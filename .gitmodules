@@ -1,0 +1,3 @@
+[submodule "bass-wrap"]
+	path = bass-wrap
+	url = https://github.com/mzdk100/bass-wrap

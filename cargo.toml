@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "bass-wrap",
     "main",
     "peeper"
 ]

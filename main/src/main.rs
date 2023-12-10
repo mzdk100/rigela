@@ -21,7 +21,6 @@ async fn main_async() -> Result<()> {
     let player = MediaPlayer::new()?;
     let synth = SpeechSynthesizer::new()?;
     let stream = synth.SynthesizeTextToStreamAsync(h!("你好"))?.await?;
-    stream.GetInputStreamAt(0)?;
     let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
     let item = MediaPlaybackItem::Create(&source)?;
     player.SetSource(&item)?;
