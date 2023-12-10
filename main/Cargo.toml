@@ -1,0 +1,21 @@
+[package]
+name = "rigela"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bass-rs = "0.2.3"
+futures = "0.3.29"
+peeper = {path = "../peeper" }
+
+[dependencies.windows]
+version = "0.52.0"
+features = [
+    "Media_SpeechSynthesis",
+    "Media_Core",
+    "Media_Playback",
+    "Foundation",
+    "Storage_Streams"
+]
