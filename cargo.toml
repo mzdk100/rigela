@@ -2,6 +2,7 @@
 members = [
     "bass-wrap",
     "main",
-    "peeper"
+    "peeper",
+	"jab-sys",
 ]
 resolver = "2"
