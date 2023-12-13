@@ -1,5 +1,5 @@
 #[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+pub extern "C" fn add(left: usize, right: usize) -> usize {
     left + right
 }
 

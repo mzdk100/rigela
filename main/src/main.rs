@@ -3,18 +3,17 @@
 use windows::core::{h, Result};
 use windows::Media::{
     Core::MediaSource,
-    Playback::{
-        MediaPlaybackItem,
-        MediaPlayer
-    },
-    SpeechSynthesis::SpeechSynthesizer
+    Playback::{MediaPlaybackItem, MediaPlayer},
+    SpeechSynthesis::SpeechSynthesizer,
 };
 #[link(name = "peeper.dll", kind = "static")]
 extern "C" {
     fn add(left: usize, right: usize) -> usize;
 }
 fn main() -> Result<()> {
-    unsafe { println!("Hello, {}!", add(3, 4)); }
+    unsafe {
+        println!("Hello, {}!", add(3, 4));
+    }
     futures::executor::block_on(main_async())
 }
 async fn main_async() -> Result<()> {
