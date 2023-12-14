@@ -13,29 +13,32 @@
 
 #![windows_subsystem = "windows"]
 
-use windows::core::{h, Result};
+
+use std::time::Duration;
+use tokio::time;
+use windows::core::{HSTRING, Result};
 use windows::Media::{
     Core::MediaSource,
     Playback::{MediaPlaybackItem, MediaPlayer},
     SpeechSynthesis::SpeechSynthesizer,
 };
-#[link(name = "peeper.dll", kind = "static")]
-extern "C" {
-    fn add(left: usize, right: usize) -> usize;
-}
-fn main() -> Result<()> {
-    unsafe {
-        println!("Hello, {}!", add(3, 4));
-    }
-    futures::executor::block_on(main_async())
-}
-async fn main_async() -> Result<()> {
-    let player = MediaPlayer::new()?;
-    let synth = SpeechSynthesizer::new()?;
-    let stream = synth.SynthesizeTextToStreamAsync(h!("你好"))?.await?;
+async fn speak(text: &str, synth: &SpeechSynthesizer, player: &MediaPlayer) -> Result<()> {
+    let stream = synth.SynthesizeTextToStreamAsync(&HSTRING::from(text))?.await?;
     let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
     let item = MediaPlaybackItem::Create(&source)?;
     player.SetSource(&item)?;
     player.Play()?;
+    Ok(())
+}
+#[tokio::main]
+async fn main() -> Result<()> {
+    println!("Hello, {}!", peeper::add(3, 4));
+    let player = MediaPlayer::new()?;
+    let synth = SpeechSynthesizer::new()?;
+    for i in 0..10 {
+        speak(format!("{}", i).as_str(), &synth, &player).await?;
+        time::sleep(Duration::from_millis(300)).await;
+    }
+    time::sleep(Duration::from_millis(1000)).await;
     Ok(())
 }
