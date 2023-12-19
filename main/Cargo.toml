@@ -22,3 +22,7 @@ features = [
     "macros",
     "time"
 ]
+
+[build-dependencies.embed-resource]
+# 嵌入资源信息到程序中
+version = "2.4.0"

@@ -1,0 +1,57 @@
+#include <windows.h>
+
+#define VER_FILEVERSION 1,0,0,0
+#define VER_FILEVERSION_STR "1.0.0.0\0"
+
+#define VER_PRODUCTVERSION 1,0,0,0
+#define VER_PRODUCTVERSION_STR "1.0\0"
+
+#ifndef DEBUG
+#define VER_DEBUG 0
+#else
+#define VER_DEBUG VS_FF_DEBUG
+#endif
+
+/*
+ * 版本信息定义。
+ * 参考： https://learn.microsoft.com/zh-cn/windows/win32/menurc/versioninfo-resource?redirectedfrom=MSDN
+ * */
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION VER_FILEVERSION
+PRODUCTVERSION VER_PRODUCTVERSION
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS VER_DEBUG
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_DLL
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName", "sscn"
+            VALUE "FileDescription", "RigelA screen reader (rsr)."
+            VALUE "FileVersion", VER_FILEVERSION_STR
+            VALUE "InternalName", "rigela"
+            VALUE "LegalCopyright", "Copyright (C) 2023 The RigelA Open Source Project. RigelA and all its contributors. All rights reserved."
+            VALUE "OriginalFilename", "rigela.exe"
+            VALUE "ProductName", "RigelA Screen Reader (vsr)."
+            VALUE "ProductVersion", VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    /*
+     * 以下行只能针对本地化版本进行修改。
+     * 它由任意数量的WORD、WORD对组成，每对描述文件支持的语言、代码页组合。
+     * 例如，文件可能具有值“0x409,1252”，表示它支持Windows ANSI代码页（1252）中的英语（0x409）。
+     * */
+    BEGIN
+        VALUE "Translation", 0x804, 1252
+    END
+END
+
+/*
+ * 图标资源
+ * */
+IDI_ICON1 ICON DISCARDABLE "logo.ico"
