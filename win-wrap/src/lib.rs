@@ -11,5 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod com;
+pub mod com;
+pub mod common;
+pub mod hook;
 pub mod uia;
+pub mod tts;

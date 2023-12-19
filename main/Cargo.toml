@@ -5,35 +5,20 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-# 异步运行时（携程框架）
-tokio = { version = "1.35.0", features = ["rt", "rt-multi-thread", "macros", "time"] }
+[dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
-peeper = {path = "../peeper" }
+path = "../peeper"
 
-[dependencies.windows]
-# windows的所有API
-version = "0.52.0"
-# 使用到的API特性（用于编译时间优化）
+[dependencies.win-wrap]
+# Windows Api的安全封装
+path = "../win-wrap"
+
+[dependencies.tokio]
+# 异步运行时（携程框架）
+version = "1.35.0"
 features = [
-    # 用于实现COM事件订阅
-    "implement",
-    # 系统语音（SAPI5）
-    "Media_SpeechSynthesis",
-    # 媒体核心API
-    "Media_Core",
-    # 媒体播放API
-    "Media_Playback",
-    # Win32基础框架
-    "Foundation",
-    # 流式读写API
-    "Storage_Streams",
-    # COM交互
-    "Win32_System_Com",
-    # 窗口和消息队列
-    "Win32_UI_WindowsAndMessaging",
-    # 无障碍API（MSAA和UIA）
-    "UI_Accessibility",
-    "Win32_UI_Accessibility",
-    "UI_UIAutomation"
+    "rt",
+    "rt-multi-thread",
+    "macros",
+    "time"
 ]

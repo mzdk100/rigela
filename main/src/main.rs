@@ -13,20 +13,19 @@
 
 #![windows_subsystem = "windows"]
 
-mod safety;
-mod tts;
-
-use safety::{com::*, uia::*};
+use win_wrap::{common::*, com::*, hook::*, tts::*, uia::*};
 use std::time::Duration;
 use tokio::{time};
-use windows::core::Result;
-use crate::tts::Tts;
 
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // 用于测试DLL
-    println!("Hello, {}!", peeper::add(3, 4));
+    // peeper 可以监控远进程中的信息
+    peeper::mount();
+    // 安装键盘钩子
+    let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, |w_param, l_param, next| {
+        next()
+    });
     // 获取主线程携程处理器
     let main_handler = tokio::runtime::Handle::current();
     // 初始化COM线程模型。
@@ -47,8 +46,14 @@ async fn main() -> Result<()> {
         });
     });
     // 无限循环
-    loop {
+    let mut is_needed_quit = false;
+    while !is_needed_quit {
         // 需要使用携程框架中的sleep函数，不可以使用线程级别的sleep，否则主线程无法处理任何携程任务
         time::sleep(Duration::from_millis(1000)).await;
     }
+    // 解除键盘钩子
+    keyboard_hook.unhook();
+    // 解除远进程监控
+    peeper::unmount();
+    Ok(())
 }

@@ -11,18 +11,45 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[no_mangle]
-pub extern "C" fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use std::ffi::c_void;
+use std::sync::RwLock;
+use windows::Win32::{
+    Foundation::{BOOL, FALSE, TRUE, HMODULE},
+    System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
+};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+static H_INSTANCE: RwLock<HMODULE> = RwLock::new(HMODULE(0));
+fn setup(hmodule: HMODULE) {
+    let x = H_INSTANCE.read().unwrap();
+    if x.is_invalid() {
+        return;
     }
+    let mut x = H_INSTANCE.write().unwrap();
+    *x = hmodule;
 }
+
+#[no_mangle]
+pub extern "system" fn mount() {
+    println!("mounted")
+}
+
+#[no_mangle]
+pub extern "system" fn unmount() {
+    println!("unmounted")
+}
+
+#[no_mangle]
+extern "system" fn DllMain(h_module: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
+    match dw_reason {
+        DLL_PROCESS_ATTACH => {
+            println!("hm: {}", h_module.0)
+        }
+        DLL_PROCESS_DETACH => {}
+        DLL_THREAD_ATTACH => {}
+        DLL_THREAD_DETACH => {}
+        _ => return FALSE
+    }
+    TRUE
+}
+#[cfg(test)]
+mod tests {}

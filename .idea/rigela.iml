@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/bass-wrap/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/jab-sys/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/jab-sys/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/win-wrap/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

@@ -30,6 +30,7 @@ impl<CB> Callback<CB>
 }
 impl<CB> IUIAutomationFocusChangedEventHandler_Impl for Callback<CB>
     where CB: Fn(UiAutomationElement) -> () + 'static {
+    #[allow(non_snake_case)]
     fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
         let func = &*self.func;
         func(UiAutomationElement::from(sender.unwrap()));
@@ -42,7 +43,7 @@ impl UiAutomation {
     /**
      * 获取UI根元素。
      * */
-    pub(crate) fn get_root_element(&self) -> UiAutomationElement {
+    pub fn get_root_element(&self) -> UiAutomationElement {
         let el = unsafe { self.0.GetRootElement() }
             .expect("Can't get the root element.");
         UiAutomationElement::from(&el)
@@ -51,7 +52,7 @@ impl UiAutomation {
     /**
      * 创建一个UiAutomation对象。
      * */
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         let automation = unsafe { CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_ALL) }
             .expect("Can't create the ui automation.");
         UiAutomation {
@@ -59,7 +60,12 @@ impl UiAutomation {
         }
     }
 
-    pub(crate) fn add_focus_changed_listener<CB>(&self, func: CB)
+    /**
+     * 注册一个焦点改变时的通知函数
+     * 处理函数运行在单独的子线程中。
+     * `func` 用于接收事件的函数。
+     * */
+    pub fn add_focus_changed_listener<CB>(&self, func: CB)
         where CB: Fn(UiAutomationElement) -> () + 'static {
         let handler: IUIAutomationFocusChangedEventHandler = Callback::new(func).into();
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
@@ -73,7 +79,10 @@ impl UiAutomationElement {
         }
     }
 
-    pub(crate) fn get_name(&self) -> String {
+    /**
+     * 获取元素的当前名称。
+     * */
+    pub fn get_name(&self) -> String {
         unsafe { self.0.CurrentName() }
             // 不需要手动释放BSTR类型的指针，windows-rs已经对BSTR类型实现drop特征
             .expect("Can't get the element name.")

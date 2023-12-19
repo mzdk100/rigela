@@ -1,0 +1,38 @@
+[package]
+name = "win-wrap"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.windows]
+# windows的所有API
+version = "0.52.0"
+# 使用到的API特性（用于编译时间优化）
+features = [
+    # 用于实现COM事件订阅
+    "implement",
+    # 系统语音（SAPI5）
+    "Media_SpeechSynthesis",
+    # 媒体核心API
+    "Media_Core",
+    # 媒体播放API
+    "Media_Playback",
+    # Win32基础框架
+    "Foundation",
+    "Win32_System_Diagnostics_Debug",
+    # Win32多线程
+    "Win32_System_Threading",
+    # Win32安全操作
+    "Win32_Security",
+    # 流式读写API
+    "Storage_Streams",
+    # COM交互
+    "Win32_System_Com",
+    # 窗口和消息队列
+    "Win32_UI_WindowsAndMessaging",
+    # 无障碍API（MSAA和UIA）
+    "UI_Accessibility",
+    "Win32_UI_Accessibility",
+    "UI_UIAutomation"
+]

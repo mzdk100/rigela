@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::future::Future;
 use std::sync::Arc;
-use tokio::macros::support::Future;
 use windows::core::{HSTRING, Result};
 use windows::Media::Core::MediaSource;
 use windows::Media::Playback::{MediaPlaybackItem, MediaPlayer};
@@ -23,7 +23,10 @@ pub struct Tts{
     player: Arc<MediaPlayer>
 }
 impl Tts {
-    pub(crate) fn new() -> Self {
+    /**
+     * 创建一个TTS对象（语音合成，SAPI5）
+     * */
+    pub fn new() -> Self {
         // 创建语音合成器
         let synth = SpeechSynthesizer::new()
             .expect("Can't create the speech synthesizer.");
@@ -35,7 +38,13 @@ impl Tts {
             player: Arc::new(player)
         }
     }
-    pub(crate) fn speak<'a>(&'a self, text: &'a str) -> impl Future<Output=Result<()>> + 'a {
+
+    /**
+     * 朗读一段文字（直接播放）
+     * 此函数是异步函数，需要使用.await。
+     * `text` 要朗读的文字。
+     * */
+    pub fn speak<'a>(&'a self, text: &'a str) -> impl Future<Output=Result<()>> + 'a {
         async move {
             let stream = self.synth.SynthesizeTextToStreamAsync(&HSTRING::from(text))?.await?;
             let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
