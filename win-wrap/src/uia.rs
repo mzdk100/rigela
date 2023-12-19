@@ -17,27 +17,24 @@ use windows::core::{implement, Result};
 use windows::Win32::System::Com::{CLSCTX_ALL, CoCreateInstance};
 use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler, IUIAutomationFocusChangedEventHandler_Impl};
 #[implement(IUIAutomationFocusChangedEventHandler)]
-struct Callback<CB> where CB: Fn(UiAutomationElement) -> () + 'static {
-    func: Box<CB>
-}
-impl<CB> Callback<CB>
+struct OnFocusChangedCallback<CB>(Box<CB>) where CB: Fn(UiAutomationElement) -> () + 'static;
+impl<CB> OnFocusChangedCallback<CB>
     where CB: Fn(UiAutomationElement) -> () + 'static {
     fn new(func: CB) -> Self {
-        Callback{
-            func: Box::new(func)
-        }
+        OnFocusChangedCallback(Box::new(func))
     }
 }
-impl<CB> IUIAutomationFocusChangedEventHandler_Impl for Callback<CB>
+impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<CB>
     where CB: Fn(UiAutomationElement) -> () + 'static {
     #[allow(non_snake_case)]
     fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
-        let func = &*self.func;
+        let func = &*self.0;
         func(UiAutomationElement::from(sender.unwrap()));
         Ok(())
     }
 }
 pub struct UiAutomation(IUIAutomation);
+#[derive(Clone)]
 pub struct UiAutomationElement(IUIAutomationElement);
 impl UiAutomation {
     /**
@@ -67,16 +64,14 @@ impl UiAutomation {
      * */
     pub fn add_focus_changed_listener<CB>(&self, func: CB)
         where CB: Fn(UiAutomationElement) -> () + 'static {
-        let handler: IUIAutomationFocusChangedEventHandler = Callback::new(func).into();
+        let handler: IUIAutomationFocusChangedEventHandler = OnFocusChangedCallback::new(func).into();
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
             .expect("Can't add the focus changed listener.")
     }
 }
 impl UiAutomationElement {
     fn from(el: &IUIAutomationElement) -> Self {
-        UiAutomationElement {
-            0: el.clone()
-        }
+        UiAutomationElement(el.clone())
     }
 
     /**
@@ -89,21 +84,26 @@ impl UiAutomationElement {
             .to_string()
     }
 
+    /**
+     * 获取元素的当前类名。
+     * */
     pub(crate) fn get_class_name(&self) -> String {
         unsafe { self.0.CurrentClassName() }
             .expect("Can't get the class name of element.")
             .to_string()
     }
+
+    /**
+     * 获取本土化的控件类型描述。
+     * */
+    pub fn get_localized_control_type(&self) -> String {
+        unsafe { self.0.CurrentLocalizedControlType() }
+            .unwrap()
+            .to_string()
+    }
 }
 unsafe impl Send for UiAutomationElement {}
 unsafe impl Sync for UiAutomationElement {}
-impl Clone for UiAutomationElement {
-    fn clone(&self) -> Self {
-        Self {
-            0: self.0.clone()
-        }
-    }
-}
 impl Display for UiAutomationElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "UiAutomationElement: {}", self.get_name())

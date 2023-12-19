@@ -12,12 +12,17 @@
  */
 
 #![windows_subsystem = "windows"]
-
-use win_wrap::{common::*, com::*, hook::*, tts::*, uia::*};
+mod performer;
+use performer::{Performer, Speakable};
+use win_wrap::{common::*, com::*, hook::*, uia::*};
 use std::time::Duration;
 use tokio::{time};
 
-
+impl Speakable for UiAutomationElement {
+    fn get_sentence(&self) -> String {
+        format!("{}: {}", self.get_name(), self.get_localized_control_type())
+    }
+}
 #[tokio::main]
 async fn main() -> Result<()> {
     // peeper 可以监控远进程中的信息
@@ -30,19 +35,17 @@ async fn main() -> Result<()> {
     let main_handler = tokio::runtime::Handle::current();
     // 初始化COM线程模型。
     co_initialize_multi_thread()?;
-    // 创建tts
-    let tts = Tts::new();
+    // 创建表演者对象
+    let performer = Performer::new();
     // 获取Automation
     let automation = UiAutomation::new();
-    // 获取UI根元素
-    let root_element = automation.get_root_element();
     // 朗读当前桌面
-    tts.speak(root_element.get_name().as_str()).await?;
+    performer.speak(&automation.get_root_element()).await?;
     // 订阅UIA的焦点元素改变事件
     automation.add_focus_changed_listener(move |x| {
-        let tts2 = tts.clone();
+        let performer2 = performer.clone();
         main_handler.spawn(async move {
-            tts2.speak(x.get_name().as_str()).await
+            performer2.speak(&x).await
         });
     });
     // 无限循环
