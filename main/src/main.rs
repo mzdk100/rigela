@@ -29,6 +29,8 @@ async fn main() -> Result<()> {
     peeper::mount();
     // 安装键盘钩子
     let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, |w_param, l_param, next| {
+        let info: &KbdLlHookStruct = l_param.to();
+        println!("{}", info.vkCode);
         next()
     });
     // 获取主线程携程处理器

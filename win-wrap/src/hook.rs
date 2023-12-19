@@ -17,7 +17,7 @@ use std::thread;
 use std::time::SystemTime;
 use windows::Win32::Foundation::{CloseHandle, FALSE, HANDLE, HINSTANCE, HWND, LPARAM, LRESULT, TRUE, WPARAM};
 use windows::Win32::System::Threading::{GetCurrentThreadId, CreateEventW, SetEvent, WaitForSingleObject};
-use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, DispatchMessageW, GetMessageW, HHOOK, MSG, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, CWPRETSTRUCT, CWPSTRUCT, DispatchMessageW, GetMessageW, HHOOK, KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_KEYBOARD_LL, WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_QUIT};
 
 /* 钩子类型。 */
 pub type HookType = WINDOWS_HOOK_ID;
@@ -28,6 +28,36 @@ pub const HOOK_TYPE_KEYBOARD_LL: HookType = WH_KEYBOARD_LL;
 /* 低级鼠标钩子。 */
 pub const HOOK_TYPE_MOUSE_LL: HookType = WH_MOUSE_LL;
 
+/* 当SendMessage()把消息交给WndProc时,在WndProc尚未执行前,系统调用CallWndProc钩子函数,钩子函数执行后才执行窗口过程。 */
+pub const HOOK_TYPE_CALL_WND_PROC: WINDOWS_HOOK_ID = WH_CALLWNDPROC;
+
+/* 当SendMessage()把消息交给WndProc时,在WndProc执行完毕,系统调用CallWndProcRet钩子函数,从而可以拦截窗口过程函数的结果。 */
+pub const HOOK_TYPE_CALL_WND_PROC_RET: WINDOWS_HOOK_ID = WH_CALLWNDPROCRET;
+
+/* 低级键盘钩子信息结构。 */
+pub type KbdLlHookStruct = KBDLLHOOKSTRUCT;
+
+/* 低级鼠标钩子信息结构。 */
+pub type MsLlHookStruct = MSLLHOOKSTRUCT;
+
+/* 窗口过程函数之前的钩子信息结构。 */
+pub type CwpStruct = CWPSTRUCT;
+
+/* 窗口过程函数之后的钩子信息结构。 */
+pub type CwpRStruct = CWPRETSTRUCT;
+
+pub trait ConvertLParam {
+    /**
+     * 把LPARAM转换成另一种类型的方法。
+     * */
+    fn to<T>(&self) -> &T;
+}
+impl ConvertLParam for LPARAM{
+    fn to<T>(&self) -> &T {
+        let ptr = self.0 as *const T;
+        unsafe { &*ptr }
+    }
+}
 type NextHookFunc = dyn Fn() -> LRESULT;
 type HookCbFunc = Arc<dyn Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static>;
 #[derive(Clone)]
@@ -209,6 +239,9 @@ macro_rules! define_hook_proc {
 }
 define_hook_proc!(proc_keyboard_ll, HOOK_TYPE_KEYBOARD_LL);
 define_hook_proc!(proc_mouse_ll, HOOK_TYPE_MOUSE_LL);
+define_hook_proc!(proc_call_wnd_proc, HOOK_TYPE_CALL_WND_PROC);
+define_hook_proc!(proc_call_wnd_proc_ret, HOOK_TYPE_CALL_WND_PROC_RET);
+
 fn install(hook_type: HookType) {
     let lock = H_HOOK
         .read()
@@ -223,6 +256,8 @@ fn install(hook_type: HookType) {
         let proc = match hook_type {
             HOOK_TYPE_KEYBOARD_LL => proc_keyboard_ll,
             HOOK_TYPE_MOUSE_LL => proc_mouse_ll,
+            HOOK_TYPE_CALL_WND_PROC => proc_call_wnd_proc,
+            HOOK_TYPE_CALL_WND_PROC_RET => proc_call_wnd_proc_ret,
             x => panic!("Unsupported hook type: {}.", x.0)
         };
         let h_hook = unsafe { SetWindowsHookExW(hook_type, Some(proc), HINSTANCE::default(), 0) }
