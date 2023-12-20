@@ -12,6 +12,7 @@
  */
 
 pub use windows::core::Result;
+pub use windows::Win32::Foundation::LRESULT;
 use windows::Win32::System::Diagnostics::Debug::Beep;
 
 /**

@@ -13,10 +13,11 @@
 
 #![windows_subsystem = "windows"]
 mod performer;
+mod terminator;
+
 use performer::{Performer, Speakable};
+use terminator::Terminator;
 use win_wrap::{common::*, com::*, hook::*, uia::*};
-use std::time::Duration;
-use tokio::{time};
 
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
@@ -25,16 +26,24 @@ impl Speakable for UiAutomationElement {
 }
 #[tokio::main]
 async fn main() -> Result<()> {
+    // 创建一个终结者对象，main方法将使用他异步等待程序退出
+    let (terminator, mut waiter) = Terminator::new();
     // peeper 可以监控远进程中的信息
     peeper::mount();
-    // 安装键盘钩子
-    let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, |w_param, l_param, next| {
+    // 准备安装键盘钩子，并获取一个主线程的携程处理器，用于在钩子函数中调度任务到主线程
+    let main_handler = tokio::runtime::Handle::current();
+    let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         let info: &KbdLlHookStruct = l_param.to();
         println!("{}", info.vkCode);
+        if info.vkCode == 163 && info.flags.contains(LLKHF_EXTENDED) {
+            let terminator = terminator.clone();
+            main_handler.spawn(async move {
+                terminator.exit().await;
+            });
+            return LRESULT::default()
+        }
         next()
     });
-    // 获取主线程携程处理器
-    let main_handler = tokio::runtime::Handle::current();
     // 初始化COM线程模型。
     co_initialize_multi_thread()?;
     // 创建表演者对象
@@ -43,19 +52,16 @@ async fn main() -> Result<()> {
     let automation = UiAutomation::new();
     // 朗读当前桌面
     performer.speak(&automation.get_root_element()).await?;
-    // 订阅UIA的焦点元素改变事件
+    // 订阅UIA的焦点元素改变事件，并获取主线程的携程处理器，用于在uia线程中调度任务到主线程
+    let main_handler = tokio::runtime::Handle::current();
     automation.add_focus_changed_listener(move |x| {
         let performer2 = performer.clone();
         main_handler.spawn(async move {
             performer2.speak(&x).await
         });
     });
-    // 无限循环
-    let mut is_needed_quit = false;
-    while !is_needed_quit {
-        // 需要使用携程框架中的sleep函数，不可以使用线程级别的sleep，否则主线程无法处理任何携程任务
-        time::sleep(Duration::from_millis(1000)).await;
-    }
+    // 等待程序退出的信号
+    waiter.wait().await;
     // 解除键盘钩子
     keyboard_hook.unhook();
     // 解除远进程监控
