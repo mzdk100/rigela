@@ -34,6 +34,8 @@ impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<C
     }
 }
 pub struct UiAutomation(IUIAutomation);
+unsafe impl Sync for UiAutomation {}
+unsafe impl Send for UiAutomation {}
 #[derive(Clone)]
 pub struct UiAutomationElement(IUIAutomationElement);
 impl UiAutomation {

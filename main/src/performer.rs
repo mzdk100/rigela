@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 use std::future::Future;
-use win_wrap::{common::Result, tts::Tts};
+use win_wrap::tts::Tts;
+
 pub(crate) trait Speakable {
     fn get_sentence(&self) -> String;
 }
@@ -31,9 +32,12 @@ impl Performer {
     /**
      * 使用语音输出，播报对象的信息。
      * */
-    pub(crate) fn speak<'a>(&'a self, speakable: &'a (dyn Speakable + Sync)) -> impl Future<Output = Result<()>> + 'a {
+    pub(crate) fn speak<'a>(&'a self, speakable: &'a (dyn Speakable + Sync)) -> impl Future<Output = ()> + 'a {
         async {
-            self.0.speak(speakable.get_sentence().as_str()).await
+            self.0
+                .speak(speakable.get_sentence().as_str())
+                .await
+                .unwrap();
         }
     }
 }
