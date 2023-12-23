@@ -9,19 +9,35 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
- */
+ */use std::collections::HashMap;
 
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use win_wrap::common::LRESULT;
 use win_wrap::hook::{ConvertLParam, HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
+use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
 use crate::launcher::{Launcher};
+use crate::talent::get_all_talents;
 
+/**
+ * 命令类型枚举。
+ * */
+pub enum CommandType {
+    // 键盘命令
+    Key(Vec<(VirtualKey, bool)>),
+    // 触摸命令
+    Touch,
+    // 语音命令
+    Voice,
+}
+
+/**
+ * 指挥官结构。
+ * */
 #[derive(Clone)]
 pub struct Commander {
     launcher: Option<Arc<Launcher>>,
     keyboard_hook: Option<WindowsHook>,
 }
-
 impl Commander {
     /**
      * 创建一个指挥官对象。
@@ -40,17 +56,37 @@ impl Commander {
      * */
     pub(crate) fn apply(&mut self, launcher: Arc<Launcher>) {
         self.launcher = Some(launcher.clone());
-        let terminator = launcher.terminator.clone();
-        let main_handler = launcher.main_handler.clone();
+        let talents = get_all_talents();
+        // 跟踪每一个键的按下状态
+        let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
         // 准备安装键盘钩子
         let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
-            let terminator = terminator.clone();
             let info: &KbdLlHookStruct = l_param.to();
-            if info.vkCode == 163 && info.flags.contains(LLKHF_EXTENDED) {
-                main_handler.spawn(async move {
-                    terminator.exit().await;
+            let is_extended = info.flags.contains(LLKHF_EXTENDED);
+            let mut map = key_track.write().unwrap();
+            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+            map.insert((info.vkCode, is_extended), pressed);
+            if !pressed {
+                return next();
+            }
+            for i in &talents {
+                let cmd_list = i.get_supported_cmd_list();
+                let cmd_item = cmd_list.iter().find(|x| match *x {
+                    CommandType::Key(y) => {
+                        for (vk, ext) in y {
+                            match map.get(&(vk.0 as u32, *ext)) {
+                                None => return false,
+                                Some(x) => if !x {return false}
+                            }
+                        }
+                        true
+                    }
+                    _ => false
                 });
-                return LRESULT::default()
+                if let Some(_) = cmd_item {
+                    i.perform(launcher.clone());
+                    return LRESULT::default();
+                }
             }
             next()
         });

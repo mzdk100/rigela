@@ -21,6 +21,8 @@ features = [
     # Win32基础框架
     "Foundation",
     "Win32_System_Diagnostics_Debug",
+    # 鼠标和键盘API
+    "Win32_UI_Input_KeyboardAndMouse",
     # Win32多线程
     "Win32_System_Threading",
     # Win32安全操作

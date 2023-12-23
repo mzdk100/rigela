@@ -12,13 +12,12 @@
  */
 
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::SystemTime;
 use windows::Win32::Foundation::{CloseHandle, FALSE, HANDLE, HINSTANCE, HWND, LPARAM, LRESULT, TRUE, WPARAM};
 use windows::Win32::System::Threading::{GetCurrentThreadId, CreateEventW, SetEvent, WaitForSingleObject};
-use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, CWPRETSTRUCT, CWPSTRUCT, DispatchMessageW, GetMessageW, HHOOK, KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_KEYBOARD_LL, WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, CWPRETSTRUCT, CWPSTRUCT, DispatchMessageW, GetMessageW, HHOOK, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSG, MSLLHOOKSTRUCT, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_KEYBOARD_LL, WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_QUIT};
 pub use windows::Win32::UI::WindowsAndMessaging::{LLKHF_ALTDOWN, LLKHF_EXTENDED, LLKHF_INJECTED, LLKHF_LOWER_IL_INJECTED, LLKHF_UP};
 
 /* 钩子类型。 */
@@ -38,6 +37,7 @@ pub const HOOK_TYPE_CALL_WND_PROC_RET: WINDOWS_HOOK_ID = WH_CALLWNDPROCRET;
 
 /* 低级键盘钩子信息结构。 */
 pub type KbdLlHookStruct = KBDLLHOOKSTRUCT;
+pub type KbdLlHookFlags = KBDLLHOOKSTRUCT_FLAGS;
 
 /* 低级鼠标钩子信息结构。 */
 pub type MsLlHookStruct = MSLLHOOKSTRUCT;

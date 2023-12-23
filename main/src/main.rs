@@ -13,9 +13,21 @@
 
 #![windows_subsystem = "windows"]
 
+/**
+ * 入口程序。
+ * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
+ * 1. launcher 发射台，负责启动整个框架；
+ * 2. commander 指挥官，负责从用户那里收集命令请求，例如键盘命令；
+ * 3. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
+ * 4. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
+ * 5. talent 才能，一些功能的实现；
+ * 6. terminator 终结者，用于控制和等待程序结束。
+ * */
+
 mod commander;
 mod launcher;
 mod performer;
+mod talent;
 mod terminator;
 
 use launcher::Launcher;

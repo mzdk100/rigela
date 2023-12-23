@@ -11,9 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod com;
-pub mod common;
-pub mod hook;
-pub mod input;
-pub mod uia;
-pub mod tts;
+mod program;
+
+use std::sync::Arc;
+use crate::talent::program::{CurrentTimeTalent, ExitTalent};
+use super::{commander::CommandType, launcher::Launcher};
+
+/**
+ * 一个能力的抽象接口。
+ * `launcher` 发射台的引用。
+ * */
+pub trait Talented {
+    fn get_supported_cmd_list(&self) -> Vec<CommandType>;
+    fn perform(&self, launcher: Arc<Launcher>);
+}
+
+/**
+ * 获取所有能力。
+ * */
+pub(crate) fn get_all_talents() -> Vec<Box<dyn Talented + Sync + Send>> {
+    vec![Box::new(ExitTalent), Box::new(CurrentTimeTalent)]
+}

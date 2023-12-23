@@ -27,7 +27,7 @@ impl Speakable for UiAutomationElement {
 pub struct Launcher {
     commander: Arc<Commander>,
     pub(crate) main_handler: Arc<Handle>,
-    performer: Arc<Performer>,
+    pub(crate) performer: Arc<Performer>,
     pub(crate) terminator: Arc<Terminator>,
     ui_automation: Arc<UiAutomation>,
     waiter: Option<Box<TerminationWaiter>>
