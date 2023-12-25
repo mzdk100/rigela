@@ -12,40 +12,17 @@
  */
 use std::future::Future;
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use crate::performer::{Performer, Speakable};
+use std::time::Duration;
+use tokio::time::sleep;
+use win_wrap::com::co_initialize_multi_thread;
 use crate::terminator::{TerminationWaiter, Terminator};
-use win_wrap::{uia::*};
-use crate::commander::Commander;
+use crate::context::Context;
 
-impl Speakable for UiAutomationElement {
-    fn get_sentence(&self) -> String {
-        format!("{}: {}", self.get_name(), self.get_localized_control_type())
-    }
-}
 
 pub struct Launcher {
-    commander: Arc<Commander>,
-    pub(crate) main_handler: Arc<Handle>,
-    pub(crate) performer: Arc<Performer>,
-    pub(crate) terminator: Arc<Terminator>,
-    ui_automation: Arc<UiAutomation>,
+    context: Arc<Context>,
     waiter: Option<Box<TerminationWaiter>>
 }
-impl Clone for Launcher {
-    fn clone(&self) -> Self {
-        Self{
-            commander: self.commander.clone(),
-            main_handler: self.main_handler.clone(),
-            performer: self.performer.clone(),
-            terminator: self.terminator.clone(),
-            ui_automation: self.ui_automation.clone(),
-            // 只有主线程可以独有等待程序结束的权限，不可以克隆
-            waiter: None
-        }
-    }
-}
-
 impl Launcher {
     /**
      * 创建一个发射台，通常一个进程只有一个实例。
@@ -53,38 +30,33 @@ impl Launcher {
     pub(crate) fn new() -> Self {
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
-        // 创建一个指挥官，用于下发操作命令
-        let mut commander =Commander::new();
-        // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
-        let performer = Performer::new();
-        // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
-        let main_handler = Handle::current();
-        // 创建UiAutomation
-        let ui_automation = UiAutomation::new();
-        let launcher = Self {
-            commander: commander.clone().into(),
-            main_handler: main_handler.into(),
-            performer: performer.into(),
-            terminator: terminator.into(),
-            ui_automation: ui_automation.into(),
+        let ctx = Context::new(terminator);
+        let ctx_ref: Arc<Context> = ctx.into();
+        ctx_ref.apply();
+        Self {
+            context: ctx_ref,
             waiter: Some(waiter.into())
-        };
-        let launcher_ref = Arc::new(launcher.clone());
-        commander.apply(launcher_ref);
-        launcher
+        }
     }
 
     /**
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) fn launch(&mut self) -> impl Future + '_ {
+        // 初始化COM线程模型。
+        co_initialize_multi_thread()
+            .expect("Can't initialize the com environment.");
         async {
-            let performer = self.performer.clone();
-            let main_handler = self.main_handler.clone();
+            // peeper 可以监控远进程中的信息
+            peeper::mount();
+            let ctx = self.context.clone();
+            let performer = ctx.performer.clone();
+            let main_handler = ctx.main_handler.clone();
             // 朗读当前桌面
-            performer.speak(&self.ui_automation.get_root_element()).await;
+            performer.speak(&ctx.ui_automation.get_root_element()).await;
+            sleep(Duration::from_millis(1000)).await;
             // 订阅UIA的焦点元素改变事件
-            self.ui_automation.add_focus_changed_listener(move |x| {
+            ctx.ui_automation.add_focus_changed_listener(move |x| {
                 let performer = performer.clone();
                 main_handler.spawn(async move {
                     performer.speak(&x).await
@@ -96,7 +68,9 @@ impl Launcher {
                 .unwrap()
                 .wait()
                 .await;
-            self.commander.dispose();
+            self.context.dispose();
+            // 解除远进程监控
+            peeper::unmount();
         }
     }
 }

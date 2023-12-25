@@ -21,28 +21,22 @@
  * 3. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
  * 4. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
  * 5. talent 才能，一些功能的实现；
- * 6. terminator 终结者，用于控制和等待程序结束。
+ * 6. terminator 终结者，用于控制和等待程序结束；
+ * 7. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
 
 mod commander;
+mod context;
 mod launcher;
 mod performer;
 mod talent;
 mod terminator;
 
 use launcher::Launcher;
-use win_wrap::com::co_initialize_multi_thread;
 
 #[tokio::main]
 async fn main() {
-    // 初始化COM线程模型。
-    co_initialize_multi_thread()
-        .expect("Can't initialize the com environment.");
-    // peeper 可以监控远进程中的信息
-    peeper::mount();
     // 使用发射台启动主程序
     let mut launcher = Launcher::new();
     launcher.launch().await;
-    // 解除远进程监控
-    peeper::unmount();
 }

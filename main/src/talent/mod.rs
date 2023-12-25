@@ -14,16 +14,17 @@
 mod program;
 
 use std::sync::Arc;
+use crate::context::Context;
 use crate::talent::program::{CurrentTimeTalent, ExitTalent};
-use super::{commander::CommandType, launcher::Launcher};
+use super::commander::CommandType;
 
 /**
  * 一个能力的抽象接口。
- * `launcher` 发射台的引用。
+ * `context` 框架的上下文环境。
  * */
 pub trait Talented {
     fn get_supported_cmd_list(&self) -> Vec<CommandType>;
-    fn perform(&self, launcher: Arc<Launcher>);
+    fn perform(&self, context: Arc<Context>);
 }
 
 /**

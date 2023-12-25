@@ -27,5 +27,9 @@ features = [
 [build-dependencies.embed-resource]
 # 嵌入资源信息到程序中
 version = "2.4.0"
+
+[dependencies.rigela-macros]
+path = "../macros"
+
 [dependencies]
 chrono = "0.4.31"

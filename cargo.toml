@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "bass-wrap",
+    "macros",
     "main",
     "peeper",
     "jab-sys",

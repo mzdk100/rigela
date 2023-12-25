@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */use std::collections::HashMap;
 
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use win_wrap::common::LRESULT;
 use win_wrap::hook::{ConvertLParam, HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
 use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
-use crate::launcher::{Launcher};
+use crate::context::Context;
 use crate::talent::get_all_talents;
 
 /**
@@ -35,8 +35,7 @@ pub enum CommandType {
  * */
 #[derive(Clone)]
 pub struct Commander {
-    launcher: Option<Arc<Launcher>>,
-    keyboard_hook: Option<WindowsHook>,
+    keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
 }
 impl Commander {
     /**
@@ -45,17 +44,15 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            launcher: None,
-            keyboard_hook: None
+            keyboard_hook: Arc::new(Mutex::new(None))
         }
     }
 
     /**
      * 让指挥官开始工作。
-     * `launcher` 对对发射台的引用，可以通过此对象访问整个框架的所有API。
+     * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
-    pub(crate) fn apply(&mut self, launcher: Arc<Launcher>) {
-        self.launcher = Some(launcher.clone());
+    pub(crate) fn apply(&self, context: Arc<Context>) {
         let talents = get_all_talents();
         // 跟踪每一个键的按下状态
         let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
@@ -84,13 +81,13 @@ impl Commander {
                     _ => false
                 });
                 if let Some(_) = cmd_item {
-                    i.perform(launcher.clone());
+                    i.perform(context.clone());
                     return LRESULT::default();
                 }
             }
             next()
         });
-        self.keyboard_hook = Some(keyboard_hook);
+        self.keyboard_hook.lock().unwrap().replace(keyboard_hook);
     }
 
     /**
@@ -98,8 +95,11 @@ impl Commander {
      * */
     pub(crate) fn dispose(&self) {
         // 解除键盘钩子
-        if let Some(x) = &self.keyboard_hook {
-            x.unhook()
-        }
+        self.keyboard_hook
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap()
+            .unhook()
     }
 }

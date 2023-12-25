@@ -12,52 +12,29 @@
  */
 
 use chrono::prelude::{DateTime, Local};
-use std::sync::Arc;
 use win_wrap::input::{VK_ESCAPE, VK_F12, VK_INSERT};
 use crate::performer::Speakable;
-use super::{super::{commander::CommandType::{self, Key}, launcher::Launcher}, Talented};
+use super::super::context::Context;
+use rigela_macros::talent;
 
-pub(crate) struct ExitTalent;
-impl Talented for ExitTalent {
-    fn get_supported_cmd_list(&self) -> Vec<CommandType> {
-        vec![
-            Key(vec![
-                // 小键盘区域的insert加esc键
-                (VK_INSERT, false),
-                (VK_ESCAPE, false)
-            ])
-        ]
-    }
-
-    fn perform(&self, launcher: Arc<Launcher>) {
-        let terminator = launcher.terminator.clone();
-        let main_handler = launcher.main_handler.clone();
-        main_handler.spawn(async move {
-            terminator.exit().await;
-        });
-    }
+#[talent(doc="退出", key=((VK_INSERT, false),(VK_ESCAPE, false)))]
+async fn exit(context: Arc<Context>) {
+    context
+        .terminator
+        .exit()
+        .await;
 }
-pub struct CurrentTimeTalent;
+
+
 impl Speakable for DateTime<Local> {
     fn get_sentence(&self) -> String {
         format!("{}", self)
     }
 }
-impl Talented for CurrentTimeTalent {
-    fn get_supported_cmd_list(&self) -> Vec<CommandType> {
-        vec![
-            Key(vec![
-                // 小键盘区域的insert加f12键
-                (VK_INSERT, false),
-                (VK_F12, false)
-                    ])
-        ]
-    }
-
-    fn perform(&self, launcher: Arc<Launcher>) {
-        let main_handler = launcher.main_handler.clone();
-        main_handler.spawn(async move {
-            launcher.performer.speak(&Local::now()).await;
-        });
-    }
+#[talent(doc="当前时间", key=((VK_INSERT, false),(VK_F12, false)))]
+async fn current_time(context: Arc<Context>) {
+    context
+        .performer
+        .speak(&Local::now())
+        .await;
 }
