@@ -31,6 +31,7 @@ mod launcher;
 mod performer;
 mod talent;
 mod terminator;
+mod consts;
 
 use launcher::Launcher;
 
