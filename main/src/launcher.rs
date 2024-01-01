@@ -10,14 +10,16 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 use std::future::Future;
 use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 use crate::terminator::{TerminationWaiter, Terminator};
 use crate::context::Context;
-
+use crate::gui::welcome::show_welcome;
 
 pub struct Launcher {
     context: Arc<Context>,
@@ -50,6 +52,9 @@ impl Launcher {
             // peeper 可以监控远进程中的信息
             peeper::mount();
             let ctx = self.context.clone();
+            let ctx2 = self.context.clone();
+            // 显示欢迎页面。
+            thread::spawn(|| show_welcome(ctx2));
             let performer = ctx.performer.clone();
             let main_handler = ctx.main_handler.clone();
             // 朗读当前桌面

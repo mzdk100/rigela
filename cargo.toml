@@ -5,6 +5,7 @@ members = [
     "main",
     "peeper",
     "jab-sys",
+    "resources",
     "win-wrap"
 ]
 resolver = "2"

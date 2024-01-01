@@ -15,7 +15,7 @@ path = "../win-wrap"
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
-version = "1.35.0"
+version = "1.35.1"
 features = [
     "rt",
     "rt-multi-thread",
@@ -31,5 +31,14 @@ version = "2.4.0"
 [dependencies.rigela-macros]
 path = "../macros"
 
+[dependencies.rigela-resources]
+path = "../resources"
+
 [dependencies]
+# 查看日期和时间
 chrono = "0.4.31"
+# 获取用户目录的路径
+home = "0.5.9"
+# gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
+winit = "0.28.7"
+eframe = "0.24.1"

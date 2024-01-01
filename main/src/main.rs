@@ -20,15 +20,18 @@
  * 2. commander 指挥官，负责从用户那里收集命令请求，例如键盘命令；
  * 3. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
  * 4. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
- * 5. talent 才能，一些功能的实现；
- * 6. terminator 终结者，用于控制和等待程序结束；
- * 7. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
+ * 5. resource_accessor 资源访问器，可以读写资源文件，内部实现了自动增量更新；
+ * 6. talent 才能，一些功能的实现；
+ * 7. terminator 终结者，用于控制和等待程序结束；
+ * 8. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
 
 mod commander;
 mod context;
+mod gui;
 mod launcher;
 mod performer;
+mod resources;
 mod talent;
 mod terminator;
 

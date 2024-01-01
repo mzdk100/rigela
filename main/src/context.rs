@@ -14,6 +14,7 @@ use tokio::runtime::Handle;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 use crate::commander::Commander;
 use crate::performer::{Performer, Speakable};
+use crate::resources::ResourceAccessor;
 use crate::terminator::Terminator;
 
 impl Speakable for UiAutomationElement {
@@ -25,6 +26,7 @@ impl Speakable for UiAutomationElement {
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) main_handler: Arc<Handle>,
+    pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) performer: Arc<Performer>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>
@@ -35,6 +37,7 @@ impl Clone for Context {
             commander: self.commander.clone(),
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
+            resource_accessor: self.resource_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone()
         }
@@ -52,12 +55,15 @@ impl Context {
         let performer = Performer::new();
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
+        // 资源访问器
+        let resources = ResourceAccessor::new();
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
         Self {
-            commander: Arc::new(commander.into()),
+            commander: commander.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
+            resource_accessor: resources.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into()
         }

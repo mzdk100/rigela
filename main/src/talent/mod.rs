@@ -15,7 +15,11 @@ mod program;
 
 use std::sync::Arc;
 use crate::context::Context;
-use crate::talent::program::{CurrentTimeTalent, ExitTalent};
+//noinspection RsUnresolvedReference
+use crate::talent::program::{
+    CurrentTimeTalent,
+    ExitTalent
+};
 use super::commander::CommandType;
 
 /**
@@ -27,6 +31,7 @@ pub trait Talented {
     fn perform(&self, context: Arc<Context>);
 }
 
+//noinspection RsUnresolvedReference
 /**
  * 获取所有能力。
  * */

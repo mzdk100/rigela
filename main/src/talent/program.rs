@@ -12,8 +12,10 @@
  */
 
 use chrono::prelude::{DateTime, Local};
+#[allow(unused_imports)]
 use win_wrap::input::{VK_ESCAPE, VK_F12, VK_INSERT};
 use crate::performer::Speakable;
+#[allow(unused_imports)]
 use super::super::context::Context;
 use rigela_macros::talent;
 
