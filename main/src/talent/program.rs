@@ -18,9 +18,17 @@ use crate::performer::Speakable;
 #[allow(unused_imports)]
 use super::super::context::Context;
 use rigela_macros::talent;
+use std::time::Duration;
+use tokio::time::sleep;
+use crate::consts;
 
 #[talent(doc="退出", key=((VK_INSERT, false),(VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
+    context
+        .performer
+        .speakText(consts::TEXT_QUIT)
+        .await;
+    sleep(Duration::from_millis(1000)).await;
     context
         .terminator
         .exit()
