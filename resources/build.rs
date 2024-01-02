@@ -26,7 +26,7 @@ use tokio::task::spawn_blocking;
 
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 const COMPRESSED_DIR: &str = "compressed";
-const FILES_DIR: &str = "files";
+const FILES_DIR: &str = "dev";
 async fn compress(resource_name: &str) {
     let output = Path::new(COMPRESSED_DIR)
         .join(format!("{}.cba", resource_name));
@@ -174,7 +174,7 @@ async fn main() {
     }
     let mut dir = read_dir(Path::new(FILES_DIR))
         .await
-        .expect("Can't read the files directory.");
+        .expect("Can't read the dev directory.");
     while let Ok(Some(x)) = dir.next_entry().await {
         let filename = x.file_name();
         let name = filename.as_os_str()
