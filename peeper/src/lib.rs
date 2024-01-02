@@ -18,7 +18,10 @@ use windows::Win32::{
     System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
 };
 
+#[allow(dead_code)]
 static H_INSTANCE: RwLock<HMODULE> = RwLock::new(HMODULE(0));
+
+#[allow(dead_code)]
 fn setup(hmodule: HMODULE) {
     let x = H_INSTANCE.read().unwrap();
     if x.is_invalid() {

@@ -26,7 +26,7 @@ use crate::consts;
 async fn exit(context: Arc<Context>) {
     context
         .performer
-        .speakText(consts::TEXT_QUIT)
+        .speak_text(consts::TEXT_QUIT)
         .await;
     sleep(Duration::from_millis(1000)).await;
     context

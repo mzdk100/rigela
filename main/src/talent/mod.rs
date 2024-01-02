@@ -26,6 +26,7 @@ use super::commander::CommandType;
  * 一个能力的抽象接口。
  * `context` 框架的上下文环境。
  * */
+
 pub trait Talented {
     fn get_supported_cmd_list(&self) -> Vec<CommandType>;
     fn perform(&self, context: Arc<Context>);

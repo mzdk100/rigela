@@ -23,6 +23,8 @@ use crate::talent::get_all_talents;
 /**
  * 命令类型枚举。
  * */
+
+#[allow(dead_code)]
 pub enum CommandType {
     // 键盘命令
     Key(Vec<(VirtualKey, bool)>),

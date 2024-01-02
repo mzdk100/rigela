@@ -89,6 +89,7 @@ impl UiAutomationElement {
     /**
      * 获取元素的当前类名。
      * */
+    #[allow(dead_code)]
     pub(crate) fn get_class_name(&self) -> String {
         unsafe { self.0.CurrentClassName() }
             .expect("Can't get the class name of element.")

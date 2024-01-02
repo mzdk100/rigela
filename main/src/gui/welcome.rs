@@ -30,7 +30,8 @@ pub(crate) fn show_welcome(context: Arc<Context>) {
     };
     struct RigelAApp;
     impl App for RigelAApp {
-        fn update(&mut self, ctx: &GuiContext, frame: &mut Frame) {
+        #[allow(unused_must_use)]
+        fn update(&mut self, ctx: &GuiContext, _frame: &mut Frame) {
             CentralPanel::default().show(ctx, |ui| {
                 ui.heading("感谢您使用 RigelA");
                 ui.label("RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！").request_focus();
