@@ -12,14 +12,13 @@
  */
 
 mod program;
+mod form_browser;
 
 use std::sync::Arc;
 use crate::context::Context;
 //noinspection RsUnresolvedReference
-use crate::talent::program::{
-    CurrentTimeTalent,
-    ExitTalent
-};
+use crate::talent::program::all_talents;
+use crate::talent::form_browser::PrevElementTalent;
 use super::commander::CommandType;
 
 /**
@@ -37,5 +36,12 @@ pub trait Talented {
  * 获取所有能力。
  * */
 pub(crate) fn get_all_talents() -> Vec<Box<dyn Talented + Sync + Send>> {
-    vec![Box::new(ExitTalent), Box::new(CurrentTimeTalent)]
+    let mut result: Vec<Box<dyn Talented + Sync + Send>> = Vec::new();
+
+    for i in all_talents(){
+        result.push(Box::new(i));
+    }
+    // result.push(Box::new(PrevElementTalent));
+
+    result
 }

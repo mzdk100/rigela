@@ -50,11 +50,6 @@ impl Performer {
         }
     }
     pub(crate) fn speak_text<'a>(&'a self, text: &'a str) -> impl Future<Output = ()> + 'a {
-        async {
-            self.0
-                .speak(text)
-                .await
-                .unwrap();
-        }
+        async { self.0.speak(text).await.unwrap(); }
     }
 }

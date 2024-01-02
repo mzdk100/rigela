@@ -21,18 +21,13 @@ use rigela_macros::talent;
 use std::time::Duration;
 use tokio::time::sleep;
 use crate::consts;
+use crate::talent::Talented;
 
-#[talent(doc="退出", key=((VK_INSERT, false),(VK_ESCAPE, false)))]
+#[talent(doc = "退出", key = ((VK_INSERT, false), (VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
-    context
-        .performer
-        .speak_text(consts::TEXT_QUIT)
-        .await;
+    context.performer.speak_text(consts::TEXT_QUIT).await;
     sleep(Duration::from_millis(1000)).await;
-    context
-        .terminator
-        .exit()
-        .await;
+    context.terminator.exit().await;
 }
 
 
@@ -41,10 +36,15 @@ impl Speakable for DateTime<Local> {
         format!("{}", self)
     }
 }
-#[talent(doc="当前时间", key=((VK_INSERT, false),(VK_F12, false)))]
+
+#[talent(doc = "当前时间", key = ((VK_INSERT, false), (VK_F12, false)))]
 async fn current_time(context: Arc<Context>) {
-    context
-        .performer
-        .speak(&Local::now())
-        .await;
+    context.performer.speak(&Local::now()).await;
+}
+
+pub fn all_talents() -> Vec<Box<dyn Talented+Send+Sync>>{
+    vec![
+        Box::new(ExitTalent),
+        Box::new(CurrentTimeTalent),
+    ]
 }
