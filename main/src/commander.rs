@@ -86,7 +86,7 @@ impl Commander {
                 });
                 if let Some(_) = cmd_item {
                     i.perform(context.clone());
-                    return LRESULT::default();
+                    return LRESULT(1);
                 }
             }
             next()
