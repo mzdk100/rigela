@@ -11,21 +11,34 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
+use crate::browser::Browseable;
 use std::fmt::{Display, Formatter};
 use windows::core::{implement, Result};
-use windows::Win32::System::Com::{CLSCTX_ALL, CoCreateInstance};
-use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler, IUIAutomationFocusChangedEventHandler_Impl};
+use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
+use windows::Win32::UI::Accessibility::{
+    CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler,
+    IUIAutomationFocusChangedEventHandler_Impl, TreeScope,
+};
+
 #[implement(IUIAutomationFocusChangedEventHandler)]
-struct OnFocusChangedCallback<CB>(Box<CB>) where CB: Fn(UiAutomationElement) -> () + 'static;
+struct OnFocusChangedCallback<CB>(Box<CB>)
+where
+    CB: Fn(UiAutomationElement) -> () + 'static;
+
 impl<CB> OnFocusChangedCallback<CB>
-    where CB: Fn(UiAutomationElement) -> () + 'static {
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
+{
     fn new(func: CB) -> Self {
         OnFocusChangedCallback(Box::new(func))
     }
 }
+
 impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<CB>
-    where CB: Fn(UiAutomationElement) -> () + 'static {
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
+{
     #[allow(non_snake_case)]
     fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
         let func = &*self.0;
@@ -33,30 +46,39 @@ impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<C
         Ok(())
     }
 }
+
+#[derive(Clone)]
 pub struct UiAutomation(IUIAutomation);
+
 unsafe impl Sync for UiAutomation {}
+
 unsafe impl Send for UiAutomation {}
+
 #[derive(Clone)]
 pub struct UiAutomationElement(IUIAutomationElement);
+
 impl UiAutomation {
     /**
      * 获取UI根元素。
      * */
     pub fn get_root_element(&self) -> UiAutomationElement {
-        let el = unsafe { self.0.GetRootElement() }
-            .expect("Can't get the root element.");
+        let el = unsafe { self.0.GetRootElement() }.expect("Can't get the root element.");
         UiAutomationElement::from(&el)
+    }
+
+    pub fn get_element_from_hwnd(&self, hwnd: HWND) -> Option<UiAutomationElement> {
+        let el = unsafe { self.0.ElementFromHandle(hwnd) }.ok()?;
+        Some(UiAutomationElement::from(&el))
     }
 
     /**
      * 创建一个UiAutomation对象。
      * */
     pub fn new() -> Self {
-        let automation = unsafe { CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_ALL) }
-            .expect("Can't create the ui automation.");
-        UiAutomation {
-            0: automation
-        }
+        let automation =
+            unsafe { CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_ALL) }
+                .expect("Can't create the ui automation.");
+        UiAutomation { 0: automation }
     }
 
     /**
@@ -65,12 +87,16 @@ impl UiAutomation {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_focus_changed_listener<CB>(&self, func: CB)
-        where CB: Fn(UiAutomationElement) -> () + 'static {
-        let handler: IUIAutomationFocusChangedEventHandler = OnFocusChangedCallback::new(func).into();
+    where
+        CB: Fn(UiAutomationElement) -> () + 'static,
+    {
+        let handler: IUIAutomationFocusChangedEventHandler =
+            OnFocusChangedCallback::new(func).into();
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
             .expect("Can't add the focus changed listener.")
     }
 }
+
 impl UiAutomationElement {
     fn from(el: &IUIAutomationElement) -> Self {
         UiAutomationElement(el.clone())
@@ -105,10 +131,64 @@ impl UiAutomationElement {
             .to_string()
     }
 }
+
 unsafe impl Send for UiAutomationElement {}
+
 unsafe impl Sync for UiAutomationElement {}
+
 impl Display for UiAutomationElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "UiAutomationElement: {}", self.get_name())
+    }
+}
+
+impl Browseable for UiAutomationElement {
+    fn get_name(&self) -> String {
+        self.get_name()
+    }
+
+    fn get_role(&self) -> String {
+        self.get_localized_control_type()
+    }
+}
+
+pub struct UIMatcher {
+    uiautomation: UiAutomation,
+    element: UiAutomationElement,
+}
+
+impl UIMatcher {
+    pub fn new(uiautomation: UiAutomation, element: UiAutomationElement) -> Self {
+        UIMatcher {
+            uiautomation,
+            element,
+        }
+    }
+
+    pub fn get_child_elements(&self) -> Vec<UiAutomationElement> {
+        let mut elements = Vec::new();
+        let children = unsafe {
+            self.element
+                .0
+                .FindAll(
+                    TreeScope(2),
+                    &self
+                        .uiautomation
+                        .0
+                        .CreateTrueCondition()
+                        .expect("Failed to create TrueCondition"),
+                )
+                .expect("Failed to find all children")
+        };
+        let len = unsafe { children.Length().expect("Failed to get length of children") };
+        for i in 0..len {
+            let children = unsafe {
+                children
+                    .GetElement(i)
+                    .expect("Failed to get element at index")
+            };
+            elements.push(UiAutomationElement(children));
+        }
+        elements
     }
 }

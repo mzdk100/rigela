@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. The RigelA open source project team and
+ * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod com;
-pub mod common;
-pub mod hook;
-pub mod input;
-pub mod uia;
-pub mod tts;
-pub mod browser;
+pub trait Browseable {
+    fn get_name(&self) -> String;
+    fn get_role(&self) -> String;
+}

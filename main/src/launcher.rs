@@ -57,7 +57,7 @@ impl Launcher {
             let ctx2 = self.context.clone();
 
             let ctx3 = self.context.clone();
-            let ctx4 = Mutex::new(self.context.clone());
+            let ctx4 = Arc::new(Mutex::new(self.context.clone()));
 
             // 显示欢迎页面。
             thread::spawn(|| show_welcome(ctx2));
