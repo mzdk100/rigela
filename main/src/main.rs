@@ -18,15 +18,18 @@
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
  * 1. launcher 发射台，负责启动整个框架；
  * 2. commander 指挥官，负责从用户那里收集命令请求，例如键盘命令；
- * 3. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
- * 4. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
- * 5. resource_accessor 资源访问器，可以读写资源文件，内部实现了自动增量更新；
- * 6. talent 才能，一些功能的实现；
- * 7. terminator 终结者，用于控制和等待程序结束；
- * 8. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
+0 * 3. config_manager 配置管理器，可以读写toml格式的配置文件。
+ * 4. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
+ * 5. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
+ * 6. resource_accessor 资源访问器，可以读写资源文件，内部实现了自动增量更新；
+ * 7. talent 才能，一些功能的实现；
+ * 8. terminator 终结者，用于控制和等待程序结束；
+ * 9. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
+ * 10. utils 工具函数，封装一些常用但没有归类的函数。
  * */
 
 mod commander;
+mod configs;
 mod context;
 mod gui;
 mod launcher;
@@ -34,6 +37,7 @@ mod performer;
 mod resources;
 mod talent;
 mod terminator;
+mod utils;
 mod consts;
 
 use launcher::Launcher;

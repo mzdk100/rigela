@@ -14,6 +14,8 @@
 use std::future::Future;
 use std::sync::Arc;
 use win_wrap::tts::Tts;
+use crate::configs::tts::TtsConfig;
+use crate::context::Context;
 
 
 /**
@@ -29,13 +31,46 @@ pub(crate) trait Speakable {
  * 可以进行语音输出或音效提示。
  * */
 #[derive(Clone)]
-pub(crate) struct Performer(Arc<Tts>);
+pub(crate) struct Performer {
+    tts: Arc<Tts>
+}
 impl Performer {
     /**
      * 创建表演者对象。
      * */
     pub(crate) fn new() -> Self {
-        Self(Arc::new(Tts::new()))
+        let tts = Tts::new();
+        Self {
+            tts: tts.into()
+        }
+    }
+
+    /**
+     * 设置表演者的参数。
+     * `context` 框架的上下文环境。
+     * `slot` 一个用于修改参数的函数或闭包。
+     * */
+    pub(crate) fn apply_config(&self, context: Arc<Context>, slot: impl  FnOnce(&mut TtsConfig) + Send + Sync + 'static) {
+        let main_handler = context.main_handler.clone();
+        let tts = self.tts.clone();
+        main_handler.spawn(async move {
+            let mut config = context
+                .config_manager
+                .read()
+                .await;
+            let mut tts_config = config
+                .tts_config
+                .clone()
+                .unwrap_or(TtsConfig::default());
+            slot(&mut tts_config);
+            let speed = tts_config.speed.clone().unwrap();
+            tts.set_speed(speed);
+            config.tts_config.replace(tts_config);
+            context
+                .config_manager
+                .write(&config)
+                .await;
+        });
     }
 
     /**
@@ -43,13 +78,19 @@ impl Performer {
      * */
     pub(crate) fn speak<'a>(&'a self, speakable: &'a (dyn Speakable + Sync)) -> impl Future<Output = ()> + 'a {
         async {
-            self.0
+            self
+                .tts
                 .speak(speakable.get_sentence().as_str())
                 .await
                 .unwrap();
         }
     }
     pub(crate) fn speak_text<'a>(&'a self, text: &'a str) -> impl Future<Output = ()> + 'a {
-        async { self.0.speak(text).await.unwrap(); }
+        async { self
+            .tts
+            .speak(text)
+            .await
+            .unwrap();
+        }
     }
 }

@@ -34,11 +34,17 @@ path = "../macros"
 [dependencies.rigela-resources]
 path = "../resources"
 
+[dependencies.serde]
+version = "1.0.145"
+features = ["derive"]
+
 [dependencies]
 # 查看日期和时间
 chrono = "0.4.31"
 # 获取用户目录的路径
 home = "0.5.9"
+# 配置项读写
+toml = "0.8.8"
 # gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
 winit = "0.28.7"
 eframe = "0.24.1"

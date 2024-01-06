@@ -13,6 +13,7 @@
 
 mod form_browser;
 mod program;
+mod tts;
 
 use std::sync::Arc;
 use crate::context::Context;
@@ -26,6 +27,10 @@ use crate::talent::{
     program::{
         CurrentTimeTalent,
         ExitTalent
+    },
+    tts::{
+        IncreaseTalent,
+        ReduceTalent
     }
 };
 use super::commander::CommandType;
@@ -57,6 +62,8 @@ pub(crate) fn get_all_talents() -> Vec<Box<dyn Talented + Sync + Send>> {
         Box::new(ExitTalent),
         Box::new(PrevElementTalent),
         Box::new(CurrentTimeTalent),
+        Box::new(IncreaseTalent),
         Box::new(NextElementTalent),
+        Box::new(ReduceTalent)
     ]
 }

@@ -40,6 +40,21 @@ impl Tts {
     }
 
     /**
+     * 设置语速。
+     * 某些语音的最低语速快于 0.5，最大语速低于 6.0。
+     * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
+     * `val` 语速值。
+     * */
+    pub fn set_speed(&self, val: f32) {
+        // https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
+        self.synth
+            .Options()
+            .unwrap()
+            .SetSpeakingRate(val as f64)
+            .expect("Can't set the speed value.");
+    }
+
+    /**
      * 朗读一段文字（直接播放）
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。
