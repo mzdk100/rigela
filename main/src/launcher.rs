@@ -73,9 +73,9 @@ impl Launcher {
 
                 let hwnd = get_foreground_window();
                 if hwnd != ctx3.form_browser.get_hwnd() {
-                    let ctx = ctx4.lock().unwrap();
-                    let ctx = *ctx.clone();
-                    ctx.form_browser.set_hwnd(hwnd);
+                    // TODO: let ctx = ctx4.lock().unwrap();
+                    // TODO: let ctx = *ctx.clone();
+                    // ctx.form_browser.set_hwnd(hwnd);
                     // 在这里接着往form_browser里面添加元素
                 }
             });

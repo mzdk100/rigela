@@ -19,6 +19,8 @@ use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::browser::{Browseable, FormBrowser};
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
+use crate::configs::ConfigManager;
+use crate::utils::get_program_directory;
 
 impl Speakable for dyn Browseable {
     fn get_sentence(&self) -> String {
@@ -34,6 +36,7 @@ impl Speakable for UiAutomationElement {
 
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
+    pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) performer: Arc<Performer>,
@@ -45,6 +48,7 @@ impl Clone for Context {
     fn clone(&self) -> Self {
         Self {
             commander: self.commander.clone(),
+            config_manager: self.config_manager.clone(),
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
             resource_accessor: self.resource_accessor.clone(),
@@ -62,6 +66,7 @@ impl Context {
     pub(crate) fn new(terminator: Terminator) -> Self {
         // 创建一个指挥官，用于下发操作命令
         let commander = Commander::new();
+        let config_manager = ConfigManager::new(get_program_directory().join("config.toml"));
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
         let performer = Performer::new();
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
@@ -69,16 +74,17 @@ impl Context {
         // 资源访问器
         let resources = ResourceAccessor::new();
         // 创建一个窗口浏览
-        let FormBrowser = FormBrowser::new();
+        let form_browser = FormBrowser::new();
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
         Self {
             commander: commander.into(),
+            config_manager: config_manager.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
             resource_accessor: resources.into(),
             terminator: terminator.into(),
-            form_browser: FormBrowser.into(),
+            form_browser: form_browser.into(),
             ui_automation: ui_automation.into(),
         }
     }
@@ -87,7 +93,10 @@ impl Context {
      * 把上下文对象应用于每一个组件。
      * */
     pub(crate) fn apply(&self) {
-        self.commander.apply(Arc::new(self.clone()))
+        self.commander
+            .apply(self.clone().into());
+        self.performer
+            .apply_config(self.clone().into(), |_| {});
     }
 
     /**
