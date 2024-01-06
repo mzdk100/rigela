@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::Browseable;
 use std::fmt::{Display, Formatter};
 use windows::core::{implement, Result};
 use windows::Win32::Foundation::HWND;
@@ -142,16 +141,6 @@ impl Display for UiAutomationElement {
     }
 }
 
-impl Browseable for UiAutomationElement {
-    fn get_name(&self) -> String {
-        self.get_name()
-    }
-
-    fn get_role(&self) -> String {
-        self.get_localized_control_type()
-    }
-}
-
 pub struct UIMatcher {
     uiautomation: UiAutomation,
     element: UiAutomationElement,
@@ -165,6 +154,7 @@ impl UIMatcher {
         }
     }
 
+    /// 获取元素的子元素。
     pub fn get_child_elements(&self) -> Vec<UiAutomationElement> {
         let mut elements = Vec::new();
         let children = unsafe {

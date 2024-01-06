@@ -14,14 +14,15 @@
 use crate::context::Context;
 use crate::gui::welcome::show_welcome;
 use crate::terminator::{TerminationWaiter, Terminator};
-use std::future::Future;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
-use tokio::sync::Mutex;
+use std::{
+    future::Future,
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
 use tokio::time::sleep;
-use win_wrap::browser::get_foreground_window;
 use win_wrap::com::co_initialize_multi_thread;
+use win_wrap::common::get_foreground_window;
 
 pub struct Launcher {
     context: Arc<Context>,
@@ -57,6 +58,7 @@ impl Launcher {
             let ctx2 = self.context.clone();
 
             let ctx3 = self.context.clone();
+            #[allow(unused_variables)]
             let ctx4 = Arc::new(Mutex::new(self.context.clone()));
 
             // 显示欢迎页面。

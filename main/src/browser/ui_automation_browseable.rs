@@ -11,7 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub trait Browseable {
-    fn get_name(&self) -> String;
-    fn get_role(&self) -> String;
+use crate::browser::Browseable;
+use win_wrap::uia::UiAutomationElement;
+
+impl Browseable for UiAutomationElement {
+    fn get_name(&self) -> String {
+        self.get_name()
+    }
+
+    fn get_role(&self) -> String {
+        self.get_localized_control_type()
+    }
 }

@@ -12,7 +12,10 @@
  */
 
 pub use windows::core::Result;
+pub use windows::Win32::Foundation::HWND;
 pub use windows::Win32::Foundation::LRESULT;
+pub use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+
 use windows::Win32::System::Diagnostics::Debug::Beep;
 
 /**
@@ -21,6 +24,10 @@ use windows::Win32::System::Diagnostics::Debug::Beep;
  * `duration` 持续时间（毫秒）
  * */
 pub fn beep(freq: u32, duration: u32) {
-    unsafe { Beep(freq, duration) }
-        .unwrap();
+    unsafe { Beep(freq, duration) }.unwrap();
+}
+
+/// 获取当前前台窗口句柄。
+pub fn get_foreground_window() -> HWND {
+    unsafe { GetForegroundWindow() }
 }
