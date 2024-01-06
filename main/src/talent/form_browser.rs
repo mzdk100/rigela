@@ -24,33 +24,24 @@ use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
 
 
 //noinspection RsUnresolvedReference
-#[talent(doc="上一个控件", key=((VK_LEFT, false)))]
+#[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
     let ele_text = "上一个控件";
-    context
-        .performer
-        .speak_text(ele_text)
-        .await;
+    context.performer.speak_text(ele_text).await;
 }
 
 
 //noinspection RsUnresolvedReference
-#[talent(doc="下一个控件", key=((VK_RIGHT, false)))]
+#[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
     let ele_text = "下一个控件";
-    context
-        .performer
-        .speak_text(ele_text)
-        .await;
+    context.performer.speak_text(ele_text).await;
 }
 
 
 //noinspection RsUnresolvedReference
-#[talent(doc="当前控件", key=((VK_CLEAR, false)))]
+#[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
     let ele_text = "当前控件";
-    context
-        .performer
-        .speak_text(ele_text)
-        .await;
+    context.performer.speak_text(ele_text).await;
 }

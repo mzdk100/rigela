@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. The RigelA open source project team and
+ * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,18 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use win_wrap::uia::UiAutomationElement;
-use crate::context::Context;
-use std::sync::Arc;
-use std::task::Context;
-
-pub struct VirtualForm {
-    pub focus: UiAutomationElement;
-    pub form: UiAutomationElement;
-}
-
-impl VirtualForm {
-    pub fn update(newForm: UiAutomationElement){}
-    pub fn prev(){}
-    pub fn next(){}
+pub trait Browseable {
+    fn get_name(&self) -> String;
+    fn get_role(&self) -> String;
 }
