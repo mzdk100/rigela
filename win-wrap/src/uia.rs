@@ -12,7 +12,7 @@
  */
 
 use std::fmt::{Display, Formatter};
-use windows::core::{implement, Result};
+use windows::core::{BSTR, implement, Result};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 use windows::Win32::UI::Accessibility::{
@@ -107,7 +107,7 @@ impl UiAutomationElement {
     pub fn get_name(&self) -> String {
         unsafe { self.0.CurrentName() }
             // 不需要手动释放BSTR类型的指针，windows-rs已经对BSTR类型实现drop特征
-            .expect("Can't get the element name.")
+            .unwrap_or(BSTR::new())
             .to_string()
     }
 
@@ -126,7 +126,7 @@ impl UiAutomationElement {
      * */
     pub fn get_localized_control_type(&self) -> String {
         unsafe { self.0.CurrentLocalizedControlType() }
-            .unwrap()
+            .unwrap_or(BSTR::new())
             .to_string()
     }
 }
