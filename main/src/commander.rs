@@ -14,7 +14,7 @@
 use std::collections::HashMap;
 
 use std::sync::{Arc, Mutex, RwLock};
-use win_wrap::common::LRESULT;
+use win_wrap::common::{beep, LRESULT};
 use win_wrap::hook::{ConvertLParam, HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
 use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
 use crate::context::Context;
@@ -63,11 +63,13 @@ impl Commander {
         // 准备安装键盘钩子
         let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
             let info: &KbdLlHookStruct = l_param.to();
+            beep(400,40);
             let is_extended = info.flags.contains(LLKHF_EXTENDED);
-            let mut map = key_track.write().unwrap();
             let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+            let mut map = key_track.write().unwrap();
             map.insert((info.vkCode, is_extended), pressed);
             if !pressed {
+                drop(map);  // 必须先释放锁再next()，否则可能会死锁
                 return next();
             }
             for i in &talents {
@@ -89,6 +91,7 @@ impl Commander {
                     return LRESULT(1);
                 }
             }
+            drop(map);  // 必须先释放锁再next()，否则可能会死锁
             next()
         });
         self.keyboard_hook.lock().unwrap().replace(keyboard_hook);
