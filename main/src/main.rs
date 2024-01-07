@@ -26,14 +26,17 @@ pub mod browser;
  * 7. talent 才能，一些功能的实现；
  * 8. terminator 终结者，用于控制和等待程序结束；
  * 9. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
- * 10. utils 工具函数，封装一些常用但没有归类的函数。
+ * 10. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中；
+ * 11. utils 工具函数，封装一些常用但没有归类的函数。
  * */
+
 mod commander;
 mod configs;
 mod consts;
 mod context;
 mod gui;
 mod launcher;
+mod logger;
 mod performer;
 mod resources;
 mod talent;
@@ -41,9 +44,14 @@ mod terminator;
 mod utils;
 
 use launcher::Launcher;
+use logger::init_logger;
+use log::info;
 
 #[tokio::main]
 async fn main() {
+    // 初始化日志库
+    init_logger();
+    info!("Launching RigelA...");
     // 使用发射台启动主程序
     let mut launcher = Launcher::new();
     launcher.launch().await;

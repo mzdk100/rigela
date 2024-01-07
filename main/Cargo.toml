@@ -35,6 +35,7 @@ path = "../macros"
 path = "../resources"
 
 [dependencies.serde]
+# 用于数据序列化和反序列化
 version = "1.0.145"
 features = ["derive"]
 
@@ -43,8 +44,11 @@ features = ["derive"]
 chrono = "0.4.31"
 # 获取用户目录的路径
 home = "0.5.9"
+# 记录日志
+log4rs = "1.2.0"
 # 配置项读写
 toml = "0.8.8"
 # gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
 winit = "0.28.7"
 eframe = "0.24.1"
+log = "0.4.20"

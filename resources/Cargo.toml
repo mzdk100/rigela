@@ -9,6 +9,7 @@ edition = "2021"
 bitar = "0.11.0"
 blake2 = "0.10.6"
 url = "2.5.0"
+log = "0.4.20"
 
 [dependencies.futures-util]
 version = "0.3.30"

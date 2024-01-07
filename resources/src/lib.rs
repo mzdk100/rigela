@@ -12,6 +12,7 @@
  */
 
 use std::io::SeekFrom;
+use log::{debug, info};
 use futures_util::StreamExt;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -47,7 +48,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
         );
     // 建立输出文件块的索引
     let output_index = {
-        println!("Building chunk index of {}...", save_path.display());
+        info!("Building chunk index of {}...", save_path.display());
         let mut chunk_stream = archive
             .chunker_config()
             .new_chunker(&mut output_file)
@@ -66,16 +67,16 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
     let mut output_clone = CloneOutput::new(output_file, clone_index);
     let mut total_read_from_seed = 0u64;
     if let Some(output_index) = output_index {
-        println!("Re-ordering chunks of {}...", save_path.display());
+        debug!("Re-ordering chunks of {}...", save_path.display());
         let used_from_self = output_clone
             .reorder_in_place(output_index)
             .await
             .expect("Failed to clone in place");
-        println!("Used {} from {}", used_from_self, save_path.display());
+        info!("Used {} from {}", used_from_self, save_path.display());
         total_read_from_seed += used_from_self;
     }
-    // Read the rest from archive
-    println!(
+    // 从存档中读取剩余内容
+    info!(
         "Fetching {} chunks from {}...",
         output_clone.len(), url
     );
@@ -107,13 +108,13 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
                     .await
                     .unwrap();
                 if wc > 0 {
-                    println!("Chunk '{}', size {} used", verified.hash(), verified.len());
+                    info!("Chunk '{}', size {} used", verified.hash(), verified.len());
                 }
                 output_bytes += wc as u64;
             };
             output_bytes
         };
-        println!(
+        info!(
             "Fetched {} from archive and decompressed to {}.",
             total_fetched, output_bytes
         );
@@ -127,7 +128,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
         .expect(
             format!("Failed to resize {}", save_path.display()).as_str()
         );
-    println!("Verifying checksum of {}...", save_path.display());
+    info!("Verifying checksum of {}...", save_path.display());
     let sum = {
         output_file
             .seek(SeekFrom::Start(0))
@@ -153,7 +154,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
             format!("Checksum mismatch ({}: {}, {}: {})", save_path.display(),sum, url, expected_checksum)
         )
     }
-    println!(
+    info!(
         "Successfully cloned archive using {} from archive and {} from seeds.",
         total_read_from_remote, total_read_from_seed
     );

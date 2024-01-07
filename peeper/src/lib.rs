@@ -13,6 +13,7 @@
 
 use std::ffi::c_void;
 use std::sync::RwLock;
+use log::debug;
 use windows::Win32::{
     Foundation::{BOOL, FALSE, TRUE, HMODULE},
     System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
@@ -23,22 +24,23 @@ static H_INSTANCE: RwLock<HMODULE> = RwLock::new(HMODULE(0));
 
 #[allow(dead_code)]
 fn setup(hmodule: HMODULE) {
-    let x = H_INSTANCE.read().unwrap();
+    let mut x = H_INSTANCE
+        .write()
+        .unwrap();
     if x.is_invalid() {
         return;
     }
-    let mut x = H_INSTANCE.write().unwrap();
     *x = hmodule;
 }
 
 #[no_mangle]
 pub extern "system" fn mount() {
-    println!("mounted")
+    debug!("mounted")
 }
 
 #[no_mangle]
 pub extern "system" fn unmount() {
-    println!("unmounted")
+    debug!("unmounted")
 }
 
 #[no_mangle]
@@ -54,5 +56,6 @@ extern "system" fn DllMain(h_module: HMODULE, dw_reason: u32, _lp_reserved: *con
     }
     TRUE
 }
+
 #[cfg(test)]
 mod tests {}
