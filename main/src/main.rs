@@ -13,6 +13,7 @@
 
 #![windows_subsystem = "windows"]
 
+pub mod browser;
 /**
  * 入口程序。
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
@@ -27,9 +28,9 @@
  * 9. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
  * 10. utils 工具函数，封装一些常用但没有归类的函数。
  * */
-
 mod commander;
 mod configs;
+mod consts;
 mod context;
 mod gui;
 mod launcher;
@@ -38,7 +39,6 @@ mod resources;
 mod talent;
 mod terminator;
 mod utils;
-mod consts;
 
 use launcher::Launcher;
 

@@ -11,12 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::tts::TtsConfig;
+use crate::context::Context;
 use std::future::Future;
 use std::sync::Arc;
 use win_wrap::tts::Tts;
-use crate::configs::tts::TtsConfig;
-use crate::context::Context;
-
 
 /**
  * 表演者语音信息收集接口。
@@ -32,17 +31,16 @@ pub(crate) trait Speakable {
  * */
 #[derive(Clone)]
 pub(crate) struct Performer {
-    tts: Arc<Tts>
+    tts: Arc<Tts>,
 }
+
 impl Performer {
     /**
      * 创建表演者对象。
      * */
     pub(crate) fn new() -> Self {
         let tts = Tts::new();
-        Self {
-            tts: tts.into()
-        }
+        Self { tts: tts.into() }
     }
 
     /**
@@ -50,47 +48,39 @@ impl Performer {
      * `context` 框架的上下文环境。
      * `slot` 一个用于修改参数的函数或闭包。
      * */
-    pub(crate) fn apply_config(&self, context: Arc<Context>, slot: impl  FnOnce(&mut TtsConfig) + Send + Sync + 'static) {
+    pub(crate) fn apply_config(
+        &self,
+        context: Arc<Context>,
+        slot: impl FnOnce(&mut TtsConfig) + Send + Sync + 'static,
+    ) {
         let main_handler = context.main_handler.clone();
         let tts = self.tts.clone();
         main_handler.spawn(async move {
-            let mut config = context
-                .config_manager
-                .read()
-                .await;
-            let mut tts_config = config
-                .tts_config
-                .clone()
-                .unwrap_or(TtsConfig::default());
+            let mut config = context.config_manager.read().await;
+            let mut tts_config = config.tts_config.clone().unwrap_or(TtsConfig::default());
             slot(&mut tts_config);
             let speed = tts_config.speed.clone().unwrap();
             tts.set_speed(speed);
             config.tts_config.replace(tts_config);
-            context
-                .config_manager
-                .write(&config)
-                .await;
+            context.config_manager.write(&config).await;
         });
     }
 
     /**
      * 使用语音输出，播报对象的信息。
      * */
-    pub(crate) fn speak<'a>(&'a self, speakable: &'a (dyn Speakable + Sync)) -> impl Future<Output = ()> + 'a {
+    pub(crate) fn speak<'a>(
+        &'a self,
+        speakable: &'a (dyn Speakable + Sync),
+    ) -> impl Future<Output = ()> + 'a {
         async {
-            self
-                .tts
+            self.tts
                 .speak(speakable.get_sentence().as_str())
                 .await
                 .unwrap();
         }
     }
-    pub(crate) fn speak_text<'a>(&'a self, text: &'a str) -> impl Future<Output = ()> + 'a {
-        async { self
-            .tts
-            .speak(text)
-            .await
-            .unwrap();
-        }
+    pub(crate) async fn speak_text(&self, text: &str) {
+        self.tts.speak(text).await.unwrap();
     }
 }

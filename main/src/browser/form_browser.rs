@@ -11,14 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub use windows::Win32::Foundation::HWND;
-
 use crate::browser::Browseable;
-use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
-
-pub fn get_foreground_window() -> HWND {
-    unsafe { GetForegroundWindow() }
-}
+use win_wrap::common::HWND;
 
 pub struct FormBrowser {
     hwnd: HWND,

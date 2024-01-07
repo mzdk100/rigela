@@ -11,22 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::browser::FormBrowser;
 use crate::commander::Commander;
+use crate::configs::ConfigManager;
 use crate::performer::{Performer, Speakable};
 use crate::resources::ResourceAccessor;
 use crate::terminator::Terminator;
+use crate::utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::Handle;
-use win_wrap::browser::{Browseable, FormBrowser};
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
-use crate::configs::ConfigManager;
-use crate::utils::get_program_directory;
-
-impl Speakable for dyn Browseable {
-    fn get_sentence(&self) -> String {
-        format!("{}: {}", self.get_name(), self.get_role())
-    }
-}
 
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
@@ -44,6 +38,7 @@ pub struct Context {
     pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) ui_automation: Arc<UiAutomation>,
 }
+
 impl Clone for Context {
     fn clone(&self) -> Self {
         Self {
@@ -93,10 +88,8 @@ impl Context {
      * 把上下文对象应用于每一个组件。
      * */
     pub(crate) fn apply(&self) {
-        self.commander
-            .apply(self.clone().into());
-        self.performer
-            .apply_config(self.clone().into(), |_| {});
+        self.commander.apply(self.clone().into());
+        self.performer.apply_config(self.clone().into(), |_| {});
     }
 
     /**
