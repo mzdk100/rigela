@@ -15,5 +15,7 @@ pub mod com;
 pub mod common;
 pub mod hook;
 pub mod input;
+pub mod message;
+pub mod threading;
 pub mod uia;
 pub mod tts;
