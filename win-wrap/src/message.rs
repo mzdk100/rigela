@@ -17,7 +17,7 @@ use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
 
 
 /**
- * 将消息调度到窗口过程。 它通常用于调度 GetMessage 函数检索到的消息。
+ * 将消息调度到窗口过程。它通常用于调度 get_message 函数检索到的消息。
  * `msg` 消息结构。
  * */
 pub fn dispatch_message(msg: &mut MSG) -> LRESULT {
@@ -25,7 +25,7 @@ pub fn dispatch_message(msg: &mut MSG) -> LRESULT {
 }
 
 /**
- * 从调用线程的消息队列中检索消息。 函数调度传入的已发送消息，直到已发布的消息可供检索。
+ * 从调用线程的消息队列中查询消息。函数调度传入的已发送消息，直到已发布的消息可供查询。
  * 与 get_message 不同， peek_message 函数在返回之前不会等待消息发布。
  * `msg` 消息结构，该结构从线程的消息队列接收消息信息。
  * `h_wnd` 要检索其消息的窗口的句柄。窗口必须属于当前线程。如果 h_wnd 为 NULL， get_message 将检索属于当前线程的任何窗口的消息，以及当前线程的消息队列中 h_wnd 值为 NULL 的任何消息。因此，如果 h_wnd 为 NULL，则同时处理窗口消息和线程消息。如果 h_wnd 为 -1，则 get_message 仅检索当前线程的消息队列中 h_wnd 值为 NULL 的消息，即当 h_wnd 参数为 NULL) 或 post_thread_message 时，post_message (发布的线程消息。

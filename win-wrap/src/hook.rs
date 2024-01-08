@@ -18,9 +18,9 @@ use std::thread;
 use std::time::SystemTime;
 use windows::Win32::UI::WindowsAndMessaging::{CWPRETSTRUCT, CWPSTRUCT, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSLLHOOKSTRUCT, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_GETMESSAGE, WH_KEYBOARD_LL, WH_MOUSE_LL};
 pub use windows::Win32::UI::WindowsAndMessaging::{LLKHF_ALTDOWN, LLKHF_EXTENDED, LLKHF_INJECTED, LLKHF_LOWER_IL_INJECTED, LLKHF_UP};
-use crate::common::{call_next_hook_ex, close_handle, set_windows_hook_ex, unhook_windows_hook_ex, HANDLE, HINSTANCE, WINDOWS_HOOK_ID, LPARAM, WPARAM, LRESULT, FALSE, TRUE};
-use crate::message::{message_loop, post_thread_message, WM_QUIT};
-use crate::threading::{create_event, get_current_thread_id, set_event, wait_for_single_object};
+use crate::common::{call_next_hook_ex, set_windows_hook_ex, unhook_windows_hook_ex, HINSTANCE, WINDOWS_HOOK_ID, LPARAM, WPARAM, LRESULT};
+use crate::message::message_loop;
+use crate::threading::{get_current_thread_id, ThreadNotify};
 
 /* 钩子类型。 */
 pub type HookType = WINDOWS_HOOK_ID;
@@ -65,31 +65,15 @@ impl ConvertLParam for LPARAM{
         unsafe { &*ptr }
     }
 }
+
 type NextHookFunc = dyn Fn() -> LRESULT;
 type HookCbFunc = Arc<dyn Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static>;
-#[derive(Clone)]
-struct HookInfo(u32, HANDLE);
-impl HookInfo {
-    pub(crate) fn new(thread_id: u32, event: HANDLE) -> Self {
-        Self(thread_id, event)
-    }
-    fn quit(&self) {
-        post_thread_message(self.0, WM_QUIT, WPARAM::default(), LPARAM::default());
-    }
-    fn join(&self, millis: u32) {
-        wait_for_single_object(self.1, millis);
-        close_handle(self.1);
-    }
-    fn finish(&self) {
-        set_event(self.1);
-    }
-}
-static H_HOOK: RwLock<Option<HashMap<i32, HookInfo>>> = RwLock::new(None);
+static H_HOOK: RwLock<Option<HashMap<i32, ThreadNotify>>> = RwLock::new(None);
+static HOOK_MAP: RwLock<Option<HashMap<i32, Vec<WindowsHook>>>> = RwLock::new(None);
 
 /* Windows 的钩子。 */
 #[derive(Clone)]
 pub struct WindowsHook(WINDOWS_HOOK_ID, HookCbFunc, SystemTime);
-static HOOK_MAP: RwLock<Option<HashMap<i32, Vec<WindowsHook>>>> = RwLock::new(None);
 impl WindowsHook{
     fn call(&self, w_param: &WPARAM, l_param: &LPARAM, next: impl Fn() -> LRESULT + 'static) -> LRESULT {
         (&*self.1)(w_param, l_param, &next)
@@ -191,6 +175,7 @@ fn next_hook(vec: Vec<WindowsHook>, index: usize, code: i32, w_param: WPARAM, l_
         Some(x) => x.clone().call(&w_param, &l_param, move || next_hook(vec.clone(), index + 1, code, w_param, l_param))
     }
 }
+
 macro_rules! define_hook_proc {
     ($name:tt, $id:tt) => {
         unsafe extern "system" fn $name(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
@@ -247,9 +232,7 @@ fn install(hook_type: HookType) {
             x => panic!("Unsupported hook type: {}.", x.0)
         };
         let h_hook = set_windows_hook_ex(hook_type, Some(proc), HINSTANCE::default(), 0);
-        let tid = get_current_thread_id();
-        let event2 = create_event(None, TRUE, FALSE, None);
-        let info = HookInfo::new(tid, event2);
+        let notify = ThreadNotify::new(get_current_thread_id());
         let mut lock = H_HOOK
             .write()
             .unwrap();
@@ -261,14 +244,15 @@ fn install(hook_type: HookType) {
                 x.clone()
             }
         };
-        map.insert(hook_type.0, info.clone());
+        map.insert(hook_type.0, notify.clone());
         *lock = Some(map);
         drop(lock);
         message_loop();
         unhook_windows_hook_ex(h_hook);
-        info.finish();
+        notify.finish();
     });
 }
+
 fn uninstall(hook_type: HookType) {
     let lock = H_HOOK
         .read()
