@@ -13,29 +13,30 @@
 
 use std::ffi::c_void;
 use std::sync::RwLock;
+use std::thread;
 use log::debug;
-use windows::Win32::{
-    Foundation::{BOOL, FALSE, TRUE, HMODULE},
-    System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
-};
+use win_wrap::common::{BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, get_module_handle, HINSTANCE, HMODULE, set_windows_hook_ex, TRUE, WPARAM, LPARAM, LRESULT, call_next_hook_ex, w, unhook_windows_hook_ex};
+use win_wrap::hook::HOOK_TYPE_GET_MESSAGE;
+use win_wrap::message::message_loop;
 
 #[allow(dead_code)]
-static H_INSTANCE: RwLock<HMODULE> = RwLock::new(HMODULE(0));
+static H_INSTANCE: RwLock<HINSTANCE> = RwLock::new(HINSTANCE(0));
 
-#[allow(dead_code)]
-fn setup(hmodule: HMODULE) {
-    let mut x = H_INSTANCE
-        .write()
-        .unwrap();
-    if x.is_invalid() {
-        return;
-    }
-    *x = hmodule;
+#[no_mangle]
+unsafe extern "system" fn hook_get_message(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+    call_next_hook_ex(code, w_param, l_param)
 }
 
 #[no_mangle]
 pub extern "system" fn mount() {
-    debug!("mounted")
+    debug!("mounted");
+    thread::spawn(|| {
+        let handle = get_module_handle(w!("peeper"));
+        debug!("Module handle is {}", handle.0);
+        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, Some(hook_get_message), handle.into(), 0);
+        message_loop();
+        unhook_windows_hook_ex(h_hook);
+    });
 }
 
 #[no_mangle]

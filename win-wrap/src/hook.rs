@@ -11,14 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::SystemTime;
-use windows::Win32::Foundation::{CloseHandle, FALSE, HANDLE, HINSTANCE, HWND, LPARAM, LRESULT, TRUE, WPARAM};
-use windows::Win32::System::Threading::{GetCurrentThreadId, CreateEventW, SetEvent, WaitForSingleObject};
-use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, CWPRETSTRUCT, CWPSTRUCT, DispatchMessageW, GetMessageW, HHOOK, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSG, MSLLHOOKSTRUCT, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_KEYBOARD_LL, WH_MOUSE_LL, WINDOWS_HOOK_ID, WM_QUIT};
+use windows::Win32::UI::WindowsAndMessaging::{CWPRETSTRUCT, CWPSTRUCT, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSLLHOOKSTRUCT, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_GETMESSAGE, WH_KEYBOARD_LL, WH_MOUSE_LL};
 pub use windows::Win32::UI::WindowsAndMessaging::{LLKHF_ALTDOWN, LLKHF_EXTENDED, LLKHF_INJECTED, LLKHF_LOWER_IL_INJECTED, LLKHF_UP};
+use crate::common::{call_next_hook_ex, close_handle, set_windows_hook_ex, unhook_windows_hook_ex, HANDLE, HINSTANCE, WINDOWS_HOOK_ID, LPARAM, WPARAM, LRESULT, FALSE, TRUE};
+use crate::message::{message_loop, post_thread_message, WM_QUIT};
+use crate::threading::{create_event, get_current_thread_id, set_event, wait_for_single_object};
 
 /* 钩子类型。 */
 pub type HookType = WINDOWS_HOOK_ID;
@@ -34,6 +36,9 @@ pub const HOOK_TYPE_CALL_WND_PROC: WINDOWS_HOOK_ID = WH_CALLWNDPROC;
 
 /* 当SendMessage()把消息交给WndProc时,在WndProc执行完毕,系统调用CallWndProcRet钩子函数,从而可以拦截窗口过程函数的结果。 */
 pub const HOOK_TYPE_CALL_WND_PROC_RET: WINDOWS_HOOK_ID = WH_CALLWNDPROCRET;
+
+/* 拦截队列消息（拦截由get_message或者post_message或者peek_message的队列消息）。 */
+pub const HOOK_TYPE_GET_MESSAGE: WINDOWS_HOOK_ID = WH_GETMESSAGE;
 
 /* 低级键盘钩子信息结构。 */
 pub type KbdLlHookStruct = KBDLLHOOKSTRUCT;
@@ -63,26 +68,20 @@ impl ConvertLParam for LPARAM{
 type NextHookFunc = dyn Fn() -> LRESULT;
 type HookCbFunc = Arc<dyn Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static>;
 #[derive(Clone)]
-struct HookInfo(u32, HHOOK, HANDLE);
+struct HookInfo(u32, HANDLE);
 impl HookInfo {
-    pub(crate) fn new(thread_id: u32, h_hook: HHOOK, event: HANDLE) -> Self {
-        Self(thread_id, h_hook,     event)
-    }
-    fn hook(&self) -> HHOOK {
-        self.1
+    pub(crate) fn new(thread_id: u32, event: HANDLE) -> Self {
+        Self(thread_id, event)
     }
     fn quit(&self) {
-        unsafe { PostThreadMessageW(self.0, WM_QUIT, WPARAM::default(), LPARAM::default()) }
-            .unwrap();
+        post_thread_message(self.0, WM_QUIT, WPARAM::default(), LPARAM::default());
     }
     fn join(&self, millis: u32) {
-        unsafe { WaitForSingleObject(self.2, millis); }
-        unsafe { CloseHandle(self.2) }
-            .unwrap();
+        wait_for_single_object(self.1, millis);
+        close_handle(self.1);
     }
     fn finish(&self) {
-        unsafe { SetEvent(self.2) }
-            .unwrap();
+        set_event(self.1);
     }
 }
 static H_HOOK: RwLock<Option<HashMap<i32, HookInfo>>> = RwLock::new(None);
@@ -95,6 +94,7 @@ impl WindowsHook{
     fn call(&self, w_param: &WPARAM, l_param: &LPARAM, next: impl Fn() -> LRESULT + 'static) -> LRESULT {
         (&*self.1)(w_param, l_param, &next)
     }
+
     /**
      * 创建一个钩子对象并开始监听事件。
      * `hook_type` 钩子类型，使用“HOOK_TYPE_”开头的常亮。
@@ -182,38 +182,20 @@ impl PartialEq for WindowsHook {
         self.2 == other.2
     }
 }
-fn next_hook(vec: Vec<WindowsHook>, index: usize, h_hook: HHOOK, code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+fn next_hook(vec: Vec<WindowsHook>, index: usize, code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
     if index >= vec.len() {
-        unsafe { return CallNextHookEx(h_hook, code, w_param, l_param); }
+        return call_next_hook_ex(code, w_param, l_param);
     }
     match vec.get(index) {
-        None => unsafe { CallNextHookEx(h_hook, code, w_param, l_param) },
-        Some(x) => x.clone().call(&w_param, &l_param, move || next_hook(vec.clone(), index + 1, h_hook, code, w_param, l_param))
+        None => call_next_hook_ex(code, w_param, l_param),
+        Some(x) => x.clone().call(&w_param, &l_param, move || next_hook(vec.clone(), index + 1, code, w_param, l_param))
     }
 }
 macro_rules! define_hook_proc {
     ($name:tt, $id:tt) => {
         unsafe extern "system" fn $name(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
-            let lock = H_HOOK
-                .read()
-                .unwrap();
-            let info = match lock.as_ref() {
-                None => {
-                    drop(lock);
-                    return CallNextHookEx(HHOOK::default(), code, w_param, l_param);
-                }
-                Some(x) => x.get(&$id.0)
-            };
-            let h_hook = match info {
-                None => {
-                    drop(lock);
-                    return CallNextHookEx(HHOOK::default(), code, w_param, l_param);
-                }
-                Some(x) => x.hook()
-            };
-            drop(lock);
             if code < 0 {
-                return CallNextHookEx(h_hook, code, w_param, l_param);
+                return call_next_hook_ex(code, w_param, l_param);
             }
             let lock = HOOK_MAP
                 .read()
@@ -221,7 +203,7 @@ macro_rules! define_hook_proc {
             let vec = match lock.as_ref() {
                 None => {
                     drop(lock);
-                    return CallNextHookEx(h_hook, code, w_param, l_param);
+                    return call_next_hook_ex(code, w_param, l_param);
                 }
                 Some(x) => {
                     x.get(&$id.0)
@@ -230,12 +212,12 @@ macro_rules! define_hook_proc {
             let vec = match vec {
                 None => {
                     drop(lock);
-                    return CallNextHookEx(h_hook, code, w_param, l_param);
+                    return call_next_hook_ex(code, w_param, l_param);
                 }
                 Some(x) => x.clone()
             };
             drop(lock);
-            next_hook(vec, 0, h_hook, code, w_param, l_param)
+            next_hook(vec, 0, code, w_param, l_param)
         }
     };
 }
@@ -243,6 +225,7 @@ define_hook_proc!(proc_keyboard_ll, HOOK_TYPE_KEYBOARD_LL);
 define_hook_proc!(proc_mouse_ll, HOOK_TYPE_MOUSE_LL);
 define_hook_proc!(proc_call_wnd_proc, HOOK_TYPE_CALL_WND_PROC);
 define_hook_proc!(proc_call_wnd_proc_ret, HOOK_TYPE_CALL_WND_PROC_RET);
+define_hook_proc!(proc_get_message, HOOK_TYPE_GET_MESSAGE);
 
 fn install(hook_type: HookType) {
     let lock = H_HOOK
@@ -260,14 +243,13 @@ fn install(hook_type: HookType) {
             HOOK_TYPE_MOUSE_LL => proc_mouse_ll,
             HOOK_TYPE_CALL_WND_PROC => proc_call_wnd_proc,
             HOOK_TYPE_CALL_WND_PROC_RET => proc_call_wnd_proc_ret,
+            HOOK_TYPE_GET_MESSAGE => proc_get_message,
             x => panic!("Unsupported hook type: {}.", x.0)
         };
-        let h_hook = unsafe { SetWindowsHookExW(hook_type, Some(proc), HINSTANCE::default(), 0) }
-            .expect(format!("Can't set the {} hook.", hook_type.0).as_str());
-        let tid = unsafe { GetCurrentThreadId() };
-        let event2 = unsafe { CreateEventW(None, TRUE, FALSE, None) }
-            .unwrap();
-        let info = HookInfo::new(tid, h_hook, event2);
+        let h_hook = set_windows_hook_ex(hook_type, Some(proc), HINSTANCE::default(), 0);
+        let tid = get_current_thread_id();
+        let event2 = create_event(None, TRUE, FALSE, None);
+        let info = HookInfo::new(tid, event2);
         let mut lock = H_HOOK
             .write()
             .unwrap();
@@ -282,16 +264,8 @@ fn install(hook_type: HookType) {
         map.insert(hook_type.0, info.clone());
         *lock = Some(map);
         drop(lock);
-        let mut msg = MSG::default();
-        while unsafe { GetMessageW(&mut msg, HWND::default(), 0, 0) } != FALSE {
-            println!("abc{}", msg.message);
-            if msg.message == WM_QUIT {
-                break
-            }
-            unsafe { DispatchMessageW(&mut msg, ); }
-        }
-        unsafe { UnhookWindowsHookEx(h_hook) }
-            .unwrap();
+        message_loop();
+        unhook_windows_hook_ex(h_hook);
         info.finish();
     });
 }
