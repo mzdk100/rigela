@@ -12,13 +12,17 @@
  */
 
 use crate::browser::Browseable;
-use win_wrap::common::HWND;
+use std::sync::{LazyLock, Mutex};
+use win_wrap::common::{get_foreground_window, HWND};
 
 pub struct FormBrowser {
     hwnd: HWND,
     index: i32,
     container: Vec<Box<dyn Browseable>>,
 }
+
+pub static FORM_BROWSER: LazyLock<Mutex<FormBrowser>> =
+    LazyLock::new(|| Mutex::new(FormBrowser::new()));
 
 impl FormBrowser {
     pub fn new() -> Self {
@@ -29,9 +33,14 @@ impl FormBrowser {
         }
     }
 
-    pub fn get_hwnd(&self) -> HWND {
-        self.hwnd
+    pub fn is_foreground_window_changed(&self) -> bool {
+        self.hwnd != get_foreground_window()
     }
+
+    pub fn update_hwnd(&mut self) {
+        self.hwnd = get_foreground_window();
+    }
+
     pub fn set_hwnd(&mut self, hwnd: HWND) {
         self.hwnd = hwnd;
     }

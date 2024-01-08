@@ -11,18 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::browser::FORM_BROWSER;
 use crate::context::Context;
 use crate::gui::welcome::show_welcome;
 use crate::terminator::{TerminationWaiter, Terminator};
-use std::{
-    future::Future,
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
+use std::{future::Future, sync::Arc, thread, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
-use win_wrap::common::get_foreground_window;
 
 pub struct Launcher {
     context: Arc<Context>,
@@ -51,35 +46,51 @@ impl Launcher {
     pub(crate) fn launch(&mut self) -> impl Future + '_ {
         // 初始化COM线程模型。
         co_initialize_multi_thread().expect("Can't initialize the com environment.");
+
         async {
             // peeper 可以监控远进程中的信息
             peeper::mount();
-            let ctx = self.context.clone();
-            let ctx2 = self.context.clone();
 
-            let ctx3 = self.context.clone();
-            #[allow(unused_variables)]
-            let ctx4 = Arc::new(Mutex::new(self.context.clone()));
+            let ctx = self.context.clone();
 
             // 显示欢迎页面。
+            let ctx2 = self.context.clone();
             thread::spawn(|| show_welcome(ctx2));
+
             let performer = ctx.performer.clone();
             let main_handler = ctx.main_handler.clone();
+
             // 朗读当前桌面
             performer.speak(&ctx.ui_automation.get_root_element()).await;
             sleep(Duration::from_millis(1000)).await;
+
+            let ctx3 = Arc::clone(&self.context);
+
             // 订阅UIA的焦点元素改变事件
             ctx.ui_automation.add_focus_changed_listener(move |x| {
-                let performer = performer.clone();
-                main_handler.spawn(async move { performer.speak(&x).await });
+                let performer1 = Arc::clone(&performer);
+                let handle1 = Arc::clone(&main_handler);
+                // let performer2 = Arc::clone(&performer);
+                // let handle2 = Arc::clone(&main_handler);
 
-                let hwnd = get_foreground_window();
-                if hwnd != ctx3.form_browser.get_hwnd() {
-                    // TODO: let ctx = ctx4.lock().unwrap();
-                    // TODO: let ctx = *ctx.clone();
-                    // ctx.form_browser.set_hwnd(hwnd);
-                    // 在这里接着往form_browser里面添加元素
+                handle1.spawn(async move { performer1.speak(&x).await });
+
+                let mut fb = FORM_BROWSER.lock().expect("Can't lock the form browser.");
+                if !fb.is_foreground_window_changed() {
+                    return;
                 }
+                fb.update_hwnd();
+
+                let elements = ctx3.ui_automation.get_foreground_window_elements();
+
+                for ele in elements {
+                    fb.add(Box::new(ele));
+                }
+
+                // 测试是否监测到前台窗口更新，测试使用，待删除。
+                // handle2.spawn(async move {
+                //     performer2.speak_text("hello test").await;
+                // });
             });
             // 等待程序退出的信号
             self.waiter.as_deref_mut().unwrap().wait().await;

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::FormBrowser;
 use crate::commander::Commander;
 use crate::configs::ConfigManager;
 use crate::performer::{Performer, Speakable};
@@ -35,7 +34,6 @@ pub struct Context {
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) performer: Arc<Performer>,
     pub(crate) terminator: Arc<Terminator>,
-    pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) ui_automation: Arc<UiAutomation>,
 }
 
@@ -48,7 +46,6 @@ impl Clone for Context {
             performer: self.performer.clone(),
             resource_accessor: self.resource_accessor.clone(),
             terminator: self.terminator.clone(),
-            form_browser: self.form_browser.clone(),
             ui_automation: self.ui_automation.clone(),
         }
     }
@@ -68,8 +65,6 @@ impl Context {
         let main_handler = Handle::current();
         // 资源访问器
         let resources = ResourceAccessor::new();
-        // 创建一个窗口浏览
-        let form_browser = FormBrowser::new();
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
         Self {
@@ -79,7 +74,6 @@ impl Context {
             performer: performer.into(),
             resource_accessor: resources.into(),
             terminator: terminator.into(),
-            form_browser: form_browser.into(),
             ui_automation: ui_automation.into(),
         }
     }

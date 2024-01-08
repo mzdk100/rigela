@@ -1,3 +1,4 @@
+#![feature(lazy_cell)]
 /*
  * Copyright (c) 2023. The RigelA open source project team and
  * its contributors reserve all rights.
@@ -10,7 +11,6 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
-
 #![windows_subsystem = "windows"]
 
 pub mod browser;
@@ -29,7 +29,6 @@ pub mod browser;
  * 10. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中；
  * 11. utils 工具函数，封装一些常用但没有归类的函数。
  * */
-
 mod commander;
 mod configs;
 mod consts;
@@ -44,8 +43,8 @@ mod terminator;
 mod utils;
 
 use launcher::Launcher;
-use logger::init_logger;
 use log::info;
+use logger::init_logger;
 
 #[tokio::main]
 async fn main() {

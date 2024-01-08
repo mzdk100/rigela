@@ -15,5 +15,5 @@ mod browseable;
 mod form_browser;
 mod ui_automation_browseable;
 
-pub use browseable::Browseable;
-pub use form_browser::FormBrowser;
+pub(crate) use browseable::Browseable;
+pub(crate) use form_browser::FORM_BROWSER;

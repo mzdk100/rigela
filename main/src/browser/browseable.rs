@@ -13,12 +13,12 @@
 
 use crate::performer::Speakable;
 
-pub trait Browseable {
+pub(crate) trait Browseable: Speakable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
 }
 
-impl Speakable for dyn Browseable {
+impl dyn Browseable {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_role())
     }

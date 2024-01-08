@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::common::get_foreground_window;
 use std::fmt::{Display, Formatter};
-use windows::core::{BSTR, implement, Result};
+use windows::core::{implement, Result, BSTR};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 use windows::Win32::UI::Accessibility::{
@@ -68,6 +69,14 @@ impl UiAutomation {
     pub fn get_element_from_hwnd(&self, hwnd: HWND) -> Option<UiAutomationElement> {
         let el = unsafe { self.0.ElementFromHandle(hwnd) }.ok()?;
         Some(UiAutomationElement::from(&el))
+    }
+
+    pub fn get_foreground_window_elements(&self) -> Vec<UiAutomationElement> {
+        let mut result = Vec::new();
+        let hwnd = get_foreground_window();
+        let elements = self.get_element_from_hwnd(hwnd);
+        result.extend(elements);
+        result
     }
 
     /**
