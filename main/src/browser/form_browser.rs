@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::sync::{Mutex, OnceLock};
 use crate::browser::Browseable;
-use std::sync::{LazyLock, Mutex};
 use win_wrap::common::{get_foreground_window, HWND};
 
 pub struct FormBrowser {
@@ -21,8 +21,11 @@ pub struct FormBrowser {
     container: Vec<Box<dyn Browseable>>,
 }
 
-pub static FORM_BROWSER: LazyLock<Mutex<FormBrowser>> =
-    LazyLock::new(|| Mutex::new(FormBrowser::new()));
+pub fn get_form_browser() -> &'static Mutex<FormBrowser> {
+    static INSTANCE: OnceLock<Mutex<FormBrowser>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(FormBrowser::new()))
+}
+
 
 impl FormBrowser {
     pub fn new() -> Self {
@@ -41,14 +44,11 @@ impl FormBrowser {
         self.hwnd = get_foreground_window();
     }
 
-    pub fn set_hwnd(&mut self, hwnd: HWND) {
-        self.hwnd = hwnd;
-    }
-
     pub fn add(&mut self, element: Box<dyn Browseable>) {
         self.container.push(element);
     }
 
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.container.clear();
     }

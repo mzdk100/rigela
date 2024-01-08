@@ -1,4 +1,3 @@
-#![feature(lazy_cell)]
 /*
  * Copyright (c) 2023. The RigelA open source project team and
  * its contributors reserve all rights.

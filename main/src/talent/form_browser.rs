@@ -19,16 +19,16 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
-use crate::browser::FORM_BROWSER;
+use crate::browser::get_form_browser;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
-    FORM_BROWSER.lock().unwrap().prev();
-    let name = FORM_BROWSER.lock().unwrap().current().unwrap().get_name();
-    let role = FORM_BROWSER.lock().unwrap().current().unwrap().get_role();
+    get_form_browser().lock().unwrap().prev();
+    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
+    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
 
     context
         .performer
@@ -39,9 +39,9 @@ async fn prev_element(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
-    FORM_BROWSER.lock().unwrap().next();
-    let name = FORM_BROWSER.lock().unwrap().current().unwrap().get_name();
-    let role = FORM_BROWSER.lock().unwrap().current().unwrap().get_role();
+    get_form_browser().lock().unwrap().next();
+    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
+    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
 
     context
         .performer
@@ -52,8 +52,8 @@ async fn next_element(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
-    let name = FORM_BROWSER.lock().unwrap().current().unwrap().get_name();
-    let role = FORM_BROWSER.lock().unwrap().current().unwrap().get_role();
+    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
+    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
 
     context
         .performer

@@ -11,13 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::FORM_BROWSER;
 use crate::context::Context;
 use crate::gui::welcome::show_welcome;
 use crate::terminator::{TerminationWaiter, Terminator};
 use std::{future::Future, sync::Arc, thread, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
+use crate::browser::get_form_browser;
 
 pub struct Launcher {
     context: Arc<Context>,
@@ -75,7 +75,7 @@ impl Launcher {
 
                 handle1.spawn(async move { performer1.speak(&x).await });
 
-                let mut fb = FORM_BROWSER.lock().expect("Can't lock the form browser.");
+                let mut fb = get_form_browser().lock().expect("Can't lock the form browser.");
                 if !fb.is_foreground_window_changed() {
                     return;
                 }

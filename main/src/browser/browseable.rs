@@ -18,6 +18,7 @@ pub(crate) trait Browseable: Speakable {
     fn get_role(&self) -> String;
 }
 
+#[allow(dead_code)]
 impl dyn Browseable {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_role())
