@@ -12,15 +12,19 @@
  */
 
 
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use std::thread;
-use std::time::SystemTime;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+    thread,
+    time::SystemTime
+};
 use windows::Win32::UI::WindowsAndMessaging::{CWPRETSTRUCT, CWPSTRUCT, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSLLHOOKSTRUCT, WH_CALLWNDPROC, WH_CALLWNDPROCRET, WH_GETMESSAGE, WH_KEYBOARD_LL, WH_MOUSE_LL};
 pub use windows::Win32::UI::WindowsAndMessaging::{LLKHF_ALTDOWN, LLKHF_EXTENDED, LLKHF_INJECTED, LLKHF_LOWER_IL_INJECTED, LLKHF_UP};
-use crate::common::{call_next_hook_ex, set_windows_hook_ex, unhook_windows_hook_ex, HINSTANCE, WINDOWS_HOOK_ID, LPARAM, WPARAM, LRESULT};
-use crate::message::message_loop;
-use crate::threading::{get_current_thread_id, ThreadNotify};
+use crate::{
+    common::{call_next_hook_ex, set_windows_hook_ex, unhook_windows_hook_ex, HINSTANCE, WINDOWS_HOOK_ID, LPARAM, WPARAM, LRESULT},
+    message::message_loop,
+    threading::{get_current_thread_id, ThreadNotify}
+};
 
 /* 钩子类型。 */
 pub type HookType = WINDOWS_HOOK_ID;
@@ -52,19 +56,6 @@ pub type CwpStruct = CWPSTRUCT;
 
 /* 窗口过程函数之后的钩子信息结构。 */
 pub type CwpRStruct = CWPRETSTRUCT;
-
-pub trait ConvertLParam {
-    /**
-     * 把LPARAM转换成另一种类型的方法。
-     * */
-    fn to<T>(&self) -> &T;
-}
-impl ConvertLParam for LPARAM{
-    fn to<T>(&self) -> &T {
-        let ptr = self.0 as *const T;
-        unsafe { &*ptr }
-    }
-}
 
 type NextHookFunc = dyn Fn() -> LRESULT;
 type HookCbFunc = Arc<dyn Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static>;

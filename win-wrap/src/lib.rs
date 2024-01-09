@@ -13,6 +13,7 @@
 
 pub mod com;
 pub mod common;
+pub mod ext;
 pub mod hook;
 pub mod input;
 pub mod message;

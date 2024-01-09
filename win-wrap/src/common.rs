@@ -11,16 +11,26 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx};
-pub use windows::Win32::UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID};
-pub use windows::core::{PCSTR, PCWSTR, Result};
-use windows::core::HSTRING;
-pub use windows::Win32::Foundation::{BOOL, FALSE, TRUE, FARPROC, HANDLE, HMODULE, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM, WAIT_EVENT};
-pub use windows::Win32::System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH};
+pub use windows::{
+    Win32::{
+        Foundation::{BOOL, FALSE, TRUE, FARPROC, HANDLE, HMODULE, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM, WAIT_EVENT},
+        UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+        System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
+    },
+    core::{PCSTR, PCWSTR, Result},
+};
 
-use windows::Win32::System::Diagnostics::Debug::Beep;
-use windows::Win32::Foundation::CloseHandle;
-use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW};
+use windows::{
+    core::HSTRING,
+    Win32::{
+        UI::WindowsAndMessaging::{CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx},
+        System::{
+            Diagnostics::Debug::Beep,
+            LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW}
+        },
+        Foundation::CloseHandle,
+    }
+};
 
 /**
  * 播放一个声音。
@@ -107,5 +117,6 @@ pub fn load_library(lib_file_name: &str) -> HMODULE {
  * `proc_name` 函数或变量名称，或函数的序号值。如果此参数是序号值，则它必须在低序位字中；高序位字必须为零。
  * */
 pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
-    unsafe { GetProcAddress(h_module, PCSTR::from_raw(proc_name.as_ptr())) }
+    let name = String::from(proc_name);
+    unsafe { GetProcAddress(h_module, PCSTR::from_raw(name.as_ptr())) }
 }

@@ -11,45 +11,92 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::ffi::c_void;
-use std::mem::transmute;
-use std::thread;
+use std::{
+    ffi::c_void,
+    thread,
+    sync::RwLock
+};
 use log::debug;
-use win_wrap::common::{BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, HMODULE, set_windows_hook_ex, TRUE, WPARAM, LPARAM, LRESULT, HOOKPROC, call_next_hook_ex, unhook_windows_hook_ex, load_library, beep, get_proc_address};
-use win_wrap::hook::HOOK_TYPE_GET_MESSAGE;
-use win_wrap::message::message_loop;
+use win_wrap::{
+    common::{
+        DLL_PROCESS_DETACH,
+        DLL_THREAD_ATTACH,
+        DLL_THREAD_DETACH,
+        FALSE,
+        HMODULE,
+        set_windows_hook_ex,
+        TRUE,
+        WPARAM,
+        LPARAM,
+        LRESULT,
+        call_next_hook_ex,
+        unhook_windows_hook_ex,
+        load_library,
+        DLL_PROCESS_ATTACH,
+        BOOL,
+        get_proc_address
+    },
+    hook::HOOK_TYPE_GET_MESSAGE,
+    message::message_loop,
+    ext::FarProcExt,
+    threading::{
+        ThreadNotify,
+        get_current_thread_id
+    }
+};
+
+static HOOK_THREAD: RwLock<Option<ThreadNotify>> = RwLock::new(None);
 
 #[no_mangle]
-unsafe extern "system" fn hook_get_message(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
-    beep(400,40);
+unsafe extern "system" fn hook_proc_get_message(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
     call_next_hook_ex(code, w_param, l_param)
 }
 
-#[no_mangle]
+/**
+ * 启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
+ * 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
+ * 注意： 当main引用本模块并构建时，会自动生成此dll。
+ * */
 pub extern "system" fn mount() {
     debug!("mounted");
     thread::spawn(|| {
         let path = format!("{}.dll", module_path!());
-        debug!("p:{}", path);
+        debug!("Module path: {}", path);
         let handle = load_library(path.as_str());
-        debug!("Module handle is {}", handle.0);
-        let proc = get_proc_address(handle, "hook_get_message")
-            .map(|x| unsafe {
-                transmute::<_, unsafe extern "system" fn(i32, WPARAM, LPARAM) -> LRESULT>(x)
-            });
-        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc, handle.into(), 0);
+        debug!("Module handle: {}", handle.0);
+        let proc = get_proc_address(handle, "hook_proc_get_message");
+        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0);
+        let notify = ThreadNotify::new(get_current_thread_id());
+        let mut lock = HOOK_THREAD
+            .write()
+            .unwrap();
+        *lock = Some(notify.clone());
+        drop(lock);
         message_loop();
         unhook_windows_hook_ex(h_hook);
+        notify.finish();
     });
 }
 
-#[no_mangle]
+/** 停止亏叹气。 */
 pub extern "system" fn unmount() {
+    let mut lock = HOOK_THREAD
+        .write()
+        .unwrap();
+    match lock.as_ref() {
+        None => {}
+        Some(x) => {
+            x.quit();
+            x.join(5000);
+        }
+    }
+    *lock = None;
+    drop(lock);
     debug!("unmounted")
 }
 
 #[no_mangle]
-extern "system" fn DllMain(h_module: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
+extern "system" fn DllMain(_: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
     match dw_reason {
         DLL_PROCESS_ATTACH => {}
         DLL_PROCESS_DETACH => {}
@@ -59,6 +106,3 @@ extern "system" fn DllMain(h_module: HMODULE, dw_reason: u32, _lp_reserved: *con
     }
     TRUE
 }
-
-#[cfg(test)]
-mod tests {}

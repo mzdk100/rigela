@@ -15,7 +15,8 @@ use std::collections::HashMap;
 
 use std::sync::{Arc, Mutex, RwLock};
 use win_wrap::common::LRESULT;
-use win_wrap::hook::{ConvertLParam, HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
+use win_wrap::ext::LParamExt;
+use win_wrap::hook::{HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
 use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
 use crate::context::Context;
 use crate::talent::get_all_talents;
