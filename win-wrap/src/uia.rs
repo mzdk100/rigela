@@ -66,15 +66,17 @@ impl UiAutomation {
         UiAutomationElement::from(&el)
     }
 
+    /// 根据窗口句柄获取ui元素
     pub fn get_element_from_hwnd(&self, hwnd: HWND) -> Option<UiAutomationElement> {
         let el = unsafe { self.0.ElementFromHandle(hwnd) }.ok()?;
         Some(UiAutomationElement::from(&el))
     }
 
+    /// 获取前台窗口控件元素
     pub fn get_foreground_window_elements(&self) -> Vec<UiAutomationElement> {
         let mut result = Vec::new();
-        let hwnd = get_foreground_window();
-        let elements = self.get_element_from_hwnd(hwnd);
+        let element = self.get_element_from_hwnd(get_foreground_window()).unwrap();
+        let elements = UIMatcher::new(self, &element).get_child_elements();
         result.extend(elements);
         result
     }
@@ -150,16 +152,16 @@ impl Display for UiAutomationElement {
     }
 }
 
-pub struct UIMatcher {
-    uiautomation: UiAutomation,
-    element: UiAutomationElement,
+pub struct UIMatcher<'a> {
+    uiautomation: Box<&'a UiAutomation>,
+    element: Box<&'a UiAutomationElement>,
 }
 
-impl UIMatcher {
-    pub fn new(uiautomation: UiAutomation, element: UiAutomationElement) -> Self {
+impl<'a> UIMatcher<'a> {
+    pub fn new(uiautomation: &'a UiAutomation, element: &'a UiAutomationElement) -> Self {
         UIMatcher {
-            uiautomation,
-            element,
+            uiautomation: Box::new(uiautomation),
+            element: Box::new(element),
         }
     }
 
