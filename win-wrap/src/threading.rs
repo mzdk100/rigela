@@ -64,7 +64,7 @@ impl ThreadNotify {
      * 创建一个通知对象。
      * `thread_id` 一个线程ID，此线程必须有一个消息循环。
      * */
-    pub(crate) fn new(thread_id: u32) -> Self {
+    pub fn new(thread_id: u32) -> Self {
         let event = create_event(None, TRUE, FALSE, None);
         Self(thread_id, event)
     }
@@ -72,7 +72,7 @@ impl ThreadNotify {
     /**
      * 往线程的消息队列中发送一个退出请求，然后此函数会立即返回。
      */
-    pub(crate) fn quit(&self) {
+    pub fn quit(&self) {
         post_thread_message(self.0, WM_QUIT, WPARAM::default(), LPARAM::default());
     }
 
@@ -80,7 +80,7 @@ impl ThreadNotify {
      * 等待finish函数被调用，一个应用场景就是主线程需要等待子线程是否接收到退出信号并调用了finish方法，当子线程调用finish方法时，join会返回。
      * `millis` 等待的超时时间（毫秒），如果在指定的时间内子线程没有调用过finish，join也会返回。
      * */
-    pub(crate) fn join(&self, millis: u32) {
+    pub fn join(&self, millis: u32) {
         wait_for_single_object(self.1, millis);
         close_handle(self.1);
     }
@@ -88,7 +88,7 @@ impl ThreadNotify {
     /**
      * 通知join方法返回，这通常放在线程结束时调用。
      * */
-    pub(crate) fn finish(&self) {
+    pub fn finish(&self) {
         set_event(self.1);
     }
 }
