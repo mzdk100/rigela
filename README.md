@@ -21,6 +21,7 @@ cargo run
 [Windows消息常亮表](WM_REFERENCE.md)
 如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
 [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
+[Rust语言圣经](https://course.rs/about-book.html)
 [Rust for Windows 仓库](https://github.com/microsoft/windows-rs)
 [Rust for Windows 文档](https://microsoft.github.io/windows-docs-rs/)
 [Rust的异步运行时tokio仓库](https://github.com/tokio-rs/tokio)

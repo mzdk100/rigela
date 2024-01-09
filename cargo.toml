@@ -1,3 +1,8 @@
+[profile.release]
+# 发布模式开启优化程序大小
+opt-level = "s"
+
+
 [workspace]
 members = [
     "bass-wrap",

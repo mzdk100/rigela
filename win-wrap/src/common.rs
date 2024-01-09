@@ -11,15 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, GetForegroundWindow, HOOKPROC, SetWindowsHookExW, UnhookWindowsHookEx};
-pub use windows::Win32::UI::WindowsAndMessaging::{HHOOK, WINDOWS_HOOK_ID};
-pub use windows::core::{PCWSTR, Result, h, w};
-pub use windows::Win32::Foundation::{BOOL, FALSE, TRUE, HANDLE, HMODULE, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM, WAIT_EVENT};
+use windows::Win32::UI::WindowsAndMessaging::{CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx};
+pub use windows::Win32::UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID};
+pub use windows::core::{PCSTR, PCWSTR, Result};
+use windows::core::HSTRING;
+pub use windows::Win32::Foundation::{BOOL, FALSE, TRUE, FARPROC, HANDLE, HMODULE, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM, WAIT_EVENT};
 pub use windows::Win32::System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH};
 
 use windows::Win32::System::Diagnostics::Debug::Beep;
 use windows::Win32::Foundation::CloseHandle;
-use windows::Win32::System::LibraryLoader::GetModuleHandleW;
+use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW};
 
 /**
  * 播放一个声音。
@@ -86,8 +87,25 @@ pub fn close_handle(h_object: HANDLE) {
  * 若要避免一节中所述的竞争条件，请使用 get_module_handle_ex 函数。
  * `module_name` 装入的模块名（.dll或.exe文件）。如果省略扩展名，则会附加预设库副文件名.dll。文件名串可以包含尾端点字符（.），表示模块名称没有扩展名。字符串不需要指定路径。指定路径时，请务必使用反斜线（\），而不是正斜线（/）。名称会独立比较（大小写）目前对应至呼叫进程的地址空间的模块名称。如果此参数为 Null， get_module_handle 将返回用来创建调用进程（.exe文件的文件的句柄）。get_module_handle函数不会撷取使用LOAD_LIBRARY_AS_DATAFILE旗标加载之模组的句柄。
  * */
-pub fn get_module_handle<T>(module_name: T) -> HMODULE
-where T: windows::core::IntoParam<PCWSTR> {
-    unsafe { GetModuleHandleW(module_name) }
+pub fn get_module_handle(module_name: &str) -> HMODULE {
+    unsafe { GetModuleHandleW(&HSTRING::from(module_name)) }
         .expect("Can't get the module handle.")
+}
+
+/**
+ * 将指定的模块加载到调用进程的地址空间中。指定的模块可能会导致加载其他模块。有关其他加载选项，请使用 load_library_ex 函数。
+ * `lib_file_name` 模块的名称。这可以是库模块 (.dll 文件)，也可以是可执行模块 (.exe 文件)。如果指定的模块是可执行模块，则不会加载静态导入;相反，模块就像使用标志的 load_library_ex DONT_RESOLVE_DLL_REFERENCES 加载一样。指定的名称是模块的文件名，与库模块本身中存储的名称无关，该名称由 module-definition (.def) 文件中的 LIBRARY 关键字 (keyword) 指定。如果字符串指定完整路径，则函数仅搜索模块的该路径。如果字符串指定相对路径或模块名称而不指定路径，则函数使用标准搜索策略来查找模块;如果函数找不到模块，该函数将失败。指定路径时，请务必使用反斜杠 (\) ，而不是使用 /) (正斜杠。如果字符串指定模块名称而不指定路径，并且省略文件扩展名，则该函数会将默认库扩展“.DLL”追加到模块名称。若要防止函数将“.DLL”追加到模块名称中，请在模块名称字符串中包含尾随点字符 (.)。
+ * */
+pub fn load_library(lib_file_name: &str) -> HMODULE {
+    unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }
+        .expect("Can't load the library.")
+}
+
+/**
+ * 从指定的动态链接库 (DLL) 检索导出函数(也称为过程)或变量的地址。
+ * `h_module` 包含函数或变量的DLL模块的句柄。load_library、load_library_ex、load_packaged_library 或 get_module_handle函数返回此句柄。get_proc_address函数不会从使用LOAD_LIBRARY_AS_DATAFILE标志加载的模块中检索地址。有关详细信息，请参阅load_library_ex。
+ * `proc_name` 函数或变量名称，或函数的序号值。如果此参数是序号值，则它必须在低序位字中；高序位字必须为零。
+ * */
+pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
+    unsafe { GetProcAddress(h_module, PCSTR::from_raw(proc_name.as_ptr())) }
 }

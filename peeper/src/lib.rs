@@ -12,18 +12,16 @@
  */
 
 use std::ffi::c_void;
-use std::sync::RwLock;
+use std::mem::transmute;
 use std::thread;
 use log::debug;
-use win_wrap::common::{BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, get_module_handle, HINSTANCE, HMODULE, set_windows_hook_ex, TRUE, WPARAM, LPARAM, LRESULT, call_next_hook_ex, w, unhook_windows_hook_ex};
+use win_wrap::common::{BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, HMODULE, set_windows_hook_ex, TRUE, WPARAM, LPARAM, LRESULT, HOOKPROC, call_next_hook_ex, unhook_windows_hook_ex, load_library, beep, get_proc_address};
 use win_wrap::hook::HOOK_TYPE_GET_MESSAGE;
 use win_wrap::message::message_loop;
 
-#[allow(dead_code)]
-static H_INSTANCE: RwLock<HINSTANCE> = RwLock::new(HINSTANCE(0));
-
 #[no_mangle]
 unsafe extern "system" fn hook_get_message(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+    beep(400,40);
     call_next_hook_ex(code, w_param, l_param)
 }
 
@@ -31,9 +29,15 @@ unsafe extern "system" fn hook_get_message(code: i32, w_param: WPARAM, l_param: 
 pub extern "system" fn mount() {
     debug!("mounted");
     thread::spawn(|| {
-        let handle = get_module_handle(w!("peeper"));
+        let path = format!("{}.dll", module_path!());
+        debug!("p:{}", path);
+        let handle = load_library(path.as_str());
         debug!("Module handle is {}", handle.0);
-        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, Some(hook_get_message), handle.into(), 0);
+        let proc = get_proc_address(handle, "hook_get_message")
+            .map(|x| unsafe {
+                transmute::<_, unsafe extern "system" fn(i32, WPARAM, LPARAM) -> LRESULT>(x)
+            });
+        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc, handle.into(), 0);
         message_loop();
         unhook_windows_hook_ex(h_hook);
     });
@@ -47,9 +51,7 @@ pub extern "system" fn unmount() {
 #[no_mangle]
 extern "system" fn DllMain(h_module: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
     match dw_reason {
-        DLL_PROCESS_ATTACH => {
-            println!("hm: {}", h_module.0)
-        }
+        DLL_PROCESS_ATTACH => {}
         DLL_PROCESS_DETACH => {}
         DLL_THREAD_ATTACH => {}
         DLL_THREAD_DETACH => {}
