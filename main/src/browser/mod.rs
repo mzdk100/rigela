@@ -13,7 +13,7 @@
 
 mod browseable;
 mod form_browser;
-mod ui_automation_browseable;
 
 pub(crate) use browseable::Browseable;
 pub(crate) use form_browser::get_form_browser;
+pub mod uia;
