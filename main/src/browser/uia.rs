@@ -53,8 +53,11 @@ pub(crate) async fn watch_foreground_window(context: Arc<Context>) {
     let ctx = Arc::clone(&context);
 
     uia.add_focus_changed_listener(move |_| {
-        let fb = get_form_browser().lock().unwrap();
-        if !fb.is_foreground_window_changed() {
+        if !get_form_browser()
+            .lock()
+            .unwrap()
+            .is_foreground_window_changed()
+        {
             return;
         }
 

@@ -61,7 +61,7 @@ impl Launcher {
             uia::speak_focus_item(Arc::clone(&self.context)).await;
 
             // 监听前台窗口变动
-            // uia::watch_foreground_window(Arc::clone(&self.context)).await;
+            uia::watch_foreground_window(Arc::clone(&self.context)).await;
 
             // 等待程序退出的信号
             self.waiter.as_deref_mut().unwrap().wait().await;
