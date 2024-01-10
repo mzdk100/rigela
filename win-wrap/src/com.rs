@@ -13,12 +13,13 @@
 
 use windows::{core::*, Win32::System::Com::*};
 
-
 /**
  * 使用多线程模型套间（Multi Thread Apartment, MTA）初始化COM调用。
  * MTA能充分利用多核CPU，提高程序性能，但要注意线程之间同步的安全问题。
  * */
 pub fn co_initialize_multi_thread() -> Result<()> {
-    unsafe { CoInitializeEx(None, COINIT_MULTITHREADED)?; }
+    unsafe {
+        CoInitializeEx(None, COINIT_MULTITHREADED)?;
+    }
     Ok(())
 }

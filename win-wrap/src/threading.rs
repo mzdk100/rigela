@@ -11,11 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::{
+    common::{close_handle, BOOL, FALSE, HANDLE, LPARAM, TRUE, WAIT_EVENT, WPARAM},
+    message::post_thread_message,
+};
+use windows::{
+    core::HSTRING,
+    Win32::{
+        System::Threading::{
+            CreateEventW, GetCurrentThreadId, SetEvent, WaitForSingleObject,
+        },
+        UI::WindowsAndMessaging::WM_QUIT,
+    }
+};
 pub use windows::Win32::Security::SECURITY_ATTRIBUTES;
-use windows::Win32::System::Threading::{GetCurrentThreadId, CreateEventW, SetEvent, WaitForSingleObject};
-use windows::Win32::UI::WindowsAndMessaging::WM_QUIT;
-use crate::common::{BOOL, FALSE, TRUE, close_handle, HANDLE, PCWSTR, WAIT_EVENT, LPARAM, WPARAM};
-use crate::message::post_thread_message;
 
 /**
  * 查询调用线程的线程标识符。
@@ -32,10 +41,24 @@ pub fn get_current_thread_id() -> u32 {
  * `initial_state` 如果此参数为TRUE，则会发出事件对象的初始状态信号;否则，则为非signaled。
  * `name` 事件对象的名称。名称限制为 MAX_PATH个字符。名称比较区分大小写。如果 name 符合现有具名事件对象的名称，此函式会要求 EVENT_ALL_ACCESS 访问权限。在此情况下，系统会忽略 manual_reset 和 initial_state 参数，因为它们已经由建立进程设定。如果 event_attributes 参数不是 Null，它会判断是否可以继承句柄，但会忽略其安全性描述符成员。如果 name 为 Null，则会建立事件对象，而不需要名称。如果 name 符合相同命名空间中另一种对象的名称，（例如现有的号志、mutex、可等候计时器、作业或文件对应对象），则函数会失败，而且 get_last_error 函数会传回 ERROR_INVALID_HANDLE。这是因为这些对象共享相同的命名空间。名称可以有 Global 或 「Local」 前置词，以在全局或会话命名空间中明确建立对象。名称的其余部分可以包含反斜线字符（\）以外的任何字符。使用终端机服务会话实作快速用户切换。核心对象名称必须遵循终端机服务概述的指导方针，让应用程序可以支持多个用户。对象可以在私用命名空间中建立。
  * */
-pub fn create_event<T>(event_attributes: Option<*const SECURITY_ATTRIBUTES>, manual_reset: BOOL, initial_state: BOOL, name: T) -> HANDLE
-where T: windows::core::IntoParam<PCWSTR> {
-    unsafe { CreateEventW(event_attributes, manual_reset, initial_state, name) }
-        .expect("Can't create the event.")
+pub fn create_event(
+    event_attributes: Option<*const SECURITY_ATTRIBUTES>,
+    manual_reset: BOOL,
+    initial_state: BOOL,
+    name: Option<&str>,
+) -> HANDLE {
+    unsafe {
+        match name {
+            None => CreateEventW(event_attributes, manual_reset, initial_state, None),
+            Some(x) => CreateEventW(
+                event_attributes,
+                manual_reset,
+                initial_state,
+                &HSTRING::from(x),
+            ),
+        }
+    }
+    .expect("Can't create the event.")
 }
 
 /**
@@ -43,8 +66,7 @@ where T: windows::core::IntoParam<PCWSTR> {
  * `h_event` 事件句柄。
  */
 pub fn set_event(h_event: HANDLE) {
-    unsafe { SetEvent(h_event) }
-        .expect("Can't set the event.")
+    unsafe { SetEvent(h_event) }.expect("Can't set the event.")
 }
 
 /**

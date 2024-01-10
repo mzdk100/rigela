@@ -14,18 +14,18 @@
 use std::future::Future;
 use std::sync::Arc;
 use windows::{
+    core::{Result, HSTRING},
     Media::{
         Core::MediaSource,
         Playback::{MediaPlaybackItem, MediaPlayer},
-        SpeechSynthesis::SpeechSynthesizer
+        SpeechSynthesis::SpeechSynthesizer,
     },
-    core::{HSTRING, Result},
 };
 
 #[derive(Clone)]
-pub struct Tts{
+pub struct Tts {
     synth: Arc<SpeechSynthesizer>,
-    player: Arc<MediaPlayer>
+    player: Arc<MediaPlayer>,
 }
 
 impl Tts {
@@ -34,14 +34,12 @@ impl Tts {
      * */
     pub fn new() -> Self {
         // 创建语音合成器
-        let synth = SpeechSynthesizer::new()
-            .expect("Can't create the speech synthesizer.");
+        let synth = SpeechSynthesizer::new().expect("Can't create the speech synthesizer.");
         // 创建媒体播放器
-        let player = MediaPlayer::new()
-            .expect("Can't create the media player.");
+        let player = MediaPlayer::new().expect("Can't create the media player.");
         Self {
             synth: synth.into(),
-            player: player.into()
+            player: player.into(),
         }
     }
 
@@ -65,9 +63,12 @@ impl Tts {
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。
      * */
-    pub fn speak<'a>(&'a self, text: &'a str) -> impl Future<Output=Result<()>> + 'a {
+    pub fn speak<'a>(&'a self, text: &'a str) -> impl Future<Output = Result<()>> + 'a {
         async move {
-            let stream = self.synth.SynthesizeTextToStreamAsync(&HSTRING::from(text))?.await?;
+            let stream = self
+                .synth
+                .SynthesizeTextToStreamAsync(&HSTRING::from(text))?
+                .await?;
             let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
             let item = MediaPlaybackItem::Create(&source)?;
             self.player.SetSource(&item)?;

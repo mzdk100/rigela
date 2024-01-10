@@ -12,7 +12,7 @@
  */
 
 use std::future::Future;
-use tokio::sync::mpsc::{channel, Sender, Receiver};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Clone)]
 pub struct Terminator(Sender<()>);
@@ -28,11 +28,9 @@ impl Terminator {
     }
 
     /* 发送退出信号。 */
-    pub(crate) fn exit<'a>(&'a self) -> impl Future<Output=()> + 'a {
+    pub(crate) fn exit<'a>(&'a self) -> impl Future<Output = ()> + 'a {
         async {
-            self.0.send(())
-                .await
-                .unwrap();
+            self.0.send(()).await.unwrap();
         }
     }
 }

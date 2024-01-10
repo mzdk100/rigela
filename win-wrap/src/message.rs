@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::Win32::UI::WindowsAndMessaging::{DispatchMessageW, GetMessageW, PostThreadMessageW, TranslateMessage};
-pub use windows::Win32::UI::WindowsAndMessaging::{MSG, WM_QUIT};
 use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
-
+use windows::Win32::UI::WindowsAndMessaging::{
+    DispatchMessageW, GetMessageW, PostThreadMessageW, TranslateMessage,
+};
+pub use windows::Win32::UI::WindowsAndMessaging::{MSG, WM_QUIT};
 
 /**
  * 将消息调度到窗口过程。它通常用于调度 get_message 函数检索到的消息。
@@ -52,7 +53,7 @@ pub fn post_thread_message(id_thread: u32, msg: u32, w_param: WPARAM, l_param: L
  * 将虚拟密钥信息转换为字符信息。字符信息会张贴至调用程序的消息队列，下次程序调用 get_message 或 peek_message 函数时要读取。
  * `msg` MSG结构，其中包含使用get_message或peek_message函数从调用程序消息队列撷取的信息。
  */
-pub fn translate_message (msg: &mut MSG) -> BOOL {
+pub fn translate_message(msg: &mut MSG) -> BOOL {
     unsafe { TranslateMessage(msg) }
 }
 
@@ -63,10 +64,9 @@ pub fn message_loop() {
     let mut msg = MSG::default();
     while get_message(&mut msg, HWND::default(), 0, 0) != FALSE {
         if msg.message == WM_QUIT {
-            break
+            break;
         }
         dispatch_message(&mut msg);
         translate_message(&mut msg);
     }
 }
-

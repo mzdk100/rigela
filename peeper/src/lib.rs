@@ -11,44 +11,28 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    ffi::c_void,
-    thread,
-    sync::RwLock
-};
 use log::debug;
+use std::{ffi::c_void, sync::RwLock, thread};
 use win_wrap::{
     common::{
-        DLL_PROCESS_DETACH,
-        DLL_THREAD_ATTACH,
-        DLL_THREAD_DETACH,
-        FALSE,
-        HMODULE,
-        set_windows_hook_ex,
-        TRUE,
-        WPARAM,
-        LPARAM,
-        LRESULT,
-        call_next_hook_ex,
-        unhook_windows_hook_ex,
-        load_library,
-        DLL_PROCESS_ATTACH,
-        BOOL,
-        get_proc_address
+        call_next_hook_ex, get_proc_address, load_library, set_windows_hook_ex,
+        unhook_windows_hook_ex, BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH,
+        DLL_THREAD_DETACH, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM,
     },
+    ext::FarProcExt,
     hook::HOOK_TYPE_GET_MESSAGE,
     message::message_loop,
-    ext::FarProcExt,
-    threading::{
-        ThreadNotify,
-        get_current_thread_id
-    }
+    threading::{get_current_thread_id, ThreadNotify},
 };
 
 static HOOK_THREAD: RwLock<Option<ThreadNotify>> = RwLock::new(None);
 
 #[no_mangle]
-unsafe extern "system" fn hook_proc_get_message(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+unsafe extern "system" fn hook_proc_get_message(
+    code: i32,
+    w_param: WPARAM,
+    l_param: LPARAM,
+) -> LRESULT {
     call_next_hook_ex(code, w_param, l_param)
 }
 
@@ -65,11 +49,10 @@ pub extern "system" fn mount() {
         let handle = load_library(path.as_str());
         debug!("Module handle: {}", handle.0);
         let proc = get_proc_address(handle, "hook_proc_get_message");
-        let h_hook = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0);
+        let h_hook =
+            set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0);
         let notify = ThreadNotify::new(get_current_thread_id());
-        let mut lock = HOOK_THREAD
-            .write()
-            .unwrap();
+        let mut lock = HOOK_THREAD.write().unwrap();
         *lock = Some(notify.clone());
         drop(lock);
         message_loop();
@@ -80,9 +63,7 @@ pub extern "system" fn mount() {
 
 /** 停止亏叹气。 */
 pub extern "system" fn unmount() {
-    let mut lock = HOOK_THREAD
-        .write()
-        .unwrap();
+    let mut lock = HOOK_THREAD.write().unwrap();
     match lock.as_ref() {
         None => {}
         Some(x) => {
@@ -102,7 +83,7 @@ extern "system" fn DllMain(_: HMODULE, dw_reason: u32, _lp_reserved: *const c_vo
         DLL_PROCESS_DETACH => {}
         DLL_THREAD_ATTACH => {}
         DLL_THREAD_DETACH => {}
-        _ => return FALSE
+        _ => return FALSE,
     }
     TRUE
 }

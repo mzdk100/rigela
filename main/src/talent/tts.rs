@@ -11,35 +11,29 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 /* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
+#[allow(unused_imports)]
+use crate::context::Context;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
-#[allow(unused_imports)]
-use crate::context::Context;
 
 /* 使用talent macro可选导入的条目 */
 #[allow(unused_imports)]
-use win_wrap::input::{VK_OEM_PLUS, VK_OEM_MINUS, VK_INSERT};
+use win_wrap::input::{VK_INSERT, VK_OEM_MINUS, VK_OEM_PLUS};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_OEM_PLUS, false)))]
 async fn increase(context: Arc<Context>) {
-    context
-        .performer
-        .apply_config(context.clone(), |c| {
-            c.speed.replace(c.speed.unwrap() + 0.1);
-        });
+    context.performer.apply_config(context.clone(), |c| {
+        c.speed.replace(c.speed.unwrap() + 0.1);
+    });
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_OEM_MINUS, false)))]
 async fn reduce(context: Arc<Context>) {
-    context
-        .performer
-        .apply_config(context.clone(), |c| {
-            c.speed.replace(c.speed.unwrap() - 0.1);
-        });
-
+    context.performer.apply_config(context.clone(), |c| {
+        c.speed.replace(c.speed.unwrap() - 0.1);
+    });
 }

@@ -12,14 +12,14 @@
  */
 
 use crate::{
-    resources::ResourceAccessor,
-    performer::{Performer, Speakable},
-    configs::ConfigManager,
     commander::Commander,
+    configs::ConfigManager,
+    gui::GuiAccessor,
+    performer::{Performer, Speakable},
+    resources::ResourceAccessor,
+    talent::TalentAccessor,
     terminator::Terminator,
     utils::get_program_directory,
-    gui::GuiAccessor,
-    talent::TalentAccessor
 };
 use std::sync::Arc;
 use tokio::runtime::Handle;

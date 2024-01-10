@@ -3,10 +3,9 @@ mod gui;
 mod talent;
 mod utils;
 
+use crate::gui::parse_gui;
 use proc_macro::TokenStream;
 use talent::parse_talent;
-use crate::gui::parse_gui;
-
 
 #[proc_macro_attribute]
 pub fn talent(args: TokenStream, item: TokenStream) -> TokenStream {

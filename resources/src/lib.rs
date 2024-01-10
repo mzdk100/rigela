@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::io::SeekFrom;
-use log::{debug, info};
+use bitar::archive_reader::HttpReader;
+use bitar::{Archive, ChunkIndex, CloneOutput, HashSum, VerifiedChunk};
+use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
+use log::{debug, info};
+use std::io::SeekFrom;
 use std::path::PathBuf;
 use std::time::Duration;
-use bitar::{Archive, ChunkIndex, CloneOutput, HashSum, VerifiedChunk};
-use bitar::archive_reader::HttpReader;
-use blake2::{Blake2b512, Digest};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::task::spawn_blocking;
@@ -31,7 +31,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
         .retry_delay(Duration::from_millis(5000));
     let archive = Archive::try_init(reader).await;
     if let Err(x) = archive {
-        return Err(format!("Failed to read archive at {}.\n{}", url, x))
+        return Err(format!("Failed to read archive at {}.\n{}", url, x));
     }
     let mut archive = archive.unwrap();
     let clone_index = archive.build_source_index();
@@ -43,9 +43,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
         .create_new(false)
         .open(&save_path)
         .await
-        .expect(
-            format!("Failed to open {}", save_path.display()).as_str()
-        );
+        .expect(format!("Failed to open {}", save_path.display()).as_str());
     // 建立输出文件块的索引
     let output_index = {
         info!("Building chunk index of {}...", save_path.display());
@@ -56,9 +54,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
             .buffered(4);
         let mut index = ChunkIndex::new_empty(archive.chunk_hash_length());
         while let Some(r) = chunk_stream.next().await {
-            let (chunk_offset, verified) = r
-                .unwrap()
-                .unwrap();
+            let (chunk_offset, verified) = r.unwrap().unwrap();
             let (hash, chunk) = verified.into_parts();
             index.add_chunk(hash, chunk.len(), &[chunk_offset]);
         }
@@ -76,10 +72,7 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
         total_read_from_seed += used_from_self;
     }
     // 从存档中读取剩余内容
-    info!(
-        "Fetching {} chunks from {}...",
-        output_clone.len(), url
-    );
+    info!("Fetching {} chunks from {}...", output_clone.len(), url);
     let total_read_from_remote = {
         let mut total_fetched = 0u64;
         let output_bytes = {
@@ -103,15 +96,12 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
             let mut output_bytes = 0;
             while let Some(result) = chunk_stream.next().await {
                 let verified = result.unwrap();
-                let wc = output_clone
-                    .feed(&verified)
-                    .await
-                    .unwrap();
+                let wc = output_clone.feed(&verified).await.unwrap();
                 if wc > 0 {
                     info!("Chunk '{}', size {} used", verified.hash(), verified.len());
                 }
                 output_bytes += wc as u64;
-            };
+            }
             output_bytes
         };
         info!(
@@ -125,22 +115,14 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
     output_file
         .set_len(archive.total_source_size())
         .await
-        .expect(
-            format!("Failed to resize {}", save_path.display()).as_str()
-        );
+        .expect(format!("Failed to resize {}", save_path.display()).as_str());
     info!("Verifying checksum of {}...", save_path.display());
     let sum = {
-        output_file
-            .seek(SeekFrom::Start(0))
-            .await
-            .unwrap();
+        output_file.seek(SeekFrom::Start(0)).await.unwrap();
         let mut output_hasher = Blake2b512::new();
         let mut buffer: Vec<u8> = vec![0; 4 * 1024 * 1024];
         loop {
-            let rc = output_file
-                .read(&mut buffer)
-                .await
-                .unwrap();
+            let rc = output_file.read(&mut buffer).await.unwrap();
             if rc == 0 {
                 break;
             }
@@ -150,17 +132,18 @@ pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, Str
     };
     let expected_checksum = archive.source_checksum();
     if sum != *expected_checksum {
-        return Err(
-            format!("Checksum mismatch ({}: {}, {}: {})", save_path.display(),sum, url, expected_checksum)
-        )
+        return Err(format!(
+            "Checksum mismatch ({}: {}, {}: {})",
+            save_path.display(),
+            sum,
+            url,
+            expected_checksum
+        ));
     }
     info!(
         "Successfully cloned archive using {} from archive and {} from seeds.",
         total_read_from_remote, total_read_from_seed
     );
-    output_file
-        .seek(SeekFrom::Start(0))
-        .await
-        .unwrap();
+    output_file.seek(SeekFrom::Start(0)).await.unwrap();
     Ok(output_file)
 }

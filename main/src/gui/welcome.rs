@@ -11,19 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[allow(unused_imports)]
+use crate::{context::Context, gui::GuiContext};
+use eframe::egui::CentralPanel;
 /** 必选条目。 */
 use rigela_macros::gui;
 #[allow(unused_imports)]
-use crate::{context::Context, gui::GuiContext};
-#[allow(unused_imports)]
 use std::sync::Arc;
-use eframe::egui::CentralPanel;
 
-#[gui(doc="欢迎页面", title="欢迎")]
+#[gui(doc = "欢迎页面", title = "欢迎")]
 fn welcome(context: Arc<Context>, gui_context: &GuiContext) {
     CentralPanel::default().show(gui_context, |ui| {
+        let mut text = String::from("RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！");
         ui.heading("感谢您使用 RigelA");
-        ui.label("RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！").request_focus();
+        ui.text_edit_multiline(&mut text);
         if ui.button("我要捐献").clicked() {
             context
                 .performer

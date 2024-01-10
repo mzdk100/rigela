@@ -11,23 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 pub(crate) mod welcome;
 
-use std::sync::Arc;
-use eframe::{
-    App,
-    CreationContext,
-    EventLoopBuilderHook,
-    NativeOptions,
-    run_native,
-    egui::{FontData, FontDefinitions, FontFamily, ViewportBuilder}
-};
-use tokio::io::AsyncReadExt;
-use crate::gui::welcome::WelcomeFrameUi;
 use crate::context::Context;
-use winit::platform::windows::EventLoopBuilderExtWindows;
+use crate::gui::welcome::WelcomeFrameUi;
 pub use eframe::egui::Context as GuiContext;
+use eframe::{
+    egui::{FontData, FontDefinitions, FontFamily, ViewportBuilder},
+    run_native, App, CreationContext, EventLoopBuilderHook, NativeOptions,
+};
+use std::sync::Arc;
+use tokio::io::AsyncReadExt;
+use winit::platform::windows::EventLoopBuilderExtWindows;
 
 /**
  * 一个GUI页面的抽象接口。
@@ -42,7 +37,10 @@ pub trait FrameUi {
     /**
      * 配置字体资源。
      * */
-    fn apply_font(context: Arc<Context>, cc: &CreationContext) where Self: Sized {
+    fn apply_font(context: Arc<Context>, cc: &CreationContext)
+    where
+        Self: Sized,
+    {
         let mut fonts = FontDefinitions::default();
         let main_handler = context.main_handler.clone();
         let ttf_file = main_handler.block_on(async move {
@@ -76,26 +74,35 @@ pub trait FrameUi {
     /**
      * 运行APP UI。
      * */
-    fn run<A>(context: Arc<Context>, title: &str, app: A) where Self: Sized, A: App + 'static {
-        let event_loop_builder: Option<EventLoopBuilderHook> = Some(Box::new(|event_loop_builder| {
+    fn run<A>(context: Arc<Context>, title: &str, app: A)
+    where
+        Self: Sized,
+        A: App + 'static,
+    {
+        let event_loop_builder: Option<EventLoopBuilderHook> =
+            Some(Box::new(|event_loop_builder| {
                 event_loop_builder.with_any_thread(true);
-        }));
+            }));
         let options = NativeOptions {
             event_loop_builder,
             viewport: ViewportBuilder::default().with_inner_size([320.0, 240.0]),
             ..Default::default()
         };
-        run_native(title, options, Box::new(|cc| {
-            Self::apply_font(context, cc);
-            Box::new(app)
-        }))
-            .expect(format!("Can't initialize the `{}` app.", title).as_str());
+        run_native(
+            title,
+            options,
+            Box::new(|cc| {
+                Self::apply_font(context, cc);
+                Box::new(app)
+            }),
+        )
+        .expect(format!("Can't initialize the `{}` app.", title).as_str());
     }
 }
 
 pub struct GuiAccessor {
     #[allow(dead_code)]
-    pub(crate) frames: Arc<Vec<Box<dyn FrameUi + Sync + Send>>>
+    pub(crate) frames: Arc<Vec<Box<dyn FrameUi + Sync + Send>>>,
 }
 
 impl GuiAccessor {
@@ -103,11 +110,9 @@ impl GuiAccessor {
      * 创建一个UI访问器。
      * */
     pub(crate) fn new() -> Self {
-        let frames: Vec<Box<dyn FrameUi + Sync + Send>> = vec![
-            Box::new(WelcomeFrameUi)
-        ];
+        let frames: Vec<Box<dyn FrameUi + Sync + Send>> = vec![Box::new(WelcomeFrameUi)];
         Self {
-            frames: frames.into()
+            frames: frames.into(),
         }
     }
 }

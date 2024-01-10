@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use std::intrinsics::transmute;
 use crate::common::{FARPROC, HOOKPROC, LPARAM};
+use std::intrinsics::transmute;
 
 /**
  * 对FARPROC类型的扩展操作。

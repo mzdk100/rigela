@@ -11,29 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
+use crate::utils::get_struct_name;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{ItemFn, MetaNameValue, Token};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use crate::utils::get_struct_name;
+use syn::{ItemFn, MetaNameValue, Token};
 
 struct Metadata {
     doc: MetaNameValue,
-    title: String
+    title: String,
 }
 impl Parse for Metadata {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let r=Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
+        let r = Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
         let iter = r.iter();
         let mut doc: Option<MetaNameValue> = None;
         let mut title = String::new();
         for i in iter {
-            let name = i.path
-                .get_ident()
-                .unwrap()
-                .to_string();
+            let name = i.path.get_ident().unwrap().to_string();
             if name == "doc" {
                 doc = Some(i.clone())
             } else if name == "title" {
@@ -42,7 +38,7 @@ impl Parse for Metadata {
         }
         Ok(Self {
             doc: doc.unwrap().clone(),
-            title
+            title,
         })
     }
 }
@@ -80,5 +76,4 @@ pub fn parse_gui(args: TokenStream, item: TokenStream) -> TokenStream {
             pub fn #id2(&self) -> #id {#id}
         }
     }
-
 }

@@ -12,12 +12,11 @@
  */
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TtsConfig {
     pub(crate) speed: Option<f32>,
     pub(crate) volume: Option<f32>,
-    pub(crate) pitch: Option<f32>
+    pub(crate) pitch: Option<f32>,
 }
 
 impl Default for TtsConfig {

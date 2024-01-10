@@ -12,10 +12,10 @@
  */
 
 use crate::{
+    browser::uia,
     context::Context,
     gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
-    browser::uia
 };
 use std::{future::Future, sync::Arc};
 use win_wrap::com::co_initialize_multi_thread;
@@ -53,7 +53,8 @@ impl Launcher {
             peeper::mount();
 
             // 显示欢迎页面。
-            self.context.gui_accessor
+            self.context
+                .gui_accessor
                 .get_welcome_frame_ui()
                 .show(self.context.clone());
 

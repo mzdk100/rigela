@@ -10,32 +10,32 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+use bitar::chunk_dictionary::chunker_parameters::ChunkingAlgorithm;
+use bitar::chunk_dictionary::{ChunkDescriptor, ChunkDictionary, ChunkerParameters};
+use bitar::chunker::Config::RollSum;
+use bitar::chunker::FilterConfig;
+use bitar::{Compression, HashSum};
+use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use std::collections::HashMap;
 use std::future;
 use std::path::Path;
-use bitar::chunker::Config::RollSum;
-use bitar::chunker::FilterConfig;
-use bitar::{Compression, HashSum};
-use bitar::chunk_dictionary::{ChunkDescriptor, ChunkDictionary, ChunkerParameters};
-use bitar::chunk_dictionary::chunker_parameters::ChunkingAlgorithm;
-use blake2::{Blake2b512, Digest};
-use tokio::{fs::{File, OpenOptions}, io::AsyncWriteExt};
 use tokio::fs::{create_dir, read_dir};
 use tokio::task::spawn_blocking;
+use tokio::{
+    fs::{File, OpenOptions},
+    io::AsyncWriteExt,
+};
 
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 const COMPRESSED_DIR: &str = "compressed";
 const FILES_DIR: &str = "dev";
 async fn compress(resource_name: &str) {
-    let output = Path::new(COMPRESSED_DIR)
-        .join(format!("{}.cba", resource_name));
+    let output = Path::new(COMPRESSED_DIR).join(format!("{}.cba", resource_name));
     let input = Path::new(FILES_DIR).join(resource_name);
     let mut input_file = File::open(&input)
         .await
-        .expect(
-            format!("Failed to open input file {}.", input.display()).as_str()
-        );
+        .expect(format!("Failed to open input file {}.", input.display()).as_str());
     let hash_config = FilterConfig::default();
     let chunkier_config = RollSum(hash_config.clone());
     let compression = Compression::brotli(6).unwrap();
@@ -47,20 +47,18 @@ async fn compress(resource_name: &str) {
     let mut chunk_order = Vec::new();
     let mut archive_chunks = Vec::new();
     let mut archive_body = Vec::new();
-    {  // 需要单独的块来限制对chunk_order变量的可变引用时间不能太长，否则在最后生成file_header的时候无法对chunk_order进行不可变引用
+    {
+        // 需要单独的块来限制对chunk_order变量的可变引用时间不能太长，否则在最后生成file_header的时候无法对chunk_order进行不可变引用
         let mut chunk_stream = chunkier
             .map(|r| {
-                let (offset, chunk) = r
-                    .expect("error while chunking");
-                source_hasher
-                    .update(chunk.data());
+                let (offset, chunk) = r.expect("error while chunking");
+                source_hasher.update(chunk.data());
                 source_size += chunk.len() as u64;
                 spawn_blocking(move || (offset, chunk.verify()))
             })
             .buffered(4)
             .filter_map(|r| {
-                let (offset, verified) = r
-                    .expect("error while hashing chunk");
+                let (offset, verified) = r.expect("error while hashing chunk");
                 let (unique, chunk_index) = if unique_chunks.contains_key(verified.hash()) {
                     (false, *unique_chunks.get(verified.hash()).unwrap())
                 } else {
@@ -90,13 +88,15 @@ async fn compress(resource_name: &str) {
             .buffered(4);
         let mut archive_offset: u64 = 0;
         while let Some(r) = chunk_stream.next().await {
-            let (index, offset, verified, compressed) = r
-                .expect("Error compressing.");
+            let (index, offset, verified, compressed) = r.expect("Error compressing.");
             let chunk_len = verified.len();
             let use_uncompressed = compressed.len() >= chunk_len;
             println!(
                 "Chunk {}, '{}', offset: {}, size: {}, {}",
-                index, verified.hash(), offset, chunk_len,
+                index,
+                verified.hash(),
+                offset,
+                chunk_len,
                 if use_uncompressed {
                     "left uncompressed".to_owned()
                 } else {
@@ -130,16 +130,14 @@ async fn compress(resource_name: &str) {
         .create_new(false)
         .open(output.clone())
         .await
-        .expect(
-            format!("Failed to open the output file {}.", output.display()).as_str()
-        );
+        .expect(format!("Failed to open the output file {}.", output.display()).as_str());
     let chunkier_params = ChunkerParameters {
         chunk_filter_bits: hash_config.filter_bits.bits(),
         min_chunk_size: hash_config.min_chunk_size as u32,
         max_chunk_size: hash_config.max_chunk_size as u32,
         rolling_hash_window_size: hash_config.window_size as u32,
         chunk_hash_length: HashSum::MAX_LEN as u32,
-        chunking_algorithm: ChunkingAlgorithm::Rollsum as i32
+        chunking_algorithm: ChunkingAlgorithm::Rollsum as i32,
     };
     // 构建最终存档
     let file_header = ChunkDictionary {
@@ -152,12 +150,13 @@ async fn compress(resource_name: &str) {
         chunker_params: Some(chunkier_params),
     };
     let header_buf = bitar::header::build(&file_header, None).unwrap();
-    output_file
-        .write_all(&header_buf)
-        .await
-        .expect(
-            format!("Failed to write the header to output file {}.", output.display()).as_str()
-        );
+    output_file.write_all(&header_buf).await.expect(
+        format!(
+            "Failed to write the header to output file {}.",
+            output.display()
+        )
+        .as_str(),
+    );
     output_file
         .write_all(&archive_body[..])
         .await
@@ -177,7 +176,8 @@ async fn main() {
         .expect("Can't read the dev directory.");
     while let Ok(Some(x)) = dir.next_entry().await {
         let filename = x.file_name();
-        let name = filename.as_os_str()
+        let name = filename
+            .as_os_str()
             .to_str()
             .expect("Can't read the filename.");
         compress(name).await;

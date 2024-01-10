@@ -13,12 +13,12 @@
 
 use std::collections::HashMap;
 
+use crate::context::Context;
 use std::sync::{Arc, Mutex, RwLock};
 use win_wrap::common::LRESULT;
 use win_wrap::ext::LParamExt;
-use win_wrap::hook::{HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
+use win_wrap::hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED};
 use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
-use crate::context::Context;
 
 /**
  * 命令类型枚举。
@@ -48,7 +48,7 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            keyboard_hook: Arc::new(Mutex::new(None))
+            keyboard_hook: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -57,45 +57,48 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Arc<Context>) {
-        let talents = context
-            .talent_accessor
-            .talents
-            .clone();
+        let talents = context.talent_accessor.talents.clone();
         // 跟踪每一个键的按下状态
         let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
         // 准备安装键盘钩子
-        let keyboard_hook = WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
-            let info: &KbdLlHookStruct = l_param.to();
-            let is_extended = info.flags.contains(LLKHF_EXTENDED);
-            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
-            let mut map = key_track.write().unwrap();
-            map.insert((info.vkCode, is_extended), pressed);
-            if !pressed {
-                drop(map);  // 必须先释放锁再next()，否则可能会死锁
-                return next();
-            }
-            for i in talents.iter() {
-                let cmd_list = i.get_supported_cmd_list();
-                let cmd_item = cmd_list.iter().find(|x| match *x {
-                    CommandType::Key(y) => {
-                        for (vk, ext) in y {
-                            match map.get(&(vk.0 as u32, *ext)) {
-                                None => return false,
-                                Some(x) => if !x {return false}
-                            }
-                        }
-                        true
-                    }
-                    _ => false
-                });
-                if let Some(_) = cmd_item {
-                    i.perform(context.clone());
-                    return LRESULT(1);
+        let keyboard_hook =
+            WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+                let info: &KbdLlHookStruct = l_param.to();
+                let is_extended = info.flags.contains(LLKHF_EXTENDED);
+                let pressed =
+                    w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+                let mut map = key_track.write().unwrap();
+                map.insert((info.vkCode, is_extended), pressed);
+                if !pressed {
+                    drop(map); // 必须先释放锁再next()，否则可能会死锁
+                    return next();
                 }
-            }
-            drop(map);  // 必须先释放锁再next()，否则可能会死锁
-            next()
-        });
+                for i in talents.iter() {
+                    let cmd_list = i.get_supported_cmd_list();
+                    let cmd_item = cmd_list.iter().find(|x| match *x {
+                        CommandType::Key(y) => {
+                            for (vk, ext) in y {
+                                match map.get(&(vk.0 as u32, *ext)) {
+                                    None => return false,
+                                    Some(x) => {
+                                        if !x {
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+                            true
+                        }
+                        _ => false,
+                    });
+                    if let Some(_) = cmd_item {
+                        i.perform(context.clone());
+                        return LRESULT(1);
+                    }
+                }
+                drop(map); // 必须先释放锁再next()，否则可能会死锁
+                next()
+            });
         self.keyboard_hook.lock().unwrap().replace(keyboard_hook);
     }
 
@@ -104,11 +107,6 @@ impl Commander {
      * */
     pub(crate) fn dispose(&self) {
         // 解除键盘钩子
-        self.keyboard_hook
-            .lock()
-            .unwrap()
-            .clone()
-            .unwrap()
-            .unhook()
+        self.keyboard_hook.lock().unwrap().clone().unwrap().unhook()
     }
 }

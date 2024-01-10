@@ -12,23 +12,33 @@
  */
 
 pub use windows::{
+    core::{Result, PCSTR, PCWSTR},
     Win32::{
-        Foundation::{BOOL, FALSE, TRUE, FARPROC, HANDLE, HMODULE, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM, WAIT_EVENT},
+        Foundation::{
+            BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, TRUE,
+            WAIT_EVENT, WPARAM,
+        },
+        System::SystemServices::{
+            DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
+        },
         UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
-        System::SystemServices::{DLL_PROCESS_DETACH, DLL_PROCESS_ATTACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH}
     },
-    core::{PCSTR, PCWSTR, Result},
 };
 
 use windows::{
     core::HSTRING,
     Win32::{
-        UI::WindowsAndMessaging::{CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx},
+        Foundation::{
+            CloseHandle,
+            GetLastError
+        },
         System::{
             Diagnostics::Debug::Beep,
-            LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW}
+            LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
         },
-        Foundation::CloseHandle,
+        UI::WindowsAndMessaging::{
+            CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
+        },
     }
 };
 
@@ -55,10 +65,10 @@ pub fn get_foreground_window() -> HWND {
 pub fn call_next_hook_ex(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
     unsafe {
         CallNextHookEx(
-            HHOOK::default(),  // 此参数应该忽略： https://learn.microsoft.com/zh-cn/windows/win32/api/winuser/nf-winuser-callnexthookex?redirectedfrom=MSDN
+            HHOOK::default(), // 此参数应该忽略： https://learn.microsoft.com/zh-cn/windows/win32/api/winuser/nf-winuser-callnexthookex?redirectedfrom=MSDN
             code,
             w_param,
-            l_param
+            l_param,
         )
     }
 }
@@ -69,7 +79,12 @@ pub fn call_next_hook_ex(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT
  * `func` 钩子程序的地址。如果 id_thread 参数为零，或指定不同进程所建立线程的识别码，func参数必须指向 DLL 中的拦截程序。否则，func可以在与目前进程相关联的代码中指向拦截程序。
  * `h_mod` DLL 的实例句柄，其中包含 func参数所指向的拦截程序。如果id_thread参数指定目前进程所建立的执行绪，而且拦截程序位于与目前进程相关联的代码内，则必须将h_mod参数设定为Null。
  * */
-pub fn set_windows_hook_ex(id_hook: WINDOWS_HOOK_ID, func: HOOKPROC, h_mod: HINSTANCE, id_thread: u32) -> HHOOK {
+pub fn set_windows_hook_ex(
+    id_hook: WINDOWS_HOOK_ID,
+    func: HOOKPROC,
+    h_mod: HINSTANCE,
+    id_thread: u32,
+) -> HHOOK {
     unsafe { SetWindowsHookExW(id_hook, func, h_mod, id_thread) }
         .expect(format!("Can't set the {} hook.", id_hook.0).as_str())
 }
@@ -79,8 +94,7 @@ pub fn set_windows_hook_ex(id_hook: WINDOWS_HOOK_ID, func: HOOKPROC, h_mod: HINS
  * `h_hook` 要移除的钩子的句柄。此参数是由先前调用 set_windows_hook_ex 获取的钩子句柄。
  * */
 pub fn unhook_windows_hook_ex(h_hook: HHOOK) {
-    unsafe { UnhookWindowsHookEx(h_hook) }
-        .expect("Can't remove the hook.")
+    unsafe { UnhookWindowsHookEx(h_hook) }.expect("Can't remove the hook.")
 }
 
 /**
@@ -88,8 +102,7 @@ pub fn unhook_windows_hook_ex(h_hook: HHOOK) {
  * `h_object` 打开对象的有效句柄。
  * */
 pub fn close_handle(h_object: HANDLE) {
-    unsafe { CloseHandle(h_object) }
-        .expect("Can't close the object handle.")
+    unsafe { CloseHandle(h_object) }.expect("Can't close the object handle.")
 }
 
 /**
@@ -98,8 +111,7 @@ pub fn close_handle(h_object: HANDLE) {
  * `module_name` 装入的模块名（.dll或.exe文件）。如果省略扩展名，则会附加预设库副文件名.dll。文件名串可以包含尾端点字符（.），表示模块名称没有扩展名。字符串不需要指定路径。指定路径时，请务必使用反斜线（\），而不是正斜线（/）。名称会独立比较（大小写）目前对应至呼叫进程的地址空间的模块名称。如果此参数为 Null， get_module_handle 将返回用来创建调用进程（.exe文件的文件的句柄）。get_module_handle函数不会撷取使用LOAD_LIBRARY_AS_DATAFILE旗标加载之模组的句柄。
  * */
 pub fn get_module_handle(module_name: &str) -> HMODULE {
-    unsafe { GetModuleHandleW(&HSTRING::from(module_name)) }
-        .expect("Can't get the module handle.")
+    unsafe { GetModuleHandleW(&HSTRING::from(module_name)) }.expect("Can't get the module handle.")
 }
 
 /**
@@ -107,16 +119,22 @@ pub fn get_module_handle(module_name: &str) -> HMODULE {
  * `lib_file_name` 模块的名称。这可以是库模块 (.dll 文件)，也可以是可执行模块 (.exe 文件)。如果指定的模块是可执行模块，则不会加载静态导入;相反，模块就像使用标志的 load_library_ex DONT_RESOLVE_DLL_REFERENCES 加载一样。指定的名称是模块的文件名，与库模块本身中存储的名称无关，该名称由 module-definition (.def) 文件中的 LIBRARY 关键字 (keyword) 指定。如果字符串指定完整路径，则函数仅搜索模块的该路径。如果字符串指定相对路径或模块名称而不指定路径，则函数使用标准搜索策略来查找模块;如果函数找不到模块，该函数将失败。指定路径时，请务必使用反斜杠 (\) ，而不是使用 /) (正斜杠。如果字符串指定模块名称而不指定路径，并且省略文件扩展名，则该函数会将默认库扩展“.DLL”追加到模块名称。若要防止函数将“.DLL”追加到模块名称中，请在模块名称字符串中包含尾随点字符 (.)。
  * */
 pub fn load_library(lib_file_name: &str) -> HMODULE {
-    unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }
-        .expect("Can't load the library.")
+    unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }.expect("Can't load the library.")
 }
 
 /**
- * 从指定的动态链接库 (DLL) 检索导出函数(也称为过程)或变量的地址。
+ * 从指定的动态链接库 (DLL) 查询导出函数(也称为过程)或变量的地址。
  * `h_module` 包含函数或变量的DLL模块的句柄。load_library、load_library_ex、load_packaged_library 或 get_module_handle函数返回此句柄。get_proc_address函数不会从使用LOAD_LIBRARY_AS_DATAFILE标志加载的模块中检索地址。有关详细信息，请参阅load_library_ex。
  * `proc_name` 函数或变量名称，或函数的序号值。如果此参数是序号值，则它必须在低序位字中；高序位字必须为零。
  * */
 pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
     let name = String::from(proc_name);
     unsafe { GetProcAddress(h_module, PCSTR::from_raw(name.as_ptr())) }
+}
+
+/**
+ * 查询调用线程的最后错误代码值。 最后一个错误代码按线程进行维护。多个线程不会覆盖彼此的最后错误代码。
+ * */
+pub fn get_last_error() -> Result<()> {
+    unsafe { GetLastError() }
 }

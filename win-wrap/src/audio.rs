@@ -11,21 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 use std::fmt::{Display, Formatter};
 use std::mem::size_of;
-use windows::Win32::Media::Audio::{AudioCategory_SoundEffects, WAVE_FORMAT_PCM, WAVEFORMATEX, XAudio2::{
-    IXAudio2,
-    IXAudio2MasteringVoice,
-    XAUDIO2_USE_DEFAULT_PROCESSOR,
-    XAudio2CreateWithVersionInfo
-}};
-use windows::Win32::Media::Audio::XAudio2::{IXAudio2SourceVoice, XAUDIO2_BUFFER, XAUDIO2_MAX_FREQ_RATIO, XAUDIO2_VOICE_NOSRC};
+use windows::Win32::Media::Audio::XAudio2::{
+    IXAudio2SourceVoice, XAUDIO2_BUFFER, XAUDIO2_MAX_FREQ_RATIO, XAUDIO2_VOICE_NOSRC,
+};
+use windows::Win32::Media::Audio::{
+    AudioCategory_SoundEffects,
+    XAudio2::{
+        IXAudio2, IXAudio2MasteringVoice, XAudio2CreateWithVersionInfo,
+        XAUDIO2_USE_DEFAULT_PROCESSOR,
+    },
+    WAVEFORMATEX, WAVE_FORMAT_PCM,
+};
 
 pub struct AudioOutputStream {
     engine: IXAudio2,
     mastering_voice: IXAudio2MasteringVoice,
-    source_voice: IXAudio2SourceVoice
+    source_voice: IXAudio2SourceVoice,
 }
 
 impl AudioOutputStream {
@@ -39,9 +42,19 @@ impl AudioOutputStream {
         unsafe { XAudio2CreateWithVersionInfo(&mut engine, 0, XAUDIO2_USE_DEFAULT_PROCESSOR, 2) }
             .expect("Can't create the XAudio engine.");
         if let Some(x) = engine.as_ref() {
-            unsafe { x.CreateMasteringVoice(&mut mastering_voice, num_channels, sample_rate, 0, None, None, AudioCategory_SoundEffects) }
-                .expect("Can't create the mastering voice.");
-            let block_align = num_channels * 2;  // 每个样本的字节数
+            unsafe {
+                x.CreateMasteringVoice(
+                    &mut mastering_voice,
+                    num_channels,
+                    sample_rate,
+                    0,
+                    None,
+                    None,
+                    AudioCategory_SoundEffects,
+                )
+            }
+            .expect("Can't create the mastering voice.");
+            let block_align = num_channels * 2; // 每个样本的字节数
             let format = WAVEFORMATEX {
                 cbSize: size_of::<WAVEFORMATEX>() as u16,
                 nChannels: num_channels as u16,
@@ -49,20 +62,29 @@ impl AudioOutputStream {
                 nBlockAlign: block_align as u16,
                 nAvgBytesPerSec: sample_rate * block_align,
                 wBitsPerSample: (block_align * 8) as u16,
-                wFormatTag: WAVE_FORMAT_PCM as u16
+                wFormatTag: WAVE_FORMAT_PCM as u16,
             };
-            unsafe { x.CreateSourceVoice(&mut source_voice, &format, XAUDIO2_VOICE_NOSRC, XAUDIO2_MAX_FREQ_RATIO, None, None, None) }
-                .expect("Can't create the source voice.");
+            unsafe {
+                x.CreateSourceVoice(
+                    &mut source_voice,
+                    &format,
+                    XAUDIO2_VOICE_NOSRC,
+                    XAUDIO2_MAX_FREQ_RATIO,
+                    None,
+                    None,
+                    None,
+                )
+            }
+            .expect("Can't create the source voice.");
         }
         Self {
             engine: engine.unwrap(),
             mastering_voice: mastering_voice.unwrap(),
-            source_voice: source_voice.unwrap()
+            source_voice: source_voice.unwrap(),
         }
     }
     pub fn push(&self) {
-        unsafe { self.source_voice.Start(0, 0) }
-            .expect("Can't start.");
+        unsafe { self.source_voice.Start(0, 0) }.expect("Can't start.");
         let mut data: [u8; 32000] = [0; 32000];
         for i in 0..data.len() {
             data[i] = ((i as f64).sin() * 32f64) as u8
