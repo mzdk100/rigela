@@ -15,6 +15,7 @@ use proc_macro2::{Delimiter::Bracket, Group, Punct, Spacing, Span, TokenStream};
 use proc_macro2::Delimiter::Parenthesis;
 use quote::{quote, TokenStreamExt, ToTokens};
 use syn::{parse::{Parse, ParseStream}, Ident, ItemFn, Token, MetaNameValue, punctuated::Punctuated};
+use crate::utils::get_struct_name;
 
 struct Metadata {
     doc: MetaNameValue,
@@ -61,18 +62,16 @@ impl Parse for Metadata {
         })
     }
 }
-fn get_struct_name(ident: &Ident) -> Ident {
-    let s = ident.to_string();
-    let s = s.to_upper_camel_case() + "Talent";
-    Ident::new(s.as_str(), Span::call_site())
-}
+
 
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
     let doc = metadata.doc;
     let cmd_list = metadata.cmd_list;
     let input: ItemFn = syn::parse2(item).unwrap();
-    let id = get_struct_name(&input.sig.ident);
+    let id = get_struct_name(&input.sig.ident, "Talent");
+    let id2 = format!("get_{}_talent", input.sig.ident.to_string());
+    let id2 = Ident::new(id2.as_str(), Span::call_site());
     let body = input.block.to_token_stream();
     quote! {
         #[#doc]
@@ -85,6 +84,10 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
                 let main_handler = context.main_handler.clone();
                 main_handler.spawn(async move #body);
             }
+        }
+        impl crate::talent::TalentAccessor {
+            #[#doc]
+            pub fn #id2(&self) -> #id {#id}
         }
     }
 

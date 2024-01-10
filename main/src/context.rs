@@ -11,12 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::Commander;
-use crate::configs::ConfigManager;
-use crate::performer::{Performer, Speakable};
-use crate::resources::ResourceAccessor;
-use crate::terminator::Terminator;
-use crate::utils::get_program_directory;
+use crate::{
+    resources::ResourceAccessor,
+    performer::{Performer, Speakable},
+    configs::ConfigManager,
+    commander::Commander,
+    terminator::Terminator,
+    utils::get_program_directory,
+    gui::GuiAccessor,
+    talent::TalentAccessor
+};
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
@@ -30,9 +34,11 @@ impl Speakable for UiAutomationElement {
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
+    pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) performer: Arc<Performer>,
+    pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
 }
@@ -42,9 +48,11 @@ impl Clone for Context {
         Self {
             commander: self.commander.clone(),
             config_manager: self.config_manager.clone(),
+            gui_accessor: self.gui_accessor.clone(),
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
             resource_accessor: self.resource_accessor.clone(),
+            talent_accessor: self.talent_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
         }
@@ -59,20 +67,26 @@ impl Context {
         // 创建一个指挥官，用于下发操作命令
         let commander = Commander::new();
         let config_manager = ConfigManager::new(get_program_directory().join("config.toml"));
+        // 创建GUI访问器
+        let gui_accessor = GuiAccessor::new();
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
         let performer = Performer::new();
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
-        // 资源访问器
+        // 创建资源访问器
         let resources = ResourceAccessor::new();
+        // 创建能力访问器
+        let talent_accessor = TalentAccessor::new();
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
+            gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
             resource_accessor: resources.into(),
+            talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
         }

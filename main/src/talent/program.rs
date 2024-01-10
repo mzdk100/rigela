@@ -44,7 +44,6 @@ async fn exit(context: Arc<Context>) {
         .await;
 }
 
-
 impl Speakable for DateTime<Local> {
     fn get_sentence(&self) -> String {
         format!("{}", self)
