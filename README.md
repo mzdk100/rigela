@@ -9,7 +9,6 @@
 ```shell
 git clone https://gitcode.net/mzdk100/rigela.git
 cd rigela
-git submodule update --init
 cargo run
 ```
 

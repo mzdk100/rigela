@@ -13,15 +13,21 @@
 
 use std::future::Future;
 use std::sync::Arc;
-use windows::core::{HSTRING, Result};
-use windows::Media::Core::MediaSource;
-use windows::Media::Playback::{MediaPlaybackItem, MediaPlayer};
-use windows::Media::SpeechSynthesis::SpeechSynthesizer;
+use windows::{
+    Media::{
+        Core::MediaSource,
+        Playback::{MediaPlaybackItem, MediaPlayer},
+        SpeechSynthesis::SpeechSynthesizer
+    },
+    core::{HSTRING, Result},
+};
 
+#[derive(Clone)]
 pub struct Tts{
     synth: Arc<SpeechSynthesizer>,
     player: Arc<MediaPlayer>
 }
+
 impl Tts {
     /**
      * 创建一个TTS对象（语音合成，SAPI5）
@@ -34,8 +40,8 @@ impl Tts {
         let player = MediaPlayer::new()
             .expect("Can't create the media player.");
         Self {
-            synth: Arc::new(synth),
-            player: Arc::new(player)
+            synth: synth.into(),
+            player: player.into()
         }
     }
 
@@ -67,15 +73,6 @@ impl Tts {
             self.player.SetSource(&item)?;
             self.player.Play()?;
             Ok(())
-        }
-    }
-}
-
-impl Clone for Tts {
-    fn clone(&self) -> Self {
-        Self {
-            synth: self.synth.clone(),
-            player: self.player.clone()
         }
     }
 }

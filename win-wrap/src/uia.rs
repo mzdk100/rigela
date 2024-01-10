@@ -13,12 +13,16 @@
 
 use crate::common::get_foreground_window;
 use std::fmt::{Display, Formatter};
-use windows::core::{implement, Result, BSTR};
-use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
-use windows::Win32::UI::Accessibility::{
-    CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler,
-    IUIAutomationFocusChangedEventHandler_Impl, TreeScope,
+use windows::{
+    Win32::{
+        Foundation::HWND,
+        System::Com::{CoCreateInstance, CLSCTX_ALL},
+        UI::Accessibility::{
+            CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler,
+            IUIAutomationFocusChangedEventHandler_Impl, TreeScope,
+        }
+    },
+    core::{implement, Result, BSTR},
 };
 
 #[implement(IUIAutomationFocusChangedEventHandler)]

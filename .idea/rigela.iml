@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/macros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/main/examples" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

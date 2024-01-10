@@ -5,7 +5,6 @@ opt-level = "s"
 
 [workspace]
 members = [
-    "bass-wrap",
     "macros",
     "main",
     "peeper",
