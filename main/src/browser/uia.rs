@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::{get_form_browser, Browseable};
+use crate::browser::form_browser;
+use crate::browser::Browseable;
 use crate::context::Context;
 use std::sync::Arc;
 use std::time::Duration;
@@ -30,9 +31,9 @@ impl Browseable for UiAutomationElement {
 
 pub(crate) async fn speak_desktop(context: Arc<Context>) {
     let ctx = Arc::clone(&context);
-    ctx.performer
-        .speak(&ctx.ui_automation.get_root_element())
-        .await;
+    let root = ctx.ui_automation.get_root_element();
+    ctx.performer.speak(&root).await;
+
     sleep(Duration::from_millis(1000)).await;
 }
 
@@ -53,21 +54,17 @@ pub(crate) async fn watch_foreground_window(context: Arc<Context>) {
     let ctx = Arc::clone(&context);
 
     uia.add_focus_changed_listener(move |_| {
-        if !get_form_browser()
-            .lock()
-            .unwrap()
-            .is_foreground_window_changed()
-        {
+        if !form_browser::is_foreground_window_changed() {
             return;
         }
 
-        let uia2 = Arc::clone(&ctx.ui_automation);
-        get_form_browser().lock().unwrap().update_hwnd();
-        get_form_browser().lock().unwrap().clear();
+        form_browser::update_form_browser_hwnd();
+        form_browser::clear_browseable();
 
+        let uia2 = Arc::clone(&ctx.ui_automation);
         let elements = uia2.get_foreground_window_elements();
         for ele in elements {
-            get_form_browser().lock().unwrap().add(Box::new(ele));
+            form_browser::add_browseable(Arc::new(ele));
         }
     });
 }
