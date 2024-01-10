@@ -14,10 +14,10 @@ features = [
     "implement",
     # 系统语音（SAPI5）
     "Media_SpeechSynthesis",
-    # 媒体核心API
+    # 媒体相关的API
     "Media_Core",
-    # 媒体播放API
     "Media_Playback",
+    "Win32_Media_Audio_XAudio2",
     # Win32基础框架
     "Foundation",
     "Win32_System_Diagnostics_Debug",
