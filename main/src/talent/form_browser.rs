@@ -19,46 +19,33 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
-use crate::browser::get_form_browser;
+use crate::browser::form_browser;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
-    get_form_browser().lock().unwrap().prev();
-    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
-    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
-
-    context
-        .performer
-        .speak_text(&format!("{} {}", name, role))
-        .await;
+    if let Some(ele) = form_browser::prev_browseable() {
+        let msg = format!("{} {}", ele.get_name(), ele.get_role());
+        context.performer.speak_text(&msg).await;
+    }
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
-    get_form_browser().lock().unwrap().next();
-    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
-    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
-
-    context
-        .performer
-        .speak_text(&format!("{} {}", name, role))
-        .await;
+    if let Some(ele) = form_browser::next_browseable() {
+        let msg = format!("{} {}", ele.get_name(), ele.get_role());
+        context.performer.speak_text(&msg).await;
+    }
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
-    let name = get_form_browser().lock().unwrap().current().unwrap().get_name();
-    let role = get_form_browser().lock().unwrap().current().unwrap().get_role();
-
-    context
-        .performer
-        .speak_text(&format!("{} {}", name, role))
-        .await;
-
-    // context.performer.speak(ele).await;
+    if let Some(ele) = form_browser::current_browseable() {
+        let msg = format!("{} {}", ele.get_name(), ele.get_role());
+        context.performer.speak_text(&msg).await;
+    }
 }

@@ -11,18 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
+use home::home_dir;
 use std::fs::create_dir;
 use std::path::PathBuf;
-use home::home_dir;
 
 pub(crate) fn get_program_directory() -> PathBuf {
     let program_dir = home_dir()
         .expect("Can't get the current user directory.")
         .join(".rigela");
     if !program_dir.exists() {
-        create_dir(&program_dir)
-            .expect("Can't create the root directory.");
+        create_dir(&program_dir).expect("Can't create the root directory.");
     }
     program_dir
 }

@@ -12,18 +12,13 @@
  */
 
 use crate::browser::Browseable;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::{get_foreground_window, HWND};
 
-pub struct FormBrowser {
+struct FormBrowser {
     hwnd: HWND,
     index: i32,
-    container: Vec<Box<dyn Browseable>>,
-}
-
-pub fn get_form_browser() -> &'static Mutex<FormBrowser> {
-    static INSTANCE: OnceLock<Mutex<FormBrowser>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(FormBrowser::new()))
+    container: Vec<Arc<dyn Browseable + Sync + Send>>,
 }
 
 impl FormBrowser {
@@ -35,20 +30,22 @@ impl FormBrowser {
         }
     }
 
-    pub fn is_foreground_window_changed(&self) -> bool {
-        self.hwnd != get_foreground_window()
+    pub fn get_hwnd(&self) -> HWND {
+        self.hwnd
     }
 
-    pub fn update_hwnd(&mut self) {
-        self.hwnd = get_foreground_window();
+    pub fn set_hwnd(&mut self, hwnd: HWND) {
+        self.hwnd = hwnd;
     }
 
-    pub fn add(&mut self, element: Box<dyn Browseable>) {
+    pub fn add(&mut self, element: Arc<dyn Browseable + Sync + Send>) {
         self.container.push(element);
     }
 
     pub fn clear(&mut self) {
         self.container.clear();
+        self.index = 0;
+        self.hwnd = HWND::default();
     }
 
     pub fn next(&mut self) {
@@ -59,11 +56,11 @@ impl FormBrowser {
         self.next_index(-1);
     }
 
-    pub fn current(&self) -> Option<&dyn Browseable> {
+    pub fn current(&self) -> Option<Arc<dyn Browseable + Sync + Send>> {
         if self.container.is_empty() {
             return None;
         }
-        self.container.get(self.index as usize).map(|e| &**e)
+        Some(Arc::clone(&self.container[self.index as usize]))
     }
 
     fn next_index(&mut self, diff: i32) {
@@ -84,3 +81,41 @@ impl FormBrowser {
 
 unsafe impl Send for FormBrowser {}
 unsafe impl Sync for FormBrowser {}
+
+fn get_form_browser() -> &'static Mutex<FormBrowser> {
+    static INSTANCE: OnceLock<Mutex<FormBrowser>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(FormBrowser::new()))
+}
+
+pub(crate) fn is_foreground_window_changed() -> bool {
+    get_form_browser().lock().unwrap().get_hwnd() != get_foreground_window()
+}
+
+pub(crate) fn update_form_browser_hwnd() {
+    get_form_browser()
+        .lock()
+        .unwrap()
+        .set_hwnd(get_foreground_window());
+}
+
+pub(crate) fn clear_browseable() {
+    get_form_browser().lock().unwrap().clear();
+}
+
+pub(crate) fn add_browseable(browseable: Arc<dyn Browseable + Sync + Send>) {
+    get_form_browser().lock().unwrap().add(browseable);
+}
+
+pub(crate) fn next_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+    get_form_browser().lock().unwrap().next();
+    get_form_browser().lock().unwrap().current()
+}
+
+pub(crate) fn prev_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+    get_form_browser().lock().unwrap().prev();
+    get_form_browser().lock().unwrap().current()
+}
+
+pub(crate) fn current_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+    get_form_browser().lock().unwrap().current()
+}
