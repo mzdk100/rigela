@@ -11,11 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::uia;
-use crate::context::Context;
-use crate::gui::welcome::show_welcome;
-use crate::terminator::{TerminationWaiter, Terminator};
-use std::{future::Future, sync::Arc, thread};
+use crate::{
+    context::Context,
+    gui::FrameUi,
+    terminator::{TerminationWaiter, Terminator},
+    browser::get_form_browser
+};
+use std::{future::Future, sync::Arc, time::Duration};
+use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
 pub struct Launcher {
@@ -50,23 +53,51 @@ impl Launcher {
             // peeper 可以监控远进程中的信息
             peeper::mount();
 
+            let ctx = self.context.clone();
+
             // 显示欢迎页面。
-            let context = Arc::clone(&self.context);
-            thread::spawn(|| show_welcome(context));
+            self.context.gui_accessor
+                .get_welcome_frame_ui()
+                .show(ctx.clone());
+
+            let performer = ctx.performer.clone();
+            let main_handler = ctx.main_handler.clone();
 
             // 朗读当前桌面
-            uia::speak_desktop(Arc::clone(&self.context)).await;
+            performer.speak(&ctx.ui_automation.get_root_element()).await;
+            sleep(Duration::from_millis(1000)).await;
+
+            let ctx3 = Arc::clone(&self.context);
 
             // 订阅UIA的焦点元素改变事件
-            uia::speak_focus_item(Arc::clone(&self.context)).await;
+            ctx.ui_automation.add_focus_changed_listener(move |x| {
+                let performer1 = Arc::clone(&performer);
+                let handle1 = Arc::clone(&main_handler);
+                // let performer2 = Arc::clone(&performer);
+                // let handle2 = Arc::clone(&main_handler);
 
-            // 监听前台窗口变动
-            uia::watch_foreground_window(Arc::clone(&self.context)).await;
+                handle1.spawn(async move { performer1.speak(&x).await });
 
+                let mut fb = get_form_browser().lock().expect("Can't lock the form browser.");
+                if !fb.is_foreground_window_changed() {
+                    return;
+                }
+                fb.update_hwnd();
+
+                let elements = ctx3.ui_automation.get_foreground_window_elements();
+
+                for ele in elements {
+                    fb.add(Box::new(ele));
+                }
+
+                // 测试是否监测到前台窗口更新，测试使用，待删除。
+                // handle2.spawn(async move {
+                //     performer2.speak_text("hello test").await;
+                // });
+            });
             // 等待程序退出的信号
             self.waiter.as_deref_mut().unwrap().wait().await;
             self.context.dispose();
-
             // 解除远进程监控
             peeper::unmount();
         }

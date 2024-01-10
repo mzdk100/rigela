@@ -19,7 +19,6 @@ use win_wrap::ext::LParamExt;
 use win_wrap::hook::{HOOK_TYPE_KEYBOARD_LL, KbdLlHookStruct, LLKHF_EXTENDED, WindowsHook};
 use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
 use crate::context::Context;
-use crate::talent::get_all_talents;
 
 /**
  * 命令类型枚举。
@@ -58,7 +57,10 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Arc<Context>) {
-        let talents = get_all_talents();
+        let talents = context
+            .talent_accessor
+            .talents
+            .clone();
         // 跟踪每一个键的按下状态
         let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
         // 准备安装键盘钩子
@@ -72,7 +74,7 @@ impl Commander {
                 drop(map);  // 必须先释放锁再next()，否则可能会死锁
                 return next();
             }
-            for i in &talents {
+            for i in talents.iter() {
                 let cmd_list = i.get_supported_cmd_list();
                 let cmd_item = cmd_list.iter().find(|x| match *x {
                     CommandType::Key(y) => {

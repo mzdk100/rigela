@@ -51,19 +51,26 @@ pub trait Talented {
     fn perform(&self, context: Arc<Context>);
 }
 
-//noinspection RsUnresolvedReference
-/**
- * 获取所有能力。
- * */
-pub(crate) fn get_all_talents() -> Vec<Box<dyn Talented + Sync + Send>> {
-    // 此处的代码后面将通过macro机制自动生成
-    vec![
-        Box::new(CurrElementTalent),
-        Box::new(ExitTalent),
-        Box::new(PrevElementTalent),
-        Box::new(CurrentTimeTalent),
-        Box::new(IncreaseTalent),
-        Box::new(NextElementTalent),
-        Box::new(ReduceTalent)
-    ]
+pub struct TalentAccessor {
+    pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>
+}
+
+impl TalentAccessor {
+    /**
+     * 创建能力访问器。
+     * */
+    pub(crate) fn new() -> Self {
+        let talents: Vec<Box<dyn Talented + Sync + Send>> =     vec![
+            Box::new(CurrElementTalent),
+            Box::new(ExitTalent),
+            Box::new(PrevElementTalent),
+            Box::new(CurrentTimeTalent),
+            Box::new(IncreaseTalent),
+            Box::new(NextElementTalent),
+            Box::new(ReduceTalent)
+        ];
+        Self {
+            talents: talents.into()
+        }
+    }
 }
