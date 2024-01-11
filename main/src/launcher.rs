@@ -17,11 +17,11 @@ use crate::{
     gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
 };
-use std::{future::Future, sync::Arc};
+use std::sync::Arc;
 use win_wrap::com::co_initialize_multi_thread;
 
 pub struct Launcher {
-    context: Arc<Context>,
+    context: Context,
     waiter: Option<Box<TerminationWaiter>>,
 }
 
@@ -32,11 +32,10 @@ impl Launcher {
     pub(crate) fn new() -> Self {
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
-        let ctx = Context::new(terminator);
-        let ctx_ref: Arc<Context> = ctx.into();
-        ctx_ref.apply();
+        let context = Context::new(terminator);
+        context.apply();
         Self {
-            context: ctx_ref,
+            context,
             waiter: Some(waiter.into()),
         }
     }
@@ -44,35 +43,35 @@ impl Launcher {
     /**
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
-    pub(crate) fn launch(&mut self) -> impl Future + '_ {
+    pub(crate) async fn launch(&mut self) {
         // 初始化COM线程模型。
         co_initialize_multi_thread().expect("Can't initialize the com environment.");
 
-        async {
-            // peeper 可以监控远进程中的信息
-            peeper::mount();
+        let ctx = Arc::new(self.context.clone());
 
-            // 显示欢迎页面。
-            self.context
-                .gui_accessor
-                .get_welcome_frame_ui()
-                .show(self.context.clone());
+        // peeper 可以监控远进程中的信息
+        peeper::mount();
 
-            // 朗读当前桌面
-            uia::speak_desktop(Arc::clone(&self.context)).await;
+        // 显示欢迎页面。
+        self.context
+            .gui_accessor
+            .get_welcome_frame_ui()
+            .show(Arc::clone(&ctx));
 
-            // 订阅UIA的焦点元素改变事件
-            uia::speak_focus_item(Arc::clone(&self.context)).await;
+        // 朗读当前桌面
+        uia::speak_desktop(Arc::clone(&ctx)).await;
 
-            // 监听前台窗口变动
-            uia::watch_foreground_window(Arc::clone(&self.context)).await;
+        // 订阅UIA的焦点元素改变事件
+        uia::speak_focus_item(Arc::clone(&ctx)).await;
 
-            // 等待程序退出的信号
-            self.waiter.as_deref_mut().unwrap().wait().await;
-            self.context.dispose();
+        // 监听前台窗口变动
+        uia::watch_foreground_window(Arc::clone(&ctx)).await;
 
-            // 解除远进程监控
-            peeper::unmount();
-        }
+        // 等待程序退出的信号
+        self.waiter.as_deref_mut().unwrap().wait().await;
+        self.context.dispose();
+
+        // 解除远进程监控
+        peeper::unmount();
     }
 }

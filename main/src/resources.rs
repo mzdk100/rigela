@@ -19,6 +19,7 @@ use tokio::fs::File;
 //noinspection HttpUrlsUsage
 const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
 
+#[derive(Clone)]
 pub struct ResourceAccessor {
     root_dir: PathBuf,
 }

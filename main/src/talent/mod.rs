@@ -51,6 +51,7 @@ pub trait Talented {
     fn perform(&self, context: Arc<Context>);
 }
 
+#[derive(Clone)]
 pub struct TalentAccessor {
     pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>
 }

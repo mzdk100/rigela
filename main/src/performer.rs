@@ -13,7 +13,6 @@
 
 use crate::configs::tts::TtsConfig;
 use crate::context::Context;
-use std::future::Future;
 use std::sync::Arc;
 use win_wrap::tts::Tts;
 
@@ -31,7 +30,7 @@ pub(crate) trait Speakable {
  * */
 #[derive(Clone)]
 pub(crate) struct Performer {
-    tts: Arc<Tts>,
+    tts: Tts,
 }
 
 impl Performer {
@@ -40,7 +39,7 @@ impl Performer {
      * */
     pub(crate) fn new() -> Self {
         let tts = Tts::new();
-        Self { tts: tts.into() }
+        Self { tts }
     }
 
     /**
@@ -69,16 +68,8 @@ impl Performer {
     /**
      * 使用语音输出，播报对象的信息。
      * */
-    pub(crate) fn speak<'a>(
-        &'a self,
-        speakable: &'a (dyn Speakable + Sync),
-    ) -> impl Future<Output = ()> + 'a {
-        async {
-            self.tts
-                .speak(speakable.get_sentence().as_str())
-                .await
-                .unwrap();
-        }
+    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync)) {
+        self.tts.speak(speakable.get_sentence().as_str()).await.unwrap();
     }
     pub(crate) async fn speak_text(&self, text: &str) {
         self.tts.speak(text).await.unwrap();

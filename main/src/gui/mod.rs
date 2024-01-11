@@ -100,6 +100,7 @@ pub trait FrameUi {
     }
 }
 
+#[derive(Clone)]
 pub struct GuiAccessor {
     #[allow(dead_code)]
     pub(crate) frames: Arc<Vec<Box<dyn FrameUi + Sync + Send>>>,

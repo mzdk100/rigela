@@ -38,19 +38,19 @@ pub(crate) async fn speak_desktop(context: Arc<Context>) {
 }
 
 pub(crate) async fn speak_focus_item(context: Arc<Context>) {
-    let uia = Arc::clone(&context.ui_automation);
+    let uia = Arc::new(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
     uia.add_focus_changed_listener(move |x| {
-        let handle = Arc::clone(&ctx.main_handler);
-        let performer = Arc::clone(&ctx.performer);
+        let handle = Arc::new(&ctx.main_handler);
+        let performer = Arc::new(ctx.performer.clone());
 
         handle.spawn(async move { performer.speak(&x).await });
     });
 }
 
 pub(crate) async fn watch_foreground_window(context: Arc<Context>) {
-    let uia = Arc::clone(&context.ui_automation);
+    let uia = Arc::new(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
     uia.add_focus_changed_listener(move |_| {
@@ -61,7 +61,7 @@ pub(crate) async fn watch_foreground_window(context: Arc<Context>) {
         form_browser::update_form_browser_hwnd();
         form_browser::clear_browseable();
 
-        let uia2 = Arc::clone(&ctx.ui_automation);
+        let uia2 = Arc::new(&ctx.ui_automation);
         let elements = uia2.get_foreground_window_elements();
         for ele in elements {
             form_browser::add_browseable(Arc::new(ele));

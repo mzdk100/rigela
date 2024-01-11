@@ -25,6 +25,8 @@ use toml;
 pub struct ConfigRoot {
     pub(crate) tts_config: Option<TtsConfig>,
 }
+
+#[derive(Clone)]
 pub struct ConfigManager {
     path: PathBuf,
 }

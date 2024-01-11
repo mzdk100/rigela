@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::sync::Arc;
 use crate::{
     commander::Commander,
     configs::ConfigManager,
@@ -21,7 +22,6 @@ use crate::{
     terminator::Terminator,
     utils::get_program_directory,
 };
-use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 
@@ -31,32 +31,17 @@ impl Speakable for UiAutomationElement {
     }
 }
 
+#[derive(Clone)]
 pub struct Context {
-    pub(crate) commander: Arc<Commander>,
-    pub(crate) config_manager: Arc<ConfigManager>,
-    pub(crate) gui_accessor: Arc<GuiAccessor>,
-    pub(crate) main_handler: Arc<Handle>,
-    pub(crate) resource_accessor: Arc<ResourceAccessor>,
-    pub(crate) performer: Arc<Performer>,
-    pub(crate) talent_accessor: Arc<TalentAccessor>,
-    pub(crate) terminator: Arc<Terminator>,
-    pub(crate) ui_automation: Arc<UiAutomation>,
-}
-
-impl Clone for Context {
-    fn clone(&self) -> Self {
-        Self {
-            commander: self.commander.clone(),
-            config_manager: self.config_manager.clone(),
-            gui_accessor: self.gui_accessor.clone(),
-            main_handler: self.main_handler.clone(),
-            performer: self.performer.clone(),
-            resource_accessor: self.resource_accessor.clone(),
-            talent_accessor: self.talent_accessor.clone(),
-            terminator: self.terminator.clone(),
-            ui_automation: self.ui_automation.clone(),
-        }
-    }
+    pub(crate) commander: Commander,
+    pub(crate) config_manager: ConfigManager,
+    pub(crate) gui_accessor: GuiAccessor,
+    pub(crate) main_handler: Handle,
+    pub(crate) resource_accessor: ResourceAccessor,
+    pub(crate) performer: Performer,
+    pub(crate) talent_accessor: TalentAccessor,
+    pub(crate) terminator: Terminator,
+    pub(crate) ui_automation: UiAutomation,
 }
 
 impl Context {
@@ -80,15 +65,15 @@ impl Context {
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
         Self {
-            commander: commander.into(),
-            config_manager: config_manager.into(),
-            gui_accessor: gui_accessor.into(),
-            main_handler: main_handler.into(),
-            performer: performer.into(),
-            resource_accessor: resources.into(),
-            talent_accessor: talent_accessor.into(),
-            terminator: terminator.into(),
-            ui_automation: ui_automation.into(),
+            commander,
+            config_manager,
+            gui_accessor,
+            main_handler,
+            performer,
+            resource_accessor: resources,
+            talent_accessor,
+            terminator,
+            ui_automation,
         }
     }
 
@@ -96,7 +81,7 @@ impl Context {
      * 把上下文对象应用于每一个组件。
      * */
     pub(crate) fn apply(&self) {
-        self.commander.apply(self.clone().into());
+        self.commander.apply(Arc::new(self.clone()));
         self.performer.apply_config(self.clone().into(), |_| {});
     }
 
