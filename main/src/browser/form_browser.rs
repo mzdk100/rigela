@@ -15,10 +15,12 @@ use crate::browser::Browseable;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::{get_foreground_window, HWND};
 
+pub type BrowserElement = Arc<dyn Browseable + Sync + Send>;
+
 struct FormBrowser {
     hwnd: HWND,
     index: i32,
-    container: Vec<Arc<dyn Browseable + Sync + Send>>,
+    container: Vec<BrowserElement>,
 }
 
 impl FormBrowser {
@@ -38,7 +40,7 @@ impl FormBrowser {
         self.hwnd = hwnd;
     }
 
-    pub fn add(&mut self, element: Arc<dyn Browseable + Sync + Send>) {
+    pub fn add(&mut self, element: BrowserElement) {
         self.container.push(element);
     }
 
@@ -56,7 +58,7 @@ impl FormBrowser {
         self.next_index(-1);
     }
 
-    pub fn current(&self) -> Option<Arc<dyn Browseable + Sync + Send>> {
+    pub fn current(&self) -> Option<BrowserElement> {
         if self.container.is_empty() {
             return None;
         }
@@ -102,20 +104,20 @@ pub(crate) fn clear_browseable() {
     get_form_browser().lock().unwrap().clear();
 }
 
-pub(crate) fn add_browseable(browseable: Arc<dyn Browseable + Sync + Send>) {
+pub(crate) fn add_browseable(browseable: BrowserElement) {
     get_form_browser().lock().unwrap().add(browseable);
 }
 
-pub(crate) fn next_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+pub(crate) fn next_browseable() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().next();
     get_form_browser().lock().unwrap().current()
 }
 
-pub(crate) fn prev_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+pub(crate) fn prev_browseable() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().prev();
     get_form_browser().lock().unwrap().current()
 }
 
-pub(crate) fn current_browseable() -> Option<Arc<dyn Browseable + Sync + Send>> {
+pub(crate) fn current_browseable() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().current()
 }

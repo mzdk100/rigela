@@ -19,16 +19,19 @@ use rigela_macros::gui;
 #[allow(unused_imports)]
 use std::sync::Arc;
 
+const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
+const TITLE: &str = "感谢您使用 RigelA";
+const BUTTON_LABEL: &str = "我要捐献";
+
 #[gui(doc = "欢迎页面", title = "欢迎")]
-fn welcome(context: Arc<Context>, gui_context: &GuiContext) {
+fn welcome(_context: Arc<Context>, gui_context: &GuiContext) {
     CentralPanel::default().show(gui_context, |ui| {
-        let mut text = String::from("RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！");
-        ui.heading("感谢您使用 RigelA");
-        ui.text_edit_multiline(&mut text);
-        if ui.button("我要捐献").clicked() {
-            context
-                .performer
-                .speak_text("开始捐献。");
+        ui.heading(TITLE);
+        ui.text_edit_multiline(&mut String::from(INFO));
+
+        if ui.button(BUTTON_LABEL).clicked() {
+            // speak 需要 await
+            // context.performer.speak_text("开始捐献。");
         }
     });
 }

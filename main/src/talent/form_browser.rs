@@ -27,8 +27,7 @@ use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
 #[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
     if let Some(ele) = form_browser::prev_browseable() {
-        let msg = format!("{} {}", ele.get_name(), ele.get_role());
-        context.performer.speak_text(&msg).await;
+        context.performer.speak(&ele).await;
     }
 }
 
@@ -36,8 +35,7 @@ async fn prev_element(context: Arc<Context>) {
 #[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
     if let Some(ele) = form_browser::next_browseable() {
-        let msg = format!("{} {}", ele.get_name(), ele.get_role());
-        context.performer.speak_text(&msg).await;
+        context.performer.speak(&ele).await;
     }
 }
 
@@ -45,7 +43,6 @@ async fn next_element(context: Arc<Context>) {
 #[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
     if let Some(ele) = form_browser::current_browseable() {
-        let msg = format!("{} {}", ele.get_name(), ele.get_role());
-        context.performer.speak_text(&msg).await;
+        context.performer.speak(&ele).await;
     }
 }
