@@ -21,7 +21,7 @@ use std::sync::Arc;
 use win_wrap::com::co_initialize_multi_thread;
 
 pub struct Launcher {
-    context: Context,
+    context: Arc<Context>,
     waiter: Option<Box<TerminationWaiter>>,
 }
 
@@ -32,10 +32,12 @@ impl Launcher {
     pub(crate) fn new() -> Self {
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
-        let context = Context::new(terminator);
-        context.apply();
+        let ctx = Context::new(terminator);
+        let ctx_ref: Arc<Context> = ctx.into();
+        ctx_ref.apply();
+
         Self {
-            context,
+            context: ctx_ref,
             waiter: Some(waiter.into()),
         }
     }
@@ -47,8 +49,6 @@ impl Launcher {
         // 初始化COM线程模型。
         co_initialize_multi_thread().expect("Can't initialize the com environment.");
 
-        let ctx = Arc::new(self.context.clone());
-
         // peeper 可以监控远进程中的信息
         peeper::mount();
 
@@ -56,16 +56,16 @@ impl Launcher {
         self.context
             .gui_accessor
             .get_welcome_frame_ui()
-            .show(Arc::clone(&ctx));
+            .show(self.context.clone());
 
         // 朗读当前桌面
-        uia::speak_desktop(Arc::clone(&ctx)).await;
+        uia::speak_desktop(Arc::clone(&self.context)).await;
 
         // 订阅UIA的焦点元素改变事件
-        uia::speak_focus_item(Arc::clone(&ctx)).await;
+        uia::speak_focus_item(Arc::clone(&self.context)).await;
 
         // 监听前台窗口变动
-        uia::watch_foreground_window(Arc::clone(&ctx)).await;
+        uia::watch_foreground_window(Arc::clone(&self.context)).await;
 
         // 等待程序退出的信号
         self.waiter.as_deref_mut().unwrap().wait().await;

@@ -10,6 +10,7 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 #![windows_subsystem = "windows"]
 
 /**
@@ -53,6 +54,5 @@ async fn main() {
     info!("Launching RigelA...");
 
     // 使用发射台启动主程序
-    let mut launcher = Launcher::new();
-    launcher.launch().await;
+    Launcher::new().launch().await;
 }
