@@ -12,32 +12,27 @@
  */
 
 use crate::browser::form_browser;
-use crate::browser::Browseable;
 use crate::context::Context;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::time::sleep;
-use win_wrap::uia::UiAutomationElement;
 
-impl Browseable for UiAutomationElement {
-    fn get_name(&self) -> String {
-        self.get_name()
+#[derive(Clone)]
+pub struct EventCore;
+
+impl EventCore {
+    pub fn new() -> Self {
+        Self
     }
 
-    fn get_role(&self) -> String {
-        self.get_localized_control_type()
+    pub async fn run(&self, context: Arc<Context>) {
+        // 订阅UIA的焦点元素改变事件
+        speak_focus_item(Arc::clone(&context.clone())).await;
+
+        // 监听前台窗口变动
+        watch_foreground_window(Arc::clone(&context.clone())).await;
     }
 }
 
-pub(crate) async fn speak_desktop(context: Arc<Context>) {
-    let ctx = Arc::clone(&context);
-    let root = ctx.ui_automation.get_root_element();
-    ctx.performer.speak(&root).await;
-
-    sleep(Duration::from_millis(1000)).await;
-}
-
-pub(crate) async fn speak_focus_item(context: Arc<Context>) {
+async fn speak_focus_item(context: Arc<Context>) {
     let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
@@ -49,7 +44,7 @@ pub(crate) async fn speak_focus_item(context: Arc<Context>) {
     });
 }
 
-pub(crate) async fn watch_foreground_window(context: Arc<Context>) {
+async fn watch_foreground_window(context: Arc<Context>) {
     let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
