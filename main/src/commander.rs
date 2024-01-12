@@ -60,6 +60,7 @@ impl Commander {
         let talents = context.talent_accessor.talents.clone();
         // 跟踪每一个键的按下状态
         let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
+
         // 准备安装键盘钩子
         let keyboard_hook =
             WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {

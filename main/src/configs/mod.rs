@@ -15,7 +15,6 @@ pub(crate) mod tts;
 
 use crate::configs::tts::TtsConfig;
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 use std::path::PathBuf;
 use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -25,9 +24,11 @@ use toml;
 pub struct ConfigRoot {
     pub(crate) tts_config: Option<TtsConfig>,
 }
+
 pub struct ConfigManager {
     path: PathBuf,
 }
+
 impl ConfigManager {
     /**
      * 创建一个配置管理器
@@ -39,43 +40,39 @@ impl ConfigManager {
     /*
      * 读取配置数据。
      * */
-    pub(crate) fn read(&self) -> impl Future<Output = ConfigRoot> + '_ {
-        async move {
-            let mut content = String::new();
-            let path = self.path.clone();
-            OpenOptions::new()
-                .create(true)
-                .read(true)
-                .write(true)
-                .open(&path)
-                .await
-                .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
-                .read_to_string(&mut content)
-                .await
-                .expect("Can't edit the config.");
-            toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap()
-        }
+    pub(crate) async fn read(&self) -> ConfigRoot {
+        let mut content = String::new();
+        let path = self.path.clone();
+
+        OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .open(&path)
+            .await
+            .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
+            .read_to_string(&mut content)
+            .await
+            .expect("Can't edit the config.");
+
+        toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap()
     }
 
     /**
      * 写出配置数据。
      * `config_root` 完整的配置数据。
      * */
-    pub(crate) fn write<'a>(
-        &'a self,
-        config_root: &'a ConfigRoot,
-    ) -> impl Future<Output = ()> + 'a {
-        async {
-            let path = self.path.clone();
-            OpenOptions::new()
-                .create(true)
-                .write(true)
-                .open(&path)
-                .await
-                .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
-                .write_all(toml::to_string(config_root).unwrap().as_bytes())
-                .await
-                .expect("Can't write the config data.");
-        }
+    pub(crate) async fn write(&self, config_root: &ConfigRoot) {
+        let path = self.path.clone();
+
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(&path)
+            .await
+            .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
+            .write_all(toml::to_string(config_root).unwrap().as_bytes())
+            .await
+            .expect("Can't write the config data.");
     }
 }

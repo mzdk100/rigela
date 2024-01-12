@@ -12,3 +12,4 @@
  */
 
 pub const TEXT_QUIT: &str = "退出读屏！";
+pub const TEXT_TTS_SPEED: &str = "语速";

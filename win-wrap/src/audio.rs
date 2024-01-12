@@ -25,6 +25,7 @@ use windows::Win32::Media::Audio::{
     WAVEFORMATEX, WAVE_FORMAT_PCM,
 };
 
+#[allow(dead_code)]
 pub struct AudioOutputStream {
     engine: IXAudio2,
     mastering_voice: IXAudio2MasteringVoice,
