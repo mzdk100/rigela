@@ -58,6 +58,6 @@ log4rs = "1.2.0"
 # 配置项读写
 toml = "0.8.8"
 # gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
-winit = "0.28.7"
-eframe = "0.24.1"
+winit = "0.29.9"
+eframe = "0.25.0"
 log = "0.4.20"

@@ -8,6 +8,7 @@ members = [
     "macros",
     "main",
     "peeper",
+    "proxy32",
     "jab-sys",
     "resources",
     "win-wrap"
