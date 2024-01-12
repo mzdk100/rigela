@@ -52,7 +52,6 @@ async fn main() {
     // 初始化日志库
     init_logger();
     info!("Launching RigelA...");
-
     // 使用发射台启动主程序
     Launcher::new().launch().await;
 }
