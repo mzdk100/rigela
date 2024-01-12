@@ -15,16 +15,14 @@ use crate::{
     common::{close_handle, BOOL, FALSE, HANDLE, LPARAM, TRUE, WAIT_EVENT, WPARAM},
     message::post_thread_message,
 };
+pub use windows::Win32::Security::SECURITY_ATTRIBUTES;
 use windows::{
     core::HSTRING,
     Win32::{
-        System::Threading::{
-            CreateEventW, GetCurrentThreadId, SetEvent, WaitForSingleObject,
-        },
+        System::Threading::{CreateEventW, GetCurrentThreadId, SetEvent, WaitForSingleObject},
         UI::WindowsAndMessaging::WM_QUIT,
-    }
+    },
 };
-pub use windows::Win32::Security::SECURITY_ATTRIBUTES;
 
 /**
  * 查询调用线程的线程标识符。

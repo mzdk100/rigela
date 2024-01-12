@@ -2,9 +2,9 @@ extern crate bindgen;
 extern crate cc;
 
 use std::env;
-use std::path::PathBuf;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rerun-if-changed=allow_funcs.txt");
@@ -14,8 +14,7 @@ fn main() {
         .include("./c_jab")
         .compile("jab");
 
-    let builder = bindgen::Builder::default()
-        .header("wrapper.h");
+    let builder = bindgen::Builder::default().header("wrapper.h");
     let builder = filter_funcs(&builder);
 
     let bindings = builder

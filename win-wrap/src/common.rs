@@ -28,10 +28,7 @@ pub use windows::{
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::{
-            CloseHandle,
-            GetLastError
-        },
+        Foundation::{CloseHandle, GetLastError},
         System::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
@@ -39,7 +36,7 @@ use windows::{
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    }
+    },
 };
 
 /**

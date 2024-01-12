@@ -1,9 +1,9 @@
 use jab_sys;
 
 fn main() {
-	unsafe {
-		jab_sys::initializeAccessBridge();
-	}
+    unsafe {
+        jab_sys::initializeAccessBridge();
+    }
 
-	println!("Done!");
+    println!("Done!");
 }

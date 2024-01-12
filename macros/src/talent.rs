@@ -9,26 +9,28 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
- */use heck::ToUpperCamelCase;
+ */
+use heck::ToUpperCamelCase;
 
-use proc_macro2::{Delimiter::Bracket, Group, Punct, Spacing, Span, TokenStream};
-use proc_macro2::Delimiter::Parenthesis;
-use quote::{quote, TokenStreamExt, ToTokens};
-use syn::{parse::{Parse, ParseStream}, Ident, ItemFn, Token, MetaNameValue, punctuated::Punctuated};
 use crate::utils::get_struct_name;
+use proc_macro2::Delimiter::Parenthesis;
+use proc_macro2::{Delimiter::Bracket, Group, Punct, Spacing, Span, TokenStream};
+use quote::{quote, ToTokens, TokenStreamExt};
+use syn::{
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    Ident, ItemFn, MetaNameValue, Token,
+};
 
 struct Metadata {
     doc: MetaNameValue,
-    cmd_list: TokenStream
+    cmd_list: TokenStream,
 }
 impl Parse for Metadata {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let r=Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
+        let r = Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
         let mut iter = r.iter();
-        let doc = iter
-            .next()
-            .unwrap()
-            .clone();
+        let doc = iter.next().unwrap().clone();
         let mut cmd_list = TokenStream::new();
         cmd_list.append(Ident::new("vec", Span::call_site()));
         cmd_list.append(Punct::new('!', Spacing::Alone));
@@ -56,13 +58,9 @@ impl Parse for Metadata {
             }
             items
         }));
-        Ok(Self {
-            doc,
-            cmd_list
-        })
+        Ok(Self { doc, cmd_list })
     }
 }
-
 
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
@@ -90,5 +88,4 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             pub fn #id2(&self) -> #id {#id}
         }
     }
-
 }

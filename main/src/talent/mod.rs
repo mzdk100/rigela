@@ -15,25 +15,15 @@ mod form_browser;
 mod program;
 mod tts;
 
-use std::sync::Arc;
 use crate::context::Context;
+use std::sync::Arc;
 //noinspection RsUnresolvedReference
-use crate::talent::{
-    form_browser::{
-        CurrElementTalent,
-        PrevElementTalent,
-        NextElementTalent
-    },
-    program::{
-        CurrentTimeTalent,
-        ExitTalent
-    },
-    tts::{
-        IncreaseTalent,
-        ReduceTalent
-    }
-};
 use super::commander::CommandType;
+use crate::talent::{
+    form_browser::{CurrElementTalent, NextElementTalent, PrevElementTalent},
+    program::{CurrentTimeTalent, ExitTalent},
+    tts::{IncreaseTalent, ReduceTalent},
+};
 
 /**
  * 一个能力的抽象接口。
@@ -52,7 +42,7 @@ pub trait Talented {
 }
 
 pub struct TalentAccessor {
-    pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>
+    pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>,
 }
 
 impl TalentAccessor {
@@ -60,17 +50,17 @@ impl TalentAccessor {
      * 创建能力访问器。
      * */
     pub(crate) fn new() -> Self {
-        let talents: Vec<Box<dyn Talented + Sync + Send>> =     vec![
+        let talents: Vec<Box<dyn Talented + Sync + Send>> = vec![
             Box::new(CurrElementTalent),
             Box::new(ExitTalent),
             Box::new(PrevElementTalent),
             Box::new(CurrentTimeTalent),
             Box::new(IncreaseTalent),
             Box::new(NextElementTalent),
-            Box::new(ReduceTalent)
+            Box::new(ReduceTalent),
         ];
         Self {
-            talents: talents.into()
+            talents: talents.into(),
         }
     }
 }
