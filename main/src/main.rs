@@ -13,6 +13,7 @@
 
 #![windows_subsystem = "windows"]
 
+mod browseable_impl;
 /**
  * 入口程序。
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
@@ -34,6 +35,7 @@ mod commander;
 mod configs;
 mod consts;
 mod context;
+mod event_core;
 mod gui;
 mod launcher;
 mod logger;

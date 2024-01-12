@@ -12,12 +12,13 @@
  */
 
 use crate::{
-    browser::uia,
     context::Context,
     gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
 };
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
 pub struct Launcher {
@@ -59,13 +60,10 @@ impl Launcher {
             .show(self.context.clone());
 
         // 朗读当前桌面
-        uia::speak_desktop(Arc::clone(&self.context)).await;
+        speak_desktop(Arc::clone(&self.context)).await;
 
-        // 订阅UIA的焦点元素改变事件
-        uia::speak_focus_item(Arc::clone(&self.context)).await;
-
-        // 监听前台窗口变动
-        uia::watch_foreground_window(Arc::clone(&self.context)).await;
+        // 启动事件监听
+        self.context.event_core.run(self.context.clone()).await;
 
         // 等待程序退出的信号
         self.waiter.as_deref_mut().unwrap().wait().await;
@@ -74,4 +72,11 @@ impl Launcher {
         // 解除远进程监控
         peeper::unmount();
     }
+}
+
+async fn speak_desktop(context: Arc<Context>) {
+    let root = context.ui_automation.get_root_element();
+    context.performer.speak(&root).await;
+
+    sleep(Duration::from_millis(1000)).await;
 }

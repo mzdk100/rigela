@@ -14,6 +14,7 @@
 use crate::{
     commander::Commander,
     configs::ConfigManager,
+    event_core,
     gui::GuiAccessor,
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
@@ -41,6 +42,7 @@ pub struct Context {
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
+    pub(crate) event_core: Arc<event_core::EventCore>,
 }
 
 impl Clone for Context {
@@ -55,6 +57,7 @@ impl Clone for Context {
             talent_accessor: self.talent_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
+            event_core: self.event_core.clone(),
         }
     }
 }
@@ -79,6 +82,8 @@ impl Context {
         let talent_accessor = TalentAccessor::new();
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
+        // 事件处理中心
+        let event_core = event_core::EventCore::new();
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
@@ -89,6 +94,7 @@ impl Context {
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
+            event_core: event_core.into(),
         }
     }
 
