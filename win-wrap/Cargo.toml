@@ -21,6 +21,8 @@ features = [
     # Win32基础框架
     "Foundation",
     "Win32_System_Diagnostics_Debug",
+    "Win32_System_Kernel",
+    "Win32_Globalization",
     "Win32_System_SystemServices",
     # 动态库加载
     "Win32_System_LibraryLoader",

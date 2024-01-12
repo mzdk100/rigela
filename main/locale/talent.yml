@@ -1,0 +1,9 @@
+_version: 2
+
+program.exit:
+  en: Exit screen reader
+  zh-CN: 退出读屏
+
+tts.speed:
+  en: Voice speed %{value}
+  zh-CN: 语速%{value}

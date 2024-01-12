@@ -36,7 +36,8 @@ use windows::{
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    },
+        Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME}
+    }
 };
 
 /**
@@ -134,4 +135,16 @@ pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
  * */
 pub fn get_last_error() -> Result<()> {
     unsafe { GetLastError() }
+}
+
+/**
+ * 查询用户默认 区域设置名称。
+ * 注意 如果设计为仅在 Windows Vista 及更高版本上运行，应用程序应优先调用此函数，而不是 get_user_default_lc_id 。
+ */
+pub fn get_user_default_locale_name() -> String {
+    unsafe {
+        let mut name: [u16; MAX_LOCALE_NAME as usize] = [0; MAX_LOCALE_NAME as usize];
+        let length = GetUserDefaultLocaleName(&mut name);
+        String::from_utf16_lossy(&mut name[..(length - 1) as usize])
+    }
 }

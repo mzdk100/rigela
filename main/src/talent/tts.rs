@@ -19,7 +19,6 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
-use crate::consts::TEXT_TTS_SPEED;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_INSERT, VK_OEM_MINUS, VK_OEM_PLUS};
 
@@ -39,7 +38,7 @@ async fn increase(context: Arc<Context>) {
         .speed
         .unwrap();
     let pf = context.performer.clone();
-    pf.speak_text(format!("{TEXT_TTS_SPEED} {:.1}", speed).as_str())
+    pf.speak_text(t!("tts.speed", value = speed).as_str())
         .await;
 }
 
@@ -59,6 +58,6 @@ async fn reduce(context: Arc<Context>) {
         .speed
         .unwrap();
     let pf = context.performer.clone();
-    pf.speak_text(format!("{TEXT_TTS_SPEED} {:.1}", speed).as_str())
+    pf.speak_text(t!("tts.speed", value = speed).as_str())
         .await;
 }

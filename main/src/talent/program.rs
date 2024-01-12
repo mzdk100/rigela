@@ -23,7 +23,6 @@ use std::sync::Arc;
 use win_wrap::input::{VK_ESCAPE, VK_F12, VK_INSERT};
 
 /* 业务逻辑使用的条目 */
-use crate::consts;
 use crate::performer::Speakable;
 use chrono::prelude::{DateTime, Local};
 use std::time::Duration;
@@ -32,9 +31,13 @@ use tokio::time::sleep;
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = ((VK_INSERT, false), (VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
-    context.performer.speak_text(consts::TEXT_QUIT).await;
+    context.performer
+        .speak_text(t!("program.exit").as_str())
+        .await;
     sleep(Duration::from_millis(1000)).await;
-    context.terminator.exit().await;
+    context.terminator
+        .exit()
+        .await;
 }
 
 impl Speakable for DateTime<Local> {

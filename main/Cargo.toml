@@ -14,6 +14,12 @@ repository = "https://gitcode.net/mzdk100/rigela.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.i18n]
+# 配置I18N国际化多语言支持
+default-locale = "zh-CN"
+# 这个配置让'cargo i18n'命令行工具知道在哪里可以找到你的翻译。要保证和传给“rust_i18n::i18n！”方法的路径相同。
+load-path = "locale"
+
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
 path = "../peeper"
@@ -53,6 +59,8 @@ features = ["derive"]
 chrono = "0.4.31"
 # 获取用户目录的路径
 home = "0.5.9"
+# 配置I18N国际化多语言支持
+rust-i18n = "2.3.0"
 # 记录日志
 log4rs = "1.2.0"
 # 配置项读写

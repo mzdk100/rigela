@@ -10,6 +10,7 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 use bitar::chunk_dictionary::chunker_parameters::ChunkingAlgorithm;
 use bitar::chunk_dictionary::{ChunkDescriptor, ChunkDictionary, ChunkerParameters};
 use bitar::chunker::Config::RollSum;
@@ -18,7 +19,7 @@ use bitar::{Compression, HashSum};
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use std::collections::HashMap;
-use std::future;
+use std::{env, future};
 use std::path::Path;
 use tokio::fs::{create_dir, read_dir};
 use tokio::task::spawn_blocking;
@@ -91,18 +92,17 @@ async fn compress(resource_name: &str) {
             let (index, offset, verified, compressed) = r.expect("Error compressing.");
             let chunk_len = verified.len();
             let use_uncompressed = compressed.len() >= chunk_len;
-            println!(
-                "Chunk {}, '{}', offset: {}, size: {}, {}",
-                index,
-                verified.hash(),
-                offset,
-                chunk_len,
-                if use_uncompressed {
+            if index % 4 == 0 {
+                let compressed = if use_uncompressed {
                     "left uncompressed".to_owned()
                 } else {
                     format!("compressed to: {}", compressed.len())
-                },
-            );
+                };
+                println!(
+                    "Chunk {}, '{}', offset: {}, size: {}, {}",
+                    index, verified.hash(), offset, chunk_len, compressed
+                );
+            }
             let (mut hash, chunk) = verified.into_parts();
             let use_data = if use_uncompressed {
                 chunk.data()
@@ -165,6 +165,14 @@ async fn compress(resource_name: &str) {
 
 #[tokio::main]
 async fn main() {
+    println!("cargo:rerun-if-changed=dev");
+    println!("cargo:rerun-if-changed=src");
+    if let Ok(x) = env::var("CARGO_CFG_TARGET_ARCH") {
+        if x == "x86" {
+            // 构建32位版本不用压缩资源，仅在构建64位程序时压缩一次
+            return;
+        }
+    }
     let path = Path::new(COMPRESSED_DIR);
     if !path.exists() {
         create_dir(path)

@@ -13,7 +13,11 @@
 
 #![windows_subsystem = "windows"]
 
-mod browseable_impl;
+#[macro_use]
+extern crate rust_i18n;
+// 初始化I18N国际化多语言支持
+i18n!("locale");
+
 /**
  * 入口程序。
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
@@ -31,9 +35,9 @@ mod browseable_impl;
  * 12. utils 工具函数，封装一些常用但没有归类的函数。
  * */
 mod browser;
+mod browseable_impl;
 mod commander;
 mod configs;
-mod consts;
 mod context;
 mod event_core;
 mod gui;
@@ -48,12 +52,18 @@ mod utils;
 use launcher::Launcher;
 use log::info;
 use logger::init_logger;
+use win_wrap::common::get_user_default_locale_name;
 
 #[tokio::main]
 async fn main() {
     // 初始化日志库
     init_logger();
-    info!("Launching RigelA...");
+    // 获取用户系统的默认语言设置
+    let locale = get_user_default_locale_name();
+    info!("The current locale of the user is {}.", locale);
+    // 让I18N国际化模块的语言跟随系统
+    rust_i18n::set_locale(locale.as_str());
     // 使用发射台启动主程序
+    info!("Launching RigelA...");
     Launcher::new().launch().await;
 }
