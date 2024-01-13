@@ -21,6 +21,7 @@ use tokio::fs::File;
 const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
 const DIR_NAME: &str = ".rigela";
 
+/// 资源访问器
 pub struct ResourceAccessor {
     root_dir: PathBuf,
 }
@@ -33,6 +34,7 @@ impl ResourceAccessor {
         let root_dir = home_dir()
             .expect("Can't get the current user directory.")
             .join(DIR_NAME);
+
         if !root_dir.exists() {
             create_dir(&root_dir).expect("Can't create the root directory.");
         }

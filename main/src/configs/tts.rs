@@ -13,6 +13,7 @@
 
 use serde::{Deserialize, Serialize};
 
+/// 语音TTS的配置项
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TtsConfig {
     pub(crate) speed: Option<f32>,

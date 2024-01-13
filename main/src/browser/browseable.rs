@@ -14,11 +14,13 @@
 use crate::performer::Speakable;
 use std::sync::Arc;
 
+/// 传递给窗口浏览器的控件接口
 pub(crate) trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
 }
 
+/// 为浏览控件接口对象实现朗读接口
 impl Speakable for Arc<dyn Browsable + Sync + Send> {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_role())

@@ -55,8 +55,8 @@ impl Performer {
 
         context.main_handler.clone().spawn(async move {
             let mut config = context.config_manager.read().await;
-
             let mut tts_config = config.tts_config.clone().unwrap_or(TtsConfig::default());
+
             slot(&mut tts_config);
 
             let speed = tts_config.speed.clone().unwrap();

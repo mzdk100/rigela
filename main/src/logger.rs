@@ -24,13 +24,15 @@ use log4rs::{
     init_config,
 };
 
+const LOG_FILE_NAME: &str = "run.log";
+
 /**
  * 初始化日志收集器。
  * */
 
 pub(crate) fn init_logger() {
     let level = LevelFilter::Info;
-    let file_path = get_program_directory().join("run.log");
+    let file_path = get_program_directory().join(LOG_FILE_NAME);
 
     // 创建一个标准错误日志器
     let stderr = ConsoleAppender::builder()

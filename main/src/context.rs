@@ -26,12 +26,14 @@ use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 
+/// 给UIA元素实现朗读接口
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_localized_control_type())
     }
 }
 
+/// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
@@ -103,6 +105,8 @@ impl Context {
      * */
     pub(crate) fn apply(&self) {
         self.commander.apply(self.clone().into());
+
+        // 读取配置项，应用配置到程序实例
         self.performer.apply_config(self.clone().into(), |_| {});
     }
 

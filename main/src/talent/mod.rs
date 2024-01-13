@@ -41,7 +41,9 @@ pub trait Talented {
     fn perform(&self, context: Arc<Context>);
 }
 
+/// 技能访问器对象，包含所有技能对象列表
 pub struct TalentAccessor {
+    // 技能对象集合
     pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>,
 }
 
