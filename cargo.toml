@@ -5,6 +5,7 @@ opt-level = "s"
 
 [workspace]
 members = [
+    "build_helper",
     "macros",
     "main",
     "peeper",

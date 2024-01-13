@@ -9,8 +9,17 @@
 ```shell
 git clone https://gitcode.net/mzdk100/rigela.git
 cd rigela
+cargo mkenv
 cargo dev
 ```
+其中mkenv用来创建一个专用的构建程序，因为有同时构建32位和64位程序的需要，cargo本身是无法做到这一点的。
+请注意：我们使用"cargo dev"运行而不是"cargo run"，否则您将碰到这样的错误“error: only one `--target` argument is supported”。
+如果您执意想用"cargo run"命令，您可以添加"--target x86_64-pc-windows-msvc"额外的参数来实现：
+```sh
+cargo build --target i686-pc-windows-msvc
+cargo run --target x86_64-pc-windows-msvc
+```
+其中第一行表示先构建32位的目标，因为第二行需要依赖他，这两行命令不可以反过来写，因此为了简化书写，我们创建了一个dev的短命令。
 
 
 ## 开发文档

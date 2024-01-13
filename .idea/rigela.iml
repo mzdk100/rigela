@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/resources/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/main/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/proxy32/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/build_helper/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

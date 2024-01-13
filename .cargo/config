@@ -5,5 +5,10 @@ target = [
 ]
 
 [alias]
-ck = ["check", "--target", "x86_64-pc-windows-msvc"]
-dev = ["run", "--target", "x86_64-pc-windows-msvc"]
+# 用于建立完整的构建环境
+mkenv = ["install", "cargo-rigela", "--path", "build_helper", "--target", "x86_64-pc-windows-msvc"]
+ck = ["rigela", "check"]
+# 开发模式
+dev = ["rigela", "run"]
+# 发布模式
+rel = ["rigela", "build", "--release"]
