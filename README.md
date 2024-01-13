@@ -9,23 +9,23 @@
 ```shell
 git clone https://gitcode.net/mzdk100/rigela.git
 cd rigela
-cargo run
+cargo dev
 ```
 
 
 ## 开发文档
 我们呼吁对开源读屏项目感兴趣的开发者踊跃参与进来，开发文档也不断完善中，如果您想参与本项目的贡献，请参考下一节。
-下面是本项目提供的开发文档：
-- [用于实现国际化支持的参考文档](I18N.md)
-- [用于32位应用的代理模块参考文档](proxy32/README.md)
-- [RigelA资源增量更新参考文档](resources/README.md)
-- [Windows消息常亮表](WM_REFERENCE.md)
-如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
-- [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
-- [Rust语言圣经](https://course.rs/about-book.html)
-- [Rust for Windows 仓库](https://github.com/microsoft/windows-rs)
-- [Rust for Windows 文档](https://microsoft.github.io/windows-docs-rs/)
-- [Rust的异步运行时tokio仓库](https://github.com/tokio-rs/tokio)
+1. 本项目提供的开发文档：
+   - [用于实现国际化支持的参考文档](I18N.md)
+   - [用于32位应用的代理模块参考文档](proxy32/README.md)
+   - [RigelA资源增量更新参考文档](resources/README.md)
+   - [Windows消息常亮表](WM_REFERENCE.md)
+2. 如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
+   - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
+   - [Rust语言圣经](https://course.rs/about-book.html)
+   - [Rust for Windows 仓库](https://github.com/microsoft/windows-rs)
+   - [Rust for Windows 文档](https://microsoft.github.io/windows-docs-rs/)
+   - [Rust的异步运行时tokio仓库](https://github.com/tokio-rs/tokio)
 
 
 ## 开发贡献
