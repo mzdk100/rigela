@@ -47,7 +47,6 @@ impl ConfigManager {
         OpenOptions::new()
             .create(true)
             .read(true)
-            .write(true)
             .open(&path)
             .await
             .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())

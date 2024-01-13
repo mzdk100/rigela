@@ -11,14 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::Browseable;
+use crate::browser::Browsable;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::common::{get_foreground_window, HWND};
 
-pub type BrowserElement = Arc<dyn Browseable + Sync + Send>;
+pub type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 struct FormBrowser {
-    hwnd: HWND,
     index: i32,
     container: Vec<BrowserElement>,
 }
@@ -26,18 +24,9 @@ struct FormBrowser {
 impl FormBrowser {
     pub fn new() -> Self {
         Self {
-            hwnd: HWND::default(),
             index: 0,
             container: Vec::new(),
         }
-    }
-
-    pub fn get_hwnd(&self) -> HWND {
-        self.hwnd
-    }
-
-    pub fn set_hwnd(&mut self, hwnd: HWND) {
-        self.hwnd = hwnd;
     }
 
     pub fn add(&mut self, element: BrowserElement) {
@@ -45,9 +34,8 @@ impl FormBrowser {
     }
 
     pub fn clear(&mut self) {
-        self.container.clear();
         self.index = 0;
-        self.hwnd = HWND::default();
+        self.container.clear();
     }
 
     pub fn next(&mut self) {
@@ -89,35 +77,24 @@ fn get_form_browser() -> &'static Mutex<FormBrowser> {
     INSTANCE.get_or_init(|| Mutex::new(FormBrowser::new()))
 }
 
-pub(crate) fn is_foreground_window_changed() -> bool {
-    get_form_browser().lock().unwrap().get_hwnd() != get_foreground_window()
-}
-
-pub(crate) fn update_form_browser_hwnd() {
-    get_form_browser()
-        .lock()
-        .unwrap()
-        .set_hwnd(get_foreground_window());
-}
-
-pub(crate) fn clear_browseable() {
+pub(crate) fn clear() {
     get_form_browser().lock().unwrap().clear();
 }
 
-pub(crate) fn add_browseable(browseable: BrowserElement) {
-    get_form_browser().lock().unwrap().add(browseable);
+pub(crate) fn add(browsable: BrowserElement) {
+    get_form_browser().lock().unwrap().add(browsable);
 }
 
-pub(crate) fn next_browseable() -> Option<BrowserElement> {
+pub(crate) fn next() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().next();
     get_form_browser().lock().unwrap().current()
 }
 
-pub(crate) fn prev_browseable() -> Option<BrowserElement> {
+pub(crate) fn prev() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().prev();
     get_form_browser().lock().unwrap().current()
 }
 
-pub(crate) fn current_browseable() -> Option<BrowserElement> {
+pub(crate) fn current() -> Option<BrowserElement> {
     get_form_browser().lock().unwrap().current()
 }

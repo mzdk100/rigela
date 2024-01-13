@@ -34,8 +34,8 @@ i18n!("locale");
  * 11. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中；
  * 12. utils 工具函数，封装一些常用但没有归类的函数。
  * */
+mod browsable_impl;
 mod browser;
-mod browseable_impl;
 mod commander;
 mod configs;
 mod context;
@@ -58,11 +58,13 @@ use win_wrap::common::get_user_default_locale_name;
 async fn main() {
     // 初始化日志库
     init_logger();
+
     // 获取用户系统的默认语言设置
     let locale = get_user_default_locale_name();
     info!("The current locale of the user is {}.", locale);
     // 让I18N国际化模块的语言跟随系统
     rust_i18n::set_locale(locale.as_str());
+
     // 使用发射台启动主程序
     info!("Launching RigelA...");
     Launcher::new().launch().await;

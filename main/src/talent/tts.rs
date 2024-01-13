@@ -38,8 +38,7 @@ async fn increase(context: Arc<Context>) {
         .speed
         .unwrap();
     let pf = context.performer.clone();
-    pf.speak_text(t!("tts.speed", value = speed).as_str())
-        .await;
+    pf.speak_text(t!("tts.speed", value = speed).as_str()).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -58,6 +57,5 @@ async fn reduce(context: Arc<Context>) {
         .speed
         .unwrap();
     let pf = context.performer.clone();
-    pf.speak_text(t!("tts.speed", value = speed).as_str())
-        .await;
+    pf.speak_text(t!("tts.speed", value = speed).as_str()).await;
 }

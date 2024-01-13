@@ -29,6 +29,7 @@ use windows::{
     core::HSTRING,
     Win32::{
         Foundation::{CloseHandle, GetLastError},
+        Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
@@ -36,8 +37,7 @@ use windows::{
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-        Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME}
-    }
+    },
 };
 
 /**

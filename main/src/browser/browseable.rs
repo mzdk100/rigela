@@ -14,12 +14,12 @@
 use crate::performer::Speakable;
 use std::sync::Arc;
 
-pub(crate) trait Browseable {
+pub(crate) trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
 }
 
-impl Speakable for Arc<dyn Browseable + Sync + Send> {
+impl Speakable for Arc<dyn Browsable + Sync + Send> {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_role())
     }

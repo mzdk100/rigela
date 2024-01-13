@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::Browseable;
+use crate::browser::Browsable;
 use win_wrap::uia::UiAutomationElement;
 
-impl Browseable for UiAutomationElement {
+impl Browsable for UiAutomationElement {
     fn get_name(&self) -> String {
         self.get_name()
     }

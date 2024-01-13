@@ -13,8 +13,11 @@
 
 use crate::browser::form_browser;
 use crate::context::Context;
-use std::sync::Arc;
+use std::ops::DerefMut;
+use std::sync::{Arc, Mutex, OnceLock};
+use win_wrap::common::{get_foreground_window, HWND};
 
+/// 事件处理中心
 #[derive(Clone)]
 pub struct EventCore;
 
@@ -23,6 +26,7 @@ impl EventCore {
         Self
     }
 
+    /// 启动事件监听
     pub async fn run(&self, context: Arc<Context>) {
         // 订阅UIA的焦点元素改变事件
         speak_focus_item(Arc::clone(&context.clone())).await;
@@ -32,6 +36,7 @@ impl EventCore {
     }
 }
 
+/// 朗读焦点元素
 async fn speak_focus_item(context: Arc<Context>) {
     let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
@@ -44,22 +49,29 @@ async fn speak_focus_item(context: Arc<Context>) {
     });
 }
 
+// 存储前台窗口句柄
+fn get_old_foreground_window_hwnd() -> &'static Mutex<HWND> {
+    static INSTANCE: OnceLock<Mutex<HWND>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(HWND::default()))
+}
+
+/// 监测前台窗口变动，发送控件元素到form_browser
 async fn watch_foreground_window(context: Arc<Context>) {
     let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
     uia.add_focus_changed_listener(move |_| {
-        if !form_browser::is_foreground_window_changed() {
+        if get_foreground_window() == *get_old_foreground_window_hwnd().lock().unwrap() {
             return;
         }
 
-        form_browser::update_form_browser_hwnd();
-        form_browser::clear_browseable();
+        *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = get_foreground_window();
+        form_browser::clear();
 
         let uia2 = Arc::clone(&ctx.ui_automation);
         let elements = uia2.get_foreground_window_elements();
         for ele in elements {
-            form_browser::add_browseable(Arc::new(ele));
+            form_browser::add(Arc::new(ele));
         }
     });
 }

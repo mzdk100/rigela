@@ -19,8 +19,8 @@ use bitar::{Compression, HashSum};
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use std::collections::HashMap;
-use std::{env, future};
 use std::path::Path;
+use std::{env, future};
 use tokio::fs::{create_dir, read_dir};
 use tokio::task::spawn_blocking;
 use tokio::{
@@ -100,7 +100,11 @@ async fn compress(resource_name: &str) {
                 };
                 println!(
                     "Chunk {}, '{}', offset: {}, size: {}, {}",
-                    index, verified.hash(), offset, chunk_len, compressed
+                    index,
+                    verified.hash(),
+                    offset,
+                    chunk_len,
+                    compressed
                 );
             }
             let (mut hash, chunk) = verified.into_parts();

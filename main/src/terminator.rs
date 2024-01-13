@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::future::Future;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Clone)]
 pub struct Terminator(Sender<()>);
+
 pub struct TerminationWaiter(Receiver<()>);
 
 impl Terminator {
@@ -28,19 +28,16 @@ impl Terminator {
     }
 
     /* 发送退出信号。 */
-    pub(crate) fn exit<'a>(&'a self) -> impl Future<Output = ()> + 'a {
-        async {
-            self.0.send(()).await.unwrap();
-        }
+    pub(crate) async fn exit(&self) {
+        self.0.send(()).await.unwrap();
     }
 }
+
 impl TerminationWaiter {
     /**
      * 等待退出信号。
      * */
-    pub(crate) fn wait<'a>(&'a mut self) -> impl Future + 'a {
-        async {
-            self.0.recv().await;
-        }
+    pub(crate) async fn wait(&mut self) {
+        self.0.recv().await;
     }
 }

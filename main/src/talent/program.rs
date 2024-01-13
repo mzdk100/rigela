@@ -31,13 +31,12 @@ use tokio::time::sleep;
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = ((VK_INSERT, false), (VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
-    context.performer
+    context
+        .performer
         .speak_text(t!("program.exit").as_str())
         .await;
     sleep(Duration::from_millis(1000)).await;
-    context.terminator
-        .exit()
-        .await;
+    context.terminator.exit().await;
 }
 
 impl Speakable for DateTime<Local> {

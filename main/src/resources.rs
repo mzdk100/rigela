@@ -10,14 +10,16 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 use home::home_dir;
 use rigela_resources::clone;
 use std::fs::create_dir;
-use std::future::Future;
 use std::path::PathBuf;
 use tokio::fs::File;
+
 //noinspection HttpUrlsUsage
 const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
+const DIR_NAME: &str = ".rigela";
 
 pub struct ResourceAccessor {
     root_dir: PathBuf,
@@ -30,10 +32,11 @@ impl ResourceAccessor {
     pub(crate) fn new() -> Self {
         let root_dir = home_dir()
             .expect("Can't get the current user directory.")
-            .join(".rigela");
+            .join(DIR_NAME);
         if !root_dir.exists() {
             create_dir(&root_dir).expect("Can't create the root directory.");
         }
+
         Self { root_dir }
     }
 
@@ -41,11 +44,8 @@ impl ResourceAccessor {
      * 打开一个资源文件。
      * `resource_name` 资源名称。
      * */
-    pub(crate) fn open<'a>(
-        &'a self,
-        resource_name: &'a str,
-    ) -> impl Future<Output = Result<File, String>> + 'a {
+    pub(crate) async fn open(&self, resource_name: &str) -> Result<File, String> {
         let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
-        clone(url, self.root_dir.join(resource_name))
+        clone(url, self.root_dir.join(resource_name)).await
     }
 }
