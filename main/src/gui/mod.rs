@@ -43,18 +43,22 @@ pub trait FrameUi {
     {
         let mut fonts = FontDefinitions::default();
         let main_handler = context.main_handler.clone();
+
         let ttf_file = main_handler.block_on(async move {
-            let mut file = context
+            let mut data = Vec::new();
+
+            context
                 .resource_accessor
                 .open("bloom.ttf")
                 .await
-                .expect("Can't open the font resource.");
-            let mut data = Vec::new();
-            file.read_to_end(&mut data)
+                .expect("Can't open the font resource.")
+                .read_to_end(&mut data)
                 .await
                 .expect("Can't read the ttf resource.");
+
             data
         });
+
         fonts
             .font_data
             .insert("bloom".to_owned(), FontData::from_owned(ttf_file));
@@ -68,6 +72,7 @@ pub trait FrameUi {
             .entry(FontFamily::Monospace)
             .or_default()
             .push("bloom".to_owned());
+
         cc.egui_ctx.set_fonts(fonts);
     }
 

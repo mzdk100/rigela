@@ -20,11 +20,13 @@ use tokio::fs::OpenOptions;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use toml;
 
+/// 配置项目的根元素
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConfigRoot {
     pub(crate) tts_config: Option<TtsConfig>,
 }
 
+/// 配置管理器
 pub struct ConfigManager {
     path: PathBuf,
 }

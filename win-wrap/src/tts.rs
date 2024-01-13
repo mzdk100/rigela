@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::future::Future;
 use std::sync::Arc;
 use windows::{
     core::{Result, HSTRING},
@@ -63,17 +62,16 @@ impl Tts {
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。
      * */
-    pub fn speak<'a>(&'a self, text: &'a str) -> impl Future<Output = Result<()>> + 'a {
-        async move {
-            let stream = self
-                .synth
-                .SynthesizeTextToStreamAsync(&HSTRING::from(text))?
-                .await?;
-            let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
-            let item = MediaPlaybackItem::Create(&source)?;
-            self.player.SetSource(&item)?;
-            self.player.Play()?;
-            Ok(())
-        }
+    pub async fn speak(&self, text: &str) -> Result<()> {
+        let stream = self
+            .synth
+            .SynthesizeTextToStreamAsync(&HSTRING::from(text))?
+            .await?;
+        let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
+        let item = MediaPlaybackItem::Create(&source)?;
+        self.player.SetSource(&item)?;
+        self.player.Play()?;
+
+        Ok(())
     }
 }

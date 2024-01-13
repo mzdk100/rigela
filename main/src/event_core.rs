@@ -41,11 +41,13 @@ async fn speak_focus_item(context: Arc<Context>) {
     let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
+    // 给UI Automation的焦点改变绑定处理事件
     uia.add_focus_changed_listener(move |x| {
-        let handle = Arc::clone(&ctx.main_handler);
         let performer = Arc::clone(&ctx.performer);
 
-        handle.spawn(async move { performer.speak(&x).await });
+        // 异步执行元素朗读
+        ctx.main_handler
+            .spawn(async move { performer.speak(&x).await });
     });
 }
 
@@ -57,19 +59,24 @@ fn get_old_foreground_window_hwnd() -> &'static Mutex<HWND> {
 
 /// 监测前台窗口变动，发送控件元素到form_browser
 async fn watch_foreground_window(context: Arc<Context>) {
-    let uia = Arc::clone(&context.ui_automation);
     let ctx = Arc::clone(&context);
 
-    uia.add_focus_changed_listener(move |_| {
+    // 给UI Automation的焦点改变绑定处理事件
+    context.ui_automation.add_focus_changed_listener(move |_| {
+        // 如果前台窗口没有变动直接返回
         if get_foreground_window() == *get_old_foreground_window_hwnd().lock().unwrap() {
             return;
         }
 
+        // 保存新的前台窗口句柄
         *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = get_foreground_window();
+        // 清空窗口浏览器的控件元素
         form_browser::clear();
 
-        let uia2 = Arc::clone(&ctx.ui_automation);
-        let elements = uia2.get_foreground_window_elements();
+        // 根据句柄获取到所有的控件元素
+        let uia = Arc::clone(&ctx.ui_automation);
+        let elements = uia.get_foreground_window_elements();
+        // 添加所有的控件元素到窗口浏览器
         for ele in elements {
             form_browser::add(Arc::new(ele));
         }

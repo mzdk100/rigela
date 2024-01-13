@@ -21,6 +21,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
+/// 启动器对象
 pub struct Launcher {
     context: Arc<Context>,
     waiter: Option<Box<TerminationWaiter>>,
@@ -33,8 +34,12 @@ impl Launcher {
     pub(crate) fn new() -> Self {
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
+
+        // 上下文对象的创建，需要传入终结器，上下文对象通过终结器对象响应终结消息
         let ctx = Context::new(terminator);
         let ctx_ref: Arc<Context> = ctx.into();
+
+        // 调用上下文对象的应用到每一个组件的方法
         ctx_ref.apply();
 
         Self {
@@ -74,6 +79,7 @@ impl Launcher {
     }
 }
 
+/// 朗读桌面
 async fn speak_desktop(context: Arc<Context>) {
     let root = context.ui_automation.get_root_element();
     context.performer.speak(&root).await;
