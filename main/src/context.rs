@@ -28,13 +28,6 @@ use tokio::runtime::Handle;
 use tokio::sync::Mutex;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 
-/// 给UIA元素实现朗读接口
-impl Speakable for UiAutomationElement {
-    fn get_sentence(&self) -> String {
-        format!("{}: {}", self.get_name(), self.get_localized_control_type())
-    }
-}
-
 /// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
@@ -50,24 +43,6 @@ pub struct Context {
     pub(crate) form_browser: Arc<Mutex<FormBrowser>>,
 }
 
-impl Clone for Context {
-    fn clone(&self) -> Self {
-        Self {
-            commander: self.commander.clone(),
-            config_manager: self.config_manager.clone(),
-            gui_accessor: self.gui_accessor.clone(),
-            main_handler: self.main_handler.clone(),
-            performer: self.performer.clone(),
-            resource_accessor: self.resource_accessor.clone(),
-            talent_accessor: self.talent_accessor.clone(),
-            terminator: self.terminator.clone(),
-            ui_automation: self.ui_automation.clone(),
-            event_core: self.event_core.clone(),
-            form_browser: self.form_browser.clone(),
-        }
-    }
-}
-
 impl Context {
     /**
      * 创建一个框架上下文环境。
@@ -75,21 +50,31 @@ impl Context {
     pub(crate) fn new(terminator: Terminator) -> Self {
         // 创建一个指挥官，用于下发操作命令
         let commander = Commander::new();
+
+        // 配置管理器
         let config_manager = ConfigManager::new(get_program_directory().join("config.toml"));
+
         // 创建GUI访问器
         let gui_accessor = GuiAccessor::new();
+
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
         let performer = Performer::new();
+
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
+
         // 创建资源访问器
         let resources = ResourceAccessor::new();
+
         // 创建能力访问器
         let talent_accessor = TalentAccessor::new();
+
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
+
         // 事件处理中心
         let event_core = event_core::EventCore::new();
+
         // 窗口浏览器
         let form_browser = FormBrowser::new();
 
@@ -123,5 +108,30 @@ impl Context {
      * */
     pub(crate) fn dispose(&self) {
         self.commander.dispose();
+    }
+}
+
+impl Clone for Context {
+    fn clone(&self) -> Self {
+        Self {
+            commander: self.commander.clone(),
+            config_manager: self.config_manager.clone(),
+            gui_accessor: self.gui_accessor.clone(),
+            main_handler: self.main_handler.clone(),
+            performer: self.performer.clone(),
+            resource_accessor: self.resource_accessor.clone(),
+            talent_accessor: self.talent_accessor.clone(),
+            terminator: self.terminator.clone(),
+            ui_automation: self.ui_automation.clone(),
+            event_core: self.event_core.clone(),
+            form_browser: self.form_browser.clone(),
+        }
+    }
+}
+
+/// 给UIA元素实现朗读接口
+impl Speakable for UiAutomationElement {
+    fn get_sentence(&self) -> String {
+        format!("{}: {}", self.get_name(), self.get_localized_control_type())
     }
 }
