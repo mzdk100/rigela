@@ -20,36 +20,27 @@ use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
 #[allow(unused_imports)]
-use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
+use win_wrap::input::{VK_CLEAR, VK_HOME, VK_LEFT, VK_RIGHT};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
-    let performer = context.performer.clone();
     let mut fb = context.form_browser.lock().await;
     fb.prev();
-    if let Some(ele) = fb.current() {
-        performer.speak(&ele).await;
-    }
+    context.performer.speak(&(**fb)).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
-    let performer = context.performer.clone();
     let mut fb = context.form_browser.lock().await;
     fb.next();
-    if let Some(ele) = fb.current() {
-        performer.speak(&ele).await;
-    }
+    context.performer.speak(&(**fb)).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
-    let performer = context.performer.clone();
     let fb = context.form_browser.lock().await;
-    if let Some(ele) = fb.current() {
-        performer.speak(&ele).await;
-    }
+    context.performer.speak(&(**fb)).await;
 }

@@ -12,9 +12,10 @@
  */
 
 use crate::browser::Browsable;
+use std::ops::Deref;
 use std::sync::Arc;
 
-pub type BrowserElement = Arc<dyn Browsable + Sync + Send>;
+type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
 pub struct FormBrowser {
@@ -52,6 +53,7 @@ impl FormBrowser {
     }
 
     /// 获取当前虚拟焦点控件元素
+    #[allow(unused)]
     pub fn current(&self) -> Option<BrowserElement> {
         if self.container.is_empty() {
             return None;
@@ -73,6 +75,14 @@ impl FormBrowser {
             i if i >= len => 0,
             i => i,
         }
+    }
+}
+
+impl Deref for FormBrowser {
+    type Target = BrowserElement;
+    fn deref(&self) -> &Self::Target {
+        // todo: 这里如果container为空，需要做进一步处理，或者可以实现一个Empty BrowserElement
+        &self.container.get(self.index as usize).unwrap()
     }
 }
 

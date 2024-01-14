@@ -15,7 +15,7 @@ use crate::performer::Speakable;
 use std::sync::Arc;
 
 /// 传递给窗口浏览器的控件接口
-pub(crate) trait Browsable {
+pub trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
 }

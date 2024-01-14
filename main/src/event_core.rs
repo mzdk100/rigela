@@ -79,7 +79,7 @@ async fn watch_foreground_window(context: Arc<Context>) {
 
         handle.spawn(async move {
             let mut fb = fb.lock().await;
-            
+
             // 清空窗口浏览器的控件元素
             fb.clear();
 
