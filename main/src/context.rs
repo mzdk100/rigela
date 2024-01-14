@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::browser::form_browser::FormBrowser;
 use crate::{
     commander::Commander,
     configs::ConfigManager,
@@ -24,6 +25,7 @@ use crate::{
 };
 use std::sync::Arc;
 use tokio::runtime::Handle;
+use tokio::sync::Mutex;
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 
 /// 给UIA元素实现朗读接口
@@ -45,6 +47,7 @@ pub struct Context {
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
     pub(crate) event_core: Arc<event_core::EventCore>,
+    pub(crate) form_browser: Arc<Mutex<FormBrowser>>,
 }
 
 impl Clone for Context {
@@ -60,6 +63,7 @@ impl Clone for Context {
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
             event_core: self.event_core.clone(),
+            form_browser: self.form_browser.clone(),
         }
     }
 }
@@ -86,6 +90,9 @@ impl Context {
         let ui_automation = UiAutomation::new();
         // 事件处理中心
         let event_core = event_core::EventCore::new();
+        // 窗口浏览器
+        let form_browser = FormBrowser::new();
+
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
@@ -97,6 +104,7 @@ impl Context {
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
             event_core: event_core.into(),
+            form_browser: Arc::new(Mutex::new(form_browser)),
         }
     }
 

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::form_browser;
 use crate::context::Context;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -61,7 +60,7 @@ fn get_old_foreground_window_hwnd() -> &'static Mutex<HWND> {
 
 /// 监测前台窗口变动，发送控件元素到form_browser
 async fn watch_foreground_window(context: Arc<Context>) {
-    let ctx = Arc::clone(&context);
+    let ctx = context.clone();
 
     // 给UI Automation的焦点改变绑定处理事件
     context.ui_automation.add_focus_changed_listener(move |_| {
@@ -72,15 +71,25 @@ async fn watch_foreground_window(context: Arc<Context>) {
 
         // 保存新的前台窗口句柄
         *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = get_foreground_window();
-        // 清空窗口浏览器的控件元素
-        form_browser::clear();
 
-        // 根据句柄获取到所有的控件元素
-        let uia = Arc::clone(&ctx.ui_automation);
-        let elements = uia.get_foreground_window_elements();
-        // 添加所有的控件元素到窗口浏览器
-        for ele in elements {
-            form_browser::add(Arc::new(ele));
-        }
+        // form_browser需要异步操作
+        let handle = ctx.main_handler.clone();
+        let fb = ctx.form_browser.clone();
+        let uia = ctx.ui_automation.clone();
+
+        handle.spawn(async move {
+            let mut fb = fb.lock().await;
+            
+            // 清空窗口浏览器的控件元素
+            fb.clear();
+
+            // 根据句柄获取到所有的控件元素
+            let elements = uia.get_foreground_window_elements();
+            // 添加所有的控件元素到窗口浏览器
+            for ele in elements {
+                // form_browser::add(Arc::new(ele));
+                fb.add(Arc::new(ele));
+            }
+        });
     });
 }
