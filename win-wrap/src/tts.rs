@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. The RigelA open source project team and
+ * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::sync::Arc;
-use windows::{
-    core::{Result, HSTRING},
-    Media::{
-        Core::MediaSource,
-        Playback::{MediaPlaybackItem, MediaPlayer},
-        SpeechSynthesis::SpeechSynthesizer,
+use std::{
+    sync::{
+        Arc,
+        Mutex
     },
+    ops::Add,
 };
+use windows::{
+    core::HSTRING,
+    Media::SpeechSynthesis::SpeechSynthesizer,
+    Storage::Streams::DataReader
+};
+use crate::audio::AudioOutputStream;
 
 #[derive(Clone)]
 pub struct Tts {
     synth: Arc<SpeechSynthesizer>,
-    player: Arc<MediaPlayer>,
+    output_stream: Arc<AudioOutputStream>,
+    task_id: Arc<Mutex<u32>>
 }
 
 impl Tts {
@@ -34,11 +39,12 @@ impl Tts {
     pub fn new() -> Self {
         // 创建语音合成器
         let synth = SpeechSynthesizer::new().expect("Can't create the speech synthesizer.");
-        // 创建媒体播放器
-        let player = MediaPlayer::new().expect("Can't create the media player.");
+        // 创建音频输出流
+        let stream = AudioOutputStream::new(16000, 1);
         Self {
             synth: synth.into(),
-            player: player.into(),
+            output_stream: stream.into(),
+            task_id: Arc::new(0u32.into())
         }
     }
 
@@ -62,16 +68,50 @@ impl Tts {
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。
      * */
-    pub async fn speak(&self, text: &str) -> Result<()> {
+    pub async fn speak(&self, text: &str) {
+        let current_id = {
+            let mut lock = self.task_id.lock().unwrap();
+            let index = lock.add(1);
+            *lock = index;
+            index
+        };
         let stream = self
             .synth
-            .SynthesizeTextToStreamAsync(&HSTRING::from(text))?
-            .await?;
-        let source = MediaSource::CreateFromStream(&stream, &stream.ContentType()?)?;
-        let item = MediaPlaybackItem::Create(&source)?;
-        self.player.SetSource(&item)?;
-        self.player.Play()?;
-
-        Ok(())
+            .SynthesizeTextToStreamAsync(&HSTRING::from(text))
+            .unwrap()
+            .await
+            .unwrap();
+        let size = stream.Size().unwrap();
+        let reader = DataReader::CreateDataReader(&stream).unwrap();
+        reader
+            .LoadAsync(size as u32)
+            .unwrap()
+            .await
+            .unwrap();
+        self.output_stream.flush();
+        self.output_stream.stop();
+        self.output_stream.start();
+        // 跳过音频文件头的44个字节
+        let mut data: [u8; 44] = [0; 44];
+        reader.ReadBytes(&mut data).unwrap();
+        loop {
+            // 获取合成任务的id
+            let id = match self.task_id.lock() {
+                Ok(x) => *x,
+                Err(_) => 0u32
+            };
+            if id != current_id {
+                // 这里检查是否已经有新的合成任务，如果有就打断当前的合成任务
+                break
+            }
+            let mut data: [u8; 3200] = [0; 3200];
+            reader.ReadBytes(&mut data).unwrap_or(());
+            self.output_stream.write(&data).await;
+            if let Ok(x) = reader.UnconsumedBufferLength() {
+                if x < data.len() as u32 {
+                    break
+                }
+            }
+        }
     }
 }

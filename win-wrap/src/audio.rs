@@ -11,32 +11,48 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::fmt::{Display, Formatter};
-use std::mem::size_of;
-use windows::Win32::Media::Audio::XAudio2::{
-    IXAudio2SourceVoice, XAUDIO2_BUFFER, XAUDIO2_MAX_FREQ_RATIO, XAUDIO2_VOICE_NOSRC,
+use std::{
+    future::Future,
+    fmt::{Display, Formatter},
+    mem::size_of,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll}
 };
-use windows::Win32::Media::Audio::{
-    AudioCategory_SoundEffects,
-    XAudio2::{
-        IXAudio2, IXAudio2MasteringVoice, XAudio2CreateWithVersionInfo,
-        XAUDIO2_USE_DEFAULT_PROCESSOR,
-    },
-    WAVEFORMATEX, WAVE_FORMAT_PCM,
+use windows::Win32::Media::{
+    Audio::{
+        XAudio2::{
+            IXAudio2SourceVoice,
+            XAUDIO2_BUFFER,
+            XAUDIO2_COMMIT_NOW,
+            XAUDIO2_MAX_FREQ_RATIO,
+            XAUDIO2_VOICE_NOSRC,
+            IXAudio2,
+            IXAudio2MasteringVoice,
+            XAudio2CreateWithVersionInfo,
+            XAUDIO2_USE_DEFAULT_PROCESSOR
+        },
+        AudioCategory_SoundEffects,
+        WAVEFORMATEX,
+        WAVE_FORMAT_PCM,
+        XAudio2::XAUDIO2_VOICE_STATE
+    }
 };
 
 #[allow(dead_code)]
 pub struct AudioOutputStream {
-    engine: IXAudio2,
-    mastering_voice: IXAudio2MasteringVoice,
-    source_voice: IXAudio2SourceVoice,
+    engine: Arc<IXAudio2>,
+    mastering_voice: Arc<IXAudio2MasteringVoice>,
+    source_voice: Arc<IXAudio2SourceVoice>,
 }
 
 impl AudioOutputStream {
     /**
      * 创建一个音频输出流。
+     * `sample_rate` 采样率。
+     * `num_channels` 通道数。
      * */
-    pub fn new(num_channels: u32, sample_rate: u32) -> Self {
+    pub fn new(sample_rate: u32, num_channels: u32) -> Self {
         let mut engine: Option<IXAudio2> = None;
         let mut mastering_voice: Option<IXAudio2MasteringVoice> = None;
         let mut source_voice: Option<IXAudio2SourceVoice> = None;
@@ -79,27 +95,75 @@ impl AudioOutputStream {
             .expect("Can't create the source voice.");
         }
         Self {
-            engine: engine.unwrap(),
-            mastering_voice: mastering_voice.unwrap(),
-            source_voice: source_voice.unwrap(),
+            engine: engine.unwrap().into(),
+            mastering_voice: mastering_voice.unwrap().into(),
+            source_voice: source_voice.unwrap().into(),
         }
     }
-    pub fn push(&self) {
-        unsafe { self.source_voice.Start(0, 0) }.expect("Can't start.");
-        let mut data: [u8; 32000] = [0; 32000];
-        for i in 0..data.len() {
-            data[i] = ((i as f64).sin() * 32f64) as u8
-        }
-        let mut buf = XAUDIO2_BUFFER::default();
-        buf.pAudioData = data.as_ptr();
-        buf.AudioBytes = data.len() as u32;
-        unsafe { self.source_voice.SubmitSourceBuffer(&buf, None) }
-            .expect("Can't submit the data.");
+
+    /**
+     * 写入音频数据，并等待播放完毕。
+     * `data` 音频数据。
+     * */
+    pub async fn write(&self, data: &[u8]) {
+        StreamState::new(self.source_voice.clone(), &data).await;
+    }
+
+    /**
+     * 从语音队列中删除所有挂起的音频缓冲区。
+     * */
+    #[allow(dead_code)]
+    pub(crate) fn flush(&self) {
+        unsafe { self.source_voice.FlushSourceBuffers() }
+            .unwrap_or(())
+    }
+
+    /**
+     * 停止播放。
+     * */
+    pub fn stop(&self) {
+        unsafe { self.source_voice.Stop(0, 0) }
+            .expect("Can't stop the stream.");
+    }
+
+    /**
+     * 开始播放。
+     * */
+    pub fn start(&self) {
+        unsafe { self.source_voice.Start(0, XAUDIO2_COMMIT_NOW) }
+            .expect("Can't start.");
     }
 }
-
 impl Display for AudioOutputStream {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AudioOutputStream")
     }
 }
+unsafe impl Send for AudioOutputStream {}
+unsafe impl Sync for AudioOutputStream {}
+pub struct StreamState(Arc<IXAudio2SourceVoice>);
+impl StreamState {
+    fn new(source_voice: Arc<IXAudio2SourceVoice>, data: &[u8]) -> Self {
+        let mut buf = XAUDIO2_BUFFER::default();
+        buf.pAudioData = data.as_ptr();
+        buf.AudioBytes = data.len() as u32;
+        unsafe { source_voice.SubmitSourceBuffer(&buf, None) }.unwrap_or(());
+        Self(source_voice)
+    }
+}
+impl Future for StreamState {
+    type Output = ();
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let mut state = XAUDIO2_VOICE_STATE::default();
+    unsafe { self.0.GetState(&mut state, 0); }
+        let p = state.BuffersQueued;
+        if p < 1 {
+            Poll::Ready(())
+        } else {
+            cx.waker().clone().wake();
+            Poll::Pending
+        }
+    }
+}
+unsafe impl Send for StreamState {}
+unsafe impl Sync for StreamState {}

@@ -47,7 +47,9 @@ async fn speak_focus_item(context: Arc<Context>) {
 
         // 异步执行元素朗读
         ctx.main_handler
-            .spawn(async move { performer.speak(&x).await });
+            .spawn(async move {
+                performer.speak(&x).await;
+            });
     });
 }
 

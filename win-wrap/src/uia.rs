@@ -80,9 +80,14 @@ impl UiAutomation {
     /// 获取前台窗口控件元素
     pub fn get_foreground_window_elements(&self) -> Vec<UiAutomationElement> {
         let mut result = Vec::new();
-        let element = self.get_element_from_hwnd(get_foreground_window()).unwrap();
-        let elements = UIMatcher::new(self, &element).get_child_elements();
-        result.extend(elements);
+        let element = self.get_element_from_hwnd(get_foreground_window());
+        match element.as_ref() {
+            None => {}
+            Some(x) => {
+                let elements = UIMatcher::new(self, x).get_child_elements();
+                result.extend(elements);
+            }
+        }
         result
     }
 

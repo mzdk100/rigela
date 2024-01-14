@@ -72,11 +72,11 @@ impl Performer {
      * */
     pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync)) {
         let str = speakable.get_sentence();
-        self.tts.speak(str.as_str()).await.unwrap();
+        self.tts.speak(str.as_str()).await;
     }
 
     /// 简单朗读文本
     pub(crate) async fn speak_text(&self, text: &str) {
-        self.tts.speak(text).await.unwrap();
+        self.tts.speak(text).await;
     }
 }
