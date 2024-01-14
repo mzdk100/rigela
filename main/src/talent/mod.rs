@@ -24,6 +24,8 @@ use crate::talent::{
     program::{CurrentTimeTalent, ExitTalent},
     tts::{IncreaseTalent, ReduceTalent},
 };
+use crate::talent::form_browser::{CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent};
+use crate::talent::tts::{IncreaseRTalent, ReduceRTalent};
 
 /**
  * 一个能力的抽象接口。
@@ -53,13 +55,21 @@ impl TalentAccessor {
      * */
     pub(crate) fn new() -> Self {
         let talents: Vec<Box<dyn Talented + Sync + Send>> = vec![
-            Box::new(CurrElementTalent),
             Box::new(ExitTalent),
-            Box::new(PrevElementTalent),
             Box::new(CurrentTimeTalent),
-            Box::new(IncreaseTalent),
+
+            Box::new(PrevElementTalent),
             Box::new(NextElementTalent),
+            Box::new(CurrElementTalent),
+
+            Box::new(PrevChildElementTalent),
+            Box::new(NextChildElementTalent),
+            Box::new(CurrChildElementTalent),
+
+            Box::new(IncreaseTalent),
+            Box::new(IncreaseRTalent),
             Box::new(ReduceTalent),
+            Box::new(ReduceRTalent),
         ];
         Self {
             talents: talents.into(),
