@@ -37,6 +37,7 @@ features = [
     "rt-multi-thread",
     "sync",
     "macros",
+    "process",
     "time"
 ]
 
