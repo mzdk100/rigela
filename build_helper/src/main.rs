@@ -15,17 +15,16 @@
 fn main() {
     use std::env;
     use std::process::Command;
-    let mut arg_list = env::args()
-        .skip(2)
-        .collect::<Vec<_>>();
+    let mut arg_list = env::args().skip(2).collect::<Vec<_>>();
     if arg_list.contains(&String::from("--target")) {
         panic!("The --target argument is not allowed.");
     }
     arg_list.push("--target".to_string());
 
     // 获取cargo的路径
-    let cargo = env::var("CARGO")
-        .expect("Can't directly run the current program, this program can only be called through cargo.");
+    let cargo = env::var("CARGO").expect(
+        "Can't directly run the current program, this program can only be called through cargo.",
+    );
 
     // 先构建32位目标，因为64位主程序需要依赖他
     let args = {
@@ -56,7 +55,6 @@ fn main() {
         .wait()
         .unwrap();
 }
-
 
 #[cfg(target_arch = "x86")]
 fn main() {
