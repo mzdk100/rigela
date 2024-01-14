@@ -19,30 +19,37 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
-use crate::browser::form_browser;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_CLEAR, VK_LEFT, VK_RIGHT};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_LEFT, false)))]
 async fn prev_element(context: Arc<Context>) {
-    if let Some(ele) = form_browser::prev() {
-        context.performer.speak(&ele).await;
+    let performer = context.performer.clone();
+    let mut fb = context.form_browser.lock().await;
+    fb.prev();
+    if let Some(ele) = fb.current() {
+        performer.speak(&ele).await;
     }
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个控件", key = ((VK_RIGHT, false)))]
 async fn next_element(context: Arc<Context>) {
-    if let Some(ele) = form_browser::next() {
-        context.performer.speak(&ele).await;
+    let performer = context.performer.clone();
+    let mut fb = context.form_browser.lock().await;
+    fb.next();
+    if let Some(ele) = fb.current() {
+        performer.speak(&ele).await;
     }
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前控件", key = ((VK_CLEAR, false)))]
 async fn curr_element(context: Arc<Context>) {
-    if let Some(ele) = form_browser::current() {
-        context.performer.speak(&ele).await;
+    let performer = context.performer.clone();
+    let fb = context.form_browser.lock().await;
+    if let Some(ele) = fb.current() {
+        performer.speak(&ele).await;
     }
 }

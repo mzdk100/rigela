@@ -12,12 +12,12 @@
  */
 
 use crate::browser::Browsable;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::Arc;
 
 pub type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
-struct FormBrowser {
+pub struct FormBrowser {
     // 虚拟焦点索引
     index: i32,
     // 窗口控件集合
@@ -78,33 +78,3 @@ impl FormBrowser {
 
 unsafe impl Send for FormBrowser {}
 unsafe impl Sync for FormBrowser {}
-
-// 获取FormBrowser的实例，FormBrowser是全局单例对象
-fn get_form_browser() -> &'static Mutex<FormBrowser> {
-    static INSTANCE: OnceLock<Mutex<FormBrowser>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(FormBrowser::new()))
-}
-
-// 封装 FormBrowser的接口方法，简化外部调用
-
-pub(crate) fn clear() {
-    get_form_browser().lock().unwrap().clear();
-}
-
-pub(crate) fn add(browsable: BrowserElement) {
-    get_form_browser().lock().unwrap().add(browsable);
-}
-
-pub(crate) fn next() -> Option<BrowserElement> {
-    get_form_browser().lock().unwrap().next();
-    get_form_browser().lock().unwrap().current()
-}
-
-pub(crate) fn prev() -> Option<BrowserElement> {
-    get_form_browser().lock().unwrap().prev();
-    get_form_browser().lock().unwrap().current()
-}
-
-pub(crate) fn current() -> Option<BrowserElement> {
-    get_form_browser().lock().unwrap().current()
-}
