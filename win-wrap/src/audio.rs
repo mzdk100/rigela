@@ -113,7 +113,7 @@ impl AudioOutputStream {
      * 从语音队列中删除所有挂起的音频缓冲区。
      * */
     #[allow(dead_code)]
-    pub(crate) fn flush(&self) {
+    pub fn flush(&self) {
         unsafe { self.source_voice.FlushSourceBuffers() }
             .unwrap_or(())
     }

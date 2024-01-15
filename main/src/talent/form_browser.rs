@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
 #[allow(unused_imports)]
-use win_wrap::input::{VK_CLEAR, VK_HOME, VK_LEFT, VK_RIGHT, VK_UP, VK_PRIOR};
+use win_wrap::input::{VK_CLEAR, VK_HOME, VK_LEFT, VK_RIGHT, VK_UP, VK_PRIOR, VK_ADD};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_HOME, false)))]
@@ -66,4 +66,10 @@ async fn next_child_element(context: Arc<Context>) {
 async fn curr_child_element(context: Arc<Context>) {
     let fb = context.form_browser.lock().await;
     context.performer.speak(&(**fb)).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "下一个模式", key = ((VK_ADD, false)))]
+async fn mode_next(context: Arc<Context>) {
+    context.sounder.play("boundary.wav").await;
 }

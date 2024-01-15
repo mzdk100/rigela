@@ -15,17 +15,18 @@ mod form_browser;
 mod program;
 mod tts;
 
-use crate::context::Context;
-use std::sync::Arc;
-//noinspection RsUnresolvedReference
-use super::commander::CommandType;
-use crate::talent::{
-    form_browser::{CurrElementTalent, NextElementTalent, PrevElementTalent},
-    program::{CurrentTimeTalent, ExitTalent},
-    tts::{IncreaseTalent, ReduceTalent},
+use crate::{
+    commander::CommandType,
+    context::Context,
+    talent::{
+        form_browser::{CurrElementTalent, NextElementTalent, PrevElementTalent, ModeNextTalent},
+        program::{CurrentTimeTalent, ExitTalent},
+        tts::{IncreaseTalent, ReduceTalent},
+    },
+    talent::form_browser::{CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent},
+    talent::tts::{IncreaseRTalent, ReduceRTalent}
 };
-use crate::talent::form_browser::{CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent};
-use crate::talent::tts::{IncreaseRTalent, ReduceRTalent};
+use std::sync::Arc;
 
 /**
  * 一个能力的抽象接口。
@@ -57,6 +58,7 @@ impl TalentAccessor {
         let talents: Vec<Box<dyn Talented + Sync + Send>> = vec![
             Box::new(ExitTalent),
             Box::new(CurrentTimeTalent),
+            Box::new(ModeNextTalent),
 
             Box::new(PrevElementTalent),
             Box::new(NextElementTalent),

@@ -11,21 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::form_browser::FormBrowser;
 use crate::{
+    browser::form_browser::FormBrowser,
     commander::Commander,
     configs::ConfigManager,
     event_core,
     gui::GuiAccessor,
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
+    sounder::Sounder,
     talent::TalentAccessor,
     terminator::Terminator,
-    utils::get_program_directory,
+    utils::get_program_directory
 };
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use tokio::sync::Mutex;
+use tokio::{
+    runtime::Handle,
+    sync::Mutex
+};
 use win_wrap::uia::{UiAutomation, UiAutomationElement};
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
@@ -35,6 +38,7 @@ pub struct Context {
     pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
+    pub(crate) sounder: Arc<Sounder>,
     pub(crate) performer: Arc<Performer>,
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
@@ -66,6 +70,9 @@ impl Context {
         // 创建资源访问器
         let resources = ResourceAccessor::new();
 
+        // 创建音效播放器
+        let sounder = Sounder::new();
+
         // 创建能力访问器
         let talent_accessor = TalentAccessor::new();
 
@@ -85,6 +92,7 @@ impl Context {
             main_handler: main_handler.into(),
             performer: performer.into(),
             resource_accessor: resources.into(),
+            sounder: sounder.into(),
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
@@ -98,6 +106,11 @@ impl Context {
      * */
     pub(crate) fn apply(&self) {
         self.commander.apply(self.clone().into());
+        let sounder = self.sounder.clone();
+        let ctx = Arc::new(self.clone());
+        self.main_handler.spawn(async move {
+            sounder.apply(ctx).await
+        });
 
         // 读取配置项，应用配置到程序实例
         self.performer.apply_config(self.clone().into(), |_| {});
@@ -120,6 +133,7 @@ impl Clone for Context {
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
             resource_accessor: self.resource_accessor.clone(),
+            sounder: self.sounder.clone(),
             talent_accessor: self.talent_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
