@@ -11,14 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::common::get_foreground_window;
-use crate::uia::{UIMatcher, UiAutomationElement};
-use windows::core::{implement, Result};
-use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
-use windows::Win32::UI::Accessibility::{
-    CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler,
-    IUIAutomationFocusChangedEventHandler_Impl,
+use windows::{
+    core::{implement, Result},
+    Win32::{
+        System::Com::{CoCreateInstance, CLSCTX_ALL},
+        Foundation::HWND,
+        UI::Accessibility::{
+            CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationFocusChangedEventHandler,
+            IUIAutomationFocusChangedEventHandler_Impl,
+        }
+    }
+};
+use crate::{
+    uia::ui_element::UiAutomationElement,
+    common::get_foreground_window,
+    uia::ui_matcher::UiMatcher
 };
 
 /// UIAutomation接口本地封装
@@ -55,7 +62,7 @@ impl UiAutomation {
         let mut result = Vec::new();
 
         if let Ok(element) = self.get_element_from_hwnd(get_foreground_window()) {
-            let elements = UIMatcher::new(self).get_child_elements(&element);
+            let elements = UiMatcher::new(self).get_child_elements(&element);
             result.extend(elements);
         }
 

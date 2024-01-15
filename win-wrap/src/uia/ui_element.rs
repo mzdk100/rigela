@@ -12,8 +12,10 @@
  */
 
 use std::fmt::{Display, Formatter};
-use windows::core::BSTR;
-use windows::Win32::UI::Accessibility::IUIAutomationElement;
+use windows::{
+    core::BSTR,
+    Win32::UI::Accessibility::IUIAutomationElement
+};
 
 /// UiAutomationElement 的本地封装
 #[derive(Clone)]

@@ -24,6 +24,7 @@ features = [
     "Win32_System_Kernel",
     "Win32_Globalization",
     "Win32_System_SystemServices",
+    "Win32_System_Variant",
     # 动态库加载
     "Win32_System_LibraryLoader",
     # 鼠标和键盘API
@@ -36,6 +37,7 @@ features = [
     "Storage_Streams",
     # COM交互
     "Win32_System_Com",
+    "Win32_System_Ole",
     # 窗口和消息队列
     "Win32_UI_WindowsAndMessaging",
     # 无障碍API（MSAA和UIA）

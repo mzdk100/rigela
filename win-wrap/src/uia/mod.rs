@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod ui_automation;
-mod ui_element;
-mod ui_matcher;
-
-pub use ui_automation::UiAutomation;
-pub use ui_element::UiAutomationElement;
-pub use ui_matcher::UIMatcher;
+pub mod ui_automation;
+pub mod ui_element;
+pub mod ui_matcher;
+pub mod ui_pattern;

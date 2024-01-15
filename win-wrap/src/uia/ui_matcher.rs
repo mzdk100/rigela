@@ -11,17 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::uia::{UiAutomation, UiAutomationElement};
 use windows::Win32::UI::Accessibility::{IUIAutomation, TreeScope};
+use crate::uia::{
+    ui_automation::UiAutomation,
+    ui_element::UiAutomationElement
+};
 
 /// UIA 元素匹配器
-pub struct UIMatcher<'a> {
+pub struct UiMatcher<'a> {
     ui_automation: Box<&'a IUIAutomation>,
 }
 
-impl<'a> UIMatcher<'a> {
+impl<'a> UiMatcher<'a> {
     pub fn new(ui_automation: &'a UiAutomation) -> Self {
-        UIMatcher {
+        UiMatcher {
             ui_automation: Box::new(&ui_automation.0),
         }
     }
