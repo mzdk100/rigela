@@ -52,7 +52,9 @@ impl Sounder {
         self.output_stream.flush();
         self.output_stream.stop();
         self.output_stream.start();
-        self.output_stream.write(&data).await;
+        for i in (0..data.len()).step_by(3200) {
+            self.output_stream.write(&data[i..i + 3200]).await;
+        }
     }
 
     /**

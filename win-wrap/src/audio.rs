@@ -155,12 +155,12 @@ impl Future for StreamState {
     type Output = ();
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut state = XAUDIO2_VOICE_STATE::default();
-    unsafe { self.0.GetState(&mut state, 0); }
+        unsafe { self.0.GetState(&mut state, 0); }
         let p = state.BuffersQueued;
         if p < 1 {
             Poll::Ready(())
         } else {
-            cx.waker().clone().wake();
+            cx.waker().wake_by_ref();
             Poll::Pending
         }
     }
