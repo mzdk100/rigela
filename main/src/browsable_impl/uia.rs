@@ -12,6 +12,7 @@
  */
 
 use crate::browser::Browsable;
+use std::sync::Arc;
 use win_wrap::uia::UiAutomationElement;
 
 impl Browsable for UiAutomationElement {
@@ -21,5 +22,11 @@ impl Browsable for UiAutomationElement {
 
     fn get_role(&self) -> String {
         self.get_localized_control_type()
+    }
+    fn get_child_count(&self) -> usize {
+        0
+    }
+    fn get_child(&self, index: i32) -> Option<Arc<dyn Browsable + Sync + Send>> {
+        None
     }
 }

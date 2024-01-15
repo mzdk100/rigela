@@ -19,8 +19,10 @@ type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
 pub struct FormBrowser {
-    // 虚拟焦点索引
+    // 焦点控件索引
     index: i32,
+    // 子控件索引
+    child_index: i32,
     // 窗口控件集合
     container: Vec<BrowserElement>,
 }
@@ -29,6 +31,7 @@ impl FormBrowser {
     pub fn new() -> Self {
         Self {
             index: 0,
+            child_index: -1,
             container: Vec::new(),
         }
     }
@@ -41,18 +44,39 @@ impl FormBrowser {
     /// 清空控件
     pub fn clear(&mut self) {
         self.index = 0;
+        self.child_index = -1;
         self.container.clear();
     }
 
     pub fn next(&mut self) {
-        self.next_index(1);
+        self.index = self.next_index(self.index, self.container.len(), 1);
+        self.child_index = -1;
     }
 
     pub fn prev(&mut self) {
-        self.next_index(-1);
+        self.index = self.next_index(self.index, self.container.len(), -1);
+        self.child_index = -1;
     }
 
-    /// 获取当前虚拟焦点控件元素
+    pub fn next_child(&mut self) {
+        let len = self
+            .container
+            .get(self.index as usize)
+            .unwrap()
+            .get_child_count();
+        self.child_index = self.next_index(self.child_index, len, 1);
+    }
+
+    pub fn prev_child(&mut self) {
+        let len = self
+            .container
+            .get(self.index as usize)
+            .unwrap()
+            .get_child_count();
+        self.child_index = self.next_index(self.child_index, len, -1);
+    }
+
+    /// 获取当前焦点控件元素
     #[allow(unused)]
     pub fn current(&self) -> Option<BrowserElement> {
         if self.container.is_empty() {
@@ -62,15 +86,14 @@ impl FormBrowser {
     }
 
     /// 循环移动索引， 参数（diff 传 -1 向后移动，传 1 向前移动）
-    fn next_index(&mut self, diff: i32) {
-        let len = self.container.len() as i32;
+    fn next_index(&self, cur_index: i32, length: usize, diff: i32) -> i32 {
+        let len = length as i32;
         if len <= 1 {
-            return;
+            return 0;
         }
 
-        self.index = self.index + diff;
-
-        self.index = match self.index {
+        let result = cur_index + diff;
+        match result {
             i if i < 0 => len - 1,
             i if i >= len => 0,
             i => i,
@@ -87,4 +110,5 @@ impl Deref for FormBrowser {
 }
 
 unsafe impl Send for FormBrowser {}
+
 unsafe impl Sync for FormBrowser {}
