@@ -114,9 +114,16 @@ async fn load_proxy32() {
     }
 
     // 启动32位的代理模块。
-    Command::new(&proxy32_path)
-        .spawn()
-        .unwrap()
+    let mut cmd = Command::new(&proxy32_path).spawn();
+    while cmd.is_err() {
+        // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
+        sleep(Duration::from_millis(5000)).await;
+        // 5秒之后重新尝试启动
+        cmd = Command::new(&proxy32_path).spawn();
+    }
+
+    // 等待到程序结束
+    cmd.unwrap()
         .wait()
         .await
         .unwrap();

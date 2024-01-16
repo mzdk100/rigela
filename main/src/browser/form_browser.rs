@@ -53,7 +53,9 @@ impl FormBrowser {
         let mut container = self.container.write().await;
         container.clear();
         for i in 0..root.get_child_count() {
-            container.push(root.get_child(i).unwrap());
+            if let Some(c) = root.get_child(i) {
+                container.push(c);
+            }
         }
     }
 

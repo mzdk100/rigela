@@ -56,7 +56,12 @@ impl Sounder {
         self.output_stream.stop();
         self.output_stream.start();
 
-        for i in (0..data.len()).step_by(CHUNK_SIZE) {
+        let len = data.len();
+        for i in (0..len).step_by(CHUNK_SIZE) {
+            if i + CHUNK_SIZE >= len {
+                self.output_stream.write(&data[i..len]).await;
+                break;
+            }
             self.output_stream.write(&data[i..i + CHUNK_SIZE]).await;
         }
     }
