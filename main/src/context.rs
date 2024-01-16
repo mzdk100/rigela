@@ -25,10 +25,12 @@ use crate::{
     utils::get_program_directory,
 };
 use std::sync::Arc;
-use tokio::{runtime::Handle, sync::Mutex};
-use win_wrap::uia::ui_automation::UiAutomation;
-use win_wrap::uia::ui_element::UiAutomationElement;
-use win_wrap::uia::ui_pattern::UiAutomationLegacyIAccessiblePattern;
+use tokio::runtime::Handle;
+use win_wrap::uia::{
+    element::UiAutomationElement,
+    automation::UiAutomation,
+    pattern::UiAutomationLegacyIAccessiblePattern
+};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
 
@@ -45,7 +47,7 @@ pub struct Context {
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
     pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) form_browser: Arc<Mutex<FormBrowser>>,
+    pub(crate) form_browser: Arc<FormBrowser>,
 }
 
 impl Context {
@@ -99,7 +101,7 @@ impl Context {
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
             event_core: event_core.into(),
-            form_browser: Arc::new(Mutex::new(form_browser)),
+            form_browser: Arc::new(form_browser),
         }
     }
 

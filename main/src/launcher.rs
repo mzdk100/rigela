@@ -101,15 +101,17 @@ async fn load_proxy32() {
     #[cfg(debug_assertions)]
     let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/debug/proxy32.exe");
     let proxy32_path = get_program_directory().join("proxy32.exe");
-    OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(&proxy32_path)
-        .await
-        .unwrap()
-        .write(proxy32_bin)
-        .await
-        .unwrap();
+    {
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(&proxy32_path)
+            .await
+            .unwrap()
+            .write(proxy32_bin)
+            .await
+            .unwrap();
+    }
 
     // 启动32位的代理模块。
     Command::new(&proxy32_path)
