@@ -15,10 +15,16 @@ use crate::{
     context::Context,
     gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
+    utils::get_program_directory
 };
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::Arc,
+    time::Duration,
+    ffi::CString
+};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
+use crate::utils::write_file;
 
 /// 启动器对象
 pub struct Launcher {
@@ -55,7 +61,8 @@ impl Launcher {
         co_initialize_multi_thread().expect("Can't initialize the com environment.");
 
         // peeper 可以监控远进程中的信息
-        peeper::mount();
+        let dll_path = put_peeper().await;
+        peeper::mount(dll_path.as_ptr());
 
         // 显示欢迎页面。
         self.context
@@ -91,8 +98,7 @@ async fn speak_desktop(context: Arc<Context>) {
 
 #[cfg(target_arch = "x86_64")]
 async fn load_proxy32() {
-    use crate::utils::get_program_directory;
-    use tokio::{fs::OpenOptions, io::AsyncWriteExt, process::Command};
+    use tokio::process::Command;
 
     // 获取proxy32.exe的二进制数据并写入到用户目录中，原理是在编译时把proxy32的数据使用include_bytes!内嵌到64位的主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
@@ -101,24 +107,14 @@ async fn load_proxy32() {
     #[cfg(debug_assertions)]
     let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/debug/proxy32.exe");
     let proxy32_path = get_program_directory().join("proxy32.exe");
-    {
-        OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(&proxy32_path)
-            .await
-            .unwrap()
-            .write(proxy32_bin)
-            .await
-            .unwrap();
-    }
+    write_file(&proxy32_path, proxy32_bin).await;
 
     // 启动32位的代理模块。
     let mut cmd = Command::new(&proxy32_path).spawn();
     while cmd.is_err() {
         // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
-        sleep(Duration::from_millis(5000)).await;
-        // 5秒之后重新尝试启动
+        sleep(Duration::from_millis(1000)).await;
+        // 1秒之后重新尝试启动
         cmd = Command::new(&proxy32_path).spawn();
     }
 
@@ -134,4 +130,19 @@ async fn load_proxy32() {
     // 如果主程序本身就是32位，则无需执行此操作（proxy32模块没有用武之地）
     use log::info;
     info!("Loaded proxy32.");
+}
+
+/**
+ * 安装peeper.dll文件。
+ * */
+async fn put_peeper() -> CString {
+    // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
+    // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
+    #[cfg(not(debug_assertions))]
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+    #[cfg(debug_assertions)]
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+    let peeper_path = get_program_directory().join("peeper.dll");
+    write_file(&peeper_path, peeper_dll).await;
+    CString::new(peeper_path.to_str().unwrap()).unwrap()
 }

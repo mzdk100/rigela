@@ -12,7 +12,15 @@
  */
 
 use log::debug;
-use std::{ffi::c_void, sync::RwLock, thread};
+use std::{
+    ffi::{
+        c_void,
+        c_char,
+        CStr
+    },
+    sync::RwLock,
+    thread,
+};
 use win_wrap::{
     common::{
         call_next_hook_ex, get_proc_address, load_library, set_windows_hook_ex,
@@ -41,12 +49,12 @@ unsafe extern "system" fn hook_proc_get_message(
  * 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
  * 注意： 当main引用本模块并构建时，会自动生成此dll。
  * */
-pub extern "system" fn mount() {
+pub extern "system" fn mount(dll_path: *const c_char) {
     debug!("mounted");
-    thread::spawn(|| {
-        let path = format!("{}.dll", module_path!());
-        debug!("Module path: {}", path);
-        let handle = load_library(path.as_str());
+    let dll_path = unsafe { CStr::from_ptr(dll_path) }.to_str().unwrap();
+    thread::spawn(move || {
+        debug!("Module path: {}", dll_path);
+        let handle = load_library(dll_path);
         debug!("Module handle: {}", handle.0);
         let proc = get_proc_address(handle, "hook_proc_get_message");
         let h_hook =

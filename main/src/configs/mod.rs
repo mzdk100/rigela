@@ -16,9 +16,12 @@ pub(crate) mod tts;
 use crate::configs::tts::TtsConfig;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use tokio::fs::OpenOptions;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::{
+    fs::OpenOptions,
+    io::AsyncReadExt
+};
 use toml;
+use crate::utils::write_file;
 
 /// 配置项目的根元素
 #[derive(Debug, Deserialize, Serialize)]
@@ -67,14 +70,6 @@ impl ConfigManager {
     pub(crate) async fn write(&self, config_root: &ConfigRoot) {
         let path = self.path.clone();
 
-        OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(&path)
-            .await
-            .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
-            .write_all(toml::to_string(config_root).unwrap().as_bytes())
-            .await
-            .expect("Can't write the config data.");
+        write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await;
     }
 }

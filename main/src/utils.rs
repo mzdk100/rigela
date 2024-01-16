@@ -26,6 +26,10 @@ pub const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 use home::home_dir;
 use std::fs::create_dir;
 use std::path::PathBuf;
+use tokio::{
+    fs::OpenOptions,
+    io::AsyncWriteExt
+};
 
 const DIR_NAME: &str = ".rigela";
 /// 获取程序存储目录
@@ -39,4 +43,23 @@ pub(crate) fn get_program_directory() -> PathBuf {
     }
 
     program_dir
+}
+
+/**
+ * 把数据完整写入到文件，这会冲洗现有文件，覆盖写入。
+ * `path` 文件路径。
+ * `data` 需要写入的数据。
+ * */
+pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) {
+    OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&path)
+        .await
+        .expect(format!("Can't open the file ({}).", path.display()).as_str())
+        .write_all(data)
+        .await
+        .expect("Can't write the data to file.");
+
 }
