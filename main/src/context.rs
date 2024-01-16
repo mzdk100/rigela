@@ -22,16 +22,15 @@ use crate::{
     sounder::Sounder,
     talent::TalentAccessor,
     terminator::Terminator,
-    utils::get_program_directory
+    utils::get_program_directory,
 };
 use std::sync::Arc;
-use tokio::{
-    runtime::Handle,
-    sync::Mutex
-};
+use tokio::{runtime::Handle, sync::Mutex};
 use win_wrap::uia::ui_automation::UiAutomation;
 use win_wrap::uia::ui_element::UiAutomationElement;
 use win_wrap::uia::ui_pattern::UiAutomationLegacyIAccessiblePattern;
+
+const CONFIG_FILE_NAME: &str = "config.toml";
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {
@@ -58,7 +57,8 @@ impl Context {
         let commander = Commander::new();
 
         // 配置管理器
-        let config_manager = ConfigManager::new(get_program_directory().join("config.toml"));
+        let path = get_program_directory().join(CONFIG_FILE_NAME);
+        let config_manager = ConfigManager::new(path);
 
         // 创建GUI访问器
         let gui_accessor = GuiAccessor::new();
@@ -108,11 +108,11 @@ impl Context {
      * */
     pub(crate) fn apply(&self) {
         self.commander.apply(self.clone().into());
-        let sounder = self.sounder.clone();
+
         let ctx = Arc::new(self.clone());
-        self.main_handler.spawn(async move {
-            sounder.apply(ctx).await
-        });
+        let sounder = self.sounder.clone();
+        self.main_handler
+            .spawn(async move { sounder.apply(ctx).await });
 
         // 读取配置项，应用配置到程序实例
         self.performer.apply_config(self.clone().into(), |_| {});
@@ -149,13 +149,16 @@ impl Clone for Context {
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
         let mut name = self.get_name();
+
         if name.is_empty() {
             let accessible: UiAutomationLegacyIAccessiblePattern = self.into();
             name = accessible.get_name();
+
             if name.is_empty() {
                 name = accessible.get_description();
             }
         }
+
         format!("{}: {}", name, self.get_localized_control_type())
     }
 }
