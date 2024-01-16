@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod ui_automation;
-pub mod ui_element;
-pub mod ui_matcher;
-pub mod ui_pattern;
+pub mod automation;
+pub mod element;
+pub mod pattern;
