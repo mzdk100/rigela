@@ -18,13 +18,15 @@ mod tts;
 use crate::{
     commander::CommandType,
     context::Context,
+    talent::form_browser::{
+        CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent,
+    },
+    talent::tts::{IncreaseRTalent, ReduceRTalent},
     talent::{
-        form_browser::{CurrElementTalent, NextElementTalent, PrevElementTalent, ModeNextTalent},
+        form_browser::{CurrElementTalent, ModeNextTalent, NextElementTalent, PrevElementTalent},
         program::{CurrentTimeTalent, ExitTalent},
         tts::{IncreaseTalent, ReduceTalent},
     },
-    talent::form_browser::{CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent},
-    talent::tts::{IncreaseRTalent, ReduceRTalent}
 };
 use std::sync::Arc;
 
@@ -59,15 +61,12 @@ impl TalentAccessor {
             Box::new(ExitTalent),
             Box::new(CurrentTimeTalent),
             Box::new(ModeNextTalent),
-
             Box::new(PrevElementTalent),
             Box::new(NextElementTalent),
             Box::new(CurrElementTalent),
-
             Box::new(PrevChildElementTalent),
             Box::new(NextChildElementTalent),
             Box::new(CurrChildElementTalent),
-
             Box::new(IncreaseTalent),
             Box::new(IncreaseRTalent),
             Box::new(ReduceTalent),

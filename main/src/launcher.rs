@@ -16,10 +16,7 @@ use crate::{
     gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
 };
-use std::{
-    sync::Arc,
-    time::Duration
-};
+use std::{sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
@@ -86,13 +83,8 @@ impl Launcher {
 
 /// 朗读桌面
 async fn speak_desktop(context: Arc<Context>) {
-    let root = context
-        .ui_automation
-        .get_root_element();
-    context
-        .performer
-        .speak(&root)
-        .await;
+    let root = context.ui_automation.get_root_element();
+    context.performer.speak(&root).await;
 
     sleep(Duration::from_millis(1000)).await;
 }
@@ -100,18 +92,14 @@ async fn speak_desktop(context: Arc<Context>) {
 #[cfg(target_arch = "x86_64")]
 async fn load_proxy32() {
     use crate::utils::get_program_directory;
-    use tokio::{
-        fs::OpenOptions,
-        io::AsyncWriteExt,
-        process::Command
-    };
+    use tokio::{fs::OpenOptions, io::AsyncWriteExt, process::Command};
 
     // 获取proxy32.exe的二进制数据并写入到用户目录中，原理是在编译时把proxy32的数据使用include_bytes!内嵌到64位的主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-        let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/release/proxy32.exe");
+    let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/release/proxy32.exe");
     #[cfg(debug_assertions)]
-        let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/debug/proxy32.exe");
+    let proxy32_bin = include_bytes!("../../target/i686-pc-windows-msvc/debug/proxy32.exe");
     let proxy32_path = get_program_directory().join("proxy32.exe");
     OpenOptions::new()
         .create(true)

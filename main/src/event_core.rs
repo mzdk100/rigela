@@ -45,10 +45,9 @@ async fn speak_focus_item(context: Arc<Context>) {
         let performer = Arc::clone(&ctx.performer);
 
         // 异步执行元素朗读
-        ctx.main_handler
-            .spawn(async move {
-                performer.speak(&x).await;
-            });
+        ctx.main_handler.spawn(async move {
+            performer.speak(&x).await;
+        });
     });
 }
 
@@ -65,31 +64,19 @@ async fn watch_foreground_window(context: Arc<Context>) {
     // 给UI Automation的焦点改变绑定处理事件
     context.ui_automation.add_focus_changed_listener(move |_| {
         // 如果前台窗口没有变动直接返回
-        if get_foreground_window() == *get_old_foreground_window_hwnd().lock().unwrap() {
+        let handle = get_foreground_window();
+        if handle == *get_old_foreground_window_hwnd().lock().unwrap() {
             return;
         }
 
         // 保存新的前台窗口句柄
-        *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = get_foreground_window();
+        *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = handle;
 
         // form_browser需要异步操作
-        let handle = ctx.main_handler.clone();
-        let fb = ctx.form_browser.clone();
-        let uia = ctx.ui_automation.clone();
-
-        handle.spawn(async move {
-            let mut fb = fb.lock().await;
-
-            // 清空窗口浏览器的控件元素
-            fb.clear();
-
-            // 根据句柄获取到所有的控件元素
-            let elements = uia.get_foreground_window_elements();
-            // 添加所有的控件元素到窗口浏览器
-            for ele in elements {
-                // form_browser::add(Arc::new(ele));
-                fb.add(Arc::new(ele));
-            }
-        });
+        let main_handler = ctx.main_handler.clone();
+        if let Some(root) = ctx.ui_automation.element_from_handle(handle) {
+            let form_browser = ctx.form_browser.clone();
+            main_handler.spawn(async move { form_browser.render(Arc::new(root)).await });
+        }
     });
 }

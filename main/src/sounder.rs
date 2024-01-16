@@ -9,19 +9,20 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
- */use std::collections::HashMap;
+ */
+use std::collections::HashMap;
 use std::io::SeekFrom;
 
 use std::sync::Arc;
 
+use crate::context::Context;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::sync::Mutex;
 use win_wrap::audio::AudioOutputStream;
-use crate::context::Context;
 
 pub(crate) struct Sounder {
     data_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
-    output_stream: Arc<AudioOutputStream>
+    output_stream: Arc<AudioOutputStream>,
 }
 
 impl Sounder {
@@ -32,7 +33,7 @@ impl Sounder {
         let output_stream = AudioOutputStream::new(16000, 1);
         Self {
             data_table: Arc::new(HashMap::new().into()),
-            output_stream: output_stream.into()
+            output_stream: output_stream.into(),
         }
     }
 
@@ -41,13 +42,8 @@ impl Sounder {
      * 目前仅支持16位深16K采样率单通道的音频。
      * */
     pub(crate) async fn play(&self, res_name: &str) {
-        let lock =             self.data_table
-            .lock()
-            .await;
-        let data = lock
-            .get(res_name)
-            .unwrap()
-            .clone();
+        let lock = self.data_table.lock().await;
+        let data = lock.get(res_name).unwrap().clone();
         drop(lock);
         self.output_stream.flush();
         self.output_stream.stop();
@@ -65,23 +61,10 @@ impl Sounder {
         let list = vec!["boundary.wav"];
         for i in &list {
             let mut data = Vec::<u8>::new();
-            let mut file = context
-                .resource_accessor
-                .open(i)
-                .await
-                .unwrap();
-            file
-                .seek(SeekFrom::Start(44))
-                .await
-                .unwrap();
-            file
-                .read_to_end(&mut data)
-                .await
-                .unwrap();
-            self.data_table
-                .lock()
-                .await
-                .insert(i.to_string(), data);
+            let mut file = context.resource_accessor.open(i).await.unwrap();
+            file.seek(SeekFrom::Start(44)).await.unwrap();
+            file.read_to_end(&mut data).await.unwrap();
+            self.data_table.lock().await.insert(i.to_string(), data);
         }
     }
 }

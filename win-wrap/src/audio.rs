@@ -12,31 +12,22 @@
  */
 
 use std::{
-    future::Future,
     fmt::{Display, Formatter},
+    future::Future,
     mem::size_of,
     pin::Pin,
     sync::Arc,
-    task::{Context, Poll}
+    task::{Context, Poll},
 };
-use windows::Win32::Media::{
-    Audio::{
-        XAudio2::{
-            IXAudio2SourceVoice,
-            XAUDIO2_BUFFER,
-            XAUDIO2_COMMIT_NOW,
-            XAUDIO2_MAX_FREQ_RATIO,
-            XAUDIO2_VOICE_NOSRC,
-            IXAudio2,
-            IXAudio2MasteringVoice,
-            XAudio2CreateWithVersionInfo,
-            XAUDIO2_USE_DEFAULT_PROCESSOR
-        },
-        AudioCategory_SoundEffects,
-        WAVEFORMATEX,
-        WAVE_FORMAT_PCM,
-        XAudio2::XAUDIO2_VOICE_STATE
-    }
+use windows::Win32::Media::Audio::{
+    AudioCategory_SoundEffects,
+    XAudio2::XAUDIO2_VOICE_STATE,
+    XAudio2::{
+        IXAudio2, IXAudio2MasteringVoice, IXAudio2SourceVoice, XAudio2CreateWithVersionInfo,
+        XAUDIO2_BUFFER, XAUDIO2_COMMIT_NOW, XAUDIO2_MAX_FREQ_RATIO, XAUDIO2_USE_DEFAULT_PROCESSOR,
+        XAUDIO2_VOICE_NOSRC,
+    },
+    WAVEFORMATEX, WAVE_FORMAT_PCM,
 };
 
 #[allow(dead_code)]
@@ -114,24 +105,21 @@ impl AudioOutputStream {
      * */
     #[allow(dead_code)]
     pub fn flush(&self) {
-        unsafe { self.source_voice.FlushSourceBuffers() }
-            .unwrap_or(())
+        unsafe { self.source_voice.FlushSourceBuffers() }.unwrap_or(())
     }
 
     /**
      * 停止播放。
      * */
     pub fn stop(&self) {
-        unsafe { self.source_voice.Stop(0, 0) }
-            .expect("Can't stop the stream.");
+        unsafe { self.source_voice.Stop(0, 0) }.expect("Can't stop the stream.");
     }
 
     /**
      * 开始播放。
      * */
     pub fn start(&self) {
-        unsafe { self.source_voice.Start(0, XAUDIO2_COMMIT_NOW) }
-            .expect("Can't start.");
+        unsafe { self.source_voice.Start(0, XAUDIO2_COMMIT_NOW) }.expect("Can't start.");
     }
 }
 impl Display for AudioOutputStream {
@@ -155,7 +143,9 @@ impl Future for StreamState {
     type Output = ();
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut state = XAUDIO2_VOICE_STATE::default();
-        unsafe { self.0.GetState(&mut state, 0); }
+        unsafe {
+            self.0.GetState(&mut state, 0);
+        }
         let p = state.BuffersQueued;
         if p < 1 {
             Poll::Ready(())

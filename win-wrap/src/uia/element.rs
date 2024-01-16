@@ -13,11 +13,8 @@
 
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use windows::{
-    core::BSTR,
-    Win32::UI::Accessibility::IUIAutomationElement
-};
 use windows::Win32::UI::Accessibility::{IUIAutomation, TreeScope_Children};
+use windows::{core::BSTR, Win32::UI::Accessibility::IUIAutomationElement};
 
 /// UiAutomationElement 的本地封装
 #[derive(Clone)]
@@ -37,7 +34,7 @@ impl UiAutomationElement {
     pub(crate) fn obtain(automation: Arc<IUIAutomation>, element: IUIAutomationElement) -> Self {
         Self {
             _automation: automation,
-            _current: element
+            _current: element,
         }
     }
 
@@ -60,20 +57,37 @@ impl UiAutomationElement {
             .to_string()
     }
 
-    /// 获取子元素
-    #[allow(unused_mut)]
-    pub fn get_children(&self) -> Vec<UiAutomationElement> {
-        let mut vec = Vec::new();
-        let children = unsafe { self._current.FindAll(TreeScope_Children, &self._automation.CreateTrueCondition().unwrap()) }
-            .unwrap();
-        let len = unsafe { children.Length() }
-            .unwrap();
-        for i in 0..len {
-            let c = unsafe { children.GetElement(i) }
-                .unwrap();
-            vec.push(UiAutomationElement::obtain(self._automation.clone(), c))
+    /**
+     * 获取子元素数量。
+     * */
+    pub fn get_child_count(&self) -> i32 {
+        if let Ok(children) = unsafe {
+            self._current.FindAll(
+                TreeScope_Children,
+                &self._automation.CreateTrueCondition().unwrap(),
+            )
+        } {
+            return unsafe { children.Length() }.unwrap();
         }
-        vec
+        0
+    }
+
+    /**
+     * 获取子元素。
+     * `index` 序号。
+     * */
+    pub fn get_child(&self, index: i32) -> Option<UiAutomationElement> {
+        if let Ok(children) = unsafe {
+            self._current.FindAll(
+                TreeScope_Children,
+                &self._automation.CreateTrueCondition().unwrap(),
+            )
+        } {
+            if let Ok(el) = unsafe { children.GetElement(index) } {
+                return Some(UiAutomationElement::obtain(self._automation.clone(), el));
+            }
+        }
+        None
     }
 
     /**

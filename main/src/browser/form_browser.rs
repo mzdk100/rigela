@@ -12,110 +12,135 @@
  */
 
 use crate::browser::Browsable;
-use std::ops::Deref;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
-type BrowserElement = Arc<dyn Browsable + Sync + Send>;
+pub(crate) type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
 pub struct FormBrowser {
     // 焦点控件索引
-    index: i32,
+    index: RwLock<i32>,
     // 子控件索引
-    child_index: i32,
+    child_index: RwLock<i32>,
     // 窗口控件集合
-    container: Vec<BrowserElement>,
+    container: RwLock<Vec<BrowserElement>>,
 }
 
 impl FormBrowser {
     pub fn new() -> Self {
         Self {
-            index: 0,
-            child_index: -1,
-            container: Vec::new(),
+            index: RwLock::new(0),
+            child_index: RwLock::new(-1),
+            container: RwLock::new(Vec::new()),
         }
     }
 
-    /// 添加控件
-    pub fn add(&mut self, element: BrowserElement) {
-        self.container.push(element);
-    }
-
-    /// 清空控件
-    pub fn clear(&mut self) {
-        self.index = 0;
-        self.child_index = -1;
-        self.container.clear();
+    /**
+     * 浏览器渲染操作，解析控件树。
+     * `root` 根元素。
+     * */
+    pub(crate) async fn render(&self, root: BrowserElement) {
+        {
+            // 使用单独的块保证读写锁不会有过长的生命周期
+            let mut index = self.index.write().await;
+            *index = 0;
+        }
+        {
+            let mut index = self.child_index.write().await;
+            *index = 0;
+        }
+        let mut container = self.container.write().await;
+        container.clear();
+        for i in 0..root.get_child_count() {
+            container.push(root.get_child(i).unwrap());
+        }
     }
 
     /// 向后移动当前焦点
-    pub fn next(&mut self) {
-        self.move_cur_index(1);
+    pub(crate) async fn next(&self) -> &Self {
+        self.move_cur_index(1).await
     }
 
     /// 向前移动当前焦点
-    pub fn prev(&mut self) {
-        self.move_cur_index(-1);
+    pub(crate) async fn prev(&self) -> &Self {
+        self.move_cur_index(-1).await
     }
 
     /// 向后移动当前子控件
-    pub fn next_child(&mut self) {
-        self.move_child_index(1);
+    pub(crate) async fn next_child(&self) -> &Self {
+        self.move_child_index(1).await
     }
 
     /// 向前移动当前子控件
-    pub fn prev_child(&mut self) {
-        self.move_child_index(-1);
+    pub(crate) async fn prev_child(&self) -> &Self {
+        self.move_child_index(-1).await
     }
 
     /// 获取当前子控件
-    pub fn current_child(&self) -> BrowserElement {
-        let cur_element = self.current().unwrap();
-        cur_element.get_child(self.child_index as usize)
+    pub(crate) async fn current_child(&self) -> Option<BrowserElement> {
+        let cur_element = self.current().await;
+        if cur_element.is_none() {
+            return None;
+        }
+        let cur_element = cur_element.unwrap();
+        let child_index = { *self.child_index.read().await };
+        cur_element.get_child(child_index as usize)
     }
 
     /// 移动当前索引
-    fn move_cur_index(&mut self, diff: i32) {
-        self.index = self.next_index(self.index, self.container.len(), diff);
-        self.child_index = -1;
-    }
-
-    /// 移动当前子控件索引
-    fn move_child_index(&mut self, diff: i32) {
-        let cur_element = self.current().unwrap();
-        let len = cur_element.get_child_count();
-        self.child_index = self.next_index(self.child_index, len, diff);
-    }
-
-    /// 获取当前焦点控件元素
-    pub fn current(&self) -> Option<BrowserElement> {
-        if self.container.is_empty() {
-            return None;
-        }
-        Some(Arc::clone(&self.container[self.index as usize]))
-    }
-
-    /// 循环移动索引， 参数（diff 传 -1 向后移动，传 1 向前移动）
-    fn next_index(&self, cur_index: i32, length: usize, diff: i32) -> i32 {
-        let len = length as i32;
+    async fn move_cur_index(&self, diff: i32) -> &Self {
+        let container = self.container.read().await;
+        let len = container.len() as i32;
         if len <= 1 {
-            return 0;
+            return self;
         }
-
+        let cur_index = { *self.index.read().await };
         let result = cur_index + diff;
-        match result {
+        let result = match result {
             i if i < 0 => len - 1,
             i if i >= len => 0,
             i => i,
+        };
+        {
+            let mut index = self.index.write().await;
+            *index = result;
         }
+        {
+            let mut index = self.child_index.write().await;
+            *index = -1;
+        };
+        self
     }
-}
 
-impl Deref for FormBrowser {
-    type Target = BrowserElement;
-    fn deref(&self) -> &Self::Target {
-        // todo: 这里如果container为空，需要做进一步处理，或者可以实现一个Empty BrowserElement
-        &self.container.get(self.index as usize).unwrap()
+    /// 移动当前子控件索引
+    pub(crate) async fn move_child_index(&self, diff: i32) -> &Self {
+        let cur_element = self.current().await;
+        if cur_element.is_none() {
+            return self;
+        }
+        let cur_element = cur_element.unwrap();
+        let len = cur_element.get_child_count() as i32;
+        {
+            let mut index = self.child_index.write().await;
+            let result = *index + diff;
+            *index = match result {
+                i if i < 0 => len - 1,
+                i if i >= len => 0,
+                i => i,
+            };
+        }
+        self
+    }
+
+    /// 获取当前焦点控件元素
+    pub(crate) async fn current(&self) -> Option<BrowserElement> {
+        let container = self.container.read().await;
+        if container.is_empty() {
+            return None;
+        }
+        let index = { *self.index.read().await };
+        Some(container[index as usize].clone())
     }
 }
 

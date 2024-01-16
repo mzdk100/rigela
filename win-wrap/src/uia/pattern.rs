@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use windows::{
-    core::{BSTR, ComInterface},
-    Win32::UI::Accessibility::{IUIAutomationLegacyIAccessiblePattern, UIA_LegacyIAccessiblePatternId}
-};
 use crate::uia::element::UiAutomationElement;
+use windows::{
+    core::{ComInterface, BSTR},
+    Win32::UI::Accessibility::{
+        IUIAutomationLegacyIAccessiblePattern, UIA_LegacyIAccessiblePatternId,
+    },
+};
 
 pub struct UiAutomationLegacyIAccessiblePattern(IUIAutomationLegacyIAccessiblePattern);
 
@@ -42,10 +43,14 @@ impl UiAutomationLegacyIAccessiblePattern {
 
 impl From<&UiAutomationElement> for UiAutomationLegacyIAccessiblePattern {
     fn from(value: &UiAutomationElement) -> Self {
-        let pattern = unsafe { value.get_raw().GetCurrentPattern(UIA_LegacyIAccessiblePatternId) }
-            .expect("Can't get the LegacyIAccessiblePattern.")
-            .cast::<IUIAutomationLegacyIAccessiblePattern>()
-            .unwrap();
+        let pattern = unsafe {
+            value
+                .get_raw()
+                .GetCurrentPattern(UIA_LegacyIAccessiblePatternId)
+        }
+        .expect("Can't get the LegacyIAccessiblePattern.")
+        .cast::<IUIAutomationLegacyIAccessiblePattern>()
+        .unwrap();
         Self(pattern)
     }
 }

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::browser::form_browser::BrowserElement;
 use crate::performer::Speakable;
 use std::sync::Arc;
 
@@ -19,7 +20,7 @@ pub trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
     fn get_child_count(&self) -> usize;
-    fn get_child(&self, index: usize) -> Arc<dyn Browsable + Sync + Send>;
+    fn get_child(&self, index: usize) -> Option<BrowserElement>;
 }
 
 /// 为浏览控件接口对象实现朗读接口

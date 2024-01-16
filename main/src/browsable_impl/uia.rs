@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::browser::form_browser::BrowserElement;
 use crate::browser::Browsable;
 use std::sync::Arc;
 use win_wrap::uia::element::UiAutomationElement;
@@ -24,13 +25,12 @@ impl Browsable for UiAutomationElement {
         self.get_localized_control_type()
     }
     fn get_child_count(&self) -> usize {
-        0
+        self.get_child_count() as usize
     }
-    fn get_child(&self, index: usize) -> Arc<dyn Browsable + Sync + Send> {
-        if index == 0 {
-            return Arc::new(self.clone());
+    fn get_child(&self, index: usize) -> Option<BrowserElement> {
+        if let Some(x) = self.get_child(index as i32) {
+            return Some(Arc::new(x));
         }
-        // Todo: 获取子元素
-        Arc::new(self.clone())
+        None
     }
 }

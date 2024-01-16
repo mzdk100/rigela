@@ -22,21 +22,21 @@ use crate::{
     sounder::Sounder,
     talent::TalentAccessor,
     terminator::Terminator,
-    utils::get_program_directory
+    utils::get_program_directory,
 };
 use std::sync::Arc;
-use tokio::{
-    runtime::Handle,
-    sync::Mutex
+use tokio::runtime::Handle;
+use win_wrap::uia::{
+    automation::UiAutomation, element::UiAutomationElement,
+    pattern::UiAutomationLegacyIAccessiblePattern,
 };
-use win_wrap::uia::automation::UiAutomation;
-use win_wrap::uia::element::UiAutomationElement;
-use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
+    pub(crate) event_core: Arc<event_core::EventCore>,
+    pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
@@ -45,8 +45,6 @@ pub struct Context {
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
-    pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) form_browser: Arc<Mutex<FormBrowser>>,
 }
 
 impl Context {
@@ -90,6 +88,8 @@ impl Context {
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
+            event_core: event_core.into(),
+            form_browser: form_browser.into(),
             gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
@@ -98,8 +98,6 @@ impl Context {
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
-            event_core: event_core.into(),
-            form_browser: Arc::new(Mutex::new(form_browser)),
         }
     }
 
@@ -110,9 +108,8 @@ impl Context {
         self.commander.apply(self.clone().into());
         let sounder = self.sounder.clone();
         let ctx = Arc::new(self.clone());
-        self.main_handler.spawn(async move {
-            sounder.apply(ctx).await
-        });
+        self.main_handler
+            .spawn(async move { sounder.apply(ctx).await });
 
         // 读取配置项，应用配置到程序实例
         self.performer.apply_config(self.clone().into(), |_| {});

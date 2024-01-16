@@ -11,25 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::audio::AudioOutputStream;
 use std::{
-    sync::{
-        Arc,
-        Mutex
-    },
     ops::Add,
+    sync::{Arc, Mutex},
 };
 use windows::{
-    core::HSTRING,
-    Media::SpeechSynthesis::SpeechSynthesizer,
-    Storage::Streams::DataReader
+    core::HSTRING, Media::SpeechSynthesis::SpeechSynthesizer, Storage::Streams::DataReader,
 };
-use crate::audio::AudioOutputStream;
 
 #[derive(Clone)]
 pub struct Tts {
     synth: Arc<SpeechSynthesizer>,
     output_stream: Arc<AudioOutputStream>,
-    task_id: Arc<Mutex<u32>>
+    task_id: Arc<Mutex<u32>>,
 }
 
 impl Tts {
@@ -44,7 +39,7 @@ impl Tts {
         Self {
             synth: synth.into(),
             output_stream: stream.into(),
-            task_id: Arc::new(0u32.into())
+            task_id: Arc::new(0u32.into()),
         }
     }
 
@@ -83,11 +78,7 @@ impl Tts {
             .unwrap();
         let size = stream.Size().unwrap();
         let reader = DataReader::CreateDataReader(&stream).unwrap();
-        reader
-            .LoadAsync(size as u32)
-            .unwrap()
-            .await
-            .unwrap();
+        reader.LoadAsync(size as u32).unwrap().await.unwrap();
         self.output_stream.flush();
         self.output_stream.stop();
         self.output_stream.start();
@@ -98,18 +89,18 @@ impl Tts {
             // 获取合成任务的id
             let id = match self.task_id.lock() {
                 Ok(x) => *x,
-                Err(_) => 0u32
+                Err(_) => 0u32,
             };
             if id != current_id {
                 // 这里检查是否已经有新的合成任务，如果有就打断当前的合成任务
-                break
+                break;
             }
             let mut data: [u8; 3200] = [0; 3200];
             reader.ReadBytes(&mut data).unwrap_or(());
             self.output_stream.write(&data).await;
             if let Ok(x) = reader.UnconsumedBufferLength() {
                 if x < data.len() as u32 {
-                    break
+                    break;
                 }
             }
         }
