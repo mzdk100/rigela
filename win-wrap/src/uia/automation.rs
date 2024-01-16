@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::sync::Arc;
 use windows::{
     core::{implement, Result},
     Win32::{
@@ -23,14 +24,13 @@ use windows::{
     }
 };
 use crate::{
-    uia::ui_element::UiAutomationElement,
-    common::get_foreground_window,
-    uia::ui_matcher::UiMatcher
+    uia::element::UiAutomationElement,
+    common::get_foreground_window
 };
 
 /// UIAutomation接口本地封装
 #[derive(Clone)]
-pub struct UiAutomation(pub IUIAutomation);
+pub struct UiAutomation(Arc<IUIAutomation>);
 
 impl UiAutomation {
     /**
@@ -40,33 +40,29 @@ impl UiAutomation {
         let automation =
             unsafe { CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_ALL) }
                 .expect("Can't create the ui automation.");
-        UiAutomation { 0: automation }
+        UiAutomation { 0: automation.into() }
     }
 
     /**
      * 获取UI根元素。
      * */
-    pub fn get_root_element(&self) -> Result<UiAutomationElement> {
-        let el = unsafe { self.0.GetRootElement() }?;
-        Ok((&el).into())
+    pub fn get_root_element(&self) -> UiAutomationElement {
+        let el = unsafe { self.0.GetRootElement() }
+            .expect("Can't get the root element.");
+        UiAutomationElement::obtain(self.0.clone(), el)
     }
 
     /// 根据窗口句柄获取ui元素
-    pub fn get_element_from_hwnd(&self, hwnd: HWND) -> Result<UiAutomationElement> {
-        let el = unsafe { self.0.ElementFromHandle(hwnd) }?;
-        Ok((&el).into())
+    pub fn element_from_handle(&self, hwnd: HWND) -> UiAutomationElement {
+        let el = unsafe { self.0.ElementFromHandle(hwnd) }
+            .unwrap();
+        UiAutomationElement::obtain(self.0.clone(), el)
     }
 
     /// 获取前台窗口控件元素
     pub fn get_foreground_window_elements(&self) -> Vec<UiAutomationElement> {
-        let mut result = Vec::new();
-
-        if let Ok(element) = self.get_element_from_hwnd(get_foreground_window()) {
-            let elements = UiMatcher::new(self).get_child_elements(&element);
-            result.extend(elements);
-        }
-
-        result
+        let element = self.element_from_handle(get_foreground_window());
+        return element.get_children();
     }
 
     /**
@@ -79,7 +75,7 @@ impl UiAutomation {
         CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationFocusChangedEventHandler =
-            OnFocusChangedCallback::new(func).into();
+            OnFocusChangedCallback::new(func, self.0.clone()).into();
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
             .expect("Can't add the focus changed listener.")
     }
@@ -90,16 +86,23 @@ unsafe impl Sync for UiAutomation {}
 unsafe impl Send for UiAutomation {}
 
 #[implement(IUIAutomationFocusChangedEventHandler)]
-struct OnFocusChangedCallback<CB>(Box<CB>)
+struct OnFocusChangedCallback<CB>
 where
-    CB: Fn(UiAutomationElement) -> () + 'static;
+    CB: Fn(UiAutomationElement) -> () + 'static
+{
+    _automation: Arc<IUIAutomation>,
+    _cb: Box<CB>,
+}
 
-impl<CB> OnFocusChangedCallback<CB>
+impl <CB> OnFocusChangedCallback<CB>
 where
     CB: Fn(UiAutomationElement) -> () + 'static,
 {
-    fn new(func: CB) -> Self {
-        OnFocusChangedCallback(Box::new(func))
+        fn new(func: CB, automation: Arc<IUIAutomation>) -> Self {
+        Self {
+            _automation: automation,
+            _cb: func.into()
+        }
     }
 }
 
@@ -109,8 +112,8 @@ where
 {
     #[allow(non_snake_case)]
     fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
-        let func = &*self.0;
-        func(sender.unwrap().into());
+        let func = &*self._cb;
+        func(UiAutomationElement::obtain(self._automation.clone(), sender.unwrap().clone()));
         Ok(())
     }
 }

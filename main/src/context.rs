@@ -29,9 +29,9 @@ use tokio::{
     runtime::Handle,
     sync::Mutex
 };
-use win_wrap::uia::ui_automation::UiAutomation;
-use win_wrap::uia::ui_element::UiAutomationElement;
-use win_wrap::uia::ui_pattern::UiAutomationLegacyIAccessiblePattern;
+use win_wrap::uia::automation::UiAutomation;
+use win_wrap::uia::element::UiAutomationElement;
+use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {

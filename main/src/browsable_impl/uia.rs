@@ -13,7 +13,7 @@
 
 use crate::browser::Browsable;
 use std::sync::Arc;
-use win_wrap::uia::ui_element::UiAutomationElement;
+use win_wrap::uia::element::UiAutomationElement;
 
 impl Browsable for UiAutomationElement {
     fn get_name(&self) -> String {

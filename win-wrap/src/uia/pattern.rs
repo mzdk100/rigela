@@ -16,7 +16,7 @@ use windows::{
     core::{BSTR, ComInterface},
     Win32::UI::Accessibility::{IUIAutomationLegacyIAccessiblePattern, UIA_LegacyIAccessiblePatternId}
 };
-use crate::uia::ui_element::UiAutomationElement;
+use crate::uia::element::UiAutomationElement;
 
 pub struct UiAutomationLegacyIAccessiblePattern(IUIAutomationLegacyIAccessiblePattern);
 
@@ -42,7 +42,7 @@ impl UiAutomationLegacyIAccessiblePattern {
 
 impl From<&UiAutomationElement> for UiAutomationLegacyIAccessiblePattern {
     fn from(value: &UiAutomationElement) -> Self {
-        let pattern = unsafe { value.0.GetCurrentPattern(UIA_LegacyIAccessiblePatternId) }
+        let pattern = unsafe { value.get_raw().GetCurrentPattern(UIA_LegacyIAccessiblePatternId) }
             .expect("Can't get the LegacyIAccessiblePattern.")
             .cast::<IUIAutomationLegacyIAccessiblePattern>()
             .unwrap();
