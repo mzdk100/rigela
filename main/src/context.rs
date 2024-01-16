@@ -25,18 +25,17 @@ use crate::{
     utils::get_program_directory,
 };
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use win_wrap::uia::{
-    automation::UiAutomation, element::UiAutomationElement,
-    pattern::UiAutomationLegacyIAccessiblePattern,
-};
+use tokio::{runtime::Handle, sync::Mutex};
+use win_wrap::uia::ui_automation::UiAutomation;
+use win_wrap::uia::ui_element::UiAutomationElement;
+use win_wrap::uia::ui_pattern::UiAutomationLegacyIAccessiblePattern;
+
+const CONFIG_FILE_NAME: &str = "config.toml";
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
-    pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
@@ -45,6 +44,8 @@ pub struct Context {
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
+    pub(crate) event_core: Arc<event_core::EventCore>,
+    pub(crate) form_browser: Arc<Mutex<FormBrowser>>,
 }
 
 impl Context {
@@ -56,7 +57,8 @@ impl Context {
         let commander = Commander::new();
 
         // 配置管理器
-        let config_manager = ConfigManager::new(get_program_directory().join("config.toml"));
+        let path = get_program_directory().join(CONFIG_FILE_NAME);
+        let config_manager = ConfigManager::new(path);
 
         // 创建GUI访问器
         let gui_accessor = GuiAccessor::new();
@@ -88,8 +90,6 @@ impl Context {
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
-            event_core: event_core.into(),
-            form_browser: form_browser.into(),
             gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
@@ -98,6 +98,8 @@ impl Context {
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
+            event_core: event_core.into(),
+            form_browser: Arc::new(Mutex::new(form_browser)),
         }
     }
 
@@ -106,8 +108,9 @@ impl Context {
      * */
     pub(crate) fn apply(&self) {
         self.commander.apply(self.clone().into());
-        let sounder = self.sounder.clone();
+
         let ctx = Arc::new(self.clone());
+        let sounder = self.sounder.clone();
         self.main_handler
             .spawn(async move { sounder.apply(ctx).await });
 
@@ -146,13 +149,16 @@ impl Clone for Context {
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
         let mut name = self.get_name();
+
         if name.is_empty() {
             let accessible: UiAutomationLegacyIAccessiblePattern = self.into();
             name = accessible.get_name();
+
             if name.is_empty() {
                 name = accessible.get_description();
             }
         }
+
         format!("{}: {}", name, self.get_localized_control_type())
     }
 }
