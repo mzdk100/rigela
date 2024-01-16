@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
 #[allow(unused_imports)]
-use win_wrap::input::{VK_CLEAR, VK_HOME, VK_LEFT, VK_RIGHT, VK_UP, VK_PRIOR, VK_ADD};
+use win_wrap::input::{VK_ADD, VK_CLEAR, VK_HOME, VK_LEFT, VK_PRIOR, VK_RIGHT, VK_UP};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_HOME, false)))]
@@ -49,23 +49,23 @@ async fn curr_element(context: Arc<Context>) {
 #[talent(doc = "上一个子控件", key = ((VK_LEFT, false)))]
 async fn prev_child_element(context: Arc<Context>) {
     let mut fb = context.form_browser.lock().await;
-    fb.prev();
-    context.performer.speak(&(**fb)).await;
+    fb.prev_child();
+    context.performer.speak(&fb.current_child()).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个子控件", key = ((VK_RIGHT, false)))]
 async fn next_child_element(context: Arc<Context>) {
     let mut fb = context.form_browser.lock().await;
-    fb.next();
-    context.performer.speak(&(**fb)).await;
+    fb.next_child();
+    context.performer.speak(&fb.current_child()).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前子控件", key = ((VK_CLEAR, false)))]
 async fn curr_child_element(context: Arc<Context>) {
     let fb = context.form_browser.lock().await;
-    context.performer.speak(&(**fb)).await;
+    context.performer.speak(&fb.current_child()).await;
 }
 
 //noinspection RsUnresolvedReference

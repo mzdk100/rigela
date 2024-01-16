@@ -12,10 +12,7 @@
  */
 
 use std::fmt::{Display, Formatter};
-use windows::{
-    core::BSTR,
-    Win32::UI::Accessibility::IUIAutomationElement
-};
+use windows::{core::BSTR, Win32::UI::Accessibility::IUIAutomationElement};
 
 /// UiAutomationElement 的本地封装
 #[derive(Clone)]
@@ -41,6 +38,16 @@ impl UiAutomationElement {
             .to_string()
     }
 
+    /// 获取子元素
+    #[allow(unused_mut)]
+    pub fn get_child_elements(&self) -> Vec<UiAutomationElement> {
+        let mut elements = Vec::new();
+
+        // Todo: 没有UIAutomation实例，无法使用FindAll
+
+        elements
+    }
+
     /**
      * 获取元素的当前类名。
      * */
@@ -59,6 +66,7 @@ impl From<&IUIAutomationElement> for UiAutomationElement {
 }
 
 unsafe impl Send for UiAutomationElement {}
+
 unsafe impl Sync for UiAutomationElement {}
 
 impl Display for UiAutomationElement {

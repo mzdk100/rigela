@@ -26,7 +26,11 @@ impl Browsable for UiAutomationElement {
     fn get_child_count(&self) -> usize {
         0
     }
-    fn get_child(&self, index: i32) -> Option<Arc<dyn Browsable + Sync + Send>> {
-        None
+    fn get_child(&self, index: usize) -> Arc<dyn Browsable + Sync + Send> {
+        if index == 0 {
+            return Arc::new(self.clone());
+        }
+        // Todo: 获取子元素
+        Arc::new(self.clone())
     }
 }

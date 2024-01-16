@@ -7,7 +7,7 @@ target = [
 [alias]
 # 用于建立完整的构建环境
 mkenv = ["install", "cargo-rigela", "--path", "build_helper", "--target", "x86_64-pc-windows-msvc"]
-ck = ["rigela", "check"]
+ck = ["rigela", "check", "--color=never"]
 # 开发模式
 dev = ["rigela", "run"]
 # 发布模式

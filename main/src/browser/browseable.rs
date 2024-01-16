@@ -19,7 +19,7 @@ pub trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
     fn get_child_count(&self) -> usize;
-    fn get_child(&self, index: i32) -> Option<Arc<dyn Browsable + Sync + Send>>;
+    fn get_child(&self, index: usize) -> Arc<dyn Browsable + Sync + Send>;
 }
 
 /// 为浏览控件接口对象实现朗读接口

@@ -48,36 +48,46 @@ impl FormBrowser {
         self.container.clear();
     }
 
+    /// 向后移动当前焦点
     pub fn next(&mut self) {
-        self.index = self.next_index(self.index, self.container.len(), 1);
-        self.child_index = -1;
+        self.move_cur_index(1);
     }
 
+    /// 向前移动当前焦点
     pub fn prev(&mut self) {
-        self.index = self.next_index(self.index, self.container.len(), -1);
+        self.move_cur_index(-1);
+    }
+
+    /// 向后移动当前子控件
+    pub fn next_child(&mut self) {
+        self.move_child_index(1);
+    }
+
+    /// 向前移动当前子控件
+    pub fn prev_child(&mut self) {
+        self.move_child_index(-1);
+    }
+
+    /// 获取当前子控件
+    pub fn current_child(&self) -> BrowserElement {
+        let cur_element = self.current().unwrap();
+        cur_element.get_child(self.child_index as usize)
+    }
+
+    /// 移动当前索引
+    fn move_cur_index(&mut self, diff: i32) {
+        self.index = self.next_index(self.index, self.container.len(), diff);
         self.child_index = -1;
     }
 
-    pub fn next_child(&mut self) {
-        let len = self
-            .container
-            .get(self.index as usize)
-            .unwrap()
-            .get_child_count();
-        self.child_index = self.next_index(self.child_index, len, 1);
-    }
-
-    pub fn prev_child(&mut self) {
-        let len = self
-            .container
-            .get(self.index as usize)
-            .unwrap()
-            .get_child_count();
-        self.child_index = self.next_index(self.child_index, len, -1);
+    /// 移动当前子控件索引
+    fn move_child_index(&mut self, diff: i32) {
+        let cur_element = self.current().unwrap();
+        let len = cur_element.get_child_count();
+        self.child_index = self.next_index(self.child_index, len, diff);
     }
 
     /// 获取当前焦点控件元素
-    #[allow(unused)]
     pub fn current(&self) -> Option<BrowserElement> {
         if self.container.is_empty() {
             return None;
