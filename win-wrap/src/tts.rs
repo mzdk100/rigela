@@ -49,12 +49,12 @@ impl Tts {
      * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
      * `val` 语速值。
      * */
-    pub fn set_speed(&self, val: f32) {
+    pub fn set_speed(&self, val: u32) {
         // https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
         self.synth
             .Options()
             .unwrap()
-            .SetSpeakingRate(val as f64)
+            .SetSpeakingRate(2.0 + (val - 50) as f64 * 0.02)
             .expect("Can't set the speed value.");
     }
 

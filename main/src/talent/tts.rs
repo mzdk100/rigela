@@ -26,32 +26,38 @@ use win_wrap::input::{
 };
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音加速", key = ((VK_INSERT, false),(VK_LCONTROL, false), (VK_UP, true)))]
+#[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
 async fn increase(context: Arc<Context>) {
-    set_speed(context, 0.1).await;
+    set_speed(context, 1).await;
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音加速", key = ((VK_INSERT, false),(VK_RCONTROL, true), (VK_UP, true)))]
+#[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
 async fn increase_r(context: Arc<Context>) {
-    set_speed(context, 0.1).await;
+    set_speed(context, 1).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
 async fn reduce(context: Arc<Context>) {
-    set_speed(context, -0.1).await;
+    set_speed(context, -1).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
 async fn reduce_r(context: Arc<Context>) {
-    set_speed(context, -0.1).await;
+    set_speed(context, -1).await;
 }
 
-async fn set_speed(context: Arc<Context>, diff: f32) {
+async fn set_speed(context: Arc<Context>, diff: i32) {
     context.performer.apply_config(context.clone(), move |c| {
-        c.speed.replace(c.speed.unwrap() + diff);
+        let speed = c.speed.unwrap() + diff;
+        let speed = match speed {
+            i if i > 100 => 100,
+            i if i < 0 => 0,
+            i => i,
+        };
+        c.speed.replace(speed);
     });
 
     speak_speed(context).await;

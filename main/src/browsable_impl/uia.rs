@@ -36,9 +36,11 @@ impl Browsable for UiAutomationElement {
     fn get_role(&self) -> String {
         self.get_localized_control_type()
     }
+
     fn get_child_count(&self) -> usize {
         self.get_child_count() as usize
     }
+
     fn get_child(&self, index: usize) -> Option<BrowserElement> {
         if let Some(x) = self.get_child(index as i32) {
             return Some(Arc::new(x));

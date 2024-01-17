@@ -14,14 +14,10 @@
 pub(crate) mod tts;
 
 use crate::configs::tts::TtsConfig;
+use crate::utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use tokio::{
-    fs::OpenOptions,
-    io::AsyncReadExt
-};
 use toml;
-use crate::utils::write_file;
 
 /// 配置项目的根元素
 #[derive(Debug, Deserialize, Serialize)]
@@ -46,21 +42,17 @@ impl ConfigManager {
      * 读取配置数据。
      * */
     pub(crate) async fn read(&self) -> ConfigRoot {
-        let mut content = String::new();
-        let path = self.path.clone();
+        match read_file(&self.path.clone()).await {
+            Ok(mut content) => toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap(),
 
-        OpenOptions::new()
-            .create(true)
-            .read(true)
-            .write(true)
-            .open(&path)
-            .await
-            .expect(format!("Can't open the config file ({}).", path.display()).as_mut_str())
-            .read_to_string(&mut content)
-            .await
-            .expect("Can't edit the config.");
-
-        toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap()
+            _ => {
+                let config = ConfigRoot {
+                    tts_config: Some(TtsConfig::default()),
+                };
+                self.write(&config).await;
+                config
+            }
+        }
     }
 
     /**
@@ -69,7 +61,6 @@ impl ConfigManager {
      * */
     pub(crate) async fn write(&self, config_root: &ConfigRoot) {
         let path = self.path.clone();
-
         write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await;
     }
 }

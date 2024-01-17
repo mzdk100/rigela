@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// 语音TTS的配置项
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TtsConfig {
-    pub(crate) speed: Option<f32>,
+    pub(crate) speed: Option<i32>,
     pub(crate) volume: Option<f32>,
     pub(crate) pitch: Option<f32>,
 }
@@ -24,7 +24,7 @@ pub struct TtsConfig {
 impl Default for TtsConfig {
     fn default() -> Self {
         Self {
-            speed: Some(1.0),
+            speed: Some(50),
             volume: Some(1.0),
             pitch: Some(1.0),
         }

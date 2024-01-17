@@ -26,12 +26,11 @@ pub const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 use home::home_dir;
 use std::fs::create_dir;
 use std::path::PathBuf;
-use tokio::{
-    fs::OpenOptions,
-    io::AsyncWriteExt
-};
+use tokio::io::AsyncReadExt;
+use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 
 const DIR_NAME: &str = ".rigela";
+
 /// 获取程序存储目录
 pub(crate) fn get_program_directory() -> PathBuf {
     let program_dir = home_dir()
@@ -61,5 +60,20 @@ pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) {
         .write_all(data)
         .await
         .expect("Can't write the data to file.");
+}
 
+/// 异步读取文件
+pub async fn read_file(path: &PathBuf) -> Result<String, std::io::Error> {
+    let mut result = String::new();
+
+    OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .open(&path)
+        .await?
+        .read_to_string(&mut result)
+        .await?;
+
+    Ok(result)
 }
