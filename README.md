@@ -1,25 +1,44 @@
 # RigelA（名称取自猎户座餐宿七的英文）
-本项目是使用rust编写的一个读屏(Screen Reader)项目。
+<!-- TOC -->
+* [RigelA（名称取自猎户座餐宿七的英文）](#rigela名称取自猎户座餐宿七的英文)
+  * [简介](#简介)
+  * [构建和运行](#构建和运行)
+  * [开发文档](#开发文档)
+  * [开发贡献](#开发贡献)
+  * [许可协议](#许可协议)
+<!-- TOC -->
+
+
+## 简介
+本项目是使用rust编写的一个读屏(Screen Reader)项目![logo](logo.ico)。
 名称中首字母r和rust的首字母相同，且猎户座在12月份是最佳观赏时间，rust注重性能、编码效率和安全，让我们展开想象吧！
 关于名称可以参考[维基百科餐宿七的介绍](https://zh.wikipedia.org/wiki/%E5%8F%83%E5%AE%BF%E4%B8%83)
 关于rust环境搭建可以参考相关文档，如果您对rust语言不熟悉，强烈推荐从官方文档或权威的书籍学习。
 
 
 ## 构建和运行
-```shell
-git clone https://gitcode.net/mzdk100/rigela.git
-cd rigela
-cargo mkenv
-cargo dev
-```
-其中mkenv用来创建一个专用的构建程序，因为有同时构建32位和64位程序的需要，cargo本身是无法做到这一点的。
-请注意：我们使用"cargo dev"运行而不是"cargo run"，否则您将碰到这样的错误“error: only one `--target` argument is supported”。
-如果您执意想用"cargo run"命令，您可以添加"--target x86_64-pc-windows-msvc"额外的参数来实现：
-```sh
-cargo build --target i686-pc-windows-msvc
-cargo run --target x86_64-pc-windows-msvc
-```
-其中第一行表示先构建32位的目标，因为第二行需要依赖他，这两行命令不可以反过来写，因此为了简化书写，我们创建了一个dev的短命令。
+1. 克隆仓库
+    ```shell
+    git clone https://gitcode.net/mzdk100/rigela.git
+    ```
+    或者
+    ```shell
+    git clone https://github.com/mzdk100/rigela.git
+    ```
+2. 构建项目
+    ```shell
+    cd rigela
+    cargo mkenv
+    cargo dev
+    ```
+    其中mkenv用来创建一个专用的构建程序，因为有同时构建32位和64位程序的需要，cargo本身是无法做到这一点的。
+    请注意：我们使用"cargo dev"运行而不是"cargo run"，否则您将碰到这样的错误“error: only one `--target` argument is supported”。
+    如果您执意想用"cargo run"命令，您可以添加"--target x86_64-pc-windows-msvc"额外的参数来实现：
+    ```shell
+    cargo build --target i686-pc-windows-msvc
+    cargo run --target x86_64-pc-windows-msvc
+    ```
+    其中第一行表示先构建32位的目标，因为第二行需要依赖他，这两行命令不可以反过来写，因此为了简化书写，我们创建了一个dev的短命令。
 
 
 ## 开发文档
