@@ -15,10 +15,22 @@ use crate::browser::form_browser::BrowserElement;
 use crate::browser::Browsable;
 use std::sync::Arc;
 use win_wrap::uia::element::UiAutomationElement;
+use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
 
 impl Browsable for UiAutomationElement {
     fn get_name(&self) -> String {
-        self.get_name()
+        let mut name = self.get_name();
+
+        if name.is_empty() {
+            let accessible: UiAutomationLegacyIAccessiblePattern = self.into();
+            name = accessible.get_name();
+
+            if name.is_empty() {
+                name = accessible.get_description();
+            }
+        }
+
+        name
     }
 
     fn get_role(&self) -> String {
