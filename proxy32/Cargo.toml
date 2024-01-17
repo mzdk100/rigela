@@ -5,7 +5,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[build-dependencies.cargo-rigela]
+path = "../build_helper"
 
 [target.'cfg(target_arch = "x86")'.dependencies.tokio]
 features = ["rt-multi-thread"]

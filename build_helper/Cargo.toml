@@ -5,4 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[dependencies.embed-resource]
+# 嵌入资源信息到程序中
+version = "2.4.1"
+
+[dependencies.chrono]
+# 日期和时间
+version = "0.4.31"
