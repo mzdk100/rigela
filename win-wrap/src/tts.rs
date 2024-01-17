@@ -54,7 +54,7 @@ impl Tts {
         self.synth
             .Options()
             .unwrap()
-            .SetSpeakingRate(2.0 + (val - 50) as f64 * 0.02)
+            .SetSpeakingRate(2.0 + (val as f64 - 50.0) * 0.02)
             .expect("Can't set the speed value.");
     }
 
