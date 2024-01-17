@@ -13,10 +13,13 @@
 
 pub(crate) mod tts;
 
-use crate::configs::tts::TtsConfig;
-use crate::utils::{read_file, write_file};
+use crate::{
+    configs::tts::TtsConfig,
+    utils::{read_file, write_file}
+};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use log::error;
 use toml;
 
 /// 配置项目的根元素
@@ -61,6 +64,8 @@ impl ConfigManager {
      * */
     pub(crate) async fn write(&self, config_root: &ConfigRoot) {
         let path = self.path.clone();
-        write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await;
+        if let Err(e) = write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await {
+            error!("{}", e);
+        }
     }
 }

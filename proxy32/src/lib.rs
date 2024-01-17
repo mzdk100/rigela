@@ -11,24 +11,5 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#![windows_subsystem = "windows"]
 
-
-#[cfg(target_arch = "x86")]
-#[tokio::main]
-async fn main() {
-    use tokio::net::windows::named_pipe::ServerOptions;
-    use proxy32::PIPE_NAME;
-
-    let server = ServerOptions::new()
-        .create(PIPE_NAME)
-        .unwrap();
-    server.connect()
-        .await
-        .unwrap();
-}
-
-#[cfg(not(target_arch = "x86"))]
-fn main() {
-    panic!("X86 arch target only!");
-}
+pub const PIPE_NAME: &str = r"\\.\PIPE\RIGELA.PROXY32";

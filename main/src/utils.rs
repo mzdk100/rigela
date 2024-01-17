@@ -49,17 +49,24 @@ pub(crate) fn get_program_directory() -> PathBuf {
  * `path` 文件路径。
  * `data` 需要写入的数据。
  * */
-pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) {
-    OpenOptions::new()
+pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String> {
+    let file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
         .open(&path)
-        .await
-        .expect(format!("Can't open the file ({}).", path.display()).as_str())
+        .await;
+    if file.is_err() {
+        return Err(format!("Can't open the file ({}).", path.display()));
+    }
+    let res = file
+        .unwrap()
         .write_all(data)
-        .await
-        .expect("Can't write the data to file.");
+        .await;
+    if res.is_err() {
+        return Err("Can't write the data to file.".to_string());
+    }
+    Ok(())
 }
 
 /// 异步读取文件

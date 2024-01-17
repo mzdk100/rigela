@@ -17,6 +17,7 @@ use crate::{
     configs::ConfigManager,
     event_core,
     gui::GuiAccessor,
+    helper::proxy32::Proxy32,
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
     sounder::Sounder,
@@ -43,6 +44,7 @@ pub struct Context {
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) sounder: Arc<Sounder>,
     pub(crate) performer: Arc<Performer>,
+    pub(crate) proxy32: Arc<Proxy32>,
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
@@ -71,6 +73,9 @@ impl Context {
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
 
+        // 用于兼容32位进程访问
+        let proxy32 = Proxy32::new();
+
         // 创建资源访问器
         let resources = ResourceAccessor::new();
 
@@ -95,6 +100,7 @@ impl Context {
             gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
+            proxy32: proxy32.into(),
             resource_accessor: resources.into(),
             sounder: sounder.into(),
             talent_accessor: talent_accessor.into(),
@@ -136,6 +142,7 @@ impl Clone for Context {
             gui_accessor: self.gui_accessor.clone(),
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
+            proxy32: self.proxy32.clone(),
             resource_accessor: self.resource_accessor.clone(),
             sounder: self.sounder.clone(),
             talent_accessor: self.talent_accessor.clone(),
