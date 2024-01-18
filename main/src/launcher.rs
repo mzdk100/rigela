@@ -74,11 +74,12 @@ impl Launcher {
             .show(self.context.clone());
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-        let main_handler = self.context.main_handler.clone();
-        let proxy32 = self.context.proxy32.clone();
-        main_handler.spawn(async move {
-            proxy32.spawn().await;
-        });
+        self.context
+            .proxy32
+            .spawn()
+            .await
+            .run(self.context.clone())
+            .await;
 
         // 朗读当前桌面
         speak_desktop(self.context.clone()).await;

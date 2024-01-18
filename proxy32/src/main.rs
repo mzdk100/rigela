@@ -17,15 +17,17 @@
 #[cfg(target_arch = "x86")]
 #[tokio::main]
 async fn main() {
+    use std::env;
     use tokio::net::windows::named_pipe::ServerOptions;
-    use proxy32::PIPE_NAME;
 
+    let pipe_name = env::args().nth(1).unwrap();
     let server = ServerOptions::new()
-        .create(PIPE_NAME)
+        .create(pipe_name.as_str())
         .unwrap();
     server.connect()
         .await
         .unwrap();
+    println!("{} connected.", pipe_name);
 }
 
 #[cfg(not(target_arch = "x86"))]

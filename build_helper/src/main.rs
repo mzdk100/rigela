@@ -36,12 +36,16 @@ fn main() {
         v.push("i686-pc-windows-msvc".to_string());
         v
     };
-    Command::new(cargo.as_str())
+    let status = Command::new(cargo.as_str())
         .args(args)
         .spawn()
         .unwrap()
         .wait()
         .unwrap();
+    if status.code().unwrap_or(1) != 0 {
+        return;
+    }
+
     // 然后构建64位目标
     let args = {
         let mut v = arg_list.clone();

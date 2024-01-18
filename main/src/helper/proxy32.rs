@@ -11,8 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use tokio::process::Child;
-use tokio::sync::RwLock;
+use std::sync::Arc;
+use tokio::{
+    process::Child,
+    sync::RwLock
+};
+use crate::context::Context;
+
+#[cfg(target_arch = "x86_64")]
+const PIPE_NAME: &str = r"\\.\PIPE\RIGELA.PROXY32";
 
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
@@ -54,12 +61,19 @@ impl Proxy32 {
         }
 
         // 启动32位的代理模块。
-        let mut cmd = Command::new(&proxy32_path).spawn();
-        while cmd.is_err() {
-            // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
-            sleep(Duration::from_millis(1000)).await;
-            // 1秒之后重新尝试启动
-            cmd = Command::new(&proxy32_path).spawn();
+        let mut cmd: Result<Child, _>;
+        loop {
+            cmd = Command::new(&proxy32_path)
+                .args([PIPE_NAME])
+                .spawn();
+            if cmd.is_err() {
+                // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
+                // 1秒之后重新尝试启动
+                sleep(Duration::from_millis(1000)).await;
+            } else {
+                // 启动成功
+                break
+            }
         }
 
         let mut process = self.process.write().await;
@@ -97,5 +111,33 @@ impl Proxy32 {
         if let Some(x) = process.as_mut() {
             x.wait().await.unwrap();
         }
+    }
+
+    /**
+     * 异步方式运行proxy32，这会建立必要的命名管道进行信息交换。
+     * */
+    pub(crate) async fn run(&self, #[allow(unused_variables)] context: Arc<Context>) {
+        #[cfg(target_arch = "x86_64")]
+        context.main_handler.spawn(async move {
+            use log::error;
+            use tokio::{
+                net::windows::named_pipe::ClientOptions,
+                time::{Duration, sleep}
+            };
+
+            // 使用循环方法连接管道，因为可能在连接的时候管道还没创建完毕
+            let client = loop {
+                // 推迟一秒连接，尽量确保管道创建完毕
+                sleep(Duration::from_millis(1000)).await;
+
+                match ClientOptions::new().open(PIPE_NAME) {
+                    Ok(x) => break x,
+                    Err(e) => {
+                        error!("Can't open the named pipe ({}). {}", PIPE_NAME, e);
+                        continue
+                    }
+                }
+            };
+        });
     }
 }
