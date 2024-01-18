@@ -15,6 +15,7 @@ mod form_browser;
 mod program;
 mod tts;
 
+use crate::talent::tts::{NextPropRTalent, NextPropTalent, PrevPropRTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
     context::Context,
@@ -58,19 +59,26 @@ impl TalentAccessor {
      * */
     pub(crate) fn new() -> Self {
         let talents: Vec<Box<dyn Talented + Sync + Send>> = vec![
+            // 程序技能
             Box::new(ExitTalent),
             Box::new(CurrentTimeTalent),
             Box::new(ModeNextTalent),
+            // 窗口浏览技能
             Box::new(PrevElementTalent),
             Box::new(NextElementTalent),
             Box::new(CurrElementTalent),
             Box::new(PrevChildElementTalent),
             Box::new(NextChildElementTalent),
             Box::new(CurrChildElementTalent),
+            // 语音调节技能
             Box::new(IncreaseTalent),
             Box::new(IncreaseRTalent),
             Box::new(ReduceTalent),
             Box::new(ReduceRTalent),
+            Box::new(NextPropTalent),
+            Box::new(NextPropRTalent),
+            Box::new(PrevPropTalent),
+            Box::new(PrevPropRTalent),
         ];
         Self {
             talents: talents.into(),

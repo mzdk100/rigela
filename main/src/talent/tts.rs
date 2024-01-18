@@ -19,6 +19,7 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
+use crate::configs::tts::TtsProperty;
 #[allow(unused_imports)]
 use win_wrap::input::{
     VK_DOWN, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_OEM_MINUS, VK_OEM_PLUS, VK_RCONTROL, VK_RIGHT,
@@ -28,44 +29,72 @@ use win_wrap::input::{
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
 async fn increase(context: Arc<Context>) {
-    set_speed(context, 1).await;
+    set_value(context, 1).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
 async fn increase_r(context: Arc<Context>) {
-    set_speed(context, 1).await;
+    set_value(context, 1).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
 async fn reduce(context: Arc<Context>) {
-    set_speed(context, -1).await;
+    set_value(context, -1).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
 async fn reduce_r(context: Arc<Context>) {
-    set_speed(context, -1).await;
+    set_value(context, -1).await;
 }
 
-async fn set_speed(context: Arc<Context>, diff: i32) {
-    context.performer.apply_config(context.clone(), move |c| {
-        let speed = c.speed.unwrap() + diff;
-        let speed = match speed {
-            i if i > 100 => 100,
-            i if i < 0 => 0,
-            i => i,
-        };
-        c.speed.replace(speed);
-    });
+//noinspection RsUnresolvedReference
+#[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_RIGHT, true)))]
+async fn next_prop(context: Arc<Context>) {
+    context.performer.clone().next_tts_prop().await;
+    speak_speed(context).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_RIGHT, true)))]
+async fn next_prop_r(context: Arc<Context>) {
+    context.performer.clone().next_tts_prop().await;
+    speak_speed(context).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_LEFT, true)))]
+async fn prev_prop(context: Arc<Context>) {
+    context.performer.clone().prev_tts_prop().await;
+    speak_speed(context).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_LEFT, true)))]
+async fn prev_prop_r(context: Arc<Context>) {
+    context.performer.clone().prev_tts_prop().await;
+    speak_speed(context).await;
+}
+
+async fn set_value(context: Arc<Context>, diff: i32) {
+    context
+        .performer
+        .apply_config(context.clone(), move || diff)
+        .await;
 
     speak_speed(context).await;
 }
 
 async fn speak_speed(context: Arc<Context>) {
     let cfg = context.config_manager.read().await;
-    let speed = cfg.tts_config.unwrap().speed.unwrap();
-    let speed = t!("tts.speed", value = speed);
-    context.performer.speak_text(speed.as_str()).await;
+    let info: String;
+
+    match *context.performer.clone().cur_tts_prop.read().await {
+        TtsProperty::Speed => info = format!("语速: {}", cfg.tts_config.unwrap().speed.unwrap()),
+        TtsProperty::Volume => info = format!("音量: {}", cfg.tts_config.unwrap().speed.unwrap()),
+        TtsProperty::Pitch => info = format!("语调: {}", cfg.tts_config.unwrap().speed.unwrap()),
+    }
+    context.performer.speak_text(info.as_str()).await;
 }
