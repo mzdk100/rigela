@@ -11,11 +11,27 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::tts::TtsProperty;
-use crate::context::Context;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use win_wrap::tts::Tts;
+use std::{
+    collections::HashMap,
+    io::SeekFrom,
+    sync::Arc
+};
+use crate::{
+    configs::tts::TtsProperty,
+    context::Context
+};
+use tokio::{
+    io::{AsyncReadExt, AsyncSeekExt},
+    sync::{Mutex, RwLock}
+};
+use win_wrap::{
+    audio::AudioOutputStream,
+    tts::Tts
+};
+
+const SAMPLE_RATE: u32 = 16000;
+const NUM_CHANNELS: u32 = 1;
+const CHUNK_SIZE: usize = 3200;
 
 /**
  * 表演者语音信息收集接口。
@@ -29,10 +45,11 @@ pub(crate) trait Speakable {
  * 表演者对象结构。
  * 可以进行语音输出或音效提示。
  * */
-
 pub(crate) struct Performer {
     tts: Arc<Tts>,
-    pub(crate)  cur_tts_prop: RwLock<TtsProperty>,
+    pub(crate) cur_tts_prop: RwLock<TtsProperty>,
+    sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
+    output_stream: Arc<AudioOutputStream>,
 }
 
 impl Performer {
@@ -40,10 +57,13 @@ impl Performer {
      * 创建表演者对象。
      * */
     pub(crate) fn new() -> Self {
+        let output_stream = AudioOutputStream::new(SAMPLE_RATE, NUM_CHANNELS);
         let tts = Tts::new();
         Self {
             tts: tts.into(),
             cur_tts_prop: RwLock::new(TtsProperty::Speed),
+            sound_table: Arc::new(HashMap::new().into()),
+            output_stream: output_stream.into(),
         }
     }
 
@@ -111,5 +131,48 @@ impl Performer {
 
     pub(crate) async fn prev_tts_prop(&self) {
         *self.cur_tts_prop.write().await = self.cur_tts_prop.read().await.prev();
+    }
+
+    /**
+     * 播放一个音效。
+     * 目前仅支持16位深16K采样率单通道的音频。
+     * */
+    pub(crate) async fn play_sound(&self, res_name: &str) {
+        let lock = self.sound_table.lock().await;
+        let data = lock.get(res_name).unwrap().clone();
+        drop(lock);
+
+        self.output_stream.flush();
+        self.output_stream.stop();
+        self.output_stream.start();
+
+        let len = data.len();
+        for i in (0..len).step_by(CHUNK_SIZE) {
+            if i + CHUNK_SIZE >= len {
+                self.output_stream.write(&data[i..len]).await;
+                break;
+            }
+            self.output_stream.write(&data[i..i + CHUNK_SIZE]).await;
+        }
+    }
+
+    /**
+     * 配置表演者。
+     * `context` 上下文环境。
+     * */
+    pub(crate) async fn apply(&self, context: Arc<Context>) {
+        // 读取配置项，应用配置到程序实例
+        self.apply_config(context.clone(), || 0).await;
+
+        // 初始化音效播放器
+        let list = vec!["boundary.wav"];
+
+        for i in &list {
+            let mut data = Vec::<u8>::new();
+            let mut file = context.resource_accessor.open(i).await.unwrap();
+            file.seek(SeekFrom::Start(44)).await.unwrap();
+            file.read_to_end(&mut data).await.unwrap();
+            self.sound_table.lock().await.insert(i.to_string(), data);
+        }
     }
 }

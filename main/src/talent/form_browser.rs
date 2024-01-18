@@ -27,7 +27,7 @@ use win_wrap::input::{VK_ADD, VK_CLEAR, VK_HOME, VK_LEFT, VK_PRIOR, VK_RIGHT, VK
 async fn prev_element(context: Arc<Context>) {
     let element = context.form_browser.prev().await.current().await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -38,7 +38,7 @@ async fn prev_element(context: Arc<Context>) {
 async fn next_element(context: Arc<Context>) {
     let element = context.form_browser.next().await.current().await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -49,7 +49,7 @@ async fn next_element(context: Arc<Context>) {
 async fn curr_element(context: Arc<Context>) {
     let element = context.form_browser.current().await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -65,7 +65,7 @@ async fn prev_child_element(context: Arc<Context>) {
         .current_child()
         .await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -81,7 +81,7 @@ async fn next_child_element(context: Arc<Context>) {
         .current_child()
         .await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -92,7 +92,7 @@ async fn next_child_element(context: Arc<Context>) {
 async fn curr_child_element(context: Arc<Context>) {
     let element = context.form_browser.current_child().await;
     if element.is_none() {
-        context.sounder.play("boundary.wav").await;
+        context.performer.play_sound("boundary.wav").await;
         return;
     }
     context.performer.speak(&element.unwrap()).await;
@@ -101,5 +101,5 @@ async fn curr_child_element(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个模式", key = ((VK_ADD, false)))]
 async fn mode_next(context: Arc<Context>) {
-    context.sounder.play("boundary.wav").await;
+    context.performer.play_sound("boundary.wav").await;
 }

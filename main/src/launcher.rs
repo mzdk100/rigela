@@ -33,6 +33,9 @@ impl Launcher {
      * 创建一个发射台，通常一个进程只有一个实例。
      * */
     pub(crate) fn new() -> Self {
+        // 初始化COM线程模型。
+        co_initialize_multi_thread().expect("Can't initialize the com environment.");
+
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
 
@@ -53,9 +56,6 @@ impl Launcher {
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) async fn launch(&mut self) {
-        // 初始化COM线程模型。
-        co_initialize_multi_thread().expect("Can't initialize the com environment.");
-
         // peeper 可以监控远进程中的信息
         let dll_path = put_peeper().await;
         peeper::mount(dll_path.as_ptr());

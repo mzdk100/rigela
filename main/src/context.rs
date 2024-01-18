@@ -20,7 +20,6 @@ use crate::{
     helper::proxy32::Proxy32,
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
-    sounder::Sounder,
     talent::TalentAccessor,
     terminator::Terminator,
     utils::get_program_directory,
@@ -41,7 +40,6 @@ pub struct Context {
     pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
-    pub(crate) sounder: Arc<Sounder>,
     pub(crate) performer: Arc<Performer>,
     pub(crate) proxy32: Arc<Proxy32>,
     pub(crate) talent_accessor: Arc<TalentAccessor>,
@@ -78,9 +76,6 @@ impl Context {
         // 创建资源访问器
         let resources = ResourceAccessor::new();
 
-        // 创建音效播放器
-        let sounder = Sounder::new();
-
         // 创建能力访问器
         let talent_accessor = TalentAccessor::new();
 
@@ -101,7 +96,6 @@ impl Context {
             performer: performer.into(),
             proxy32: proxy32.into(),
             resource_accessor: resources.into(),
-            sounder: sounder.into(),
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
@@ -117,13 +111,9 @@ impl Context {
         self.commander.apply(self.clone().into());
 
         let ctx = Arc::new(self.clone());
-        let sounder = self.sounder.clone();
 
         self.main_handler.spawn(async move {
-            sounder.apply(ctx.clone()).await;
-
-            // 读取配置项，应用配置到程序实例
-            ctx.performer.apply_config(ctx.clone(), || 0).await;
+            ctx.performer.apply(ctx.clone()).await;
         });
     }
 
@@ -145,7 +135,6 @@ impl Clone for Context {
             performer: self.performer.clone(),
             proxy32: self.proxy32.clone(),
             resource_accessor: self.resource_accessor.clone(),
-            sounder: self.sounder.clone(),
             talent_accessor: self.talent_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
