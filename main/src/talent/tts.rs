@@ -93,8 +93,9 @@ async fn speak_speed(context: Arc<Context>) {
 
     match *context.performer.clone().cur_tts_prop.read().await {
         TtsProperty::Speed => info = format!("语速: {}", cfg.tts_config.unwrap().speed.unwrap()),
-        TtsProperty::Volume => info = format!("音量: {}", cfg.tts_config.unwrap().speed.unwrap()),
-        TtsProperty::Pitch => info = format!("语调: {}", cfg.tts_config.unwrap().speed.unwrap()),
+        TtsProperty::Volume => info = format!("音量: {}", cfg.tts_config.unwrap().volume.unwrap()),
+        TtsProperty::Pitch => info = format!("语调: {}", cfg.tts_config.unwrap().pitch.unwrap()),
     }
+
     context.performer.speak_text(info.as_str()).await;
 }

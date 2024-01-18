@@ -45,16 +45,23 @@ impl ConfigManager {
      * 读取配置数据。
      * */
     pub(crate) async fn read(&self) -> ConfigRoot {
-        match read_file(&self.path.clone()).await {
-            Ok(mut content) => toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap(),
-
-            _ => {
+        let config = match read_file(&self.path.clone()).await {
+            Ok(mut content) => match toml::from_str::<ConfigRoot>(content.as_mut_str()) {
+                Ok(c) => Some(c),
+                Err(_) => None,
+            },
+            _ => None,
+        };
+        // 这里需要调用异步，不可以转换成 unwrap_or_else
+        match config {
+            None => {
                 let config = ConfigRoot {
                     tts_config: Some(TtsConfig::default()),
                 };
                 self.write(&config).await;
                 config
             }
+            Some(c) => c,
         }
     }
 

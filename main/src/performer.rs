@@ -103,9 +103,9 @@ impl Performer {
             };
         }
         tts.set_prop(
-            2.0 + (tts_config.speed.unwrap_or(50) as f64 - 50.0) * 0.02,
+            3.0 + (tts_config.speed.unwrap_or(50) as f64 - 50.0) * 0.06,
             0.5 + (tts_config.volume.unwrap_or(100) as f64 - 50.0) * 0.01,
-            0.5 + (tts_config.pitch.unwrap_or(50) as f64 - 50.0) * 0.01,
+            1.0 + (tts_config.pitch.unwrap_or(50) as f64 - 50.0) * 0.01,
         );
 
         config.tts_config.replace(tts_config);
@@ -126,11 +126,15 @@ impl Performer {
     }
 
     pub(crate) async fn next_tts_prop(&self) {
-        *self.cur_tts_prop.write().await = self.cur_tts_prop.read().await.next();
+        let prop = self.cur_tts_prop.read().await.next();
+        let mut cur = self.cur_tts_prop.write().await;
+        *cur = prop;
     }
 
     pub(crate) async fn prev_tts_prop(&self) {
-        *self.cur_tts_prop.write().await = self.cur_tts_prop.read().await.prev();
+        let prop = self.cur_tts_prop.read().await.prev();
+        let mut  cur = self.cur_tts_prop.write().await;
+        *cur = prop;
     }
 
     /**

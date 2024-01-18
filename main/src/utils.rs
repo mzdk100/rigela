@@ -69,15 +69,11 @@ pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String
 /// 异步读取文件
 pub async fn read_file(path: &PathBuf) -> Result<String, std::io::Error> {
     let mut result = String::new();
-
     OpenOptions::new()
-        .create(true)
         .read(true)
-        .write(true)
         .open(&path)
         .await?
         .read_to_string(&mut result)
         .await?;
-
     Ok(result)
 }
