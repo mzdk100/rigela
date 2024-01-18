@@ -11,9 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::tts::TtsConfig;
+use crate::configs::tts::TtsProperty;
 use crate::context::Context;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 use win_wrap::tts::Tts;
 
 /**
@@ -28,9 +29,10 @@ pub(crate) trait Speakable {
  * 表演者对象结构。
  * 可以进行语音输出或音效提示。
  * */
-#[derive(Clone)]
+
 pub(crate) struct Performer {
     tts: Arc<Tts>,
+    pub(crate)  cur_tts_prop: RwLock<TtsProperty>,
 }
 
 impl Performer {
@@ -39,7 +41,10 @@ impl Performer {
      * */
     pub(crate) fn new() -> Self {
         let tts = Tts::new();
-        Self { tts: tts.into() }
+        Self {
+            tts: tts.into(),
+            cur_tts_prop: RwLock::new(TtsProperty::Speed),
+        }
     }
 
     /**
@@ -47,24 +52,44 @@ impl Performer {
      * `context` 框架的上下文环境。
      * `slot` 一个用于修改参数的函数或闭包。
      * */
-    pub(crate) fn apply_config<FN>(&self, context: Arc<Context>, slot: FN)
+    pub(crate) async fn apply_config<FN>(&self, context: Arc<Context>, slot: FN)
     where
-        FN: FnOnce(&mut TtsConfig) + Send + Sync + 'static,
+        FN: (FnOnce() -> i32) + Send + Sync + 'static,
     {
         let tts = self.tts.clone();
+        let mut config = context.config_manager.read().await;
+        let mut tts_config = config.tts_config.clone().unwrap();
 
-        context.main_handler.clone().spawn(async move {
-            let mut config = context.config_manager.read().await;
-            let mut tts_config = config.tts_config.clone().unwrap();
+        let diff = slot();
+        if diff != 0 {
+            let mut value = match *self.cur_tts_prop.read().await {
+                TtsProperty::Speed => tts_config.speed.unwrap(),
+                TtsProperty::Volume => tts_config.volume.unwrap(),
+                TtsProperty::Pitch => tts_config.pitch.unwrap(),
+            };
 
-            slot(&mut tts_config);
+            value = value + diff;
 
-            let speed = tts_config.speed.clone().unwrap();
-            tts.set_speed(speed as u32);
+            let value = match value {
+                i if i > 100 => 100,
+                i if i < 0 => 0,
+                i => i,
+            };
 
-            config.tts_config.replace(tts_config);
-            context.config_manager.write(&config).await;
-        });
+            match *self.cur_tts_prop.read().await {
+                TtsProperty::Speed => tts_config.speed.replace(value),
+                TtsProperty::Volume => tts_config.volume.replace(value),
+                TtsProperty::Pitch => tts_config.pitch.replace(value),
+            };
+        }
+        tts.set_prop(
+            2.0 + (tts_config.speed.unwrap_or(50) as f64 - 50.0) * 0.02,
+            0.5 + (tts_config.volume.unwrap_or(100) as f64 - 50.0) * 0.01,
+            0.5 + (tts_config.pitch.unwrap_or(50) as f64 - 50.0) * 0.01,
+        );
+
+        config.tts_config.replace(tts_config);
+        context.config_manager.write(&config).await;
     }
 
     /**
@@ -78,5 +103,13 @@ impl Performer {
     /// 简单朗读文本
     pub(crate) async fn speak_text(&self, text: &str) {
         self.tts.speak(text).await;
+    }
+
+    pub(crate) async fn next_tts_prop(&self) {
+        *self.cur_tts_prop.write().await = self.cur_tts_prop.read().await.next();
+    }
+
+    pub(crate) async fn prev_tts_prop(&self) {
+        *self.cur_tts_prop.write().await = self.cur_tts_prop.read().await.prev();
     }
 }

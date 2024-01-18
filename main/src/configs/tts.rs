@@ -17,16 +17,40 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TtsConfig {
     pub(crate) speed: Option<i32>,
-    pub(crate) volume: Option<f32>,
-    pub(crate) pitch: Option<f32>,
+    pub(crate) volume: Option<i32>,
+    pub(crate) pitch: Option<i32>,
 }
 
 impl Default for TtsConfig {
     fn default() -> Self {
         Self {
             speed: Some(50),
-            volume: Some(1.0),
-            pitch: Some(1.0),
+            volume: Some(100),
+            pitch: Some(50),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum TtsProperty {
+    Speed,
+    Volume,
+    Pitch,
+}
+
+impl TtsProperty {
+    pub fn next(&self) -> Self {
+        match self {
+            TtsProperty::Speed => TtsProperty::Volume,
+            TtsProperty::Volume => TtsProperty::Pitch,
+            TtsProperty::Pitch => TtsProperty::Speed,
+        }
+    }
+    pub fn prev(&self) -> Self {
+        match self {
+            TtsProperty::Speed => TtsProperty::Pitch,
+            TtsProperty::Volume => TtsProperty::Speed,
+            TtsProperty::Pitch => TtsProperty::Volume,
         }
     }
 }

@@ -44,18 +44,22 @@ impl Tts {
     }
 
     /**
-     * 设置语速。
+     * 设置语速。音量，语调
      * 某些语音的最低语速快于 0.5，最大语速低于 6.0。
      * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
-     * `val` 语速值。
      * */
-    pub fn set_speed(&self, val: u32) {
+    pub fn set_prop(&self, speed: f64, volume: f64, pitch: f64) {
         // https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
-        self.synth
-            .Options()
-            .unwrap()
-            .SetSpeakingRate(2.0 + (val as f64 - 50.0) * 0.02)
+        let options = self.synth.Options().unwrap();
+        options
+            .SetSpeakingRate(speed)
             .expect("Can't set the speed value.");
+        options
+            .SetAudioVolume(volume)
+            .expect("Can't set the volume value.");
+        options
+            .SetAudioPitch(pitch)
+            .expect("Can't set the pitch value.");
     }
 
     /**

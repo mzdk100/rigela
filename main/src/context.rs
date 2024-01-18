@@ -28,9 +28,8 @@ use crate::{
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{
-    element::UiAutomationElement,
-    automation::UiAutomation,
-    pattern::UiAutomationLegacyIAccessiblePattern
+    automation::UiAutomation, element::UiAutomationElement,
+    pattern::UiAutomationLegacyIAccessiblePattern,
 };
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -119,11 +118,13 @@ impl Context {
 
         let ctx = Arc::new(self.clone());
         let sounder = self.sounder.clone();
-        self.main_handler
-            .spawn(async move { sounder.apply(ctx).await });
 
-        // 读取配置项，应用配置到程序实例
-        self.performer.apply_config(self.clone().into(), |_| {});
+        self.main_handler.spawn(async move {
+            sounder.apply(ctx.clone()).await;
+
+            // 读取配置项，应用配置到程序实例
+            ctx.performer.apply_config(ctx.clone(), || 0).await;
+        });
     }
 
     /**
