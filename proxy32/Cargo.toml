@@ -8,6 +8,9 @@ edition = "2021"
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
 
-[target.'cfg(target_arch = "x86")'.dependencies.tokio]
+[dependencies.tokio]
 features = ["rt-multi-thread"]
 version = "1.35.1"
+
+[dependencies.log]
+version = "0.4.20"

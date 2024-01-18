@@ -50,6 +50,9 @@ path = "../macros"
 [dependencies.rigela-resources]
 path = "../resources"
 
+[target.'cfg(target_arch = "x86_64")'.dependencies.proxy32]
+path = "../proxy32"
+
 [dependencies.serde]
 # 用于数据序列化和反序列化
 version = "1.0.145"

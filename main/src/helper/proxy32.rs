@@ -112,25 +112,8 @@ impl Proxy32 {
     pub(crate) async fn run(&self, #[allow(unused_variables)] context: Arc<Context>) {
         #[cfg(target_arch = "x86_64")]
         context.main_handler.spawn(async move {
-            use log::error;
-            use tokio::{
-                net::windows::named_pipe::ClientOptions,
-                time::{sleep, Duration},
-            };
-
-            // 使用循环方法连接管道，因为可能在连接的时候管道还没创建完毕
-            let client = loop {
-                // 推迟一秒连接，尽量确保管道创建完毕
-                sleep(Duration::from_millis(1000)).await;
-
-                match ClientOptions::new().open(PIPE_NAME) {
-                    Ok(x) => break x,
-                    Err(e) => {
-                        error!("Can't open the named pipe ({}). {}", PIPE_NAME, e);
-                        continue;
-                    }
-                }
-            };
+            use proxy32::client_run;
+            client_run(PIPE_NAME).await;
         });
     }
 }
