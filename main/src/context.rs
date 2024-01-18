@@ -28,9 +28,8 @@ use crate::{
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{
-    element::UiAutomationElement,
-    automation::UiAutomation,
-    pattern::UiAutomationLegacyIAccessiblePattern
+    automation::UiAutomation, element::UiAutomationElement,
+    pattern::UiAutomationLegacyIAccessiblePattern,
 };
 
 const CONFIG_FILE_NAME: &str = "config.toml";

@@ -15,11 +15,11 @@ pub(crate) mod tts;
 
 use crate::{
     configs::tts::TtsConfig,
-    utils::{read_file, write_file}
+    utils::{read_file, write_file},
 };
+use log::error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use log::error;
 use toml;
 
 /// 配置项目的根元素

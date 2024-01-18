@@ -59,10 +59,7 @@ pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String
     if file.is_err() {
         return Err(format!("Can't open the file ({}).", path.display()));
     }
-    let res = file
-        .unwrap()
-        .write_all(data)
-        .await;
+    let res = file.unwrap().write_all(data).await;
     if res.is_err() {
         return Err("Can't write the data to file.".to_string());
     }

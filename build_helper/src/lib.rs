@@ -13,13 +13,13 @@
 
 extern crate embed_resource;
 
+use chrono::{Datelike, Local};
 use std::env;
 use std::env::current_dir;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
-use chrono::{Datelike, Local};
 
 const VERSION: &str = r#"
 #include <windows.h>
@@ -76,13 +76,8 @@ END
 IDI_ICON1 ICON DISCARDABLE "{LOGO}"
 "#;
 pub fn make_version() {
-    let path = Path::new(env::var("OUT_DIR").unwrap().as_str())
-        .join("version.rc");
-    let logo_path = current_dir()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("logo.ico");
+    let path = Path::new(env::var("OUT_DIR").unwrap().as_str()).join("version.rc");
+    let logo_path = current_dir().unwrap().parent().unwrap().join("logo.ico");
     let mut description = env::var("CARGO_PKG_DESCRIPTION").unwrap();
     if description.is_empty() {
         description = "RigelA screen reader (rsr).".to_string()
@@ -90,7 +85,13 @@ pub fn make_version() {
     let mut version = String::from(VERSION);
     version = version.replace("{NAME}", env::var("CARGO_PKG_NAME").unwrap().as_str());
     version = version.replace("{DESCRIPTION}", description.as_str());
-    version = version.replace("{VERSION}", env::var("CARGO_PKG_VERSION").unwrap().replace(".", ",").as_str());
+    version = version.replace(
+        "{VERSION}",
+        env::var("CARGO_PKG_VERSION")
+            .unwrap()
+            .replace(".", ",")
+            .as_str(),
+    );
     version = version.replace("{VERSION_NAME}", get_vcs_last_commit_hash().as_str());
     version = version.replace("{PRODUCT}", "rigela");
     version = version.replace("{COPYRIGHT}", format!("Copyright (C) 2023-{} The RigelA Open Source Project. RigelA and all its contributors. All rights reserved.", Local::now().year()).as_str());

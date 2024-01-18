@@ -13,11 +13,7 @@
 
 use log::debug;
 use std::{
-    ffi::{
-        c_void,
-        c_char,
-        CStr
-    },
+    ffi::{c_char, c_void, CStr},
     sync::RwLock,
     thread,
 };

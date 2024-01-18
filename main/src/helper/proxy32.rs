@@ -11,19 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::sync::Arc;
-use tokio::{
-    process::Child,
-    sync::RwLock
-};
 use crate::context::Context;
+use std::sync::Arc;
+use tokio::{process::Child, sync::RwLock};
 
 #[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\RIGELA.PROXY32";
 
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
-    process: RwLock<Option<Child>>
+    process: RwLock<Option<Child>>,
 }
 
 impl Proxy32 {
@@ -32,7 +29,7 @@ impl Proxy32 {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            process: None.into()
+            process: None.into(),
         }
     }
 
@@ -44,17 +41,15 @@ impl Proxy32 {
         use crate::utils::{get_program_directory, write_file};
         use log::error;
         use std::time::Duration;
-        use tokio::{
-            process::Command,
-            time::sleep
-        };
+        use tokio::{process::Command, time::sleep};
 
         // 获取proxy32.exe的二进制数据并写入到用户目录中，原理是在编译时把proxy32的数据使用include_bytes!内嵌到64位的主程序内部，在运行时释放到磁盘。
         // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
         #[cfg(not(debug_assertions))]
-            let proxy32_bin = include_bytes!("../../../target/i686-pc-windows-msvc/release/proxy32.exe");
+        let proxy32_bin =
+            include_bytes!("../../../target/i686-pc-windows-msvc/release/proxy32.exe");
         #[cfg(debug_assertions)]
-            let proxy32_bin = include_bytes!("../../../target/i686-pc-windows-msvc/debug/proxy32.exe");
+        let proxy32_bin = include_bytes!("../../../target/i686-pc-windows-msvc/debug/proxy32.exe");
         let proxy32_path = get_program_directory().join("proxy32.exe");
         if let Err(e) = write_file(&proxy32_path, proxy32_bin).await {
             error!("{}", e);
@@ -63,16 +58,14 @@ impl Proxy32 {
         // 启动32位的代理模块。
         let mut cmd: Result<Child, _>;
         loop {
-            cmd = Command::new(&proxy32_path)
-                .args([PIPE_NAME])
-                .spawn();
+            cmd = Command::new(&proxy32_path).args([PIPE_NAME]).spawn();
             if cmd.is_err() {
                 // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
                 // 1秒之后重新尝试启动
                 sleep(Duration::from_millis(1000)).await;
             } else {
                 // 启动成功
-                break
+                break;
             }
         }
 
@@ -122,7 +115,7 @@ impl Proxy32 {
             use log::error;
             use tokio::{
                 net::windows::named_pipe::ClientOptions,
-                time::{Duration, sleep}
+                time::{sleep, Duration},
             };
 
             // 使用循环方法连接管道，因为可能在连接的时候管道还没创建完毕
@@ -134,7 +127,7 @@ impl Proxy32 {
                     Ok(x) => break x,
                     Err(e) => {
                         error!("Can't open the named pipe ({}). {}", PIPE_NAME, e);
-                        continue
+                        continue;
                     }
                 }
             };

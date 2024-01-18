@@ -16,7 +16,12 @@ use log::LevelFilter;
 use log4rs::{
     append::{
         console::{ConsoleAppender, Target},
-        file::FileAppender,
+        rolling_file::{
+            policy::compound::{
+                roll::delete::DeleteRoller, trigger::size::SizeTrigger, CompoundPolicy,
+            },
+            RollingFileAppender,
+        },
     },
     config::{Appender, Config, Root},
     encode::pattern::PatternEncoder,
@@ -42,7 +47,15 @@ pub(crate) fn init_logger() {
         .build();
 
     //输出到文件
-    let logfile = FileAppender::builder().build(file_path).unwrap();
+    let logfile = RollingFileAppender::builder()
+        .build(
+            file_path,
+            Box::new(CompoundPolicy::new(
+                Box::new(SizeTrigger::new(1024 * 1024)), // 超过1MB后滚动
+                Box::new(DeleteRoller::new()),
+            )),
+        )
+        .unwrap();
 
     // 将跟踪级别输出记录到文件中，其中跟踪是默认级别，以编程方式指定的级别记录到stderr。
     let config = Config::builder()
