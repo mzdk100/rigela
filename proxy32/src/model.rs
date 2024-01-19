@@ -11,18 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#![windows_subsystem = "windows"]
 
-#[cfg(target_arch = "x86")]
-#[tokio::main]
-async fn main() {
-    use rigela_proxy32::server::Proxy32Server;
-    use std::env;
-    let mut server = Proxy32Server::new(env::args().nth(1).unwrap().as_str()).await;
-    server.run().await;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
+pub enum Proxy32Data {
+    QUIT  // 退出
 }
 
-#[cfg(not(target_arch = "x86"))]
-fn main() {
-    panic!("X86 arch target only!");
+#[derive(Deserialize, Serialize)]
+pub struct Proxy32Packet {
+    pub(crate) id: u32,
+    pub data: Proxy32Data
 }

@@ -12,7 +12,6 @@
  */
 
 use rigela_resources::clone;
-use std::fs::create_dir;
 use std::path::PathBuf;
 use rigela_utils::get_program_directory;
 use tokio::fs::File;

@@ -11,18 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#![windows_subsystem = "windows"]
-
-#[cfg(target_arch = "x86")]
-#[tokio::main]
-async fn main() {
-    use rigela_proxy32::server::Proxy32Server;
-    use std::env;
-    let mut server = Proxy32Server::new(env::args().nth(1).unwrap().as_str()).await;
-    server.run().await;
-}
-
-#[cfg(not(target_arch = "x86"))]
-fn main() {
-    panic!("X86 arch target only!");
-}
+pub mod client;
+pub mod model;
+pub mod server;

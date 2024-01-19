@@ -67,5 +67,5 @@ async fn speak_speed(context: Arc<Context>) {
     let cfg = context.config_manager.read().await;
     let speed = cfg.tts_config.unwrap().speed.unwrap();
     let speed = t!("tts.speed", value = speed);
-    context.performer.speak_text(speed.as_str()).await;
+    context.performer.speak_text(&speed).await;
 }

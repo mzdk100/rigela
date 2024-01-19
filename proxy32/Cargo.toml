@@ -1,12 +1,9 @@
 [package]
-name = "proxy32"
+name = "rigela-proxy32"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[build-dependencies.cargo-rigela]
-path = "../build_helper"
 
 [dependencies.tokio]
 features = ["rt-multi-thread"]
@@ -18,3 +15,6 @@ version = "0.4.20"
 [dependencies.serde]
 # 用于数据序列化和反序列化
 version = "1.0.145"
+
+[dependencies.rigela-utils]
+path = "../utils"

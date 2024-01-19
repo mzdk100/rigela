@@ -13,10 +13,12 @@
 
 use tokio::process::Child;
 use tokio::sync::RwLock;
+use rigela_proxy32::client::Proxy32Client;
 
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
-    process: RwLock<Option<Child>>
+    process: RwLock<Option<Child>>,
+    client: RwLock<Option<Proxy32Client>>
 }
 
 impl Proxy32 {
@@ -25,7 +27,8 @@ impl Proxy32 {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            process: None.into()
+            process: None.into(),
+            client: None.into()
         }
     }
 
@@ -34,7 +37,7 @@ impl Proxy32 {
      * */
     #[cfg(target_arch = "x86_64")]
     pub(crate) async fn spawn(&self) -> &Self {
-        use crate::utils::{get_program_directory, write_file};
+        use rigela_utils::{get_program_directory, write_file};
         use log::error;
         use std::time::Duration;
         use tokio::{
