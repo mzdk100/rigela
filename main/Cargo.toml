@@ -59,6 +59,9 @@ path = "../utils"
 version = "1.0.145"
 features = ["derive"]
 
+[dependencies.toml]
+version = "0.8.8"
+
 [dependencies]
 # 查看日期和时间
 chrono = "0.4.31"
@@ -66,8 +69,6 @@ chrono = "0.4.31"
 rust-i18n = "3.0.0"
 # 记录日志
 log4rs = "1.2.0"
-# 配置项读写
-toml = "0.8.8"
 # gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
 winit = "0.29.9"
 eframe = "0.25.0"
