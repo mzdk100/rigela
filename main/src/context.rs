@@ -21,9 +21,9 @@ use crate::{
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
     talent::TalentAccessor,
-    terminator::Terminator,
-    utils::get_program_directory,
+    terminator::Terminator
 };
+use rigela_utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{

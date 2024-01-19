@@ -14,3 +14,7 @@ version = "1.35.1"
 
 [dependencies.log]
 version = "0.4.20"
+
+[dependencies.serde]
+# 用于数据序列化和反序列化
+version = "1.0.145"

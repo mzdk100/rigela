@@ -1,6 +1,6 @@
 [package]
 name = "main"
-description = "RigelA screen reader (rsr)."
+description = "RigelA读屏主程序"
 version = "0.1.0"
 edition = "2021"
 authors = [
@@ -41,8 +41,9 @@ features = [
     "time"
 ]
 
-[build-dependencies.cargo-rigela]
-path = "../build_helper"
+[build-dependencies.embed-resource]
+# 嵌入资源信息到程序中
+version = "2.4.0"
 
 [dependencies.rigela-macros]
 path = "../macros"
@@ -50,8 +51,8 @@ path = "../macros"
 [dependencies.rigela-resources]
 path = "../resources"
 
-[target.'cfg(target_arch = "x86_64")'.dependencies.proxy32]
-path = "../proxy32"
+[dependencies.rigela-utils]
+path = "../utils"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
@@ -61,10 +62,8 @@ features = ["derive"]
 [dependencies]
 # 查看日期和时间
 chrono = "0.4.31"
-# 获取用户目录的路径
-home = "0.5.9"
 # 配置I18N国际化多语言支持
-rust-i18n = "2.3.0"
+rust-i18n = "3.0.0"
 # 记录日志
 log4rs = "1.2.0"
 # 配置项读写

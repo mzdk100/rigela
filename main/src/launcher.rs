@@ -14,11 +14,15 @@
 use crate::{
     context::Context,
     gui::FrameUi,
-    terminator::{TerminationWaiter, Terminator},
-    utils::{get_program_directory, write_file},
+    terminator::{TerminationWaiter, Terminator}
+};
+use rigela_utils::{get_program_directory, write_file};
+use std::{
+    sync::Arc,
+    time::Duration,
+    ffi::CString
 };
 use log::error;
-use std::{ffi::CString, sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
@@ -33,9 +37,6 @@ impl Launcher {
      * 创建一个发射台，通常一个进程只有一个实例。
      * */
     pub(crate) fn new() -> Self {
-        // 初始化COM线程模型。
-        co_initialize_multi_thread().expect("Can't initialize the com environment.");
-
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
 
@@ -56,6 +57,9 @@ impl Launcher {
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) async fn launch(&mut self) {
+        // 初始化COM线程模型。
+        co_initialize_multi_thread().expect("Can't initialize the com environment.");
+
         // peeper 可以监控远进程中的信息
         let dll_path = put_peeper().await;
         peeper::mount(dll_path.as_ptr());
@@ -67,12 +71,11 @@ impl Launcher {
             .show(self.context.clone());
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-        self.context
-            .proxy32
-            .spawn()
-            .await
-            .run(self.context.clone())
-            .await;
+        let main_handler = self.context.main_handler.clone();
+        let proxy32 = self.context.proxy32.clone();
+        main_handler.spawn(async move {
+            proxy32.spawn().await;
+        });
 
         // 朗读当前桌面
         speak_desktop(self.context.clone()).await;
@@ -85,7 +88,12 @@ impl Launcher {
         self.context.dispose();
 
         // 杀死32位代理模块
-        self.context.proxy32.kill().await.wait().await;
+        self.context
+            .proxy32
+            .kill()
+            .await
+            .wait()
+            .await;
 
         // 解除远进程监控
         peeper::unmount();
@@ -107,9 +115,9 @@ async fn put_peeper() -> CString {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
     let peeper_path = get_program_directory().join("peeper.dll");
     if let Err(e) = write_file(&peeper_path, peeper_dll).await {
         error!("{}", e);

@@ -11,15 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use home::home_dir;
 use rigela_resources::clone;
 use std::fs::create_dir;
 use std::path::PathBuf;
+use rigela_utils::get_program_directory;
 use tokio::fs::File;
 
 //noinspection HttpUrlsUsage
 const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
-const DIR_NAME: &str = ".rigela";
 
 /// 资源访问器
 pub struct ResourceAccessor {
@@ -31,14 +30,7 @@ impl ResourceAccessor {
      * 创建一个资源读取器。
      * */
     pub(crate) fn new() -> Self {
-        let root_dir = home_dir()
-            .expect("Can't get the current user directory.")
-            .join(DIR_NAME);
-
-        if !root_dir.exists() {
-            create_dir(&root_dir).expect("Can't create the root directory.");
-        }
-
+        let root_dir = get_program_directory();
         Self { root_dir }
     }
 

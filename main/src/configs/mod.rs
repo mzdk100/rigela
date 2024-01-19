@@ -14,12 +14,12 @@
 pub(crate) mod tts;
 
 use crate::{
-    configs::tts::TtsConfig,
-    utils::{read_file, write_file},
+    configs::tts::TtsConfig
 };
-use log::{error, info};
+use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use log::error;
 use toml;
 
 /// 配置项目的根元素
@@ -45,29 +45,16 @@ impl ConfigManager {
      * 读取配置数据。
      * */
     pub(crate) async fn read(&self) -> ConfigRoot {
-        let config = match read_file(&self.path.clone()).await {
-            Ok(mut content) => match toml::from_str::<ConfigRoot>(content.as_mut_str()) {
-                Ok(c) => Some(c),
-                Err(_) => {
-                    info!("配置文件格式错误，将使用默认配置");
-                    None
-                }
-            },
+        match read_file(&self.path.clone()).await {
+            Ok(mut content) => toml::from_str::<ConfigRoot>(content.as_mut_str()).unwrap(),
+
             _ => {
-                info!("配置文件不存在，将使用默认配置");
-                None
-            }
-        };
-        // 这里需要调用异步，不可以转换成 unwrap_or_else
-        match config {
-            None => {
                 let config = ConfigRoot {
                     tts_config: Some(TtsConfig::default()),
                 };
                 self.write(&config).await;
                 config
             }
-            Some(c) => c,
         }
     }
 
@@ -77,14 +64,8 @@ impl ConfigManager {
      * */
     pub(crate) async fn write(&self, config_root: &ConfigRoot) {
         let path = self.path.clone();
-
-        match toml::to_string(config_root) {
-            Ok(content) => {
-                if let Err(e) = write_file(&path, content.as_bytes()).await {
-                    error!("{}", e);
-                }
-            }
-            Err(e) => error!("{}", e),
+        if let Err(e) = write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await {
+            error!("{}", e);
         }
     }
 }

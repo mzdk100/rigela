@@ -29,11 +29,11 @@ i18n!("locale");
  * 6. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
  * 7. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
  * 8. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
- * 9. talent 才能访问器，一些功能的实现；
- * 10. terminator 终结者，用于控制和等待程序结束；
- * 11. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
- * 12. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中；
- * 13. utils 工具函数，封装一些常用但没有归类的函数。
+ * 9. sounder 音效播放器，用于播放音效资源；
+ * 10. talent 才能访问器，一些功能的实现；
+ * 11. terminator 终结者，用于控制和等待程序结束；
+ * 12. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
+ * 13. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中。
  * */
 mod browsable_impl;
 mod browser;
@@ -47,9 +47,9 @@ mod launcher;
 mod logger;
 mod performer;
 mod resources;
+mod sounder;
 mod talent;
 mod terminator;
-mod utils;
 
 use launcher::Launcher;
 use log::info;
