@@ -12,9 +12,11 @@
  */
 
 mod form_browser;
+mod mouse;
 mod program;
 mod tts;
 
+use crate::talent::mouse::{ClickTalent, RightClickTalent};
 use crate::talent::tts::{NextPropRTalent, NextPropTalent, PrevPropRTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
@@ -79,6 +81,8 @@ impl TalentAccessor {
             Box::new(NextPropRTalent),
             Box::new(PrevPropTalent),
             Box::new(PrevPropRTalent),
+            Box::new(ClickTalent),
+            Box::new(RightClickTalent),
         ];
         Self {
             talents: talents.into(),

@@ -22,84 +22,76 @@ use std::sync::Arc;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_ADD, VK_CLEAR, VK_HOME, VK_LEFT, VK_PRIOR, VK_RIGHT, VK_UP};
 
+const WAVE: &str = "boundary.wav";
+
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个控件", key = ((VK_HOME, false)))]
 async fn prev_element(context: Arc<Context>) {
-    let element = context.form_browser.prev().await.current().await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+    match context.form_browser.prev().await.current().await {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个控件", key = ((VK_PRIOR, false)))]
 async fn next_element(context: Arc<Context>) {
-    let element = context.form_browser.next().await.current().await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+    match context.form_browser.next().await.current().await {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前控件", key = ((VK_UP, false)))]
 async fn curr_element(context: Arc<Context>) {
-    let element = context.form_browser.current().await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+    match context.form_browser.current().await {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "上一个子控件", key = ((VK_LEFT, false)))]
 async fn prev_child_element(context: Arc<Context>) {
-    let element = context
+    match context
         .form_browser
         .prev_child()
         .await
         .current_child()
-        .await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+        .await
+    {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个子控件", key = ((VK_RIGHT, false)))]
 async fn next_child_element(context: Arc<Context>) {
-    let element = context
+    match context
         .form_browser
         .next_child()
         .await
         .current_child()
-        .await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+        .await
+    {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前子控件", key = ((VK_CLEAR, false)))]
 async fn curr_child_element(context: Arc<Context>) {
-    let element = context.form_browser.current_child().await;
-    if element.is_none() {
-        context.performer.play_sound("boundary.wav").await;
-        return;
-    }
-    context.performer.speak(&element.unwrap()).await;
+    match context.form_browser.current_child().await {
+        Some(element) => context.performer.speak(&element).await,
+        None => context.performer.play_sound(WAVE).await,
+    };
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个模式", key = ((VK_ADD, false)))]
 async fn mode_next(context: Arc<Context>) {
-    context.performer.play_sound("boundary.wav").await;
+    context.performer.play_sound(WAVE).await;
 }

@@ -17,7 +17,7 @@ use crate::{
     configs::tts::TtsConfig,
     utils::{read_file, write_file},
 };
-use log::error;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use toml;
@@ -48,9 +48,15 @@ impl ConfigManager {
         let config = match read_file(&self.path.clone()).await {
             Ok(mut content) => match toml::from_str::<ConfigRoot>(content.as_mut_str()) {
                 Ok(c) => Some(c),
-                Err(_) => None,
+                Err(_) => {
+                    info!("配置文件格式错误，将使用默认配置");
+                    None
+                }
             },
-            _ => None,
+            _ => {
+                info!("配置文件不存在，将使用默认配置");
+                None
+            }
         };
         // 这里需要调用异步，不可以转换成 unwrap_or_else
         match config {
@@ -71,8 +77,14 @@ impl ConfigManager {
      * */
     pub(crate) async fn write(&self, config_root: &ConfigRoot) {
         let path = self.path.clone();
-        if let Err(e) = write_file(&path, toml::to_string(config_root).unwrap().as_bytes()).await {
-            error!("{}", e);
+
+        match toml::to_string(config_root) {
+            Ok(content) => {
+                if let Err(e) = write_file(&path, content.as_bytes()).await {
+                    error!("{}", e);
+                }
+            }
+            Err(e) => error!("{}", e),
         }
     }
 }

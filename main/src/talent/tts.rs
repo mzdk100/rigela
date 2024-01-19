@@ -54,48 +54,44 @@ async fn reduce_r(context: Arc<Context>) {
 #[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_RIGHT, true)))]
 async fn next_prop(context: Arc<Context>) {
     context.performer.clone().next_tts_prop().await;
-    speak_speed(context).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_RIGHT, true)))]
 async fn next_prop_r(context: Arc<Context>) {
     context.performer.clone().next_tts_prop().await;
-    speak_speed(context).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_LEFT, true)))]
 async fn prev_prop(context: Arc<Context>) {
     context.performer.clone().prev_tts_prop().await;
-    speak_speed(context).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_LEFT, true)))]
 async fn prev_prop_r(context: Arc<Context>) {
     context.performer.clone().prev_tts_prop().await;
-    speak_speed(context).await;
+    speak_tts_prop(context).await;
 }
 
 async fn set_value(context: Arc<Context>, diff: i32) {
-    context
-        .performer
-        .apply_config(context.clone(), move || diff)
-        .await;
+    let pf = context.performer.clone();
+    pf.apply_config(context.clone(), move || diff).await;
 
-    speak_speed(context).await;
+    speak_tts_prop(context).await;
 }
 
-async fn speak_speed(context: Arc<Context>) {
-    let cfg = context.config_manager.read().await;
-    let info: String;
-
-    match *context.performer.clone().cur_tts_prop.read().await {
-        TtsProperty::Speed => info = format!("语速: {}", cfg.tts_config.unwrap().speed.unwrap()),
-        TtsProperty::Volume => info = format!("音量: {}", cfg.tts_config.unwrap().volume.unwrap()),
-        TtsProperty::Pitch => info = format!("语调: {}", cfg.tts_config.unwrap().pitch.unwrap()),
+async fn speak_tts_prop(context: Arc<Context>) {
+    if let Some(config) = context.config_manager.read().await.tts_config {
+        let info = match *context.performer.clone().cur_tts_prop.read().await {
+            TtsProperty::Speed => format!("语速: {}", config.speed.unwrap()),
+            TtsProperty::Volume => format!("音量: {}", config.volume.unwrap()),
+            TtsProperty::Pitch => format!("语调: {}", config.pitch.unwrap()),
+        };
+        context.performer.speak_text(&*info).await;
     }
-
-    context.performer.speak_text(info.as_str()).await;
 }

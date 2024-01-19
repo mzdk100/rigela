@@ -11,23 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    collections::HashMap,
-    io::SeekFrom,
-    sync::Arc
-};
-use crate::{
-    configs::tts::TtsProperty,
-    context::Context
-};
+use crate::{configs::tts::TtsProperty, context::Context};
+use std::{collections::HashMap, io::SeekFrom, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
-    sync::{Mutex, RwLock}
+    sync::{Mutex, RwLock},
 };
-use win_wrap::{
-    audio::AudioOutputStream,
-    tts::Tts
-};
+use win_wrap::{audio::AudioOutputStream, tts::Tts};
 
 const SAMPLE_RATE: u32 = 16000;
 const NUM_CHANNELS: u32 = 1;
@@ -82,7 +72,9 @@ impl Performer {
 
         let diff = slot();
         if diff != 0 {
-            let mut value = match *self.cur_tts_prop.read().await {
+            let prop = self.cur_tts_prop.read().await;
+
+            let mut value = match *prop {
                 TtsProperty::Speed => tts_config.speed.unwrap(),
                 TtsProperty::Volume => tts_config.volume.unwrap(),
                 TtsProperty::Pitch => tts_config.pitch.unwrap(),
@@ -96,16 +88,17 @@ impl Performer {
                 i => i,
             };
 
-            match *self.cur_tts_prop.read().await {
+            match *prop {
                 TtsProperty::Speed => tts_config.speed.replace(value),
                 TtsProperty::Volume => tts_config.volume.replace(value),
                 TtsProperty::Pitch => tts_config.pitch.replace(value),
             };
         }
+
         tts.set_prop(
-            3.0 + (tts_config.speed.unwrap_or(50) as f64 - 50.0) * 0.06,
-            0.5 + (tts_config.volume.unwrap_or(100) as f64 - 50.0) * 0.01,
-            1.0 + (tts_config.pitch.unwrap_or(50) as f64 - 50.0) * 0.01,
+            3.0 + (tts_config.speed.unwrap() as f64 - 50.0) * 0.06,
+            0.5 + (tts_config.volume.unwrap() as f64 - 50.0) * 0.01,
+            1.0 + (tts_config.pitch.unwrap() as f64 - 50.0) * 0.01,
         );
 
         config.tts_config.replace(tts_config);
@@ -133,7 +126,7 @@ impl Performer {
 
     pub(crate) async fn prev_tts_prop(&self) {
         let prop = self.cur_tts_prop.read().await.prev();
-        let mut  cur = self.cur_tts_prop.write().await;
+        let mut cur = self.cur_tts_prop.write().await;
         *cur = prop;
     }
 
