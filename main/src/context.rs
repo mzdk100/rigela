@@ -22,9 +22,9 @@ use crate::{
     resources::ResourceAccessor,
     sounder::Sounder,
     talent::TalentAccessor,
-    terminator::Terminator,
-    utils::get_program_directory,
+    terminator::Terminator
 };
+use rigela_utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use win_wrap::uia::{

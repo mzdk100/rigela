@@ -14,12 +14,9 @@
 use crate::{
     context::Context,
     gui::FrameUi,
-    terminator::{TerminationWaiter, Terminator},
-    utils::{
-        get_program_directory,
-        write_file
-    }
+    terminator::{TerminationWaiter, Terminator}
 };
+use rigela_utils::{get_program_directory, write_file};
 use std::{
     sync::Arc,
     time::Duration,

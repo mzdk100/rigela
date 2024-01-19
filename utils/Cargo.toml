@@ -1,0 +1,28 @@
+[package]
+name = "rigela-utils"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# 获取用户目录的路径
+home = "0.5.9"
+# 输出日志
+log = "0.4.20"
+
+[dependencies.serde]
+# 用于数据序列化和反序列化
+version = "1.0.145"
+features = ["derive"]
+
+[dependencies.tokio]
+# 异步运行时（携程框架）
+version = "1.35.1"
+features = [
+    "macros",
+    "time"
+]
+
+[dependencies.toml]
+version = "0.8.8"

@@ -33,8 +33,7 @@ i18n!("locale");
  * 10. talent 才能访问器，一些功能的实现；
  * 11. terminator 终结者，用于控制和等待程序结束；
  * 12. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
- * 13. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中；
- * 14. utils 工具函数，封装一些常用但没有归类的函数。
+ * 13. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中。
  * */
 mod browsable_impl;
 mod browser;
@@ -51,7 +50,6 @@ mod resources;
 mod sounder;
 mod talent;
 mod terminator;
-mod utils;
 
 use launcher::Launcher;
 use log::info;

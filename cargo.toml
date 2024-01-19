@@ -12,6 +12,7 @@ members = [
     "proxy32",
     "jab-sys",
     "resources",
+    "utils",
     "win-wrap"
 ]
 resolver = "2"

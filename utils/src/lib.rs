@@ -11,17 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-/* 仓库地址。 */
-#[allow(unused)]
-pub const REPOSITORY_URL: &str = env!("CARGO_PKG_REPOSITORY");
-
-/* 作者信息。 */
-#[allow(unused)]
-pub const AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
-
-/* 描述信息。 */
-#[allow(unused)]
-pub const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+pub mod pipe;
 
 use home::home_dir;
 use std::fs::create_dir;
@@ -32,7 +22,7 @@ use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 const DIR_NAME: &str = ".rigela";
 
 /// 获取程序存储目录
-pub(crate) fn get_program_directory() -> PathBuf {
+pub fn get_program_directory() -> PathBuf {
     let program_dir = home_dir()
         .expect("Can't get the current user directory.")
         .join(DIR_NAME);
@@ -49,7 +39,7 @@ pub(crate) fn get_program_directory() -> PathBuf {
  * `path` 文件路径。
  * `data` 需要写入的数据。
  * */
-pub(crate) async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String> {
+pub async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String> {
     let file = OpenOptions::new()
         .create(true)
         .write(true)

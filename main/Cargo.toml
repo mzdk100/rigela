@@ -51,6 +51,9 @@ path = "../macros"
 [dependencies.rigela-resources]
 path = "../resources"
 
+[dependencies.rigela-utils]
+path = "../utils"
+
 [dependencies.serde]
 # 用于数据序列化和反序列化
 version = "1.0.145"
@@ -59,10 +62,8 @@ features = ["derive"]
 [dependencies]
 # 查看日期和时间
 chrono = "0.4.31"
-# 获取用户目录的路径
-home = "0.5.9"
 # 配置I18N国际化多语言支持
-rust-i18n = "2.3.0"
+rust-i18n = "3.0.0"
 # 记录日志
 log4rs = "1.2.0"
 # 配置项读写

@@ -17,15 +17,6 @@
 #[cfg(target_arch = "x86")]
 #[tokio::main]
 async fn main() {
-    use tokio::net::windows::named_pipe::ServerOptions;
-    use proxy32::PIPE_NAME;
-
-    let server = ServerOptions::new()
-        .create(PIPE_NAME)
-        .unwrap();
-    server.connect()
-        .await
-        .unwrap();
 }
 
 #[cfg(not(target_arch = "x86"))]
