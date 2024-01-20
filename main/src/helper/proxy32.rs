@@ -69,11 +69,11 @@ impl Proxy32 {
 
         {
             let mut process = self.process.write().await;
-            *process = Some(cmd.unwrap()).into();
+            *process = Some(cmd).into();
         }
         let proxy32_client = Proxy32Client::new(PIPE_NAME).await;
-        let client = self.client.write().await.unwrap();
-        *client = proxy32_client;
+        let mut client = self.client.write().await;
+        *client = Some(proxy32_client);
         self
     }
 
