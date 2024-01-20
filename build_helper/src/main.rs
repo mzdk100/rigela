@@ -26,7 +26,23 @@ fn main() {
         "Can't directly run the current program, this program can only be called through cargo.",
     );
 
-    // 先构建32位目标，因为64位主程序需要依赖他
+    // 需要最先构建peeper
+    let args2 = if arg_list.contains(&String::from("--release")) {
+        vec!["build", "-p", "peeper", "--release"]
+    } else {
+        vec!["build", "-p", "peeper"]
+    };
+    let status = Command::new(cargo.as_str())
+        .args(args2)
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    if status.code().unwrap_or(1) != 0 {
+        panic!("Can't build the peeper.");
+    }
+
+    // 下一步是构建32位目标，因为64位主程序需要依赖他
     let args = {
         let mut v = arg_list.clone();
         if v[0] == "run" {
@@ -43,10 +59,10 @@ fn main() {
         .wait()
         .unwrap();
     if status.code().unwrap_or(1) != 0 {
-        return;
+        panic!("Can't build the 32-bit target.");
     }
 
-    // 然后构建64位目标
+    // 最后构建64位目标
     let args = {
         let mut v = arg_list.clone();
         v.push("x86_64-pc-windows-msvc".to_string());
