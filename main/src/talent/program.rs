@@ -33,7 +33,7 @@ use tokio::time::sleep;
 async fn exit(context: Arc<Context>) {
     context
         .performer
-        .speak_text(t!("program.exit").as_str())
+        .speak_text(&t!("program.exit"))
         .await;
     sleep(Duration::from_millis(1000)).await;
     context.terminator.exit().await;

@@ -13,10 +13,13 @@
 
 #![windows_subsystem = "windows"]
 
-
 #[cfg(target_arch = "x86")]
 #[tokio::main]
 async fn main() {
+    use rigela_proxy32::server::Proxy32Server;
+    use std::env;
+    let mut server = Proxy32Server::new(env::args().nth(1).unwrap().as_str()).await;
+    server.run().await;
 }
 
 #[cfg(not(target_arch = "x86"))]

@@ -17,19 +17,28 @@ use tokio::{
         BufReader,
         AsyncBufReadExt,
         AsyncWriteExt,
-        AsyncRead
+        AsyncRead,
+        AsyncWrite
     },
     net::windows::named_pipe::{
         ClientOptions,
         NamedPipeClient
     },
     time::{sleep, Duration},
-    net::windows::named_pipe::ServerOptions
+    net::windows::named_pipe::ServerOptions,
 };
 use serde::{Deserialize, Serialize};
+use tokio::net::windows::named_pipe::NamedPipeServer;
 
 
-pub async fn client_run(pipe_name: &str) {
+/**
+ * 连接到一个管道。
+ * `pipe_name` 管道名称。
+ * */
+pub async fn client_connect<T>(pipe_name: &str) -> PipeStream<T, NamedPipeClient>
+    where
+        T: for<'de> Deserialize<'de> + Serialize
+{
     // 使用循环方法连接管道，因为可能在连接的时候管道还没创建完毕
     let client = loop {
         // 推迟一秒连接，尽量确保管道创建完毕
@@ -43,45 +52,72 @@ pub async fn client_run(pipe_name: &str) {
             }
         }
     };
-
+    PipeStream::new(client)
 }
 
-pub async fn server_run(pipe_name: &str) {
+/**
+ * 创建一个管道服务器，并等待一个客户端连接。
+ * `pipe_name` 管道名称。
+ * */
+pub async fn server_run<T>(pipe_name: &str) -> PipeStream<T, NamedPipeServer>
+    where
+        T: for<'de> Deserialize<'de> + Serialize
+{
     let server = ServerOptions::new()
         .create(pipe_name)
         .unwrap();
     server.connect()
         .await
         .unwrap();
+    PipeStream::new(server)
 }
 
-pub struct PipeStream<T>
+pub struct PipeStream<R, T>
     where
-        T: AsyncRead,
+        R: for<'de> Deserialize<'de> + Serialize,
+        T: AsyncRead + AsyncWrite
 {
+    _packet: Option<R>,
     reader: BufReader<T>
 }
 
-impl<T> PipeStream<T>
+impl<R, T> PipeStream<R, T>
     where
-        T: AsyncRead + Unpin
+        R: for<'de> Deserialize<'de> + Serialize,
+        T: AsyncRead + AsyncWrite + Unpin
 {
-    fn new(stream: T) -> Self {
-        let mut reader = BufReader::new(stream);
+    /**
+     * 创建一个管道的流，用于发送和接收数据。
+     * 其中传输的数据是实现了Deserialize 和 Serialize接口的struct。
+     * */
+    pub fn new(stream: T) -> Self {
+        let reader = BufReader::new(stream);
         Self {
+            _packet: None,
             reader
         }
     }
-    async fn recv<R>(&mut self)
-    where
-    R: for<'de> Deserialize<'de>
-    {
+
+    /**
+     * 接收一个数据包。
+     * */
+    pub async fn recv(&mut self) -> Option<R> {
         let mut buf = Vec::new();
         if let Ok(x) = self.reader.read_until(b'\n', &mut buf).await {
             if x < 1 {
-                return;
+                return None;
             }
         };
         let packet: R = toml::from_str(String::from_utf8_lossy(&buf).to_string().as_str()).unwrap();
+        Some(packet)
+    }
+
+    /**
+     * 发送一个数据包。
+     * `packet` 实现了序列化接口的数据。
+     * */
+    pub async fn send(&mut self, packet: &R) {
+        let data = toml::to_string(&packet).unwrap();
+        self.reader.write_all(data.as_bytes()).await.unwrap();
     }
 }

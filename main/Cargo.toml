@@ -45,6 +45,9 @@ features = [
 # 嵌入资源信息到程序中
 version = "2.4.0"
 
+[dependencies.rigela-proxy32]
+path = "../proxy32"
+
 [dependencies.rigela-macros]
 path = "../macros"
 
