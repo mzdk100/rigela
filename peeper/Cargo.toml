@@ -13,9 +13,16 @@ log = "0.4.20"
 [dependencies.win-wrap]
 path = "../win-wrap"
 
+[dependencies.rigela-utils]
+path = "../utils"
+
 [dependencies.windows]
 version = "0.52.0"
 features = ["Win32_Foundation"]
+
+[dependencies.tokio]
+features = ["fs", "io-util", "net"]
+version = "1.35.1"
 
 [lib]
 name = "peeper"

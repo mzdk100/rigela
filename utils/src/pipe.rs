@@ -20,15 +20,16 @@ use tokio::{
         AsyncRead,
         AsyncWrite
     },
-    net::windows::named_pipe::{
-        ClientOptions,
-        NamedPipeClient
-    },
     time::{sleep, Duration},
-    net::windows::named_pipe::ServerOptions,
+    net::windows::named_pipe::{
+        ServerOptions,
+        ClientOptions,
+        NamedPipeClient,
+        NamedPipeServer
+    }
 };
 use serde::{Deserialize, Serialize};
-use tokio::net::windows::named_pipe::NamedPipeServer;
+use serde_json_bytes::serde_json::{from_slice, to_vec};
 
 
 /**
@@ -108,7 +109,7 @@ impl<R, T> PipeStream<R, T>
                 return None;
             }
         };
-        let packet: R = toml::from_str(String::from_utf8_lossy(&buf).to_string().as_str()).unwrap();
+        let packet: R = from_slice(&buf).unwrap();
         Some(packet)
     }
 
@@ -117,7 +118,8 @@ impl<R, T> PipeStream<R, T>
      * `packet` 实现了序列化接口的数据。
      * */
     pub async fn send(&mut self, packet: &R) {
-        let data = toml::to_string(&packet).unwrap();
-        self.reader.write_all(data.as_bytes()).await.unwrap();
+        let mut data = to_vec(&packet).unwrap();
+        data.push(b'\n');
+        self.reader.write_all(&data).await.unwrap();
     }
 }
