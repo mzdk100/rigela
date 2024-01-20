@@ -15,7 +15,9 @@ use tokio::process::Child;
 use tokio::sync::RwLock;
 use rigela_proxy32::client::Proxy32Client;
 
+#[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
+
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
     process: RwLock<Option<Child>>,
@@ -92,6 +94,10 @@ impl Proxy32 {
      * 杀死进程。
      * */
     pub(crate) async fn kill(&self) -> &Self {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.quit().await;
+        }
         let mut process = self.process.write().await;
         if let Some(p) = process.as_mut() {
             p.kill().await.unwrap_or(());
