@@ -62,15 +62,11 @@ impl Performer {
      * `context` 框架的上下文环境。
      * `slot` 一个用于修改参数的函数或闭包。
      * */
-    pub(crate) async fn apply_config<FN>(&self, context: Arc<Context>, slot: FN)
-    where
-        FN: (FnOnce() -> i32) + Send + Sync + 'static,
-    {
+    pub(crate) async fn apply_config(&self, context: Arc<Context>, diff: i32) {
         let tts = self.tts.clone();
         let mut config = context.config_manager.read().await;
         let mut tts_config = config.tts_config.clone().unwrap();
 
-        let diff = slot();
         if diff != 0 {
             let prop = self.cur_tts_prop.read().await;
 
@@ -159,7 +155,7 @@ impl Performer {
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
         // 读取配置项，应用配置到程序实例
-        self.apply_config(context.clone(), || 0).await;
+        self.apply_config(context.clone(), 0).await;
 
         // 初始化音效播放器
         let list = vec!["boundary.wav"];

@@ -29,25 +29,29 @@ use win_wrap::input::{
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
 async fn increase(context: Arc<Context>) {
-    set_value(context, 1).await;
+    context.performer.apply_config(context.clone(), 1).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
 async fn increase_r(context: Arc<Context>) {
-    set_value(context, 1).await;
+    context.performer.apply_config(context.clone(), 1).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
 async fn reduce(context: Arc<Context>) {
-    set_value(context, -1).await;
+    context.performer.apply_config(context.clone(), -1).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
 async fn reduce_r(context: Arc<Context>) {
-    set_value(context, -1).await;
+    context.performer.apply_config(context.clone(), -1).await;
+    speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -75,13 +79,6 @@ async fn prev_prop(context: Arc<Context>) {
 #[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_LEFT, true)))]
 async fn prev_prop_r(context: Arc<Context>) {
     context.performer.clone().prev_tts_prop().await;
-    speak_tts_prop(context).await;
-}
-
-async fn set_value(context: Arc<Context>, diff: i32) {
-    let pf = context.performer.clone();
-    pf.apply_config(context.clone(), move || diff).await;
-
     speak_tts_prop(context).await;
 }
 
