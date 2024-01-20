@@ -15,6 +15,7 @@ use tokio::process::Child;
 use tokio::sync::RwLock;
 use rigela_proxy32::client::Proxy32Client;
 
+const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
     process: RwLock<Option<Child>>,
@@ -57,16 +58,22 @@ impl Proxy32 {
         }
 
         // 启动32位的代理模块。
-        let mut cmd = Command::new(&proxy32_path).spawn();
-        while cmd.is_err() {
+        let cmd = loop {
             // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
             sleep(Duration::from_millis(1000)).await;
-            // 1秒之后重新尝试启动
-            cmd = Command::new(&proxy32_path).spawn();
-        }
+            // 1秒之后再尝试启动
+            if let Ok(x) = Command::new(&proxy32_path).args([PIPE_NAME]).spawn() {
+                break x
+            }
+        };
 
-        let mut process = self.process.write().await;
-        *process = Some(cmd.unwrap()).into();
+        {
+            let mut process = self.process.write().await;
+            *process = Some(cmd.unwrap()).into();
+        }
+        let proxy32_client = Proxy32Client::new(PIPE_NAME).await;
+        let client = self.client.write().await.unwrap();
+        *client = proxy32_client;
         self
     }
 

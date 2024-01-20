@@ -1,6 +1,6 @@
 [package]
 name = "main"
-description = "RigelA读屏主程序"
+description = "RigelA screen reader (rsr)."
 version = "0.1.0"
 edition = "2021"
 authors = [
@@ -44,6 +44,9 @@ features = [
 [build-dependencies.embed-resource]
 # 嵌入资源信息到程序中
 version = "2.4.0"
+
+[build-dependencies.cargo-rigela]
+path = "../build_helper"
 
 [dependencies.rigela-proxy32]
 path = "../proxy32"
