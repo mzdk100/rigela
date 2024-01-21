@@ -20,8 +20,18 @@ path = "../utils"
 version = "0.52.0"
 features = ["Win32_Foundation"]
 
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.195"
+
 [dependencies.tokio]
-features = ["fs", "io-util", "net"]
+features = [
+    "rt-multi-thread",
+    "fs",
+    "io-util",
+    "net",
+    "sync"
+]
 version = "1.35.1"
 
 [lib]

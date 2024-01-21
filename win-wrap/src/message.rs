@@ -12,10 +12,14 @@
  */
 
 use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
-use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, PostThreadMessageW, TranslateMessage,
+pub use windows::Win32::UI::WindowsAndMessaging::{HWND_BROADCAST, MSG, WM_QUIT};
+use windows::{
+    core::HSTRING,
+    Win32::UI::WindowsAndMessaging::{
+        DispatchMessageW, GetMessageW, PostThreadMessageW, RegisterWindowMessageW, SendMessageW,
+        TranslateMessage,
+    },
 };
-pub use windows::Win32::UI::WindowsAndMessaging::{MSG, WM_QUIT};
 
 /**
  * 将消息调度到窗口过程。它通常用于调度 get_message 函数检索到的消息。
@@ -50,6 +54,18 @@ pub fn post_thread_message(id_thread: u32, msg: u32, w_param: WPARAM, l_param: L
 }
 
 /**
+ * 该函数将指定的消息发送到一个或多个窗口。此函数为指定的窗口调用窗口程序，直到窗口程序处理完消息再返回。
+ * 而和函数post_message不同，post_message是将一个消息寄送到一个线程的消息队列后就立即返回。
+ * `h_wnd` 指定要接收消息的窗口的句柄。如果此参数为HWND_BROADCAST，则消息将被发送到系统中所有顶层窗口，包括无效或不可见的非自身拥有的窗口、被覆盖的窗口和弹出式窗口，但消息不被发送到子窗口。
+ * `msg` 指定被发送的消息。
+ * `w_param` 指定附加的消息特定信息。
+ * `l_param` 指定附加的消息特定信息。
+ * */
+pub fn send_message(h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
+    unsafe { SendMessageW(h_wnd, msg, w_param, l_param) }
+}
+
+/**
  * 将虚拟密钥信息转换为字符信息。字符信息会张贴至调用程序的消息队列，下次程序调用 get_message 或 peek_message 函数时要读取。
  * `msg` MSG结构，其中包含使用get_message或peek_message函数从调用程序消息队列撷取的信息。
  */
@@ -57,6 +73,17 @@ pub fn translate_message(msg: &mut MSG) -> BOOL {
     unsafe { TranslateMessage(msg) }
 }
 
+/**
+ * 注册一个新窗口消息，保证在整个系统中唯一。发送或发布消息时可以使用消息值。
+ * register_window_message 函数通常用于注册消息，以便在两个协作应用程序之间进行通信。
+ * 如果两个不同的应用程序注册相同的消息字符串，则应用程序将返回相同的消息值。该消息将保持注册状态，直到会话结束。
+ * 仅当多个应用程序必须处理同一消息时，才使用此函数。若要在窗口类中发送私人消息，应用程序可以使用 0x7FFF WM_USER 范围内的任何整数。(此范围内的消息是窗口类的专用消息，而不是应用程序。
+ * 例如，预定义控件类（如 BUTTON、 EDIT、 LISTBOX 和 COMBOBOX）可能使用此范围中的值。)
+ * `string` 消息字符串。
+ * */
+pub fn register_window_message(string: &str) -> u32 {
+    unsafe { RegisterWindowMessageW(&HSTRING::from(string)) }
+}
 /**
  * 在当前线程上创建一个窗口消息循环，直到接收到WM_QUIT消息为止。
  * */

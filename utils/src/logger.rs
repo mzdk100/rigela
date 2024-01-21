@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use rigela_utils::get_program_directory;
 use log::LevelFilter;
 use log4rs::{
     append::{
@@ -28,6 +27,7 @@ use log4rs::{
     filter::threshold::ThresholdFilter,
     init_config,
 };
+use crate::get_program_directory;
 
 const LOG_FILE_NAME: &str = "run.log";
 
@@ -35,9 +35,11 @@ const LOG_FILE_NAME: &str = "run.log";
  * 初始化日志收集器。
  * */
 
-pub(crate) fn init_logger() {
+pub fn init_logger(path: Option<&str>) {
     let level = LevelFilter::Info;
-    let file_path = get_program_directory().join(LOG_FILE_NAME);
+    let file_path = get_program_directory()
+        .join("logs")
+        .join(path.unwrap_or(LOG_FILE_NAME));
 
     // 创建一个标准错误日志器
     let stderr = ConsoleAppender::builder()

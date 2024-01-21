@@ -14,15 +14,11 @@
 use crate::{
     context::Context,
     gui::FrameUi,
-    terminator::{TerminationWaiter, Terminator}
-};
-use rigela_utils::{get_program_directory, write_file};
-use std::{
-    sync::Arc,
-    time::Duration,
-    ffi::CString
+    terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
+use rigela_utils::{get_program_directory, write_file};
+use std::{sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
@@ -61,8 +57,8 @@ impl Launcher {
      * */
     pub(crate) async fn launch(&mut self) {
         // peeper 可以监控远进程中的信息
-        let dll_path = put_peeper().await;
-        peeper::mount(dll_path.as_ptr());
+        put_peeper().await;
+        peeper::mount();
 
         // 显示欢迎页面。
         self.context
@@ -87,12 +83,7 @@ impl Launcher {
         self.context.dispose();
 
         // 杀死32位代理模块
-        self.context
-            .proxy32
-            .kill()
-            .await
-            .wait()
-            .await;
+        self.context.proxy32.kill().await.wait().await;
 
         // 解除远进程监控
         peeper::unmount();
@@ -110,16 +101,15 @@ async fn speak_desktop(context: Arc<Context>) {
 /**
  * 安装peeper.dll文件。
  * */
-async fn put_peeper() -> CString {
+async fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
-        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
     let peeper_path = get_program_directory().join("peeper.dll");
     if let Err(e) = write_file(&peeper_path, peeper_dll).await {
         error!("{}", e);
     };
-    CString::new(peeper_path.to_str().unwrap()).unwrap()
 }

@@ -12,8 +12,8 @@
  */
 
 use rigela_resources::clone;
-use std::path::PathBuf;
 use rigela_utils::get_program_directory;
+use std::path::PathBuf;
 use tokio::fs::File;
 
 //noinspection HttpUrlsUsage

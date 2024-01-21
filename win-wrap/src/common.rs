@@ -28,16 +28,25 @@ pub use windows::{
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::{CloseHandle, GetLastError},
+        Foundation::{
+            MAX_PATH,
+            CloseHandle,
+            GetLastError
+        },
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
-            LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW},
+            LibraryLoader::{
+                GetModuleHandleW,
+                GetProcAddress,
+                LoadLibraryW,
+                GetModuleFileNameW
+            }
         },
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    },
+    }
 };
 
 /**
@@ -113,11 +122,23 @@ pub fn get_module_handle(module_name: &str) -> HMODULE {
 }
 
 /**
+ * 获取当前进程已加载模块的文件的完整路径，该模块必须由当前进程加载。
+ * 如果想要获取另一个已加载模块的文件路径，可以使用get_module_file_name_ex函数。
+ * `h_module` 一个模块的句柄。可以是一个DLL模块，或者是一个应用程序的实例句柄。如果该参数为NULL，该函数返回该应用程序全路径。
+ */
+pub fn get_module_file_name(h_module: HMODULE) -> String {
+    unsafe {
+        let mut buf: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
+        let len = GetModuleFileNameW(h_module, &mut buf);
+        String::from_utf16_lossy(&buf[..len as usize])
+    }
+}
+/**
  * 将指定的模块加载到调用进程的地址空间中。指定的模块可能会导致加载其他模块。有关其他加载选项，请使用 load_library_ex 函数。
  * `lib_file_name` 模块的名称。这可以是库模块 (.dll 文件)，也可以是可执行模块 (.exe 文件)。如果指定的模块是可执行模块，则不会加载静态导入;相反，模块就像使用标志的 load_library_ex DONT_RESOLVE_DLL_REFERENCES 加载一样。指定的名称是模块的文件名，与库模块本身中存储的名称无关，该名称由 module-definition (.def) 文件中的 LIBRARY 关键字 (keyword) 指定。如果字符串指定完整路径，则函数仅搜索模块的该路径。如果字符串指定相对路径或模块名称而不指定路径，则函数使用标准搜索策略来查找模块;如果函数找不到模块，该函数将失败。指定路径时，请务必使用反斜杠 (\) ，而不是使用 /) (正斜杠。如果字符串指定模块名称而不指定路径，并且省略文件扩展名，则该函数会将默认库扩展“.DLL”追加到模块名称。若要防止函数将“.DLL”追加到模块名称中，请在模块名称字符串中包含尾随点字符 (.)。
  * */
-pub fn load_library(lib_file_name: &str) -> HMODULE {
-    unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }.expect("Can't load the library.")
+pub fn load_library(lib_file_name: &str) -> Result<HMODULE> {
+    unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }
 }
 
 /**

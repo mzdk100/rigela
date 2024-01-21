@@ -11,20 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use tokio::net::windows::named_pipe::NamedPipeServer;
-use rigela_utils::pipe::{PipeStream, server_run};
 use crate::model::{Proxy32Data, Proxy32Packet};
+use rigela_utils::pipe::{server_run, PipeStream};
+use tokio::net::windows::named_pipe::NamedPipeServer;
 
 pub struct Proxy32Server {
-    stream: PipeStream<Proxy32Packet, NamedPipeServer>
+    stream: PipeStream<Proxy32Packet, NamedPipeServer>,
 }
 impl Proxy32Server {
     pub async fn new(pipe_name: &str) -> Self {
         let stream = server_run(pipe_name).await;
-        Self {
-            stream
-        }
+        Self { stream }
     }
     pub async fn run(&mut self) {
         loop {
@@ -33,13 +30,10 @@ impl Proxy32Server {
                 None => break,
                 Some(p) => {
                     let data = self.on_exec(&p.data).await;
-                    let packet = Proxy32Packet {
-                        id: p.id,
-                        data
-                    };
+                    let packet = Proxy32Packet { id: p.id, data };
                     self.stream.send(&packet).await;
                     if Proxy32Data::QUIT == packet.data {
-                        break
+                        break;
                     }
                 }
             };

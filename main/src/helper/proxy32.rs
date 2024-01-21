@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use rigela_proxy32::client::Proxy32Client;
 use tokio::process::Child;
 use tokio::sync::RwLock;
-use rigela_proxy32::client::Proxy32Client;
 
 #[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
@@ -21,7 +21,7 @@ const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
     process: RwLock<Option<Child>>,
-    client: RwLock<Option<Proxy32Client>>
+    client: RwLock<Option<Proxy32Client>>,
 }
 
 impl Proxy32 {
@@ -31,7 +31,7 @@ impl Proxy32 {
     pub(crate) fn new() -> Self {
         Self {
             process: None.into(),
-            client: None.into()
+            client: None.into(),
         }
     }
 
@@ -40,20 +40,19 @@ impl Proxy32 {
      * */
     #[cfg(target_arch = "x86_64")]
     pub(crate) async fn spawn(&self) -> &Self {
-        use rigela_utils::{get_program_directory, write_file};
         use log::error;
+        use rigela_utils::{get_program_directory, write_file};
         use std::time::Duration;
-        use tokio::{
-            process::Command,
-            time::sleep
-        };
+        use tokio::{process::Command, time::sleep};
 
         // 获取proxy32.exe的二进制数据并写入到用户目录中，原理是在编译时把proxy32的数据使用include_bytes!内嵌到64位的主程序内部，在运行时释放到磁盘。
         // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
         #[cfg(not(debug_assertions))]
-            let proxy32_bin = include_bytes!("../../../target/i686-pc-windows-msvc/release/rigela-proxy32.exe");
+        let proxy32_bin =
+            include_bytes!("../../../target/i686-pc-windows-msvc/release/rigela-proxy32.exe");
         #[cfg(debug_assertions)]
-            let proxy32_bin = include_bytes!("../../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe");
+        let proxy32_bin =
+            include_bytes!("../../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe");
         let proxy32_path = get_program_directory().join("proxy32.exe");
         if let Err(e) = write_file(&proxy32_path, proxy32_bin).await {
             error!("{}", e);
@@ -65,7 +64,7 @@ impl Proxy32 {
             sleep(Duration::from_millis(1000)).await;
             // 1秒之后再尝试启动
             if let Ok(x) = Command::new(&proxy32_path).args([PIPE_NAME]).spawn() {
-                break x
+                break x;
             }
         };
 

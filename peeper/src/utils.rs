@@ -11,15 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
-pub enum Proxy32Data {
-    QUIT, // 退出
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Proxy32Packet {
-    pub(crate) id: u32,
-    pub data: Proxy32Data,
+/**
+ * 获取一个管道名称。
+ * */
+pub(crate) fn get_pipe_name() -> String {
+    format!(r"\\.\PIPE\{}", module_path!())
 }

@@ -13,11 +13,9 @@
 
 pub(crate) mod tts;
 
-use crate::{
-    configs::tts::TtsConfig
-};
-use rigela_utils::{read_file, write_file};
+use crate::configs::tts::TtsConfig;
 use log::{error, info};
+use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use toml;

@@ -21,7 +21,7 @@ use crate::{
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
     talent::TalentAccessor,
-    terminator::Terminator
+    terminator::Terminator,
 };
 use rigela_utils::get_program_directory;
 use std::sync::Arc;

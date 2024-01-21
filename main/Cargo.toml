@@ -73,8 +73,6 @@ version = "0.8.8"
 chrono = "0.4.31"
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.0"
-# 记录日志
-log4rs = "1.2.0"
 # gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
 winit = "0.29.9"
 eframe = "0.25.0"

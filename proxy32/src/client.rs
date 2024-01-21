@@ -11,16 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
+use crate::model::{Proxy32Data, Proxy32Packet};
+use rigela_utils::pipe::{client_connect, PipeStream};
 use std::collections::HashMap;
 use tokio::net::windows::named_pipe::NamedPipeClient;
-use rigela_utils::pipe::{client_connect, PipeStream};
-use crate::model::{Proxy32Data, Proxy32Packet};
 
 pub struct Proxy32Client {
     cached: HashMap<u32, Proxy32Data>,
     id: u32,
-    stream: PipeStream<Proxy32Packet, NamedPipeClient>
+    stream: PipeStream<Proxy32Packet, NamedPipeClient>,
 }
 
 impl Proxy32Client {
@@ -32,7 +31,7 @@ impl Proxy32Client {
         Self {
             cached: HashMap::new(),
             id: 0,
-            stream
+            stream,
         }
     }
 
@@ -40,12 +39,12 @@ impl Proxy32Client {
         self.id += 1;
         let packet = Proxy32Packet {
             id: self.id,
-            data: data.clone()
+            data: data.clone(),
         };
         self.stream.send(&packet).await;
         let res = match self.cached.get(&packet.id) {
             None => None,
-            Some(x) => Some(x.clone())
+            Some(x) => Some(x.clone()),
         };
         if let Some(data) = res {
             self.cached.remove(&packet.id);
@@ -56,7 +55,9 @@ impl Proxy32Client {
             match res {
                 None => break None,
                 Some(p) if p.id == packet.id => break Some(p.data),
-                Some(p) => { self.cached.insert(p.id, p.data); }
+                Some(p) => {
+                    self.cached.insert(p.id, p.data);
+                }
             }
         }
     }

@@ -11,15 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
-pub enum Proxy32Data {
-    QUIT, // 退出
-}
-
 #[derive(Deserialize, Serialize)]
-pub struct Proxy32Packet {
-    pub(crate) id: u32,
-    pub data: Proxy32Data,
+pub struct PeeperPacket {
+    name: String,
 }

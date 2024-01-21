@@ -10,6 +10,8 @@ edition = "2021"
 home = "0.5.9"
 # 输出日志
 log = "0.4.20"
+# 记录日志
+log4rs = "1.2.0"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化

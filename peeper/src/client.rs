@@ -11,15 +11,27 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use serde::{Deserialize, Serialize};
+use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeClient};
+use rigela_utils::pipe::PipeStream;
+use crate::model::PeeperPacket;
+use crate::utils::get_pipe_name;
 
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
-pub enum Proxy32Data {
-    QUIT, // 退出
+/**
+ * peeper的client运行在远进程中。
+ * */
+pub(crate) struct PeeperClient {
+    stream: PipeStream<PeeperPacket, NamedPipeClient>
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct Proxy32Packet {
-    pub(crate) id: u32,
-    pub data: Proxy32Data,
+impl PeeperClient {
+    pub async fn new() -> Self {
+        let pipe = ClientOptions::new()
+            .open(get_pipe_name())
+            .unwrap();
+        let stream = PipeStream::new(pipe);
+        Self {
+            stream
+        }
+    }
+    pub fn quit(&self) {}
 }

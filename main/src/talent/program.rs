@@ -31,10 +31,7 @@ use tokio::time::sleep;
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = ((VK_INSERT, false), (VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
-    context
-        .performer
-        .speak_text(&t!("program.exit"))
-        .await;
+    context.performer.speak_text(&t!("program.exit")).await;
     sleep(Duration::from_millis(1000)).await;
     context.terminator.exit().await;
 }

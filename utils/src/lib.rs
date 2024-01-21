@@ -12,6 +12,7 @@
  */
 
 pub mod pipe;
+pub mod logger;
 
 use home::home_dir;
 use std::fs::create_dir;

@@ -31,8 +31,7 @@ i18n!("locale");
  * 8. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
  * 9. talent 才能访问器，一些功能的实现；
  * 10. terminator 终结者，用于控制和等待程序结束；
- * 11. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问；
- * 12. logger 日志收集器，用于收集调试信息，可以输出到标准错误设备和文件中。
+ * 11. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
 mod browsable_impl;
 mod browser;
@@ -43,7 +42,6 @@ mod event_core;
 mod gui;
 mod helper;
 mod launcher;
-mod logger;
 mod performer;
 mod resources;
 mod talent;
@@ -51,13 +49,13 @@ mod terminator;
 
 use launcher::Launcher;
 use log::info;
-use logger::init_logger;
+use rigela_utils::logger::init_logger;
 use win_wrap::common::get_user_default_locale_name;
 
 #[tokio::main]
 async fn main() {
     // 初始化日志库
-    init_logger();
+    init_logger(None);
 
     // 获取用户系统的默认语言设置
     let locale = get_user_default_locale_name();
