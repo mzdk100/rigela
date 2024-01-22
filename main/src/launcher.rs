@@ -17,10 +17,9 @@ use crate::{
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
-use std::{sync::Arc, thread, time::Duration};
+use std::{sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
-use crate::gui::welcome::show_form;
 
 /// 启动器对象
 pub struct Launcher {
