@@ -12,26 +12,51 @@
  */
 
 #[allow(unused_imports)]
-use crate::{context::Context, gui::GuiContext};
-use eframe::egui::CentralPanel;
-/** 必选条目。 */
-use rigela_macros::gui;
-#[allow(unused_imports)]
-use std::sync::Arc;
 
+extern crate native_windows_derive as nwd;
+extern crate native_windows_gui as nwg;
+
+use nwd::NwgUi;
+use nwg::{EventData, NativeUi};
+
+const TITLE: &str = "Rigela";
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
-const TITLE: &str = "感谢您使用 RigelA";
 const BUTTON_LABEL: &str = "我要捐献";
 
-#[gui(doc = "欢迎页面", title = "欢迎")]
-fn welcome(_context: Arc<Context>, gui_context: &GuiContext) {
-    CentralPanel::default().show(gui_context, |ui| {
-        ui.heading(TITLE);
-        ui.text_edit_multiline(&mut String::from(INFO));
+#[derive(Default, NwgUi)]
+pub struct App {
+    #[nwg_control( title: TITLE, size: (480, 320), position: (300,300))]
+    #[nwg_events( OnWindowClose: [nwg::stop_thread_dispatch()   ] )]
+    window: nwg::Window,
 
-        if ui.button(BUTTON_LABEL).clicked() {
-            // speak 需要 await
-            // context.performer.speak_text("开始捐献。");
+    #[nwg_layout(parent: window, spacing: 5)]
+    layout: nwg::GridLayout,
+
+    #[nwg_control(text: INFO, readonly: true)]
+    #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4)]
+    #[nwg_events(OnKeyPress: [App::on_key_press(SELF, EVT_DATA)])]
+    text_box: nwg::TextBox,
+
+    #[nwg_control(text: BUTTON_LABEL, size: (100, 30))]
+    #[nwg_layout_item(layout: layout, row: 4, col: 0)]
+    #[nwg_events(OnButtonClick: [App::on_btn_click])]
+    btn: nwg::Button,
+}
+
+impl App {
+    fn on_key_press(&self, data: &EventData) {
+        if data.on_key() == nwg::keys::TAB {
+            self.btn.set_focus();
         }
-    });
+    }
+
+    fn on_btn_click(&self) {
+        nwg::modal_info_message(&self.window, "Hello", &format!("Hello"));
+    }
+}
+
+pub  fn show_form() {
+    nwg::init().expect("Failed to init Native Windows GUI");
+    let _app = App::build_ui(Default::default()).expect("Failed to build UI");
+    nwg::dispatch_thread_events();
 }
