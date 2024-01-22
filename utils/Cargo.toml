@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# 操作剪贴板
+clipboard = "0.5.0"
 # 获取用户目录的路径
 home = "0.5.9"
 # 输出日志

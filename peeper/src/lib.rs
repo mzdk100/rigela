@@ -18,13 +18,11 @@ mod utils;
 use log::{debug, error, info};
 use rigela_utils::get_program_directory;
 use std::{
-    path::Path,
     ffi::c_void,
     thread,
     sync::RwLock
 };
-use tokio::runtime::Handle;
-use rigela_utils::logger::init_logger;
+use once_cell::sync::Lazy;
 use win_wrap::{
     common::{
         call_next_hook_ex,
@@ -55,27 +53,24 @@ use win_wrap::{
 };
 use crate::client::PeeperClient;
 
+macro_rules! wm {
+    ($field:ident) => {
+        register_window_message(format!("{}_{}", module_path!(), stringify!($field)).as_str())
+    }
+}
+
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都为None
 static HOOK_THREAD: RwLock<Option<ThreadNotify>> = RwLock::new(None);
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子需要初始化，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
-static WM_HOOK_INIT: RwLock<u32> = RwLock::new(0);
+static WM_HOOK_INIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_INIT));
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子将要被卸载，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
-static WM_HOOK_UNINIT: RwLock<u32> = RwLock::new(0);
+static WM_HOOK_UNINIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_UNINIT));
 
 // peeper的client实例。
 static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
 
-macro_rules! wm {
-    ($field:ident) => {{
-        let mut message = $field.write().unwrap();
-        if *message < 1 {
-            *message = register_window_message(format!("{}_{}", module_path!(), stringify!($field)).as_str());
-        }
-        *message
-    }};
-}
 
 /**
  * 窗口过程钩子，在此钩子中可以处理来自send_message的消息。
@@ -89,26 +84,24 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
+    if code < 0 {
+        return call_next_hook_ex(code, w_param, l_param);
+    }
     let msg: &CwpStruct = l_param.to();
-    if msg.message == wm!(WM_HOOK_INIT) {
+    if WM_HOOK_INIT.clone() == msg.message {
         // 主进程发来的初始化命令
         let module = get_module_file_name(HMODULE::default());
-        if let Some(n) = Path::new(&module).file_name() {
-            if let Some(n) = n.to_str() {
-                init_logger(Some(format!("{}.log", n).as_str()));
-            }
-        }
-        info!("Injected into {}.", module);
+        info!("Injected into {}.", module.as_str());
         let mut client = CLIENT.write().unwrap();
         if client.is_none() {
-            *client = Some(Handle::current().block_on(PeeperClient::new()));
+            *client = Some(PeeperClient::new(module));
             info!("Hooked.");
         }
-    } else if msg.message == wm!(WM_HOOK_UNINIT) {
+    } else if WM_HOOK_UNINIT.clone() == msg.message {
         // 主进程发来的卸载命令
         let mut client = CLIENT.write().unwrap();
         if !client.is_none() {
-            client.as_ref().unwrap().quit();
+            client.as_mut().unwrap().quit();
             *client = None;
             info!("Unhooked.");
         }
@@ -172,7 +165,7 @@ pub fn mount() {
         // 通知所有进程需要初始化
         send_message(
             HWND_BROADCAST,
-            wm!(WM_HOOK_INIT),
+            WM_HOOK_INIT.clone(),
             WPARAM::default(),
             LPARAM::default(),
         );
@@ -186,7 +179,7 @@ pub fn mount() {
         // 在卸载钩子之前，我们必须先通知所有的远进程即将卸载钩子，让他们有机会清理资源，否则将可能引起系统不稳定
         send_message(
             HWND_BROADCAST,
-            wm!(WM_HOOK_UNINIT),
+            WM_HOOK_UNINIT.clone(),
             WPARAM::default(),
             LPARAM::default(),
         );

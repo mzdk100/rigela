@@ -15,10 +15,18 @@ pub mod pipe;
 pub mod logger;
 
 use home::home_dir;
-use std::fs::create_dir;
-use std::path::PathBuf;
-use tokio::io::AsyncReadExt;
-use tokio::{fs::OpenOptions, io::AsyncWriteExt};
+use std::{
+    fs::create_dir,
+    path::PathBuf
+};
+use clipboard::{ClipboardContext, ClipboardProvider};
+use tokio::{
+    io::{
+        AsyncReadExt,
+        AsyncWriteExt
+    },
+    fs::OpenOptions,
+};
 
 const DIR_NAME: &str = ".rigela";
 
@@ -67,4 +75,21 @@ pub async fn read_file(path: &PathBuf) -> Result<String, std::io::Error> {
         .read_to_string(&mut result)
         .await?;
     Ok(result)
+}
+
+/**
+ * 获取剪贴板文本数据。
+ * */
+pub fn get_clipboard_text() -> String {
+    let mut ctx = ClipboardContext::new().unwrap();
+    ctx.get_contents().unwrap()
+}
+
+/**
+ * 设置剪贴板文本数据。
+ * `text` 数据内容。
+ * */
+pub fn set_clipboard_text(text: String) {
+    let mut ctx = ClipboardContext::new().unwrap();
+    ctx.set_contents(text).unwrap()
 }

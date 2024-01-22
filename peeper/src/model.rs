@@ -16,5 +16,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct PeeperPacket {
-    name: String,
+    pub(crate) name: String,
+    pub(crate) data: PeeperData
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub enum PeeperData {
+    InputChar(u16),
+    Quit
 }
