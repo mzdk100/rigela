@@ -16,13 +16,22 @@ use crate::browser::Browsable;
 use std::sync::Arc;
 use win_wrap::uia::element::UiAutomationElement;
 use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
+use crate::performer::Speakable;
 
-impl Browsable for UiAutomationElement {
-    fn get_name(&self) -> String {
+trait ElementNameExt {
+    fn get_name_better(&self) -> String;
+}
+impl ElementNameExt for UiAutomationElement {
+    fn get_name_better(&self) -> String {
         let mut name = self.get_name();
 
         if name.is_empty() {
-            let accessible: UiAutomationLegacyIAccessiblePattern = self.into();
+            let accessible = UiAutomationLegacyIAccessiblePattern::obtain(self);
+            if accessible.is_err() {
+                return String::new();
+            }
+
+            let accessible = accessible.unwrap();
             name = accessible.get_name();
 
             if name.is_empty() {
@@ -31,6 +40,12 @@ impl Browsable for UiAutomationElement {
         }
 
         name
+    }
+}
+
+impl Browsable for UiAutomationElement {
+    fn get_name(&self) -> String {
+        self.get_name_better()
     }
 
     fn get_role(&self) -> String {
@@ -46,5 +61,14 @@ impl Browsable for UiAutomationElement {
             return Some(Arc::new(x));
         }
         None
+    }
+}
+
+
+/// 给UIA元素实现朗读接口
+impl Speakable for UiAutomationElement {
+    fn get_sentence(&self) -> String {
+        let name = self.get_name_better();
+        format!("{}: {}", name, self.get_localized_control_type())
     }
 }

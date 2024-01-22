@@ -12,7 +12,9 @@
  */
 
 mod client;
+mod handler;
 mod model;
+pub mod server;
 mod utils;
 
 use log::{debug, error, info};
@@ -22,6 +24,8 @@ use std::{
     thread,
     sync::RwLock
 };
+use std::thread::sleep;
+use std::time::Duration;
 use once_cell::sync::Lazy;
 use win_wrap::{
     common::{
@@ -48,10 +52,14 @@ use win_wrap::{
         LParamExt
     },
     hook::{CwpStruct, HOOK_TYPE_CALL_WND_PROC, HOOK_TYPE_GET_MESSAGE},
-    message::{message_loop, register_window_message, send_message, HWND_BROADCAST},
+    input::WM_CHAR,
+    message::{message_loop, register_window_message, send_message, HWND_BROADCAST, MSG},
     threading::{get_current_thread_id, ThreadNotify},
 };
-use crate::client::PeeperClient;
+use crate::{
+    client::PeeperClient,
+    handler::input_char
+};
 
 macro_rules! wm {
     ($field:ident) => {
@@ -121,6 +129,17 @@ unsafe extern "system" fn hook_proc_get_message(
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
+    if code < 0 {
+        return call_next_hook_ex(code, w_param, l_param);
+    }
+    let msg: &MSG = l_param.to();
+    match msg.message {
+        WM_CHAR => if let Some(client) = CLIENT.read().unwrap().as_ref() {
+            input_char(client, msg);
+        }
+        _ => {}
+    }
+
     call_next_hook_ex(code, w_param, l_param)
 }
 
@@ -148,19 +167,22 @@ pub fn mount() {
         let proc_call_wnd_proc = get_proc_address(handle, "hook_proc_call_wnd_proc");
 
         // 安装消息队列钩子
-        let h_hook_get_message = set_windows_hook_ex(
-            HOOK_TYPE_GET_MESSAGE,
-            proc_get_message.to_hook_proc(),
-            handle.into(),
-            0,
-        );
+        let h_hook_get_message = loop {
+            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc_get_message.to_hook_proc(), handle.into(), 0) {
+                break h;
+            }
+            error!("Can't set the `get message` hook.");
+            sleep(Duration::from_millis(1000));
+        };
+
         // 安装窗口过程钩子
-        let h_hook_call_wnd_proc = set_windows_hook_ex(
-            HOOK_TYPE_CALL_WND_PROC,
-            proc_call_wnd_proc.to_hook_proc(),
-            handle.into(),
-            0,
-        );
+        let h_hook_call_wnd_proc = loop {
+            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_CALL_WND_PROC, proc_call_wnd_proc.to_hook_proc(), handle.into(), 0) {
+                break h;
+            }
+            error!("Can't set the `call wnd proc` hook.");
+            sleep(Duration::from_millis(1000));
+        };
 
         // 通知所有进程需要初始化
         send_message(

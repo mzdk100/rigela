@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
@@ -24,8 +23,7 @@ use crate::{
     utils::get_pipe_name,
     model::{
         PeeperData,
-        PeeperPacket,
-        PeeperData::Quit
+        PeeperPacket
     }
 };
 
@@ -60,18 +58,17 @@ impl PeeperClient {
         if let Err(_) = self_.rt.set(rt.unwrap()) {
             error!("Can't create the runtime of the multi thread.");
         }
-        let pipe = match ClientOptions::new().open(get_pipe_name()) {
-            Ok(p) => p,
+        self_
+    }
+
+    fn get_stream() -> PipeStream<PeeperPacket, NamedPipeClient> {
+        match ClientOptions::new().open(get_pipe_name()) {
+            Ok(p) => PipeStream::new(p),
             Err(e) => {
                 error!("{}", e);
-                return self_;
+                return Self::get_stream();
             }
-        };
-        let stream = PipeStream::new(pipe);
-        if let Err(_) = self_.sender.set(Arc::new(stream.into())) {
-            error!("Can't create the peeper client.");
         }
-        self_
     }
 
     /**
@@ -79,11 +76,9 @@ impl PeeperClient {
      * `data` peeper的业务数据。
      * */
     pub fn push(&self, data: PeeperData) {
-        let sender = self.sender.get();
-        if sender.is_none() {
-            return;
-        }
-        let sender = sender.unwrap().clone();
+        let sender = self.sender.get_or_init(|| {
+            Arc::new(Self::get_stream().into())
+        }).clone();
         let packet = PeeperPacket {
             name: self.module.clone(),
             data
@@ -100,7 +95,6 @@ impl PeeperClient {
      * 退出客户端。
      * */
     pub fn quit(&mut self) {
-        self.push(Quit);
         self.rt.take().unwrap().shutdown_background();
     }
 }

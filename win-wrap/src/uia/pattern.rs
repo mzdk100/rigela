@@ -39,18 +39,23 @@ impl UiAutomationLegacyIAccessiblePattern {
             .unwrap_or(BSTR::default())
             .to_string()
     }
-}
 
-impl From<&UiAutomationElement> for UiAutomationLegacyIAccessiblePattern {
-    fn from(value: &UiAutomationElement) -> Self {
+    /**
+     * 从UI元素获取此模式。
+     * */
+    pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
         let pattern = unsafe {
             value
                 .get_raw()
                 .GetCurrentPattern(UIA_LegacyIAccessiblePatternId)
+        };
+        if let Err(e) = pattern {
+            return Err(format!("Can't get the LegacyIAccessiblePattern. ({})", e));
         }
-        .expect("Can't get the LegacyIAccessiblePattern.")
-        .cast::<IUIAutomationLegacyIAccessiblePattern>()
-        .unwrap();
-        Self(pattern)
+        let pattern = pattern
+            .unwrap()
+            .cast::<IUIAutomationLegacyIAccessiblePattern>()
+            .unwrap();
+        Ok(Self(pattern))
     }
 }

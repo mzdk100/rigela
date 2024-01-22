@@ -22,8 +22,14 @@ use crate::{
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
-    thread,
-    time::SystemTime,
+    thread::{
+        self,
+        sleep
+    },
+    time::{
+        SystemTime,
+        Duration
+    },
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CWPRETSTRUCT, CWPSTRUCT, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSLLHOOKSTRUCT,
@@ -225,7 +231,18 @@ fn install(hook_type: HookType) {
             HOOK_TYPE_GET_MESSAGE => proc_get_message,
             x => panic!("Unsupported hook type: {}.", x.0),
         };
-        let h_hook = set_windows_hook_ex(hook_type, Some(proc), HINSTANCE::default(), 0);
+        let mut retry = 0;
+        let h_hook = loop {
+            let h = set_windows_hook_ex(hook_type, Some(proc), HINSTANCE::default(), 0);
+            if h.is_ok() {
+                break h.unwrap();
+            }
+            if retry > 5 {
+                panic!("Can't set the windows hook ({}), and retrying it.", hook_type.0);
+            }
+            retry += 1;
+            sleep(Duration::from_millis(1000));
+        };
         let notify = ThreadNotify::new(get_current_thread_id());
         let mut lock = H_HOOK.write().unwrap();
         let mut map = match lock.as_ref() {

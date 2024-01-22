@@ -22,6 +22,5 @@ pub struct PeeperPacket {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum PeeperData {
-    InputChar(u16),
-    Quit
+    InputChar(u16)
 }

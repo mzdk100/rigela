@@ -17,19 +17,17 @@ use crate::{
     configs::ConfigManager,
     event_core,
     gui::GuiAccessor,
-    helper::proxy32::Proxy32,
-    performer::{Performer, Speakable},
+    performer::Performer,
+    proxy32::Proxy32,
     resources::ResourceAccessor,
     talent::TalentAccessor,
     terminator::Terminator,
 };
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use win_wrap::uia::{
-    automation::UiAutomation, element::UiAutomationElement,
-    pattern::UiAutomationLegacyIAccessiblePattern,
-};
+use tokio::runtime::{Builder, Handle, Runtime};
+use peeper::server::PeeperServer;
+use win_wrap::uia::automation::UiAutomation;
 
 const CONFIG_FILE_NAME: &str = "config.toml";
 
@@ -39,7 +37,9 @@ pub struct Context {
     pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
+    pub(crate) work_runtime: Arc<Runtime>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
+    pub(crate) peeper_server: Arc<PeeperServer>,
     pub(crate) performer: Arc<Performer>,
     pub(crate) proxy32: Arc<Proxy32>,
     pub(crate) talent_accessor: Arc<TalentAccessor>,
@@ -70,6 +70,16 @@ impl Context {
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
 
+        // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
+        let work_runtime = Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+
+        // 进程亏叹气服务
+        let peeper_server = PeeperServer::new();
+
         // 用于兼容32位进程访问
         let proxy32 = Proxy32::new();
 
@@ -93,12 +103,14 @@ impl Context {
             config_manager: config_manager.into(),
             gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
+            peeper_server: peeper_server.into(),
             performer: performer.into(),
             proxy32: proxy32.into(),
             resource_accessor: resources.into(),
             talent_accessor: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
+            work_runtime: work_runtime.into(),
             event_core: event_core.into(),
             form_browser: Arc::new(form_browser),
         }
@@ -132,32 +144,16 @@ impl Clone for Context {
             config_manager: self.config_manager.clone(),
             gui_accessor: self.gui_accessor.clone(),
             main_handler: self.main_handler.clone(),
+            peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
             proxy32: self.proxy32.clone(),
             resource_accessor: self.resource_accessor.clone(),
             talent_accessor: self.talent_accessor.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
+            work_runtime: self.work_runtime.clone(),
             event_core: self.event_core.clone(),
             form_browser: self.form_browser.clone(),
         }
-    }
-}
-
-/// 给UIA元素实现朗读接口
-impl Speakable for UiAutomationElement {
-    fn get_sentence(&self) -> String {
-        let mut name = self.get_name();
-
-        if name.is_empty() {
-            let accessible: UiAutomationLegacyIAccessiblePattern = self.into();
-            name = accessible.get_name();
-
-            if name.is_empty() {
-                name = accessible.get_description();
-            }
-        }
-
-        format!("{}: {}", name, self.get_localized_control_type())
     }
 }

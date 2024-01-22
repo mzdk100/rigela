@@ -28,21 +28,30 @@ impl EventCore {
     /// 启动事件监听
     pub async fn run(&self, context: Arc<Context>) {
         // 订阅UIA的焦点元素改变事件
-        speak_focus_item(Arc::clone(&context.clone())).await;
+        speak_focus_item(context.clone()).await;
 
         // 监听前台窗口变动
-        watch_foreground_window(Arc::clone(&context.clone())).await;
+        watch_foreground_window(context.clone()).await;
+
+        // 订阅输入事件
+        let ctx = context.clone();
+        context.peeper_server.add_on_input_char_listener(move |c| {
+            let performer = ctx.performer.clone();
+            ctx.main_handler.spawn(async move {
+                performer.speak_text(format!("{}", c).as_str()).await;
+            });
+        }).await;
     }
 }
 
 /// 朗读焦点元素
 async fn speak_focus_item(context: Arc<Context>) {
-    let uia = Arc::clone(&context.ui_automation);
-    let ctx = Arc::clone(&context);
+    let uia = context.ui_automation.clone();
+    let ctx = context.clone();
 
     // 给UI Automation的焦点改变绑定处理事件
     uia.add_focus_changed_listener(move |x| {
-        let performer = Arc::clone(&ctx.performer);
+        let performer = ctx.performer.clone();
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {

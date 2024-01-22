@@ -25,24 +25,23 @@ i18n!("locale");
  * 2. commander 指挥官，负责从用户那里收集命令请求，例如键盘命令；
  * 3. configs 配置模块，可以读写toml格式的配置文件，并实现所有的配置文件的数据结构；
  * 4. gui GUI图形界面模块，实现所有的UI交互逻辑；
- * 5. helper 功能帮手模块，用于桥接proxy32和peeper等。
- * 6. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
- * 7. peeper 窥探器，可以收集远进程中的信息，例如输入法和gdi绘图信息；
- * 8. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
- * 9. talent 才能访问器，一些功能的实现；
- * 10. terminator 终结者，用于控制和等待程序结束；
- * 11. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
+ * 5. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
+ * 6. proxy32 用于兼容32位应用进程的模块，他是一个独立进程，某些API只能运行在此环境中；
+ * 7. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
+ * 8. talent 才能访问器，一些功能的实现；
+ * 9. terminator 终结者，用于控制和等待程序结束；
+ * 10. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
-mod browsable_impl;
+mod impls;
 mod browser;
 mod commander;
 mod configs;
 mod context;
 mod event_core;
 mod gui;
-mod helper;
 mod launcher;
 mod performer;
+mod proxy32;
 mod resources;
 mod talent;
 mod terminator;

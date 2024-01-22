@@ -11,5 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod peeper;
-pub(crate) mod proxy32;
+use win_wrap::message::MSG;
+use crate::{
+    client::PeeperClient,
+    model::PeeperData::InputChar
+};
+
+pub(crate) fn input_char(client: &PeeperClient, msg: &MSG) {
+    client.push(InputChar(msg.wParam.0 as u16))
+
+}
