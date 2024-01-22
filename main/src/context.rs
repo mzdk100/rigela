@@ -16,7 +16,6 @@ use crate::{
     commander::Commander,
     configs::ConfigManager,
     event_core,
-    gui::GuiAccessor,
     helper::proxy32::Proxy32,
     performer::{Performer, Speakable},
     resources::ResourceAccessor,
@@ -37,7 +36,6 @@ const CONFIG_FILE_NAME: &str = "config.toml";
 pub struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
-    pub(crate) gui_accessor: Arc<GuiAccessor>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) performer: Arc<Performer>,
@@ -61,8 +59,6 @@ impl Context {
         let path = get_program_directory().join(CONFIG_FILE_NAME);
         let config_manager = ConfigManager::new(path);
 
-        // 创建GUI访问器
-        let gui_accessor = GuiAccessor::new();
 
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
         let performer = Performer::new();
@@ -91,7 +87,6 @@ impl Context {
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
-            gui_accessor: gui_accessor.into(),
             main_handler: main_handler.into(),
             performer: performer.into(),
             proxy32: proxy32.into(),
@@ -130,7 +125,6 @@ impl Clone for Context {
         Self {
             commander: self.commander.clone(),
             config_manager: self.config_manager.clone(),
-            gui_accessor: self.gui_accessor.clone(),
             main_handler: self.main_handler.clone(),
             performer: self.performer.clone(),
             proxy32: self.proxy32.clone(),

@@ -13,14 +13,14 @@
 
 use crate::{
     context::Context,
-    gui::FrameUi,
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
-use std::{sync::Arc, time::Duration};
+use std::{sync::Arc, thread, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
+use crate::gui::welcome::show_form;
 
 /// 启动器对象
 pub struct Launcher {
@@ -61,10 +61,7 @@ impl Launcher {
         peeper::mount();
 
         // 显示欢迎页面。
-        self.context
-            .gui_accessor
-            .get_welcome_frame_ui()
-            .show(self.context.clone());
+        // thread::spawn(||  show_form());
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
         let proxy32 = self.context.proxy32.clone();
