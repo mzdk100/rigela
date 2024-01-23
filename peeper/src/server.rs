@@ -25,7 +25,7 @@ use rigela_utils::pipe::PipeStream;
 use crate::model::{PeeperData, PeeperPacket};
 use crate::utils::get_pipe_name;
 
-type OnInputCharListener = dyn Fn(u16) + Send + Sync;
+type OnInputCharListener = dyn Fn(char) + Send + Sync;
 
 pub struct PeeperServer {
     on_input_char: Arc<Mutex<Vec<Box<OnInputCharListener>>>>,
@@ -53,6 +53,7 @@ impl PeeperServer {
                         error!("{}", e);
                         continue;
                     }
+                    log::info!("Peeper server is running.");
                     let stream = PipeStream::new(p);
                     self.on_client(stream);
                 },
@@ -74,6 +75,7 @@ impl PeeperServer {
                 }
                 let packet = packet.unwrap();
                 match packet.data {
+                    PeeperData::Quit => break,
                     PeeperData::InputChar(c) => {
                         let listeners = on_input_char_listeners.lock().await;
                         for i in listeners.iter() {
@@ -86,7 +88,7 @@ impl PeeperServer {
         });
     }
 
-    pub async fn add_on_input_char_listener(&self, listener: impl Fn(u16) + Send + Sync + 'static) {
+    pub async fn add_on_input_char_listener(&self, listener: impl Fn(char) + Send + Sync + 'static) {
         let mut listeners = self.on_input_char.lock().await;
         listeners.push(Box::new(listener));
     }

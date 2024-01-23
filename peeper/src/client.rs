@@ -32,7 +32,7 @@ use crate::{
  * */
 pub(crate) struct PeeperClient {
     module: String,
-    sender: OnceLock<Arc<Mutex<PipeStream<PeeperPacket, NamedPipeClient>>>>,
+    sender: Arc<OnceLock<Mutex<PipeStream<PeeperPacket, NamedPipeClient>>>>,
     rt: OnceLock<Runtime>
 }
 
@@ -44,7 +44,7 @@ impl PeeperClient {
         trace!("New pipe connection.");
         let self_ = Self {
             module,
-            sender: OnceLock::new(),
+            sender: OnceLock::new().into(),
             rt: OnceLock::new()
         };
         let rt = Builder::new_multi_thread()
@@ -76,15 +76,16 @@ impl PeeperClient {
      * `data` peeper的业务数据。
      * */
     pub fn push(&self, data: PeeperData) {
-        let sender = self.sender.get_or_init(|| {
-            Arc::new(Self::get_stream().into())
-        }).clone();
         let packet = PeeperPacket {
             name: self.module.clone(),
             data
         };
+        let sender = self.sender.clone();
         if let Some(rt) = self.rt.get() {
             rt.spawn(async move {
+                let sender = sender.get_or_init(|| {
+                    Self::get_stream().into()
+                });
                 let mut sender = sender.lock().await;
                 sender.send(&packet).await;
             });
@@ -92,9 +93,10 @@ impl PeeperClient {
     }
 
     /**
-     * 退出客户端。
+     * 退出客户端，这也会通知服务端退出。
      * */
     pub fn quit(&mut self) {
+        self.push(PeeperData::Quit);
         self.rt.take().unwrap().shutdown_background();
     }
 }

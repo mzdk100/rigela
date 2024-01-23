@@ -17,7 +17,7 @@ mod model;
 pub mod server;
 mod utils;
 
-use log::{debug, error, info};
+use log::{debug, error};
 use rigela_utils::get_program_directory;
 use std::{
     ffi::c_void,
@@ -99,11 +99,11 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
     if WM_HOOK_INIT.clone() == msg.message {
         // 主进程发来的初始化命令
         let module = get_module_file_name(HMODULE::default());
-        info!("Injected into {}.", module.as_str());
+        debug!("Injected into {}.", module.as_str());
         let mut client = CLIENT.write().unwrap();
         if client.is_none() {
             *client = Some(PeeperClient::new(module));
-            info!("Hooked.");
+            debug!("Hooked.");
         }
     } else if WM_HOOK_UNINIT.clone() == msg.message {
         // 主进程发来的卸载命令
@@ -111,7 +111,7 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
         if !client.is_none() {
             client.as_mut().unwrap().quit();
             *client = None;
-            info!("Unhooked.");
+            debug!("Unhooked.");
         }
     }
     call_next_hook_ex(code, w_param, l_param)
@@ -149,7 +149,7 @@ unsafe extern "system" fn hook_proc_get_message(
  * 注意： 当main引用本模块并构建时，会自动生成此dll。
  * */
 pub fn mount() {
-    debug!("mounted");
+    debug!("mounted.");
     thread::spawn(|| {
         let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
         debug!("Module path: {}", dll_path.display());
@@ -162,27 +162,27 @@ pub fn mount() {
         };
         debug!("Module handle: {}", handle.0);
 
-        // 动态获取dll中钩子函数的地址
-        let proc_get_message = get_proc_address(handle, "hook_proc_get_message");
-        let proc_call_wnd_proc = get_proc_address(handle, "hook_proc_call_wnd_proc");
-
         // 安装消息队列钩子
         let h_hook_get_message = loop {
-            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc_get_message.to_hook_proc(), handle.into(), 0) {
+            let proc = get_proc_address(handle, "hook_proc_get_message");
+            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0) {
                 break h;
             }
             error!("Can't set the `get message` hook.");
             sleep(Duration::from_millis(1000));
         };
+        debug!("The hook of get message is ok, and it is {}.", h_hook_get_message.0);
 
         // 安装窗口过程钩子
         let h_hook_call_wnd_proc = loop {
-            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_CALL_WND_PROC, proc_call_wnd_proc.to_hook_proc(), handle.into(), 0) {
+            let proc = get_proc_address(handle, "hook_proc_call_wnd_proc");
+            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_CALL_WND_PROC, proc.to_hook_proc(), handle.into(), 0) {
                 break h;
             }
             error!("Can't set the `call wnd proc` hook.");
             sleep(Duration::from_millis(1000));
         };
+        debug!("The hook of call wnd proc is ok, and it is {}.", h_hook_call_wnd_proc.0);
 
         // 通知所有进程需要初始化
         send_message(
@@ -206,8 +206,12 @@ pub fn mount() {
             LPARAM::default(),
         );
         // 因为send_message把消息发送到窗口过程函数中，所以他是同步运行，当他返回（也就是运行到这里）时，理论上所有的远进程都已经清理资源完毕（除非有一些意外），这时候无论如何都应该卸载钩子了
-        unhook_windows_hook_ex(h_hook_get_message);
-        unhook_windows_hook_ex(h_hook_call_wnd_proc);
+        if let Err(e) = unhook_windows_hook_ex(h_hook_get_message) {
+            error!("Can't unhook, because {}.", e);
+        }
+        if let Err(e) = unhook_windows_hook_ex(h_hook_call_wnd_proc) {
+            error!("Can't unhook, because {}.", e);
+        }
         notify.finish();
     });
 }
@@ -224,7 +228,7 @@ pub fn unmount() {
     }
     *lock = None;
     drop(lock);
-    debug!("unmounted")
+    debug!("unmounted.")
 }
 
 #[no_mangle]

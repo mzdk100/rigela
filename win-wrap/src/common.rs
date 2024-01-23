@@ -99,8 +99,8 @@ pub fn set_windows_hook_ex(
  * 删除 SetWindowsHookEx 函数安装在钩子链中的挂钩过程。
  * `h_hook` 要移除的钩子的句柄。此参数是由先前调用 set_windows_hook_ex 获取的钩子句柄。
  * */
-pub fn unhook_windows_hook_ex(h_hook: HHOOK) {
-    unsafe { UnhookWindowsHookEx(h_hook) }.expect("Can't remove the hook.")
+pub fn unhook_windows_hook_ex(h_hook: HHOOK) -> Result<()> {
+    unsafe { UnhookWindowsHookEx(h_hook) }
 }
 
 /**

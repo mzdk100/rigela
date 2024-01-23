@@ -253,7 +253,7 @@ fn install(hook_type: HookType) {
         *lock = Some(map);
         drop(lock);
         message_loop();
-        unhook_windows_hook_ex(h_hook);
+        unhook_windows_hook_ex(h_hook).unwrap_or(());
         notify.finish();
     });
 }

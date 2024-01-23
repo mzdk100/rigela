@@ -26,20 +26,33 @@ fn main() {
         "Can't directly run the current program, this program can only be called through cargo.",
     );
 
-    // 需要最先构建peeper
-    let args2 = if arg_list.contains(&String::from("--release")) {
-        vec!["build", "-p", "peeper", "--release"]
+    let debug = if arg_list.contains(&String::from("--release")) {
+        "release"
     } else {
-        vec!["build", "-p", "peeper"]
+        "debug"
     };
-    let status = Command::new(cargo.as_str())
-        .args(args2)
-        .spawn()
+    let peeper_path = env::current_dir()
         .unwrap()
-        .wait()
-        .unwrap();
-    if status.code().unwrap_or(1) != 0 {
-        panic!("Can't build the peeper.");
+        .join("target")
+        .join("i686-pc-windows-msvc")
+        .join(debug)
+        .join("peeper.dll");
+    if !peeper_path.exists() {
+        // 需要最先构建peeper
+        let args2 = if arg_list.contains(&String::from("--release")) {
+            vec!["build", "-p", "peeper", "--release"]
+        } else {
+            vec!["build", "-p", "peeper"]
+        };
+        let status = Command::new(cargo.as_str())
+            .args(args2)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+        if status.code().unwrap_or(1) != 0 {
+            panic!("Can't build the peeper.");
+        }
     }
 
     // 下一步是构建32位目标，因为64位主程序需要依赖他

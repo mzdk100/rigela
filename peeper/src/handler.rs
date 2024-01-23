@@ -14,10 +14,10 @@
 use win_wrap::message::MSG;
 use crate::{
     client::PeeperClient,
-    model::PeeperData::InputChar
+    model::PeeperData
 };
 
 pub(crate) fn input_char(client: &PeeperClient, msg: &MSG) {
-    client.push(InputChar(msg.wParam.0 as u16))
+    client.push(PeeperData::InputChar(msg.wParam.0 as u8 as char))
 
 }
