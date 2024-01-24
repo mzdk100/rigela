@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[allow(unused_imports)]
 extern crate native_windows_derive as nwd;
 extern crate native_windows_gui as nwg;
 
@@ -50,7 +49,7 @@ impl App {
     }
 
     fn on_btn_click(&self) {
-        nwg::modal_info_message(&self.window, "Hello", &format!("Hello"));
+        nwg::modal_info_message(&self.window, "Rigela", &format!("感谢支持!"));
     }
 }
 

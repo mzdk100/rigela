@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::gui::welcome::show_form;
 use crate::{
     context::Context,
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
-use std::{sync::Arc, time::Duration};
+use std::{sync::Arc, thread, time::Duration};
 use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
@@ -64,7 +65,7 @@ impl Launcher {
         });
 
         // 显示欢迎页面。
-        // thread::spawn(||  show_form());
+        thread::spawn(|| show_form());
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
         let proxy32 = self.context.proxy32.clone();

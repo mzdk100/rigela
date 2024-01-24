@@ -21,6 +21,9 @@ default-locale = "zh-CN"
 # 这个配置让'cargo i18n'命令行工具知道在哪里可以找到你的翻译。要保证和传给“rust_i18n::i18n！”方法的路径相同。
 load-path = "locale"
 
+[build-dependencies]
+embed-manifest = "1.4.0"
+
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
 path = "../peeper"
@@ -71,11 +74,13 @@ version = "0.8.8"
 [dependencies]
 # 查看日期和时间
 chrono = "0.4.31"
+
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.0"
-# gui库，winit的版本跟eframe库使用的winit版本走，不要使用最新，否则无法编译
-winit = "0.29.9"
-eframe = "0.25.0"
+
+# 日志库
 log = "0.4.20"
+
+# GUI
 native-windows-gui = "1.0.13"
 native-windows-derive = "1.0.5"
