@@ -16,6 +16,9 @@ version = "0.4.20"
 # 用于数据序列化和反序列化
 version = "1.0.145"
 
+[dependencies.peeper]
+path = "../peeper"
+
 [dependencies.rigela-utils]
 path = "../utils"
 

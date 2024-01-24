@@ -18,6 +18,6 @@ use crate::{
 };
 
 pub(crate) fn input_char(client: &PeeperClient, msg: &MSG) {
-    client.push(PeeperData::InputChar(msg.wParam.0 as u8 as char))
+    client.push(PeeperData::InputChar(msg.wParam.0 as u16))
 
 }

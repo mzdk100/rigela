@@ -21,9 +21,9 @@ use log::{debug, error};
 use rigela_utils::get_program_directory;
 use std::{
     ffi::c_void,
-    thread,
-    sync::RwLock
+    thread
 };
+use std::sync::{OnceLock, RwLock};
 use std::thread::sleep;
 use std::time::Duration;
 use once_cell::sync::Lazy;
@@ -67,8 +67,8 @@ macro_rules! wm {
     }
 }
 
-// 此字段保存钩子的线程，在主进程中有效，所有远进程都为None
-static HOOK_THREAD: RwLock<Option<ThreadNotify>> = RwLock::new(None);
+// 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
+static mut HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子需要初始化，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
 static WM_HOOK_INIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_INIT));
@@ -79,6 +79,27 @@ static WM_HOOK_UNINIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_UNINIT));
 // peeper的client实例。
 static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
 
+fn activate_transaction() {
+    let mut lock = CLIENT.write().unwrap();
+    lock.get_or_insert({
+        let module = get_module_file_name(HMODULE::default());
+        debug!("Injected into {}.", module.as_str());
+        let client = PeeperClient::new(module);
+        debug!("Hooked.");
+        client
+    });
+    drop(lock);
+}
+
+fn deactivate_transaction() {
+    let mut lock = CLIENT.write().unwrap();
+    if let Some(c) = lock.as_mut() {
+        c.quit();
+        debug!("Unhooked.");
+    }
+    *lock = None;
+    drop(lock);
+}
 
 /**
  * 窗口过程钩子，在此钩子中可以处理来自send_message的消息。
@@ -98,21 +119,10 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
     let msg: &CwpStruct = l_param.to();
     if WM_HOOK_INIT.clone() == msg.message {
         // 主进程发来的初始化命令
-        let module = get_module_file_name(HMODULE::default());
-        debug!("Injected into {}.", module.as_str());
-        let mut client = CLIENT.write().unwrap();
-        if client.is_none() {
-            *client = Some(PeeperClient::new(module));
-            debug!("Hooked.");
-        }
+        activate_transaction();
     } else if WM_HOOK_UNINIT.clone() == msg.message {
         // 主进程发来的卸载命令
-        let mut client = CLIENT.write().unwrap();
-        if !client.is_none() {
-            client.as_mut().unwrap().quit();
-            *client = None;
-            debug!("Unhooked.");
-        }
+        deactivate_transaction();
     }
     call_next_hook_ex(code, w_param, l_param)
 }
@@ -134,8 +144,11 @@ unsafe extern "system" fn hook_proc_get_message(
     }
     let msg: &MSG = l_param.to();
     match msg.message {
-        WM_CHAR => if let Some(client) = CLIENT.read().unwrap().as_ref() {
-            input_char(client, msg);
+        WM_CHAR => {
+            activate_transaction();
+            let lock = CLIENT.read().unwrap();
+            input_char(lock.as_ref().unwrap(), msg);
+            drop(lock);
         }
         _ => {}
     }
@@ -151,7 +164,11 @@ unsafe extern "system" fn hook_proc_get_message(
 pub fn mount() {
     debug!("mounted.");
     thread::spawn(|| {
-        let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
+        #[cfg(target_arch = "x86_64")]
+            let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
+        #[cfg(target_arch = "x86")]
+            let dll_path = get_program_directory().join(format!("{}32.dll", module_path!()));
+
         debug!("Module path: {}", dll_path.display());
         let handle = match load_library(dll_path.to_str().unwrap()) {
             Ok(h) => h,
@@ -193,9 +210,7 @@ pub fn mount() {
         );
 
         let notify = ThreadNotify::new(get_current_thread_id());
-        let mut lock = HOOK_THREAD.write().unwrap();
-        *lock = Some(notify.clone());
-        drop(lock);
+        unsafe { HOOK_THREAD.set(notify.clone()) }.unwrap_or(());
         message_loop();
 
         // 在卸载钩子之前，我们必须先通知所有的远进程即将卸载钩子，让他们有机会清理资源，否则将可能引起系统不稳定
@@ -218,16 +233,15 @@ pub fn mount() {
 
 /** 停止亏叹气。 */
 pub fn unmount() {
-    let mut lock = HOOK_THREAD.write().unwrap();
-    match lock.as_ref() {
-        None => {}
-        Some(x) => {
-            x.quit();
-            x.join(5000);
+    unsafe {
+        match HOOK_THREAD.get() {
+            None => {}
+            Some(x) => {
+                x.quit();
+                x.join(5000);
+            }
         }
     }
-    *lock = None;
-    drop(lock);
     debug!("unmounted.")
 }
 

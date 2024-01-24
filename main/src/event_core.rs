@@ -38,7 +38,7 @@ impl EventCore {
         context.peeper_server.add_on_input_char_listener(move |c| {
             let performer = ctx.performer.clone();
             ctx.main_handler.spawn(async move {
-                performer.speak_text(format!("{}", c).as_str()).await;
+                performer.speak_text(String::from_utf16_lossy(&[c]).as_str()).await;
             });
         }).await;
     }
