@@ -11,20 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::sync::{Arc, OnceLock};
-use log::{error, trace};
-use tokio::{
-    runtime::{Builder, Runtime},
-    net::windows::named_pipe::{ClientOptions, NamedPipeClient},
-    sync::Mutex
-};
-use rigela_utils::pipe::PipeStream;
 use crate::{
+    model::{PeeperData, PeeperPacket},
     utils::get_pipe_name,
-    model::{
-        PeeperData,
-        PeeperPacket
-    }
+};
+use log::{error, trace};
+use rigela_utils::pipe::PipeStream;
+use std::sync::{Arc, OnceLock};
+use tokio::{
+    net::windows::named_pipe::{ClientOptions, NamedPipeClient},
+    runtime::{Builder, Runtime},
+    sync::Mutex,
 };
 
 /**
@@ -33,7 +30,7 @@ use crate::{
 pub(crate) struct PeeperClient {
     module: String,
     sender: Arc<OnceLock<Mutex<PipeStream<PeeperPacket, NamedPipeClient>>>>,
-    rt: OnceLock<Runtime>
+    rt: OnceLock<Runtime>,
 }
 
 impl PeeperClient {
@@ -45,7 +42,7 @@ impl PeeperClient {
         let self_ = Self {
             module,
             sender: OnceLock::new().into(),
-            rt: OnceLock::new()
+            rt: OnceLock::new(),
         };
         let rt = Builder::new_multi_thread()
             .enable_all()
@@ -78,18 +75,24 @@ impl PeeperClient {
     pub fn push(&self, data: PeeperData) {
         let packet = PeeperPacket {
             name: self.module.clone(),
-            data
+            data,
         };
         let sender = self.sender.clone();
         if let Some(rt) = self.rt.get() {
             rt.spawn(async move {
-                let sender = sender.get_or_init(|| {
-                    Self::get_stream().into()
-                });
+                let sender = sender.get_or_init(|| Self::get_stream().into());
                 let mut sender = sender.lock().await;
                 sender.send(&packet).await;
             });
         }
+    }
+
+    /**
+     * 发送日志。
+     * `msg` 日志消息。
+     * */
+    pub fn log(&self, msg: String) {
+        self.push(PeeperData::Log(msg));
     }
 
     /**

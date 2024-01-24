@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::get_program_directory;
 use log::LevelFilter;
 use log4rs::{
     append::{
@@ -27,7 +28,6 @@ use log4rs::{
     filter::threshold::ThresholdFilter,
     init_config,
 };
-use crate::get_program_directory;
 
 const LOG_FILE_NAME: &str = "run.log";
 

@@ -18,6 +18,12 @@ extern crate rust_i18n;
 // 初始化I18N国际化多语言支持
 i18n!("locale");
 
+mod browser;
+mod commander;
+mod configs;
+mod context;
+mod event_core;
+mod gui;
 /**
  * 入口程序。
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
@@ -33,12 +39,6 @@ i18n!("locale");
  * 10. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
 mod impls;
-mod browser;
-mod commander;
-mod configs;
-mod context;
-mod event_core;
-mod gui;
 mod launcher;
 mod performer;
 mod proxy32;

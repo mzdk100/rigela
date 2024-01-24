@@ -11,21 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod pipe;
 pub mod logger;
+pub mod pipe;
 
-use home::home_dir;
-use std::{
-    fs::create_dir,
-    path::PathBuf
-};
 use clipboard::{ClipboardContext, ClipboardProvider};
+use home::home_dir;
+use std::{fs::create_dir, path::PathBuf};
 use tokio::{
-    io::{
-        AsyncReadExt,
-        AsyncWriteExt
-    },
     fs::OpenOptions,
+    io::{AsyncReadExt, AsyncWriteExt},
 };
 
 const DIR_NAME: &str = ".rigela";

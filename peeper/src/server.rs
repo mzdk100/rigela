@@ -11,25 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use std::{
-    sync::Arc
+use crate::{
+    model::{PeeperData, PeeperPacket},
+    utils::get_pipe_name
 };
-use log::error;
-use tokio::{
-    runtime::{Builder, Runtime},
-    net::windows::named_pipe::{NamedPipeServer, ServerOptions},
-    sync::Mutex
-};
+use log::{error, info};
 use rigela_utils::pipe::PipeStream;
-use crate::model::{PeeperData, PeeperPacket};
-use crate::utils::get_pipe_name;
+use std::sync::Arc;
+use tokio::{
+    net::windows::named_pipe::{NamedPipeServer, ServerOptions},
+    runtime::{Builder, Runtime},
+    sync::Mutex,
+};
 
 type OnInputCharListener = dyn Fn(u16) + Send + Sync;
 
 pub struct PeeperServer {
     on_input_char: Arc<Mutex<Vec<Box<OnInputCharListener>>>>,
-    rt: Runtime
+    rt: Runtime,
 }
 
 impl PeeperServer {
@@ -41,7 +40,7 @@ impl PeeperServer {
             .unwrap();
         Self {
             on_input_char: Arc::new(vec![].into()),
-            rt
+            rt,
         }
     }
 
@@ -53,13 +52,13 @@ impl PeeperServer {
                         error!("{}", e);
                         continue;
                     }
-                    log::info!("New client has connected.");
+                    info!("New client has connected.");
                     let stream = PipeStream::new(p);
                     self.on_client(stream);
-                },
+                }
                 Err(e) => {
                     error!("{}", e);
-                    break
+                    break;
                 }
             }
         }
@@ -71,10 +70,11 @@ impl PeeperServer {
             loop {
                 let packet = stream.recv().await;
                 if packet.is_none() {
-                    break
+                    break;
                 }
                 let packet = packet.unwrap();
                 match packet.data {
+                    PeeperData::Log(msg) => info!("{}: {}", packet.name, msg),
                     PeeperData::Quit => break,
                     PeeperData::InputChar(c) => {
                         let listeners = on_input_char_listeners.lock().await;

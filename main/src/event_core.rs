@@ -35,12 +35,17 @@ impl EventCore {
 
         // 订阅输入事件
         let ctx = context.clone();
-        context.peeper_server.add_on_input_char_listener(move |c| {
-            let performer = ctx.performer.clone();
-            ctx.main_handler.spawn(async move {
-                performer.speak_text(String::from_utf16_lossy(&[c]).as_str()).await;
-            });
-        }).await;
+        context
+            .peeper_server
+            .add_on_input_char_listener(move |c| {
+                let performer = ctx.performer.clone();
+                ctx.main_handler.spawn(async move {
+                    performer
+                        .speak_text(String::from_utf16_lossy(&[c]).as_str())
+                        .await;
+                });
+            })
+            .await;
     }
 }
 
