@@ -12,7 +12,10 @@
  */
 
 extern crate cargo_rigela;
+use embed_manifest::{embed_manifest, new_manifest};
 
 fn main() {
     cargo_rigela::make_version();
+
+    let _ = embed_manifest(new_manifest("Contoso.Sample"));
 }
