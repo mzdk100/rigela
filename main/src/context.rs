@@ -12,20 +12,14 @@
  */
 
 use crate::{
-    browser::form_browser::FormBrowser,
-    commander::Commander,
-    configs::ConfigManager,
-    event_core,
-    performer::Performer,
-    proxy32::Proxy32,
-    resources::ResourceAccessor,
-    talent::TalentAccessor,
+    browser::form_browser::FormBrowser, commander::Commander, configs::ConfigManager, event_core,
+    performer::Performer, proxy32::Proxy32, resources::ResourceAccessor, talent::TalentAccessor,
     terminator::Terminator,
 };
+use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
-use peeper::server::PeeperServer;
 use win_wrap::uia::automation::UiAutomation;
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -119,6 +113,7 @@ impl Context {
         let ctx = Arc::new(self.clone());
 
         self.main_handler.spawn(async move {
+            ctx.config_manager.init().await;
             ctx.performer.apply(ctx.clone()).await;
         });
     }

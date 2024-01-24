@@ -83,12 +83,11 @@ async fn prev_prop_r(context: Arc<Context>) {
 }
 
 async fn speak_tts_prop(context: Arc<Context>) {
-    if let Some(config) = context.config_manager.read().await.tts_config {
-        let info = match *context.performer.clone().cur_tts_prop.read().await {
-            TtsProperty::Speed => format!("语速: {}", config.speed.unwrap()),
-            TtsProperty::Volume => format!("音量: {}", config.volume.unwrap()),
-            TtsProperty::Pitch => format!("语调: {}", config.pitch.unwrap()),
-        };
-        context.performer.speak_text(&*info).await;
-    }
+    let cfg = context.config_manager.get_config().await.tts_config.clone();
+    let info = match context.performer.get_cur_tts_prop().await {
+        TtsProperty::Speed => format!("语速: {}", cfg.speed),
+        TtsProperty::Volume => format!("音量: {}", cfg.volume),
+        TtsProperty::Pitch => format!("语调: {}", cfg.pitch),
+    };
+    context.performer.speak_text(&*info).await;
 }

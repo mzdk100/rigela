@@ -38,7 +38,7 @@ async fn exit(context: Arc<Context>) {
 
 impl Speakable for DateTime<Local> {
     fn get_sentence(&self) -> String {
-        format!("{}", self)
+        self.format("%Y年%m月%d日 %H:%M:%S").to_string()
     }
 }
 

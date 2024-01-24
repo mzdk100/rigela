@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::tts::TtsConfig;
 use crate::{configs::tts::TtsProperty, context::Context};
 use std::{collections::HashMap, io::SeekFrom, sync::Arc};
 use tokio::{
@@ -36,7 +37,7 @@ pub(crate) trait Speakable {
  * 可以进行语音输出或音效提示。
  * */
 pub(crate) struct Performer {
-    tts: Arc<Tts>,
+    tts: Tts,
     pub(crate) cur_tts_prop: RwLock<TtsProperty>,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     output_stream: Arc<AudioOutputStream>,
@@ -50,7 +51,7 @@ impl Performer {
         let output_stream = AudioOutputStream::new(SAMPLE_RATE, NUM_CHANNELS);
         let tts = Tts::new();
         Self {
-            tts: tts.into(),
+            tts,
             cur_tts_prop: RwLock::new(TtsProperty::Speed),
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
@@ -60,45 +61,52 @@ impl Performer {
     /**
      * 设置表演者的参数。
      * `context` 框架的上下文环境。
-     * `slot` 一个用于修改参数的函数或闭包。
+     * `diff` 属性值的差值， 传0初始化tts属性值
      * */
     pub(crate) async fn apply_config(&self, context: Arc<Context>, diff: i32) {
-        let tts = self.tts.clone();
-        let mut config = context.config_manager.read().await;
-        let mut tts_config = config.tts_config.clone().unwrap();
+        let tts = &self.tts;
+        let mut config = context.config_manager.get_config().await;
+        let mut tts_config = config.tts_config.clone();
 
-        if diff != 0 {
-            let prop = self.cur_tts_prop.read().await;
-
-            let mut value = match *prop {
-                TtsProperty::Speed => tts_config.speed.unwrap(),
-                TtsProperty::Volume => tts_config.volume.unwrap(),
-                TtsProperty::Pitch => tts_config.pitch.unwrap(),
-            };
-
-            value = value + diff;
-
-            let value = match value {
-                i if i > 100 => 100,
-                i if i < 0 => 0,
-                i => i,
-            };
-
-            match *prop {
-                TtsProperty::Speed => tts_config.speed.replace(value),
-                TtsProperty::Volume => tts_config.volume.replace(value),
-                TtsProperty::Pitch => tts_config.pitch.replace(value),
-            };
+        // 如果差值等于0，直接设置TTS属性值参数，返回
+        if diff == 0 {
+            tts.set_prop(
+                3.0 + (tts_config.speed as f64 - 50.0) * 0.06,
+                0.5 + (tts_config.volume as f64 - 50.0) * 0.01,
+                1.0 + (tts_config.pitch as f64 - 50.0) * 0.01,
+            );
+            return;
         }
 
+        let restrict = |x| match x {
+            i if i > 100 => 100,
+            i if i < 0 => 0,
+            i => i,
+        };
+
+        tts_config = match self.get_cur_tts_prop().await {
+            TtsProperty::Speed => TtsConfig {
+                speed: restrict(tts_config.speed + diff),
+                ..tts_config
+            },
+            TtsProperty::Volume => TtsConfig {
+                volume: restrict(tts_config.volume + diff),
+                ..tts_config
+            },
+            TtsProperty::Pitch => TtsConfig {
+                pitch: restrict(tts_config.pitch + diff),
+                ..tts_config
+            },
+        };
+
         tts.set_prop(
-            3.0 + (tts_config.speed.unwrap() as f64 - 50.0) * 0.06,
-            0.5 + (tts_config.volume.unwrap() as f64 - 50.0) * 0.01,
-            1.0 + (tts_config.pitch.unwrap() as f64 - 50.0) * 0.01,
+            3.0 + (tts_config.speed as f64 - 50.0) * 0.06,
+            0.5 + (tts_config.volume as f64 - 50.0) * 0.01,
+            1.0 + (tts_config.pitch as f64 - 50.0) * 0.01,
         );
 
-        config.tts_config.replace(tts_config);
-        context.config_manager.write(&config).await;
+        config.tts_config = tts_config;
+        context.config_manager.set_config(config).await;
     }
 
     /**
@@ -114,12 +122,19 @@ impl Performer {
         self.tts.speak(text).await;
     }
 
+    /// 获取当前调节的TTS属性
+    pub(crate) async fn get_cur_tts_prop(&self) -> TtsProperty {
+        self.cur_tts_prop.read().await.clone()
+    }
+
+    /// 后移当前需调节的TTS属性
     pub(crate) async fn next_tts_prop(&self) {
         let prop = self.cur_tts_prop.read().await.next();
         let mut cur = self.cur_tts_prop.write().await;
         *cur = prop;
     }
 
+    /// 前移当前需调节的TTS属性
     pub(crate) async fn prev_tts_prop(&self) {
         let prop = self.cur_tts_prop.read().await.prev();
         let mut cur = self.cur_tts_prop.write().await;

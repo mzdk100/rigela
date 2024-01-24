@@ -18,17 +18,21 @@ use log::{error, info};
 use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use tokio::sync::RwLock;
 use toml;
 
 /// 配置项目的根元素
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConfigRoot {
-    pub(crate) tts_config: Option<TtsConfig>,
+    pub(crate) tts_config: TtsConfig,
 }
 
 /// 配置管理器
 pub struct ConfigManager {
+    // 配置文件的路径
     path: PathBuf,
+    // 当前的配置
+    config: RwLock<ConfigRoot>,
 }
 
 impl ConfigManager {
@@ -36,11 +40,35 @@ impl ConfigManager {
      * 创建一个配置管理器
      * */
     pub(crate) fn new(path: PathBuf) -> Self {
-        Self { path }
+        let config = ConfigRoot {
+            tts_config: TtsConfig::default(),
+        };
+        Self {
+            path,
+            config: RwLock::new(config),
+        }
+    }
+
+    /// 初始化当前配置，从配置文件获取配置信息
+    pub(crate) async fn init(&self) {
+        let mut config = self.config.write().await;
+        *config = self.read().await;
+    }
+
+    /// 获取当前的配置
+    pub(crate) async fn get_config(&self) -> ConfigRoot {
+        (*self.config.read().await).clone()
+    }
+
+    /// 修改当前的配置，修改完写入配置文件
+    pub(crate) async fn set_config(&self, config: ConfigRoot) {
+        let mut cur_config = self.config.write().await;
+        *cur_config = config.clone();
+        self.write(&config).await;
     }
 
     /*
-     * 读取配置数据。
+     * 读取配置数据。如果不存在配置文件，写入默认配置
      * */
     pub(crate) async fn read(&self) -> ConfigRoot {
         let config = match read_file(&self.path.clone()).await {
@@ -60,7 +88,7 @@ impl ConfigManager {
         match config {
             None => {
                 let config = ConfigRoot {
-                    tts_config: Some(TtsConfig::default()),
+                    tts_config: TtsConfig::default(),
                 };
                 self.write(&config).await;
                 config
