@@ -18,6 +18,7 @@ pub use windows::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, TRUE,
             WAIT_EVENT, WPARAM,
         },
+        Globalization::HIMC,
         System::SystemServices::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
@@ -28,25 +29,16 @@ pub use windows::{
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::{
-            MAX_PATH,
-            CloseHandle,
-            GetLastError
-        },
+        Foundation::{CloseHandle, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
-            LibraryLoader::{
-                GetModuleHandleW,
-                GetProcAddress,
-                LoadLibraryW,
-                GetModuleFileNameW
-            }
+            LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
         },
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    }
+    },
 };
 
 /**

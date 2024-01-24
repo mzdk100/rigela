@@ -17,54 +17,44 @@ mod model;
 pub mod server;
 mod utils;
 
+use crate::{
+    client::PeeperClient,
+    handler::{on_ime, on_input_char},
+};
 use log::{debug, error};
+use once_cell::sync::Lazy;
 use rigela_utils::get_program_directory;
 use std::{
     ffi::c_void,
-    thread
+    sync::{OnceLock, RwLock},
+    thread::{self, sleep},
+    time::Duration,
 };
-use std::sync::{OnceLock, RwLock};
-use std::thread::sleep;
-use std::time::Duration;
-use once_cell::sync::Lazy;
 use win_wrap::{
     common::{
-        call_next_hook_ex,
-        get_proc_address,
-        load_library,
-        set_windows_hook_ex,
-        unhook_windows_hook_ex,
-        BOOL,
-        DLL_PROCESS_ATTACH,
-        DLL_PROCESS_DETACH,
-        DLL_THREAD_ATTACH,
-        DLL_THREAD_DETACH,
-        FALSE,
-        HMODULE,
-        LPARAM,
-        LRESULT,
-        TRUE,
-        WPARAM,
-        get_module_file_name
+        call_next_hook_ex, get_module_file_name, get_proc_address, load_library,
+        set_windows_hook_ex, unhook_windows_hook_ex, BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH,
+        DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM,
     },
-    ext::{
-        FarProcExt,
-        LParamExt
-    },
+    ext::{FarProcExt, LParamExt},
     hook::{CwpStruct, HOOK_TYPE_CALL_WND_PROC, HOOK_TYPE_GET_MESSAGE},
-    input::WM_CHAR,
+    input::{WM_CHAR, WM_IME_NOTIFY},
     message::{message_loop, register_window_message, send_message, HWND_BROADCAST, MSG},
     threading::{get_current_thread_id, ThreadNotify},
-};
-use crate::{
-    client::PeeperClient,
-    handler::input_char
 };
 
 macro_rules! wm {
     ($field:ident) => {
         register_window_message(format!("{}_{}", module_path!(), stringify!($field)).as_str())
-    }
+    };
+}
+
+macro_rules! handle_event {
+    ($name:ident, $($arg:expr),*) => {{
+        activate_transaction();
+        let lock = CLIENT.read().unwrap();
+        $name(lock.as_ref().unwrap(), $($arg),*);
+    }};
 }
 
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
@@ -123,6 +113,11 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
     } else if WM_HOOK_UNINIT.clone() == msg.message {
         // 主进程发来的卸载命令
         deactivate_transaction();
+    } else {
+        match msg.message {
+            WM_IME_NOTIFY => handle_event!(on_ime, msg.hwnd, msg.wParam, msg.lParam),
+            _ => {}
+        }
     }
     call_next_hook_ex(code, w_param, l_param)
 }
@@ -144,12 +139,8 @@ unsafe extern "system" fn hook_proc_get_message(
     }
     let msg: &MSG = l_param.to();
     match msg.message {
-        WM_CHAR => {
-            activate_transaction();
-            let lock = CLIENT.read().unwrap();
-            input_char(lock.as_ref().unwrap(), msg);
-            drop(lock);
-        }
+        WM_CHAR => handle_event!(on_input_char, msg.wParam),
+        WM_IME_NOTIFY => handle_event!(on_ime, msg.hwnd, msg.wParam, msg.lParam),
         _ => {}
     }
 
@@ -165,9 +156,9 @@ pub fn mount() {
     debug!("mounted.");
     thread::spawn(|| {
         #[cfg(target_arch = "x86_64")]
-            let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
+        let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
         #[cfg(target_arch = "x86")]
-            let dll_path = get_program_directory().join(format!("{}32.dll", module_path!()));
+        let dll_path = get_program_directory().join(format!("{}32.dll", module_path!()));
 
         debug!("Module path: {}", dll_path.display());
         let handle = match load_library(dll_path.to_str().unwrap()) {
@@ -182,24 +173,37 @@ pub fn mount() {
         // 安装消息队列钩子
         let h_hook_get_message = loop {
             let proc = get_proc_address(handle, "hook_proc_get_message");
-            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0) {
+            if let Ok(h) =
+                set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0)
+            {
                 break h;
             }
             error!("Can't set the `get message` hook.");
             sleep(Duration::from_millis(1000));
         };
-        debug!("The hook of get message is ok, and it is {}.", h_hook_get_message.0);
+        debug!(
+            "The hook of get message is ok, and it is {}.",
+            h_hook_get_message.0
+        );
 
         // 安装窗口过程钩子
         let h_hook_call_wnd_proc = loop {
             let proc = get_proc_address(handle, "hook_proc_call_wnd_proc");
-            if let Ok(h) = set_windows_hook_ex(HOOK_TYPE_CALL_WND_PROC, proc.to_hook_proc(), handle.into(), 0) {
+            if let Ok(h) = set_windows_hook_ex(
+                HOOK_TYPE_CALL_WND_PROC,
+                proc.to_hook_proc(),
+                handle.into(),
+                0,
+            ) {
                 break h;
             }
             error!("Can't set the `call wnd proc` hook.");
             sleep(Duration::from_millis(1000));
         };
-        debug!("The hook of call wnd proc is ok, and it is {}.", h_hook_call_wnd_proc.0);
+        debug!(
+            "The hook of call wnd proc is ok, and it is {}.",
+            h_hook_call_wnd_proc.0
+        );
 
         // 通知所有进程需要初始化
         send_message(

@@ -11,13 +11,39 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use win_wrap::message::MSG;
-use crate::{
-    client::PeeperClient,
-    model::PeeperData
+use crate::{client::PeeperClient, model::PeeperData};
+use win_wrap::{
+    common::{HWND, LPARAM, WPARAM},
+    input::IMN_CHANGECANDIDATE
 };
+use win_wrap::input::{imm_get_candidate_list_count, imm_get_context, imm_release_context};
 
-pub(crate) fn input_char(client: &PeeperClient, msg: &MSG) {
-    client.push(PeeperData::InputChar(msg.wParam.0 as u16))
+//noinspection SpellCheckingInspection
+/**
+ * 处理输入法通知。
+ * `client` peeper客户端对象。
+ * `h_wnd` 窗口句柄。
+ * `command` 对应IMN_开头的输入法通知常亮值。
+ * `data` 附加数据。
+ * */
+pub(crate) fn on_ime(client: &PeeperClient, h_wnd: HWND, command: WPARAM, #[allow(unused_variables)] data: LPARAM) {
+    match command.0 as u32 {
+        IMN_CHANGECANDIDATE => {
+            // 当 IME 即将更改候选窗口的内容时，将发送此消息。然后，应用程序处理此消息以显示候选窗口本身。
+            let h_imc = imm_get_context(h_wnd);
+            let (buffer_size, list_count) = imm_get_candidate_list_count(h_imc);
+            client.log(format!("{}, {}, {}", h_imc.0, buffer_size, list_count));
+            imm_release_context(h_wnd, h_imc);
+        },
+        _ => {}
+    }
+}
 
+/**
+ * 处理输入字符。
+ * `client` peeper客户端对象。
+ * `character` 输入的unicode字符。
+ * */
+pub(crate) fn on_input_char(client: &PeeperClient, character: WPARAM) {
+    client.push(PeeperData::InputChar(character.0 as u16))
 }

@@ -14,7 +14,7 @@
 use std::{
     env,
     fs::{copy, read_dir},
-    path::Path
+    path::Path,
 };
 
 fn copy_deps(target: &str) {
@@ -32,11 +32,7 @@ fn copy_deps(target: &str) {
     let target_dir = Path::new(&env::var("USERPROFILE").unwrap()).join(".rigela");
     for i in lib_dir {
         let i = i.unwrap();
-        let f = i
-            .file_name()
-            .into_string()
-            .unwrap()
-            .to_lowercase();
+        let f = i.file_name().into_string().unwrap().to_lowercase();
         if f.ends_with(".dll") && f.starts_with("std") {
             let t = target_dir.join(&i.file_name());
             if t.exists() {

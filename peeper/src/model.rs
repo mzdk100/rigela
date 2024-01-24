@@ -11,17 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct PeeperPacket {
     pub(crate) name: String,
-    pub(crate) data: PeeperData
+    pub(crate) data: PeeperData,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
 pub enum PeeperData {
+    Log(String),
     Quit,
-    InputChar(u16)
+    InputChar(u16),
 }

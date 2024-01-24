@@ -27,8 +27,9 @@ features = [
     "Win32_System_Variant",
     # 动态库加载
     "Win32_System_LibraryLoader",
-    # 鼠标和键盘API
+    # 鼠标、键盘和输入法API
     "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Input_Ime",
     # Win32多线程
     "Win32_System_Threading",
     # Win32安全操作

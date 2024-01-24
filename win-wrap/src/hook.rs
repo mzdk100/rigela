@@ -22,14 +22,8 @@ use crate::{
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
-    thread::{
-        self,
-        sleep
-    },
-    time::{
-        SystemTime,
-        Duration
-    },
+    thread::{self, sleep},
+    time::{Duration, SystemTime},
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CWPRETSTRUCT, CWPSTRUCT, KBDLLHOOKSTRUCT, KBDLLHOOKSTRUCT_FLAGS, MSLLHOOKSTRUCT,
@@ -238,7 +232,10 @@ fn install(hook_type: HookType) {
                 break h.unwrap();
             }
             if retry > 5 {
-                panic!("Can't set the windows hook ({}), and retrying it.", hook_type.0);
+                panic!(
+                    "Can't set the windows hook ({}), and retrying it.",
+                    hook_type.0
+                );
             }
             retry += 1;
             sleep(Duration::from_millis(1000));

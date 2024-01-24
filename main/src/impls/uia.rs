@@ -13,10 +13,10 @@
 
 use crate::browser::form_browser::BrowserElement;
 use crate::browser::Browsable;
+use crate::performer::Speakable;
 use std::sync::Arc;
 use win_wrap::uia::element::UiAutomationElement;
 use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
-use crate::performer::Speakable;
 
 trait ElementNameExt {
     fn get_name_better(&self) -> String;
@@ -63,7 +63,6 @@ impl Browsable for UiAutomationElement {
         None
     }
 }
-
 
 /// 给UIA元素实现朗读接口
 impl Speakable for UiAutomationElement {
