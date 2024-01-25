@@ -20,6 +20,7 @@ use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
 use crate::configs::tts::TtsProperty;
+use async_trait::async_trait;
 #[allow(unused_imports)]
 use win_wrap::input::{
     VK_DOWN, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_OEM_MINUS, VK_OEM_PLUS, VK_RCONTROL, VK_RIGHT,

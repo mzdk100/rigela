@@ -11,14 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::{context::Context, talent::Talented};
 use std::collections::HashMap;
-
-use crate::context::Context;
 use std::sync::{Arc, Mutex, RwLock};
-use win_wrap::common::LRESULT;
-use win_wrap::ext::LParamExt;
-use win_wrap::hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED};
-use win_wrap::input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN};
+use win_wrap::{
+    common::LRESULT,
+    ext::LParamExt,
+    hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
+    input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN},
+};
 
 /**
  * 命令类型枚举。
@@ -58,66 +59,30 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Arc<Context>) {
-        // 获取所有的技能项
+        let context = context.clone();
         let talents = context.talent_accessor.talents.clone();
 
         // 跟踪每一个键的按下状态
         let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
 
-        // 准备安装键盘钩子, keyboard_hook为钩子实例
         let keyboard_hook =
             WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
-                // 获取当前按键的附加信息
                 let info: &KbdLlHookStruct = l_param.to();
-                // 当前案件是否是扩展键
                 let is_extended = info.flags.contains(LLKHF_EXTENDED);
-                // 当前消息是否是键盘按下的消息
                 let pressed =
                     w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
                 let mut map = key_track.write().unwrap();
                 map.insert((info.vkCode, is_extended), pressed);
 
-                // 如果不是键盘按下消息，调用下一个钩子
                 if !pressed {
                     drop(map); // 必须先释放锁再next()，否则可能会死锁
                     return next();
                 }
 
-                // 循环每一个技能项， i为单一技能
                 for i in talents.iter() {
-                    // 当前技能项的命令列表
-                    let cmd_list = i.get_supported_cmd_list();
-
-                    // 循环匹配当前技能项的每一组命令列表
-                    let cmd_item = cmd_list.iter().find(|x| match *x {
-                        // 匹配到当前命令为键盘命令， y为案件命令的按键集合
-                        CommandType::Key(y) => {
-                            // 循环按键命令的每一组按键， vk当前键码， ext当前扩展码
-                            for (vk, ext) in y {
-                                // 匹配键盘消息是否包含这组按键
-                                match map.get(&(vk.0 as u32, *ext)) {
-                                    // 不包含， 返回false
-                                    None => return false,
-                                    Some(x) => {
-                                        if !x {
-                                            return false;
-                                        }
-                                    }
-                                }
-                            }
-
-                            // 能够匹配， 返回true
-                            true
-                        }
-
-                        // 当前命令不是键盘命令， 返回false
-                        _ => false,
-                    });
-
-                    // 如果匹配到键盘热键，执行当前技能
-                    if let Some(_) = cmd_item {
-                        i.perform(context.clone());
+                    if match_keys(Arc::clone(i), &map) {
+                        execute(context.clone(), Arc::clone(i));
                         return LRESULT(1);
                     }
                 }
@@ -137,4 +102,35 @@ impl Commander {
         // 解除键盘钩子
         self.keyboard_hook.lock().unwrap().clone().unwrap().unhook()
     }
+}
+
+// 匹配技能项的热键列表是否与当前Hook到的按键相同
+fn match_keys(talent: Arc<dyn Talented + Send + Sync>, map: &HashMap<(u32, bool), bool>) -> bool {
+    !talent
+        .get_supported_cmd_list()
+        .iter()
+        .find(|x| match *x {
+            CommandType::Key(y) => {
+                for (vk, ext) in y {
+                    match map.get(&(vk.0 as u32, *ext)) {
+                        None => return false,
+                        Some(x) => match *x {
+                            true => continue,
+                            false => return false,
+                        },
+                    }
+                }
+                true
+            }
+            _ => false,
+        })
+        .is_none()
+}
+
+// 执行技能项的操作
+fn execute(context: Arc<Context>, talent: Arc<dyn Talented + Sync + Send>) {
+    let ctx = context.clone();
+    context.main_handler.spawn(async move {
+        talent.perform(ctx.clone()).await;
+    });
 }

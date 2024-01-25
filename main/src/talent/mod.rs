@@ -31,11 +31,13 @@ use crate::{
         tts::{IncreaseTalent, ReduceTalent},
     },
 };
+use async_trait::async_trait;
 use std::sync::Arc;
 
 /**
  * 一个能力的抽象接口。
  * */
+#[async_trait]
 pub trait Talented {
     /**
      * 获取能力可支持的命令类型。
@@ -46,13 +48,13 @@ pub trait Talented {
      * 执行能力的入口方法。
      * `context` 框架的上下文环境。
      * */
-    fn perform(&self, context: Arc<Context>);
+    async fn perform(&self, context: Arc<Context>);
 }
 
 /// 技能访问器对象，包含所有技能对象列表
 pub struct TalentAccessor {
     // 技能对象集合
-    pub(crate) talents: Arc<Vec<Box<dyn Talented + Sync + Send>>>,
+    pub(crate) talents: Arc<Vec<Arc<dyn Talented + Send + Sync + 'static>>>,
 }
 
 impl TalentAccessor {
@@ -60,29 +62,29 @@ impl TalentAccessor {
      * 创建能力访问器。
      * */
     pub(crate) fn new() -> Self {
-        let talents: Vec<Box<dyn Talented + Sync + Send>> = vec![
+        let talents: Vec<Arc<dyn Talented + Send + Sync>> = vec![
             // 程序技能
-            Box::new(ExitTalent),
-            Box::new(CurrentTimeTalent),
-            Box::new(ModeNextTalent),
+            Arc::new(ExitTalent),
+            Arc::new(CurrentTimeTalent),
+            Arc::new(ModeNextTalent),
             // 窗口浏览技能
-            Box::new(PrevElementTalent),
-            Box::new(NextElementTalent),
-            Box::new(CurrElementTalent),
-            Box::new(PrevChildElementTalent),
-            Box::new(NextChildElementTalent),
-            Box::new(CurrChildElementTalent),
+            Arc::new(PrevElementTalent),
+            Arc::new(NextElementTalent),
+            Arc::new(CurrElementTalent),
+            Arc::new(PrevChildElementTalent),
+            Arc::new(NextChildElementTalent),
+            Arc::new(CurrChildElementTalent),
             // 语音调节技能
-            Box::new(IncreaseTalent),
-            Box::new(IncreaseRTalent),
-            Box::new(ReduceTalent),
-            Box::new(ReduceRTalent),
-            Box::new(NextPropTalent),
-            Box::new(NextPropRTalent),
-            Box::new(PrevPropTalent),
-            Box::new(PrevPropRTalent),
-            Box::new(ClickTalent),
-            Box::new(RightClickTalent),
+            Arc::new(IncreaseTalent),
+            Arc::new(IncreaseRTalent),
+            Arc::new(ReduceTalent),
+            Arc::new(ReduceRTalent),
+            Arc::new(NextPropTalent),
+            Arc::new(NextPropRTalent),
+            Arc::new(PrevPropTalent),
+            Arc::new(PrevPropRTalent),
+            Arc::new(ClickTalent),
+            Arc::new(RightClickTalent),
         ];
         Self {
             talents: talents.into(),

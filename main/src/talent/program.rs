@@ -24,10 +24,10 @@ use win_wrap::input::{VK_ESCAPE, VK_F12, VK_INSERT};
 
 /* 业务逻辑使用的条目 */
 use crate::performer::Speakable;
+use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
 use std::time::Duration;
 use tokio::time::sleep;
-
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = ((VK_INSERT, false), (VK_ESCAPE, false)))]
 async fn exit(context: Arc<Context>) {
