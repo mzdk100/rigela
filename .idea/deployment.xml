@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="rigela" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="rigela" exclude=".svn;.cvs;.idea;.DS_Store;.git;.hg;.fingerprint;*.d;*.exp;*.hprof;*.lib;*.lock;*.pdb;*.pyc;*.rlib;build;deps" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="rigela">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="rigela_x64" local="$PROJECT_DIR$/target/x86_64-pc-windows-msvc/release" web="/rigela/rigela_x64/" />
           </mappings>
         </serverdata>
       </paths>

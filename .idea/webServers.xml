@@ -5,7 +5,7 @@
       <webServer id="2788ca9e-7164-4cd1-acc3-8a10c2e3907f" name="rigela" url="http://localhost">
         <fileTransfer rootFolder="/home/ubuntu/rigela" accessType="SFTP" host="api.zhumang.vip" port="22" sshConfigId="74b4a49b-4475-47fe-b3a3-bd026b974f17" sshConfig="ubuntu@api.zhumang.vip:22 password">
           <advancedOptions>
-            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="30" passiveMode="true" shareSSLContext="true" isUseSudo="true" />
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" isUseSudo="true" />
           </advancedOptions>
         </fileTransfer>
       </webServer>
