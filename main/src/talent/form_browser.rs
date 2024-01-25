@@ -19,9 +19,9 @@ use rigela_macros::talent;
 use std::sync::Arc;
 
 /* 使用talent macro可选导入的条目 */
+use async_trait::async_trait;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_ADD, VK_CLEAR, VK_HOME, VK_LEFT, VK_PRIOR, VK_RIGHT, VK_UP};
-
 const WAVE: &str = "boundary.wav";
 
 //noinspection RsUnresolvedReference

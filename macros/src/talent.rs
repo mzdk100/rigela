@@ -74,13 +74,14 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     quote! {
         #[#doc]
         pub(crate) struct #id;
+
+        #[async_trait]
         impl crate::talent::Talented for #id {
             fn get_supported_cmd_list(&self) -> Vec<crate::commander::CommandType> {
                 #cmd_list
             }
-            fn perform(&self, context: std::sync::Arc<Context>) {
-                let main_handler = context.main_handler.clone();
-                main_handler.spawn(async move #body);
+            async  fn perform(&self, context: std::sync::Arc<Context>) {
+                #body
             }
         }
         impl crate::talent::TalentAccessor {

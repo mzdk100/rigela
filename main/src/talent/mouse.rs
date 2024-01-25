@@ -12,6 +12,7 @@
  */
 
 use crate::context::Context;
+use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
