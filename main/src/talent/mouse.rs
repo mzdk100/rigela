@@ -18,15 +18,34 @@ use rigela_macros::talent;
 use std::sync::Arc;
 #[allow(unused_imports)]
 use win_wrap::input::{VK_DIVIDE, VK_MULTIPLY};
+use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "鼠标单击", key = ((VK_DIVIDE, true)))]
 async fn click(context: Arc<Context>) {
+    let (x, y) = get_point(context.clone()).await;
+    click(x,y);
     context.performer.speak_text("单击").await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "鼠标右击", key = ((VK_MULTIPLY, false)))]
 async fn right_click(context: Arc<Context>) {
+    let (x, y) = get_point(context.clone()).await;
+    right_click(x,y);
     context.performer.speak_text("右击").await;
+}
+
+async fn get_point(context: Arc<Context>) -> (i32, i32) {
+    let ele =  match context.form_browser.current_child().await {
+        None =>  context.form_browser.current().await,
+        e => e,
+    };
+    match ele {
+        None => get_cur_mouse_point(),
+        Some(e) => {
+            let r = e.get_rect();
+            (r.left, r.top)
+        }
+    }
 }

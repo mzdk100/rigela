@@ -15,6 +15,7 @@ use crate::browser::form_browser::BrowserElement;
 use crate::browser::Browsable;
 use crate::performer::Speakable;
 use std::sync::Arc;
+use win_wrap::common::RECT;
 use win_wrap::uia::element::UiAutomationElement;
 use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
 
@@ -61,6 +62,10 @@ impl Browsable for UiAutomationElement {
             return Some(Arc::new(x));
         }
         None
+    }
+
+    fn get_rect(&self) -> RECT {
+        self.get_rect()
     }
 }
 

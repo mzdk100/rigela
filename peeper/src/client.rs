@@ -91,6 +91,7 @@ impl PeeperClient {
      * 发送日志。
      * `msg` 日志消息。
      * */
+    #[allow(unused)]
     pub fn log(&self, msg: String) {
         self.push(PeeperData::Log(msg));
     }

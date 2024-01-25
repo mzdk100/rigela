@@ -15,10 +15,10 @@ use crate::common::{BOOL, HIMC, HWND, LPARAM};
 use windows::{
     core::imp::{heap_alloc, heap_free},
     Win32::UI::Input::{
-        Ime::{ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext},
         KeyboardAndMouse::{GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY},
     }
 };
+use windows::Win32::Foundation::POINT;
 pub use windows::Win32::UI::{
     Input::{
         Ime::{
@@ -79,6 +79,9 @@ pub use windows::Win32::UI::{
         WM_KEYDOWN, WM_KEYUP, WM_SYSCHAR, WM_SYSDEADCHAR, WM_SYSKEYDOWN, WM_SYSKEYUP,
     },
 };
+use windows::Win32::UI::Input::Ime::{ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext};
+use windows::Win32::UI::Input::KeyboardAndMouse::{mouse_event, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP};
+use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, SetCursorPos};
 use crate::ext::StringExt;
 
 pub type VirtualKey = VIRTUAL_KEY;
@@ -173,3 +176,33 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<St
         (list, data)
     }
 }
+
+/// 鼠标单击
+pub fn click(x: i32, y: i32) {
+    unsafe {
+        SetCursorPos(x, y)
+            .expect("SetCursorPos failed");
+        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+    }
+}
+
+/// 鼠标右键单击
+pub fn right_click(x: i32, y: i32) {
+    unsafe {
+        SetCursorPos(x, y)
+            .expect("SetCursorPos failed");
+        mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+        mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+    }
+}
+
+/// 获取鼠标当前坐标
+pub fn get_cur_mouse_point() -> (i32, i32) {
+     unsafe {
+         let mut point = POINT { x: 0, y: 0 };
+         GetCursorPos(&mut point).expect("GetCursorPos failed");
+         (point.x, point.y)
+     }
+}
+

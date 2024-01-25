@@ -13,6 +13,7 @@
 
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
+use windows::Win32::Foundation::RECT;
 use windows::Win32::UI::Accessibility::{IUIAutomation, TreeScope_Children};
 use windows::{core::BSTR, Win32::UI::Accessibility::IUIAutomationElement};
 
@@ -88,6 +89,12 @@ impl UiAutomationElement {
             }
         }
         None
+    }
+
+    /// 获取元素的坐标
+    pub fn get_rect(&self) -> RECT {
+        unsafe { self._current.CurrentBoundingRectangle() }
+            .expect("Can't get the location of element.")
     }
 
     /**

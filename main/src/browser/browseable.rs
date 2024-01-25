@@ -14,6 +14,7 @@
 use crate::browser::form_browser::BrowserElement;
 use crate::performer::Speakable;
 use std::sync::Arc;
+use win_wrap::common::RECT;
 
 /// 传递给窗口浏览器的控件接口
 pub trait Browsable {
@@ -21,6 +22,8 @@ pub trait Browsable {
     fn get_role(&self) -> String;
     fn get_child_count(&self) -> usize;
     fn get_child(&self, index: usize) -> Option<BrowserElement>;
+
+    fn get_rect(&self) -> RECT;
 }
 
 /// 为浏览控件接口对象实现朗读接口

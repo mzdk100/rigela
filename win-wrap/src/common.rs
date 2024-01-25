@@ -40,7 +40,7 @@ use windows::{
         },
     },
 };
-
+pub use windows::Win32::Foundation::RECT;
 /**
  * 播放一个声音。
  * `freq` 声音频率（Hz）
