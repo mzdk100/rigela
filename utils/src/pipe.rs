@@ -14,6 +14,7 @@
 use log::error;
 use serde::{Deserialize, Serialize};
 use serde_json_bytes::serde_json::{from_slice, to_vec};
+use std::fmt::{Display, Formatter};
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader},
     net::windows::named_pipe::{ClientOptions, NamedPipeClient, NamedPipeServer, ServerOptions},
@@ -86,15 +87,18 @@ where
     /**
      * 接收一个数据包。
      * */
-    pub async fn recv(&mut self) -> Option<R> {
+    pub async fn recv(&mut self) -> Result<R, PipeStreamError> {
         let mut buf = Vec::new();
         if let Ok(x) = self.reader.read_until(b'\n', &mut buf).await {
             if x < 1 {
-                return None;
+                return Err(PipeStreamError::ReadEof);
             }
         };
-        let packet: R = from_slice(&buf).unwrap();
-        Some(packet)
+        let r = from_slice(&buf);
+        if let Err(e) = r {
+            return Err(PipeStreamError::DecodeError(e.to_string()));
+        }
+        Ok(r.unwrap())
     }
 
     /**
@@ -105,5 +109,21 @@ where
         let mut data = to_vec(&packet).unwrap();
         data.push(b'\n');
         self.reader.write_all(&data).await.unwrap();
+    }
+}
+
+#[derive(Debug)]
+pub enum PipeStreamError {
+    ReadEof,
+    DecodeError(String),
+}
+
+impl Display for PipeStreamError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            PipeStreamError::ReadEof => "Read eof.".to_string(),
+            PipeStreamError::DecodeError(e) => e.to_string(),
+        };
+        write!(f, "{}", msg)
     }
 }

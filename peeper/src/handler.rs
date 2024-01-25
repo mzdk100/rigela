@@ -11,12 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{client::PeeperClient, model::PeeperData};
-use win_wrap::{
-    common::{HWND, LPARAM, WPARAM},
-    input::IMN_CHANGECANDIDATE
+use crate::{
+    client::PeeperClient,
+    model::{
+        PeeperData,
+        CandidateList
+    }
 };
-use win_wrap::input::{imm_get_candidate_list_count, imm_get_context, imm_release_context};
+use win_wrap::{
+    input::{
+        imm_get_candidate_list,
+        imm_get_context,
+        imm_release_context,
+        IMN_CHANGECANDIDATE
+    },
+    common::{HWND, LPARAM, WPARAM},
+};
 
 //noinspection SpellCheckingInspection
 /**
@@ -26,15 +36,25 @@ use win_wrap::input::{imm_get_candidate_list_count, imm_get_context, imm_release
  * `command` 对应IMN_开头的输入法通知常亮值。
  * `data` 附加数据。
  * */
-pub(crate) fn on_ime(client: &PeeperClient, h_wnd: HWND, command: WPARAM, #[allow(unused_variables)] data: LPARAM) {
+pub(crate) fn on_ime(
+    client: &PeeperClient,
+    h_wnd: HWND,
+    command: WPARAM,
+    #[allow(unused_variables)] data: LPARAM,
+) {
     match command.0 as u32 {
         IMN_CHANGECANDIDATE => {
             // 当 IME 即将更改候选窗口的内容时，将发送此消息。然后，应用程序处理此消息以显示候选窗口本身。
             let h_imc = imm_get_context(h_wnd);
-            let (buffer_size, list_count) = imm_get_candidate_list_count(h_imc);
-            client.log(format!("{}, {}, {}", h_imc.0, buffer_size, list_count));
+            let (list, text_list) = imm_get_candidate_list(h_imc, 0);
+            let cand = CandidateList {
+                selection: list.dwSelection,
+                page_start: list.dwPageStart,
+                list: text_list
+            };
+            client.push(PeeperData::ImeCandidateList(cand));
             imm_release_context(h_wnd, h_imc);
-        },
+        }
         _ => {}
     }
 }

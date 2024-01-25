@@ -46,6 +46,17 @@ impl EventCore {
                 });
             })
             .await;
+
+        // 订阅输入法候选事件
+        let ctx = context.clone();
+        context
+            .peeper_server
+            .add_on_ime_candidate_list_listener(move |candidate_list| {
+                let performer = ctx.performer.clone();
+                ctx.main_handler.spawn(async move {
+                    performer.speak(&candidate_list).await;
+                });
+            }).await;
     }
 }
 

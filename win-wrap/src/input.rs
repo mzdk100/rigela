@@ -12,17 +12,21 @@
  */
 
 use crate::common::{BOOL, HIMC, HWND, LPARAM};
-use windows::Win32::UI::Input::{
-    Ime::{ImmGetContext, ImmReleaseContext},
-    KeyboardAndMouse::{GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY},
+use windows::{
+    core::imp::{heap_alloc, heap_free},
+    Win32::UI::Input::{
+        Ime::{ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext},
+        KeyboardAndMouse::{GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY},
+    }
 };
 pub use windows::Win32::UI::{
     Input::{
         Ime::{
-            IMN_CHANGECANDIDATE, IMN_CLOSECANDIDATE, IMN_CLOSESTATUSWINDOW, IMN_GUIDELINE,
-            IMN_OPENCANDIDATE, IMN_OPENSTATUSWINDOW, IMN_PRIVATE, IMN_SETCANDIDATEPOS,
-            IMN_SETCOMPOSITIONFONT, IMN_SETCOMPOSITIONWINDOW, IMN_SETCONVERSIONMODE,
-            IMN_SETOPENSTATUS, IMN_SETSENTENCEMODE, IMN_SETSTATUSWINDOWPOS, IMN_SOFTKBDDESTROYED,
+            CANDIDATELIST, IMN_CHANGECANDIDATE, IMN_CLOSECANDIDATE, IMN_CLOSESTATUSWINDOW,
+            IMN_GUIDELINE, IMN_OPENCANDIDATE, IMN_OPENSTATUSWINDOW, IMN_PRIVATE,
+            IMN_SETCANDIDATEPOS, IMN_SETCOMPOSITIONFONT, IMN_SETCOMPOSITIONWINDOW,
+            IMN_SETCONVERSIONMODE, IMN_SETOPENSTATUS, IMN_SETSENTENCEMODE, IMN_SETSTATUSWINDOWPOS,
+            IMN_SOFTKBDDESTROYED,
         },
         KeyboardAndMouse::{
             VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_ABNT_C1,
@@ -75,7 +79,7 @@ pub use windows::Win32::UI::{
         WM_KEYDOWN, WM_KEYUP, WM_SYSCHAR, WM_SYSDEADCHAR, WM_SYSKEYDOWN, WM_SYSKEYUP,
     },
 };
-use windows::Win32::UI::Input::Ime::ImmGetCandidateListCountW;
+use crate::ext::StringExt;
 
 pub type VirtualKey = VIRTUAL_KEY;
 
@@ -136,7 +140,36 @@ pub fn imm_release_context(h_wnd: HWND, h_imc: HIMC) -> BOOL {
 pub fn imm_get_candidate_list_count(h_imc: HIMC) -> (u32, u32) {
     unsafe {
         let mut list_count = 0u32;
-        let buffer_size = ImmGetCandidateListCountW(h_imc, &mut list_count);
-        (buffer_size, list_count)
+        let buffer_len = ImmGetCandidateListCountW(h_imc, &mut list_count);
+        (buffer_len, list_count)
+    }
+}
+
+/**
+ * 此函数查询指定的候选列表，并将该列表复制到指定的缓冲区。
+ * `h_imc` 输入上下文的句柄。
+ * `index` 候选列表的从零开始的索引。
+ * */
+pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<String>) {
+    unsafe {
+        let len = ImmGetCandidateListW(h_imc, index, None, 0);
+        let ptr = heap_alloc(len as usize).unwrap_or(std::ptr::null_mut());
+        if ptr.is_null() {
+            return (CANDIDATELIST::default(), vec![]);
+        }
+        let p_list = ptr as *mut CANDIDATELIST;
+        ImmGetCandidateListW(h_imc, index, Some(p_list), len);
+        let list = *p_list;
+        let p1 = p_list as *const u32;
+        let p2 = p_list as *const u8;
+        let mut data = Vec::new();
+        for i in 0..list.dwCount {
+            // 因为list.dwOffset在rust编译器处理后，数组大小固定为1，所以不可以访问数组中的其他元素，这里需通过裸指针实现
+            let offset = *p1.wrapping_add(6 + i as usize);  // 6表示dwOffset在CANDIDATELIST结构中的第六个元素
+            // 获取候选字符串
+            data.push(p2.wrapping_add(offset as usize).to_string_utf16());
+        }
+        heap_free(ptr);
+        (list, data)
     }
 }

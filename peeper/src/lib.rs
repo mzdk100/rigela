@@ -13,7 +13,7 @@
 
 mod client;
 mod handler;
-mod model;
+pub mod model;
 pub mod server;
 mod utils;
 

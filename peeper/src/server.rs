@@ -13,21 +13,25 @@
 
 use crate::{
     model::{PeeperData, PeeperPacket},
-    utils::get_pipe_name
+    utils::get_pipe_name,
 };
 use log::{error, info};
-use rigela_utils::pipe::PipeStream;
+use rigela_utils::pipe::{PipeStream, PipeStreamError};
 use std::sync::Arc;
 use tokio::{
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
     runtime::{Builder, Runtime},
     sync::Mutex,
 };
+use crate::model::CandidateList;
 
-type OnInputCharListener = dyn Fn(u16) + Send + Sync;
+enum ListenerType {
+    OnInputChar(Box<dyn Fn(u16) + Send + Sync>),
+    OnImeCandidateList(Box<dyn Fn(CandidateList) + Send + Sync>),
+}
 
 pub struct PeeperServer {
-    on_input_char: Arc<Mutex<Vec<Box<OnInputCharListener>>>>,
+    listeners: Arc<Mutex<Vec<ListenerType>>>,
     rt: Runtime,
 }
 
@@ -39,7 +43,7 @@ impl PeeperServer {
             .build()
             .unwrap();
         Self {
-            on_input_char: Arc::new(vec![].into()),
+            listeners: Arc::new(vec![].into()),
             rt,
         }
     }
@@ -65,31 +69,58 @@ impl PeeperServer {
     }
 
     fn on_client(&self, mut stream: PipeStream<PeeperPacket, NamedPipeServer>) {
-        let on_input_char_listeners = self.on_input_char.clone();
+        let listeners = self.listeners.clone();
         self.rt.spawn(async move {
             loop {
                 let packet = stream.recv().await;
-                if packet.is_none() {
+                if let Err(PipeStreamError::ReadEof) = &packet {
                     break;
+                }
+                if let Err(PipeStreamError::DecodeError(e)) = &packet {
+                    error!("{}", e);
+                    continue;
                 }
                 let packet = packet.unwrap();
                 match packet.data {
                     PeeperData::Log(msg) => info!("{}: {}", packet.name, msg),
                     PeeperData::Quit => break,
-                    PeeperData::InputChar(c) => {
-                        let listeners = on_input_char_listeners.lock().await;
-                        for i in listeners.iter() {
-                            let func = &*i;
-                            func(c);
-                        }
-                    }
+                    _ => Self::call(listeners.clone(), packet.data).await
                 };
             }
         });
     }
 
+    async fn call(listeners: Arc<Mutex<Vec<ListenerType>>>, data: PeeperData) {
+        let listeners = listeners.lock().await;
+        for i in listeners.iter() {
+            match i {
+                ListenerType::OnInputChar(f) => match data {
+                    PeeperData::InputChar(c) => (&*f) (c),
+                    _       => {}
+                },
+                ListenerType::OnImeCandidateList(f) => match &data {
+                    PeeperData::ImeCandidateList(c) => (&*f) (c.clone()),
+                    _       => {}
+                },
+            }
+        }
+    }
+
+    /**
+     * 添加一个监听器，当用户输入内容到控件上时发出通知。
+     * `listener` 一个监听函数。
+     * */
     pub async fn add_on_input_char_listener(&self, listener: impl Fn(u16) + Send + Sync + 'static) {
-        let mut listeners = self.on_input_char.lock().await;
-        listeners.push(Box::new(listener));
+        let mut listeners = self.listeners.lock().await;
+        listeners.push(ListenerType::OnInputChar(Box::new(listener)));
+    }
+
+    /**
+     * 添加一个监听器，当输入法候选列表呈现或改变时发出通知。
+     * `listener` 一个监听函数。
+     * */
+    pub async fn add_on_ime_candidate_list_listener(&self, listener: impl Fn(CandidateList) + Send + Sync + 'static) {
+        let mut listeners = self.listeners.lock().await;
+        listeners.push(ListenerType::OnImeCandidateList(Box::new(listener)));
     }
 }

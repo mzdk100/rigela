@@ -46,3 +46,27 @@ impl LParamExt for LPARAM {
         unsafe { &*ptr }
     }
 }
+
+/**
+ * 对字符串的扩展操作。
+ * */
+pub(crate) trait StringExt {
+    /**
+     * 转换到utf16字符串。
+     * */
+    fn to_string_utf16(self) -> String;
+}
+
+impl StringExt for *const u8 {
+    fn to_string_utf16(self) -> String {
+        let mut r = self as *const u16;
+        let mut s = Vec::new();
+        unsafe {
+            while !r.is_null() && *r != 0 {
+                s.push(*r);
+                r = r.wrapping_add(1);
+            }
+        }
+        String::from_utf16_lossy(&s)
+    }
+}

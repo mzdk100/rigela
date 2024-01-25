@@ -14,14 +14,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-pub struct PeeperPacket {
+pub(crate) struct PeeperPacket {
     pub(crate) name: String,
     pub(crate) data: PeeperData,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-pub enum PeeperData {
+pub struct CandidateList {
+    pub selection: u32,
+    pub page_start: u32,
+    pub list: Vec<String>
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub(crate) enum PeeperData {
     Log(String),
     Quit,
     InputChar(u16),
+    ImeCandidateList(CandidateList)
 }

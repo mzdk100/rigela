@@ -10,9 +10,8 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
-
 use crate::model::{Proxy32Data, Proxy32Packet};
-use rigela_utils::pipe::{server_run, PipeStream};
+use rigela_utils::pipe::{server_run, PipeStream, PipeStreamError};
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
 pub struct Proxy32Server {
@@ -27,8 +26,8 @@ impl Proxy32Server {
         loop {
             let packet = self.stream.recv().await;
             match packet {
-                None => break,
-                Some(p) => {
+                Err(PipeStreamError::ReadEof) => break,
+                Ok(p) => {
                     let data = self.on_exec(&p.data).await;
                     let packet = Proxy32Packet { id: p.id, data };
                     self.stream.send(&packet).await;
@@ -36,6 +35,7 @@ impl Proxy32Server {
                         break;
                     }
                 }
+                _ => {}
             };
         }
     }

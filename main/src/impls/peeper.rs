@@ -11,5 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod peeper;
-mod uia;
+
+use peeper::model::CandidateList;
+use crate::performer::Speakable;
+
+impl Speakable for CandidateList {
+    fn get_sentence(&self) -> String {
+        format!("{}", self.list[self.selection as usize])
+    }
+}

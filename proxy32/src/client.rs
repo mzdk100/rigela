@@ -12,7 +12,7 @@
  */
 
 use crate::model::{Proxy32Data, Proxy32Packet};
-use rigela_utils::pipe::{client_connect, PipeStream};
+use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
 use tokio::net::windows::named_pipe::NamedPipeClient;
 
@@ -53,11 +53,12 @@ impl Proxy32Client {
         loop {
             let res = self.stream.recv().await;
             match res {
-                None => break None,
-                Some(p) if p.id == packet.id => break Some(p.data),
-                Some(p) => {
+                Err(PipeStreamError::ReadEof) => return None,
+                Ok(p) if p.id == packet.id => break Some(p.data),
+                Ok(p) => {
                     self.cached.insert(p.id, p.data);
                 }
+                _ => {}
             }
         }
     }
