@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="rigela" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="rigela">
+        <serverdata>
+          <mappings>
+            <mapping deploy="main.exe" local="$PROJECT_DIR$/target/x86_64-pc-windows-msvc/release" web="rigela_x64.exe" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
