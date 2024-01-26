@@ -11,15 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::mouse::MouseConfig;
 use crate::configs::tts::TtsConfig;
 use crate::{configs::tts::TtsProperty, context::Context};
+use std::sync::OnceLock;
 use std::{collections::HashMap, io::SeekFrom, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
     sync::{Mutex, RwLock},
 };
 use win_wrap::{audio::AudioOutputStream, tts::Tts};
-use crate::configs::mouse::MouseConfig;
 
 const SAMPLE_RATE: u32 = 16000;
 const NUM_CHANNELS: u32 = 1;
@@ -37,11 +38,13 @@ pub(crate) trait Speakable {
  * 表演者对象结构。
  * 可以进行语音输出或音效提示。
  * */
+#[derive(Debug)]
 pub(crate) struct Performer {
     tts: Tts,
     pub(crate) cur_tts_prop: RwLock<TtsProperty>,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     output_stream: Arc<AudioOutputStream>,
+    context: OnceLock<Arc<Context>>,
 }
 
 impl Performer {
@@ -56,6 +59,7 @@ impl Performer {
             cur_tts_prop: RwLock::new(TtsProperty::Speed),
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
+            context: OnceLock::new(),
         }
     }
 
@@ -109,25 +113,35 @@ impl Performer {
         config.tts_config = tts_config;
         context.config_manager.set_config(config).await;
     }
-    
+
     /// 设置是否开启朗读鼠标
     pub(crate) async fn apply_mouse_config(&self, context: Arc<Context>, is_read: bool) {
         let mut config = context.config_manager.get_config().await;
-        config.mouse_config = MouseConfig{ is_read };
+        config.mouse_config = MouseConfig { is_read };
         context.config_manager.set_config(config).await;
     }
 
     /**
-     * 使用语音输出，播报对象的信息。
+     * 使用SAPI5语音输出，播报对象的信息。
+     * `speakable` 实现了Speakable特征的对象。
      * */
-    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync)) {
+    pub(crate) async fn speak_with_sapi5(&self, speakable: &(dyn Speakable + Sync)) {
         let str = speakable.get_sentence();
         self.tts.speak(str.as_str()).await;
     }
 
-    /// 简单朗读文本
-    pub(crate) async fn speak_text(&self, text: &str) {
-        self.tts.speak(text).await;
+    /**
+     * 使用VVTTS语音输出，播报对象的信息。
+     * `speakable` 实现了Speakable特征的对象。
+     * */
+    pub(crate) async fn speak_with_vvtts(&self, speakable: &(dyn Speakable + Sync)) {
+        let ctx = self.context.get();
+        if ctx.is_none() {
+            return;
+        }
+        let str = speakable.get_sentence();
+        let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
+        self.output_stream.write(&data).await;
     }
 
     /// 获取当前调节的TTS属性
@@ -177,6 +191,7 @@ impl Performer {
      * `context` 上下文环境。
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
+        self.context.set(context.clone()).unwrap();
         // 读取配置项，应用配置到程序实例
         self.apply_tts_config(context.clone(), 0).await;
 

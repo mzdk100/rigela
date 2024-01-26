@@ -40,7 +40,7 @@ pub enum CommandType {
 /**
  * 指挥官结构。
  * */
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Commander {
     // 键盘钩子对象
     keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
@@ -171,5 +171,5 @@ fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
 async fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
     let uia = context.ui_automation.clone();
     let ele = uia.element_from_point(x, y).unwrap();
-    context.performer.speak(&ele).await
+    context.performer.speak_with_sapi5(&ele).await
 }

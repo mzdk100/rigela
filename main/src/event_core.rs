@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::{get_foreground_window, HWND};
 
 /// 事件处理中心
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EventCore;
 
 impl EventCore {
@@ -40,9 +40,10 @@ impl EventCore {
             .add_on_input_char_listener(move |c| {
                 let performer = ctx.performer.clone();
                 ctx.main_handler.spawn(async move {
-                    performer
-                        .speak_text(String::from_utf16_lossy(&[c]).as_str())
-                        .await;
+                    performer.speak_with_sapi5(&c).await;
+
+                    // 这里是测试代码
+                    performer.speak_with_vvtts(&c).await;
                 });
             })
             .await;
@@ -54,9 +55,10 @@ impl EventCore {
             .add_on_ime_candidate_list_listener(move |candidate_list| {
                 let performer = ctx.performer.clone();
                 ctx.main_handler.spawn(async move {
-                    performer.speak(&candidate_list).await;
+                    performer.speak_with_sapi5(&candidate_list).await;
                 });
-            }).await;
+            })
+            .await;
     }
 }
 
@@ -71,7 +73,7 @@ async fn speak_focus_item(context: Arc<Context>) {
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
-            performer.speak(&x).await;
+            performer.speak_with_sapi5(&x).await;
         });
     });
 }

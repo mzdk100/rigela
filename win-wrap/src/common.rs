@@ -11,40 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub use windows::{
-    core::{Result, PCSTR, PCWSTR},
-    Win32::{
-        Foundation::{
-            BOOL,
-            FALSE,
-            FARPROC,
-            HANDLE,
-            HINSTANCE,
-            HMODULE,
-            HWND,
-            LPARAM,
-            LRESULT,
-            TRUE,
-            WAIT_EVENT,
-            WPARAM,
-            RECT
-        },
-        Globalization::HIMC,
-        System::SystemServices::{
-            DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
-        },
-        UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
-    }
-};
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::{
-            CloseHandle,
-            GetLastError,
-            MAX_PATH,
-            FreeLibrary
-        },
+        Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
@@ -53,7 +23,21 @@ use windows::{
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    }
+    },
+};
+pub use windows::{
+    core::{Result, PCSTR, PCWSTR},
+    Win32::{
+        Foundation::{
+            BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
+            WAIT_EVENT, WPARAM,
+        },
+        Globalization::HIMC,
+        System::SystemServices::{
+            DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
+        },
+        UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+    },
 };
 
 /**
@@ -154,7 +138,9 @@ pub fn load_library(lib_file_name: &str) -> Result<HMODULE> {
  * `h_lib_module` 已加载的库模块的句柄。load_library、load_library_ex、get_module_handle 或 get_module_handle_ex 函数返回此句柄。
  * */
 pub fn free_library(h_lib_module: HMODULE) {
-    unsafe { FreeLibrary(h_lib_module).unwrap_or(()); }
+    unsafe {
+        FreeLibrary(h_lib_module).unwrap_or(());
+    }
 }
 
 /**

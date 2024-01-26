@@ -58,6 +58,7 @@ where
     PipeStream::new(server)
 }
 
+#[derive(Debug)]
 pub struct PipeStream<R, T>
 where
     R: for<'de> Deserialize<'de> + Serialize,
@@ -105,16 +106,24 @@ where
      * 发送一个数据包。
      * `packet` 实现了序列化接口的数据。
      * */
-    pub async fn send(&mut self, packet: &R) {
+    pub async fn send(&mut self, packet: &R) -> Result<(), PipeStreamError> {
         let mut data = to_vec(&packet).unwrap();
         data.push(b'\n');
-        self.reader.write_all(&data).await.unwrap();
+        if let Err(e) = self.reader.write_all(&data).await {
+            Err(PipeStreamError::WriteError(format!(
+                "Can't send the data. {}",
+                e
+            )))
+        } else {
+            Ok(())
+        }
     }
 }
 
 #[derive(Debug)]
 pub enum PipeStreamError {
     ReadEof,
+    WriteError(String),
     DecodeError(String),
 }
 
@@ -123,6 +132,7 @@ impl Display for PipeStreamError {
         let msg = match self {
             PipeStreamError::ReadEof => "Read eof.".to_string(),
             PipeStreamError::DecodeError(e) => e.to_string(),
+            PipeStreamError::WriteError(e) => e.to_string(),
         };
         write!(f, "{}", msg)
     }

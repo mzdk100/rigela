@@ -32,7 +32,7 @@ impl Default for TtsConfig {
 }
 
 /// TTS的属性枚举， 用来存储当前操作的TTS属性项
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TtsProperty {
     Speed,
     Volume,

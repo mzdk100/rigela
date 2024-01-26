@@ -13,19 +13,11 @@
 
 use crate::{
     client::PeeperClient,
-    model::{
-        PeeperData,
-        CandidateList
-    }
+    model::{CandidateList, PeeperData},
 };
 use win_wrap::{
-    input::{
-        imm_get_candidate_list,
-        imm_get_context,
-        imm_release_context,
-        IMN_CHANGECANDIDATE
-    },
     common::{HWND, LPARAM, WPARAM},
+    input::{imm_get_candidate_list, imm_get_context, imm_release_context, IMN_CHANGECANDIDATE},
 };
 
 //noinspection SpellCheckingInspection
@@ -50,7 +42,7 @@ pub(crate) fn on_ime(
             let cand = CandidateList {
                 selection: list.dwSelection,
                 page_start: list.dwPageStart,
-                list: text_list
+                list: text_list,
             };
             client.push(PeeperData::ImeCandidateList(cand));
             imm_release_context(h_wnd, h_imc);

@@ -25,7 +25,10 @@ use win_wrap::input::{VK_DIVIDE, VK_INSERT, VK_M, VK_MULTIPLY};
 async fn click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
-    context.performer.speak_text("单击").await;
+    context
+        .performer
+        .speak_with_sapi5(&"单击".to_string())
+        .await;
 }
 
 //noinspection RsUnresolvedReference
@@ -33,7 +36,10 @@ async fn click(context: Arc<Context>) {
 async fn right_click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
-    context.performer.speak_text("右击").await;
+    context
+        .performer
+        .speak_with_sapi5(&"右击".to_string())
+        .await;
 }
 
 //noinspection RsUnresolvedReference
@@ -52,7 +58,7 @@ async fn read_mouse(context: Arc<Context>) {
     let state = if is_read { "开启" } else { "关闭" };
     context
         .performer
-        .speak_text(format!("{}鼠标朗读", state).as_str())
+        .speak_with_sapi5(&format!("{}鼠标朗读", state))
         .await;
 }
 

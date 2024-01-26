@@ -32,6 +32,7 @@ use crate::{
     },
 };
 use async_trait::async_trait;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 /**
@@ -91,5 +92,11 @@ impl TalentAccessor {
         Self {
             talents: talents.into(),
         }
+    }
+}
+
+impl Debug for TalentAccessor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TalentAccessor({})", self.talents.len())
     }
 }

@@ -17,6 +17,7 @@ use std::path::PathBuf;
 use tokio::fs::File;
 
 /// 资源访问器
+#[derive(Debug)]
 pub struct ResourceAccessor {
     root_dir: PathBuf,
 }

@@ -11,13 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod tts;
 pub(crate) mod mouse;
+pub(crate) mod tts;
 
-use crate::{
-    configs::tts::TtsConfig,
-    configs::mouse::MouseConfig,
-};
+use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig};
 use log::{error, info};
 use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
@@ -33,6 +30,7 @@ pub struct ConfigRoot {
 }
 
 /// 配置管理器
+#[derive(Debug)]
 pub struct ConfigManager {
     // 配置文件的路径
     path: PathBuf,
@@ -93,7 +91,7 @@ impl ConfigManager {
         // 这里需要调用异步，不可以转换成 unwrap_or_else
         match config {
             None => {
-                let config = ConfigRoot { 
+                let config = ConfigRoot {
                     tts_config: TtsConfig::default(),
                     mouse_config: MouseConfig::default(),
                 };

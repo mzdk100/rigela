@@ -82,7 +82,9 @@ impl PeeperClient {
             rt.spawn(async move {
                 let sender = sender.get_or_init(|| Self::get_stream().into());
                 let mut sender = sender.lock().await;
-                sender.send(&packet).await;
+                if let Err(e) = sender.send(&packet).await {
+                    error!("{}", e);
+                }
             });
         }
     }

@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use peeper::model::CandidateList;
 use crate::performer::Speakable;
+use peeper::model::CandidateList;
 
 impl Speakable for CandidateList {
     fn get_sentence(&self) -> String {

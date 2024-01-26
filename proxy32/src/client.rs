@@ -12,10 +12,12 @@
  */
 
 use crate::model::{Proxy32Data, Proxy32Packet};
+use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
 use tokio::net::windows::named_pipe::NamedPipeClient;
 
+#[derive(Debug)]
 pub struct Proxy32Client {
     cached: HashMap<u32, Proxy32Data>,
     id: u32,
@@ -41,7 +43,9 @@ impl Proxy32Client {
             id: self.id,
             data: data.clone(),
         };
-        self.stream.send(&packet).await;
+        if let Err(e) = self.stream.send(&packet).await {
+            error!("{}", e);
+        }
         let res = match self.cached.get(&packet.id) {
             None => None,
             Some(x) => Some(x.clone()),
@@ -68,5 +72,20 @@ impl Proxy32Client {
      * */
     pub async fn quit(&mut self) {
         self.exec(&Proxy32Data::Quit).await;
+    }
+
+    /**
+     * 使用vvtts合成语音。
+     * `text` 文字内容。
+     * */
+    pub async fn eci_synth(&mut self, text: &str) -> Vec<u8> {
+        if let Some(Proxy32Data::EciSynthResponse(r)) = self
+            .exec(&Proxy32Data::EciSynthRequest(text.to_string()))
+            .await
+        {
+            r
+        } else {
+            vec![]
+        }
     }
 }

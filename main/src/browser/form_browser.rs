@@ -12,6 +12,7 @@
  */
 
 use crate::browser::Browsable;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -149,3 +150,9 @@ impl FormBrowser {
 unsafe impl Send for FormBrowser {}
 
 unsafe impl Sync for FormBrowser {}
+
+impl Debug for FormBrowser {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FormBrowser")
+    }
+}
