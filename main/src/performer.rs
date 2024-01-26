@@ -11,14 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::mouse::MouseConfig;
-use crate::configs::tts::TtsConfig;
-use crate::{configs::tts::TtsProperty, context::Context};
-use std::sync::OnceLock;
+use crate::configs::config_operations::apply_tts_config;
+use crate::context::Context;
 use std::{collections::HashMap, io::SeekFrom, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
-    sync::{Mutex, RwLock},
+    sync::Mutex,
 };
 use win_wrap::{audio::AudioOutputStream, tts::Tts};
 
@@ -38,13 +36,10 @@ pub(crate) trait Speakable {
  * 表演者对象结构。
  * 可以进行语音输出或音效提示。
  * */
-#[derive(Debug)]
 pub(crate) struct Performer {
-    tts: Tts,
-    pub(crate) cur_tts_prop: RwLock<TtsProperty>,
+    pub(crate) tts: Tts,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     output_stream: Arc<AudioOutputStream>,
-    context: OnceLock<Arc<Context>>,
 }
 
 impl Performer {
@@ -56,111 +51,22 @@ impl Performer {
         let tts = Tts::new();
         Self {
             tts,
-            cur_tts_prop: RwLock::new(TtsProperty::Speed),
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
-            context: OnceLock::new(),
         }
     }
 
     /**
-     * 设置表演者TTS的参数。
-     * `context` 框架的上下文环境。
-     * `diff` 属性值的差值， 传0初始化tts属性值
+     * 使用语音输出，播报对象的信息。
      * */
-    pub(crate) async fn apply_tts_config(&self, context: Arc<Context>, diff: i32) {
-        let tts = &self.tts;
-        let mut config = context.config_manager.get_config().await;
-        let mut tts_config = config.tts_config.clone();
-
-        // 如果差值等于0，直接设置TTS属性值参数，返回
-        if diff == 0 {
-            tts.set_prop(
-                3.0 + (tts_config.speed as f64 - 50.0) * 0.06,
-                0.5 + (tts_config.volume as f64 - 50.0) * 0.01,
-                1.0 + (tts_config.pitch as f64 - 50.0) * 0.01,
-            );
-            return;
-        }
-
-        let restrict = |x| match x {
-            i if i > 100 => 100,
-            i if i < 0 => 0,
-            i => i,
-        };
-
-        tts_config = match self.get_cur_tts_prop().await {
-            TtsProperty::Speed => TtsConfig {
-                speed: restrict(tts_config.speed + diff),
-                ..tts_config
-            },
-            TtsProperty::Volume => TtsConfig {
-                volume: restrict(tts_config.volume + diff),
-                ..tts_config
-            },
-            TtsProperty::Pitch => TtsConfig {
-                pitch: restrict(tts_config.pitch + diff),
-                ..tts_config
-            },
-        };
-
-        tts.set_prop(
-            3.0 + (tts_config.speed as f64 - 50.0) * 0.06,
-            0.5 + (tts_config.volume as f64 - 50.0) * 0.01,
-            1.0 + (tts_config.pitch as f64 - 50.0) * 0.01,
-        );
-
-        config.tts_config = tts_config;
-        context.config_manager.set_config(config).await;
-    }
-
-    /// 设置是否开启朗读鼠标
-    pub(crate) async fn apply_mouse_config(&self, context: Arc<Context>, is_read: bool) {
-        let mut config = context.config_manager.get_config().await;
-        config.mouse_config = MouseConfig { is_read };
-        context.config_manager.set_config(config).await;
-    }
-
-    /**
-     * 使用SAPI5语音输出，播报对象的信息。
-     * `speakable` 实现了Speakable特征的对象。
-     * */
-    pub(crate) async fn speak_with_sapi5(&self, speakable: &(dyn Speakable + Sync)) {
+    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync)) {
         let str = speakable.get_sentence();
         self.tts.speak(str.as_str()).await;
     }
 
-    /**
-     * 使用VVTTS语音输出，播报对象的信息。
-     * `speakable` 实现了Speakable特征的对象。
-     * */
-    pub(crate) async fn speak_with_vvtts(&self, speakable: &(dyn Speakable + Sync)) {
-        let ctx = self.context.get();
-        if ctx.is_none() {
-            return;
-        }
-        let str = speakable.get_sentence();
-        let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
-        self.output_stream.write(&data).await;
-    }
-
-    /// 获取当前调节的TTS属性
-    pub(crate) async fn get_cur_tts_prop(&self) -> TtsProperty {
-        self.cur_tts_prop.read().await.clone()
-    }
-
-    /// 后移当前需调节的TTS属性
-    pub(crate) async fn next_tts_prop(&self) {
-        let prop = self.cur_tts_prop.read().await.next();
-        let mut cur = self.cur_tts_prop.write().await;
-        *cur = prop;
-    }
-
-    /// 前移当前需调节的TTS属性
-    pub(crate) async fn prev_tts_prop(&self) {
-        let prop = self.cur_tts_prop.read().await.prev();
-        let mut cur = self.cur_tts_prop.write().await;
-        *cur = prop;
+    /// 简单朗读文本
+    pub(crate) async fn speak_text(&self, text: &str) {
+        self.tts.speak(text).await;
     }
 
     /**
@@ -191,9 +97,8 @@ impl Performer {
      * `context` 上下文环境。
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-        // 读取配置项，应用配置到程序实例
-        self.apply_tts_config(context.clone(), 0).await;
+        // 初始化TTS属性
+        apply_tts_config(context.clone(), 0).await;
 
         // 初始化音效播放器
         let list = vec!["boundary.wav"];
