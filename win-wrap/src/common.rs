@@ -15,21 +15,36 @@ pub use windows::{
     core::{Result, PCSTR, PCWSTR},
     Win32::{
         Foundation::{
-            BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, TRUE,
-            WAIT_EVENT, WPARAM,
+            BOOL,
+            FALSE,
+            FARPROC,
+            HANDLE,
+            HINSTANCE,
+            HMODULE,
+            HWND,
+            LPARAM,
+            LRESULT,
+            TRUE,
+            WAIT_EVENT,
+            WPARAM,
+            RECT
         },
         Globalization::HIMC,
         System::SystemServices::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
         UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
-    },
+    }
 };
-
 use windows::{
     core::HSTRING,
     Win32::{
-        Foundation::{CloseHandle, GetLastError, MAX_PATH},
+        Foundation::{
+            CloseHandle,
+            GetLastError,
+            MAX_PATH,
+            FreeLibrary
+        },
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
@@ -38,9 +53,9 @@ use windows::{
         UI::WindowsAndMessaging::{
             CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
         },
-    },
+    }
 };
-pub use windows::Win32::Foundation::RECT;
+
 /**
  * 播放一个声音。
  * `freq` 声音频率（Hz）
@@ -131,6 +146,15 @@ pub fn get_module_file_name(h_module: HMODULE) -> String {
  * */
 pub fn load_library(lib_file_name: &str) -> Result<HMODULE> {
     unsafe { LoadLibraryW(&HSTRING::from(lib_file_name)) }
+}
+
+/**
+ * 释放加载的动态链接库 (DLL) 模块，并在必要时递减其引用计数。
+ * 当引用计数达到零时，模块将从调用进程的地址空间中卸载，句柄不再有效。
+ * `h_lib_module` 已加载的库模块的句柄。load_library、load_library_ex、get_module_handle 或 get_module_handle_ex 函数返回此句柄。
+ * */
+pub fn free_library(h_lib_module: HMODULE) {
+    unsafe { FreeLibrary(h_lib_module).unwrap_or(()); }
 }
 
 /**

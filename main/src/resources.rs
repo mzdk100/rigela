@@ -11,13 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use rigela_resources::clone;
-use rigela_utils::get_program_directory;
+use rigela_resources::clone_resource;
+use rigela_utils::{get_program_directory, SERVER_HOME_URI};
 use std::path::PathBuf;
 use tokio::fs::File;
-
-//noinspection HttpUrlsUsage
-const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
 
 /// 资源访问器
 pub struct ResourceAccessor {
@@ -39,6 +36,6 @@ impl ResourceAccessor {
      * */
     pub(crate) async fn open(&self, resource_name: &str) -> Result<File, String> {
         let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
-        clone(url, self.root_dir.join(resource_name)).await
+        clone_resource(url, self.root_dir.join(resource_name)).await
     }
 }

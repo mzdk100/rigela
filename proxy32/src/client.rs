@@ -67,6 +67,6 @@ impl Proxy32Client {
      * 通知服务器端退出程序。
      * */
     pub async fn quit(&mut self) {
-        self.exec(&Proxy32Data::QUIT).await;
+        self.exec(&Proxy32Data::Quit).await;
     }
 }

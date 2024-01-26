@@ -13,9 +13,12 @@
 
 use serde::{Deserialize, Serialize};
 
+//noinspection SpellCheckingInspection
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub enum Proxy32Data {
-    QUIT, // 退出
+    Quit,  // 退出
+    EciSynthRequest(String),  // vvtts合成请求
+    EciSynthResponse(Vec<u8>),  // vvtts合成响应
 }
 
 #[derive(Deserialize, Serialize)]

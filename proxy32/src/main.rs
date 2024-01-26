@@ -13,15 +13,20 @@
 
 #![windows_subsystem = "windows"]
 
+mod model;
+mod tts;
+mod server;
+
 #[cfg(target_arch = "x86")]
 #[tokio::main]
 async fn main() {
     use peeper;
-    use rigela_proxy32::server::Proxy32Server;
+    use crate::server::Proxy32Server;
     use std::env;
 
     put_peeper32().await;
     peeper::mount();
+
     let mut server = Proxy32Server::new(env::args().nth(1).unwrap().as_str()).await;
     server.run().await;
     peeper::unmount();

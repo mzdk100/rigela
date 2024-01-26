@@ -22,7 +22,10 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
-const DIR_NAME: &str = ".rigela";
+pub const DIR_NAME: &str = ".rigela";
+
+//noinspection HttpUrlsUsage
+pub const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
 
 /// 获取程序存储目录
 pub fn get_program_directory() -> PathBuf {

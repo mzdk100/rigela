@@ -11,20 +11,35 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use bitar::archive_reader::HttpReader;
-use bitar::{Archive, ChunkIndex, CloneOutput, HashSum, VerifiedChunk};
+use bitar::{
+    archive_reader::HttpReader,
+    Archive,
+    ChunkIndex,
+    CloneOutput,
+    HashSum,
+    VerifiedChunk
+};
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use log::{debug, info};
-use std::io::SeekFrom;
-use std::path::PathBuf;
-use std::time::Duration;
-use tokio::fs::{File, OpenOptions};
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
-use tokio::task::spawn_blocking;
+use std::{
+    io::SeekFrom,
+    path::PathBuf,
+    time::Duration
+};
+use tokio::{
+    io::{AsyncReadExt, AsyncSeekExt},
+    fs::{File, OpenOptions},
+    task::spawn_blocking
+};
 use url::Url;
 
-pub async fn clone(resource_url: String, save_path: PathBuf) -> Result<File, String> {
+/**
+ * 增量方式克隆一个资源。
+ * `resource_url` 资源文件的url，提供文件的http server必须有断点续传能力。
+ * `save_path` 保存资源文件的本地路径。
+ * */
+pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<File, String> {
     let url = format!("{}.cba", resource_url);
     let reader = HttpReader::from_url(Url::parse(url.as_str()).unwrap())
         .retries(5)
