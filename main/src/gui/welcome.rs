@@ -49,11 +49,14 @@ impl App {
     }
 
     fn on_btn_click(&self) {
+        // Todo: 捐献按钮点击事件，带实现
+
         nwg::modal_info_message(&self.window, "Rigela", &format!("感谢支持!"));
     }
 }
 
-pub fn show_form() {
+/// 显示欢迎窗口
+pub(crate) fn show_form() {
     nwg::init().expect("Failed to init Native Windows GUI");
     let _app = App::build_ui(Default::default()).expect("Failed to build UI");
     nwg::dispatch_thread_events();

@@ -111,7 +111,6 @@ impl Context {
         self.commander.apply(self.clone().into());
 
         let ctx = Arc::new(self.clone());
-
         self.main_handler.spawn(async move {
             ctx.config_manager.init().await;
             ctx.performer.apply(ctx.clone()).await;
