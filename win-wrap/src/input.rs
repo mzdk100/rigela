@@ -12,13 +12,16 @@
  */
 
 use crate::common::{BOOL, HIMC, HWND, LPARAM};
-use windows::{
-    core::imp::{heap_alloc, heap_free},
-    Win32::UI::Input::{
-        KeyboardAndMouse::{GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY},
-    }
-};
+use crate::ext::StringExt;
 use windows::Win32::Foundation::POINT;
+use windows::Win32::UI::Input::Ime::{
+    ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext,
+};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+    mouse_event, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN,
+    MOUSEEVENTF_RIGHTUP,
+};
+use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, SetCursorPos};
 pub use windows::Win32::UI::{
     Input::{
         Ime::{
@@ -79,10 +82,12 @@ pub use windows::Win32::UI::{
         WM_KEYDOWN, WM_KEYUP, WM_SYSCHAR, WM_SYSDEADCHAR, WM_SYSKEYDOWN, WM_SYSKEYUP,
     },
 };
-use windows::Win32::UI::Input::Ime::{ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext};
-use windows::Win32::UI::Input::KeyboardAndMouse::{mouse_event, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP};
-use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, SetCursorPos};
-use crate::ext::StringExt;
+use windows::{
+    core::imp::{heap_alloc, heap_free},
+    Win32::UI::Input::KeyboardAndMouse::{
+        GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY,
+    },
+};
 
 pub type VirtualKey = VIRTUAL_KEY;
 
@@ -168,8 +173,8 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<St
         let mut data = Vec::new();
         for i in 0..list.dwCount {
             // 因为list.dwOffset在rust编译器处理后，数组大小固定为1，所以不可以访问数组中的其他元素，这里需通过裸指针实现
-            let offset = *p1.wrapping_add(6 + i as usize);  // 6表示dwOffset在CANDIDATELIST结构中的第六个元素
-            // 获取候选字符串
+            let offset = *p1.wrapping_add(6 + i as usize); // 6表示dwOffset在CANDIDATELIST结构中的第六个元素
+                                                           // 获取候选字符串
             data.push(p2.wrapping_add(offset as usize).to_string_utf16());
         }
         heap_free(ptr);
@@ -180,8 +185,7 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<St
 /// 鼠标单击
 pub fn click(x: i32, y: i32) {
     unsafe {
-        SetCursorPos(x, y)
-            .expect("SetCursorPos failed");
+        SetCursorPos(x, y).expect("SetCursorPos failed");
         mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
         mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
     }
@@ -190,8 +194,7 @@ pub fn click(x: i32, y: i32) {
 /// 鼠标右键单击
 pub fn right_click(x: i32, y: i32) {
     unsafe {
-        SetCursorPos(x, y)
-            .expect("SetCursorPos failed");
+        SetCursorPos(x, y).expect("SetCursorPos failed");
         mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
         mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
     }
@@ -199,10 +202,9 @@ pub fn right_click(x: i32, y: i32) {
 
 /// 获取鼠标当前坐标
 pub fn get_cur_mouse_point() -> (i32, i32) {
-     unsafe {
-         let mut point = POINT { x: 0, y: 0 };
-         GetCursorPos(&mut point).expect("GetCursorPos failed");
-         (point.x, point.y)
-     }
+    unsafe {
+        let mut point = POINT { x: 0, y: 0 };
+        GetCursorPos(&mut point).expect("GetCursorPos failed");
+        (point.x, point.y)
+    }
 }
-

@@ -11,26 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use bitar::{
-    archive_reader::HttpReader,
-    Archive,
-    ChunkIndex,
-    CloneOutput,
-    HashSum,
-    VerifiedChunk
-};
+use bitar::{archive_reader::HttpReader, Archive, ChunkIndex, CloneOutput, HashSum, VerifiedChunk};
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use log::{debug, info};
-use std::{
-    io::SeekFrom,
-    path::PathBuf,
-    time::Duration
-};
+use std::{io::SeekFrom, path::PathBuf, time::Duration};
 use tokio::{
-    io::{AsyncReadExt, AsyncSeekExt},
     fs::{File, OpenOptions},
-    task::spawn_blocking
+    io::{AsyncReadExt, AsyncSeekExt},
+    task::spawn_blocking,
 };
 use url::Url;
 

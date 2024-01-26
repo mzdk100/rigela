@@ -20,7 +20,7 @@ use windows::{
     core::HSTRING, Media::SpeechSynthesis::SpeechSynthesizer, Storage::Streams::DataReader,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tts {
     synth: Arc<SpeechSynthesizer>,
     output_stream: Arc<AudioOutputStream>,

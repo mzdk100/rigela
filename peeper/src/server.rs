@@ -11,19 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::model::CandidateList;
 use crate::{
     model::{PeeperData, PeeperPacket},
     utils::get_pipe_name,
 };
 use log::{error, info};
 use rigela_utils::pipe::{PipeStream, PipeStreamError};
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use tokio::{
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
     runtime::{Builder, Runtime},
     sync::Mutex,
 };
-use crate::model::CandidateList;
 
 enum ListenerType {
     OnInputChar(Box<dyn Fn(u16) + Send + Sync>),
@@ -84,7 +85,7 @@ impl PeeperServer {
                 match packet.data {
                     PeeperData::Log(msg) => info!("{}: {}", packet.name, msg),
                     PeeperData::Quit => break,
-                    _ => Self::call(listeners.clone(), packet.data).await
+                    _ => Self::call(listeners.clone(), packet.data).await,
                 };
             }
         });
@@ -95,12 +96,12 @@ impl PeeperServer {
         for i in listeners.iter() {
             match i {
                 ListenerType::OnInputChar(f) => match data {
-                    PeeperData::InputChar(c) => (&*f) (c),
-                    _       => {}
+                    PeeperData::InputChar(c) => (&*f)(c),
+                    _ => {}
                 },
                 ListenerType::OnImeCandidateList(f) => match &data {
-                    PeeperData::ImeCandidateList(c) => (&*f) (c.clone()),
-                    _       => {}
+                    PeeperData::ImeCandidateList(c) => (&*f)(c.clone()),
+                    _ => {}
                 },
             }
         }
@@ -119,8 +120,17 @@ impl PeeperServer {
      * 添加一个监听器，当输入法候选列表呈现或改变时发出通知。
      * `listener` 一个监听函数。
      * */
-    pub async fn add_on_ime_candidate_list_listener(&self, listener: impl Fn(CandidateList) + Send + Sync + 'static) {
+    pub async fn add_on_ime_candidate_list_listener(
+        &self,
+        listener: impl Fn(CandidateList) + Send + Sync + 'static,
+    ) {
         let mut listeners = self.listeners.lock().await;
         listeners.push(ListenerType::OnImeCandidateList(Box::new(listener)));
+    }
+}
+
+impl Debug for PeeperServer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "PeeperServer")
     }
 }

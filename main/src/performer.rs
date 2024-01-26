@@ -11,9 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_operations::apply_tts_config;
-use crate::context::Context;
-use std::{collections::HashMap, io::SeekFrom, sync::Arc};
+use crate::{
+    configs::config_operations::apply_tts_config,
+    context::Context
+};
+use std::{
+    collections::HashMap,
+    io::SeekFrom,
+    sync::{
+        Arc,
+        OnceLock
+    }
+};
 use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
     sync::Mutex,
@@ -36,7 +45,9 @@ pub(crate) trait Speakable {
  * 表演者对象结构。
  * 可以进行语音输出或音效提示。
  * */
+#[derive(Debug)]
 pub(crate) struct Performer {
+    context: OnceLock<Arc<Context>>,
     pub(crate) tts: Tts,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     output_stream: Arc<AudioOutputStream>,
@@ -50,6 +61,7 @@ impl Performer {
         let output_stream = AudioOutputStream::new(SAMPLE_RATE, NUM_CHANNELS);
         let tts = Tts::new();
         Self {
+            context: OnceLock::new(),
             tts,
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
@@ -57,16 +69,27 @@ impl Performer {
     }
 
     /**
-     * 使用语音输出，播报对象的信息。
+     * 使用SAPI5语音输出，播报对象的信息。
+     * `speakable` 实现了Speakable特征的对象。
      * */
-    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync)) {
+    pub(crate) async fn speak_with_sapi5(&self, speakable: &(dyn Speakable + Sync)) {
         let str = speakable.get_sentence();
         self.tts.speak(str.as_str()).await;
     }
 
-    /// 简单朗读文本
-    pub(crate) async fn speak_text(&self, text: &str) {
-        self.tts.speak(text).await;
+    //noinspection SpellCheckingInspection
+    /**
+     * 使用VVTTS语音输出，播报对象的信息。
+     * `speakable` 实现了Speakable特征的对象。
+     * */
+    pub(crate) async fn speak_with_vvtts(&self, speakable: &(dyn Speakable + Sync)) {
+        let ctx = self.context.get();
+        if ctx.is_none() {
+            return;
+        }
+        let str = speakable.get_sentence();
+        let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
+        self.output_stream.write(&data).await;
     }
 
     /**
@@ -97,6 +120,7 @@ impl Performer {
      * `context` 上下文环境。
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
+        self.context.set(context.clone()).unwrap_or(());
         // 初始化TTS属性
         apply_tts_config(context.clone(), 0).await;
 

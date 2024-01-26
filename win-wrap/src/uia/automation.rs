@@ -27,7 +27,7 @@ use windows::{
 };
 
 /// UIAutomation接口本地封装
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UiAutomation(Arc<IUIAutomation>);
 
 impl UiAutomation {

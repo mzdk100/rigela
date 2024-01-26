@@ -14,15 +14,15 @@
 use serde::{Deserialize, Serialize};
 
 //noinspection SpellCheckingInspection
-#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Proxy32Data {
-    Quit,  // 退出
-    EciSynthRequest(String),  // vvtts合成请求
-    EciSynthResponse(Vec<u8>),  // vvtts合成响应
+    Quit,                      // 退出
+    EciSynthRequest(String),   // vvtts合成请求
+    EciSynthResponse(Vec<u8>), // vvtts合成响应
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct Proxy32Packet {
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct Proxy32Packet {
     pub(crate) id: u32,
     pub data: Proxy32Data,
 }

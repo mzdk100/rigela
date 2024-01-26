@@ -11,5 +11,26 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::performer::Speakable;
+use std::borrow::Cow;
+
 mod peeper;
 mod uia;
+
+impl Speakable for u16 {
+    fn get_sentence(&self) -> String {
+        String::from_utf16_lossy(&[*self])
+    }
+}
+
+impl Speakable for String {
+    fn get_sentence(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl Speakable for Cow<'_, str> {
+    fn get_sentence(&self) -> String {
+        self.to_string()
+    }
+}

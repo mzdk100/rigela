@@ -18,6 +18,7 @@ use tokio::sync::RwLock;
 #[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
 
+#[derive(Debug)]
 pub(crate) struct Proxy32 {
     #[allow(dead_code)]
     process: RwLock<Option<Child>>,
@@ -111,6 +112,25 @@ impl Proxy32 {
         let mut process = self.process.write().await;
         if let Some(x) = process.as_mut() {
             x.wait().await.unwrap();
+        }
+    }
+}
+
+/**
+ * 业务逻辑实现。
+ * */
+impl Proxy32 {
+    //noinspection SpellCheckingInspection
+    /**
+     * 使用vvtts合成语音。
+     * `text` 文字内容。
+     * */
+    pub async fn eci_synth(&self, text: &str) -> Vec<u8> {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.eci_synth(text).await
+        } else {
+            vec![]
         }
     }
 }

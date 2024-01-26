@@ -12,7 +12,7 @@
  */
 
 use std::{
-    fmt::{Display, Formatter},
+    fmt::{Debug, Formatter},
     future::Future,
     mem::size_of,
     pin::Pin,
@@ -122,7 +122,7 @@ impl AudioOutputStream {
         unsafe { self.source_voice.Start(0, XAUDIO2_COMMIT_NOW) }.expect("Can't start.");
     }
 }
-impl Display for AudioOutputStream {
+impl Debug for AudioOutputStream {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AudioOutputStream")
     }

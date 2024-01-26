@@ -94,7 +94,7 @@ impl Launcher {
 /// 朗读桌面
 async fn speak_desktop(context: Arc<Context>) {
     let root = context.ui_automation.get_root_element();
-    context.performer.speak(&root).await;
+    context.performer.speak_with_sapi5(&root).await;
 
     sleep(Duration::from_millis(1000)).await;
 }

@@ -19,6 +19,7 @@ use crate::{
     message::message_loop,
     threading::{get_current_thread_id, ThreadNotify},
 };
+use std::fmt::{Debug, Formatter};
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
@@ -175,7 +176,11 @@ fn next_hook(
         }),
     }
 }
-
+impl Debug for WindowsHook {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "WindowsHook({})", self.0 .0)
+    }
+}
 macro_rules! define_hook_proc {
     ($name:tt, $id:tt) => {
         unsafe extern "system" fn $name(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {

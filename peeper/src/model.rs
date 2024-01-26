@@ -23,7 +23,7 @@ pub(crate) struct PeeperPacket {
 pub struct CandidateList {
     pub selection: u32,
     pub page_start: u32,
-    pub list: Vec<String>
+    pub list: Vec<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -31,5 +31,5 @@ pub(crate) enum PeeperData {
     Log(String),
     Quit,
     InputChar(u16),
-    ImeCandidateList(CandidateList)
+    ImeCandidateList(CandidateList),
 }

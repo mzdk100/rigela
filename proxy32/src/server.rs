@@ -12,13 +12,15 @@
  */
 
 #[cfg(target_arch = "x86")]
-use std::sync::{Arc, OnceLock};
-#[cfg(target_arch = "x86")]
 use crate::model::{Proxy32Data, Proxy32Packet};
 #[cfg(target_arch = "x86")]
 use crate::tts::ibmeci::Ibmeci;
 #[cfg(target_arch = "x86")]
+use log::error;
+#[cfg(target_arch = "x86")]
 use rigela_utils::pipe::{server_run, PipeStream, PipeStreamError};
+#[cfg(target_arch = "x86")]
+use std::sync::{Arc, OnceLock};
 #[cfg(target_arch = "x86")]
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
@@ -26,7 +28,7 @@ use tokio::net::windows::named_pipe::NamedPipeServer;
 #[cfg(target_arch = "x86")]
 pub struct Proxy32Server {
     stream: PipeStream<Proxy32Packet, NamedPipeServer>,
-    ibmeci: Arc<OnceLock<Ibmeci>>
+    ibmeci: Arc<OnceLock<Ibmeci>>,
 }
 
 #[cfg(target_arch = "x86")]
@@ -39,7 +41,7 @@ impl Proxy32Server {
         let stream = server_run(pipe_name).await;
         Self {
             stream,
-            ibmeci: OnceLock::new().into()
+            ibmeci: OnceLock::new().into(),
         }
     }
 
@@ -54,7 +56,9 @@ impl Proxy32Server {
                 Ok(p) => {
                     let data = self.on_exec(&p.data).await;
                     let packet = Proxy32Packet { id: p.id, data };
-                    self.stream.send(&packet).await;
+                    if let Err(e) = self.stream.send(&packet).await {
+                        error!("{}", e);
+                    }
                     if Proxy32Data::Quit == packet.data {
                         break;
                     }
@@ -66,17 +70,20 @@ impl Proxy32Server {
 
     async fn on_exec(&self, data: &Proxy32Data) -> Proxy32Data {
         match data {
-            Proxy32Data::EciSynthRequest(text) => Proxy32Data::EciSynthResponse(self.eci_synth(text).await),
-            _ => data.clone()
+            Proxy32Data::EciSynthRequest(text) => {
+                Proxy32Data::EciSynthResponse(self.eci_synth(text).await)
+            }
+            _ => data.clone(),
         }
     }
 
     #[cfg(target_arch = "x86")]
     async fn eci_synth(&self, text: &str) -> Vec<u8> {
-        let eci = self.ibmeci.get();
+        let mut eci = self.ibmeci.get();
         if eci.is_none() {
             use crate::tts::create_ibmeci;
             self.ibmeci.set(create_ibmeci().await).unwrap_or(());
+            eci = self.ibmeci.get();
         }
         eci.unwrap().synth(text).await
     }

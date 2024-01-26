@@ -14,14 +14,14 @@
 #![windows_subsystem = "windows"]
 
 mod model;
-mod tts;
 mod server;
+mod tts;
 
 #[cfg(target_arch = "x86")]
 #[tokio::main]
 async fn main() {
-    use peeper;
     use crate::server::Proxy32Server;
+    use peeper;
     use std::env;
 
     put_peeper32().await;
