@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::mouse::MouseConfig;
-use crate::configs::tts::TtsConfig;
+use crate::configs::{
+    mouse::MouseConfig,
+    tts::TtsConfig
+};
 use log::{error, info};
 use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
@@ -27,6 +29,7 @@ pub struct ConfigRoot {
 }
 
 /// 配置管理器
+#[derive(Debug)]
 pub struct ConfigManager {
     // 配置文件的路径
     path: PathBuf,
