@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_operations::apply_mouse_config;
 use crate::context::Context;
 use async_trait::async_trait;
 use rigela_macros::talent;
@@ -45,10 +46,7 @@ async fn read_mouse(context: Arc<Context>) {
         .await
         .mouse_config
         .is_read;
-    context
-        .performer
-        .apply_mouse_config(context.clone(), is_read)
-        .await;
+    apply_mouse_config(context.clone(), is_read).await;
     let state = if is_read { "开启" } else { "关闭" };
     context
         .performer

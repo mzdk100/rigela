@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_manager::ConfigManager;
 use crate::{
-    browser::form_browser::FormBrowser, commander::Commander, configs::ConfigManager, event_core,
-    performer::Performer, proxy32::Proxy32, resources::ResourceAccessor, talent::TalentAccessor,
-    terminator::Terminator,
+    browser::form_browser::FormBrowser, commander::Commander, event_core, performer::Performer,
+    proxy32::Proxy32, resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
 };
 use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
