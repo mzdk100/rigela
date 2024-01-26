@@ -30,28 +30,34 @@ use win_wrap::input::{
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
 async fn increase(context: Arc<Context>) {
-    context.performer.apply_config(context.clone(), 1).await;
+    context.performer.apply_tts_config(context.clone(), 1).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
 async fn increase_r(context: Arc<Context>) {
-    context.performer.apply_config(context.clone(), 1).await;
+    context.performer.apply_tts_config(context.clone(), 1).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
 async fn reduce(context: Arc<Context>) {
-    context.performer.apply_config(context.clone(), -1).await;
+    context
+        .performer
+        .apply_tts_config(context.clone(), -1)
+        .await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
 async fn reduce_r(context: Arc<Context>) {
-    context.performer.apply_config(context.clone(), -1).await;
+    context
+        .performer
+        .apply_tts_config(context.clone(), -1)
+        .await;
     speak_tts_prop(context).await;
 }
 

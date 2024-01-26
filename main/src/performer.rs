@@ -19,6 +19,7 @@ use tokio::{
     sync::{Mutex, RwLock},
 };
 use win_wrap::{audio::AudioOutputStream, tts::Tts};
+use crate::configs::mouse::MouseConfig;
 
 const SAMPLE_RATE: u32 = 16000;
 const NUM_CHANNELS: u32 = 1;
@@ -59,11 +60,11 @@ impl Performer {
     }
 
     /**
-     * 设置表演者的参数。
+     * 设置表演者TTS的参数。
      * `context` 框架的上下文环境。
      * `diff` 属性值的差值， 传0初始化tts属性值
      * */
-    pub(crate) async fn apply_config(&self, context: Arc<Context>, diff: i32) {
+    pub(crate) async fn apply_tts_config(&self, context: Arc<Context>, diff: i32) {
         let tts = &self.tts;
         let mut config = context.config_manager.get_config().await;
         let mut tts_config = config.tts_config.clone();
@@ -106,6 +107,13 @@ impl Performer {
         );
 
         config.tts_config = tts_config;
+        context.config_manager.set_config(config).await;
+    }
+    
+    /// 设置是否开启朗读鼠标
+    pub(crate) async fn apply_mouse_config(&self, context: Arc<Context>, is_read: bool) {
+        let mut config = context.config_manager.get_config().await;
+        config.mouse_config = MouseConfig{ is_read };
         context.config_manager.set_config(config).await;
     }
 
@@ -170,7 +178,7 @@ impl Performer {
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
         // 读取配置项，应用配置到程序实例
-        self.apply_config(context.clone(), 0).await;
+        self.apply_tts_config(context.clone(), 0).await;
 
         // 初始化音效播放器
         let list = vec!["boundary.wav"];

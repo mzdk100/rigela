@@ -12,8 +12,12 @@
  */
 
 pub(crate) mod tts;
+pub(crate) mod mouse;
 
-use crate::configs::tts::TtsConfig;
+use crate::{
+    configs::tts::TtsConfig,
+    configs::mouse::MouseConfig,
+};
 use log::{error, info};
 use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
@@ -25,6 +29,7 @@ use toml;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConfigRoot {
     pub(crate) tts_config: TtsConfig,
+    pub(crate) mouse_config: MouseConfig,
 }
 
 /// 配置管理器
@@ -42,6 +47,7 @@ impl ConfigManager {
     pub(crate) fn new(path: PathBuf) -> Self {
         let config = ConfigRoot {
             tts_config: TtsConfig::default(),
+            mouse_config: MouseConfig::default(),
         };
         Self {
             path,
@@ -87,8 +93,9 @@ impl ConfigManager {
         // 这里需要调用异步，不可以转换成 unwrap_or_else
         match config {
             None => {
-                let config = ConfigRoot {
+                let config = ConfigRoot { 
                     tts_config: TtsConfig::default(),
+                    mouse_config: MouseConfig::default(),
                 };
                 self.write(&config).await;
                 config

@@ -16,7 +16,7 @@ mod mouse;
 mod program;
 mod tts;
 
-use crate::talent::mouse::{ClickTalent, RightClickTalent};
+use crate::talent::mouse::{ClickTalent, ReadMouseTalent, RightClickTalent};
 use crate::talent::tts::{NextPropRTalent, NextPropTalent, PrevPropRTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
@@ -83,8 +83,10 @@ impl TalentAccessor {
             Arc::new(NextPropRTalent),
             Arc::new(PrevPropTalent),
             Arc::new(PrevPropRTalent),
+            // 鼠标技能
             Arc::new(ClickTalent),
             Arc::new(RightClickTalent),
+            Arc::new(ReadMouseTalent),
         ];
         Self {
             talents: talents.into(),

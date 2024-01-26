@@ -5,8 +5,7 @@
       <paths name="rigela">
         <serverdata>
           <mappings>
-            <mapping deploy="rigela_x64" local="$PROJECT_DIR$/target/x86_64-pc-windows-msvc/release" web="/rigela/rigela_x64/" />
-            <mapping deploy="." local="$PROJECT_DIR$/resources/compressed" web="/rigela" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

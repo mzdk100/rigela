@@ -17,6 +17,7 @@ use windows::{
     core::{implement, Result},
     Win32::{
         Foundation::HWND,
+        Foundation::POINT,
         System::Com::{CoCreateInstance, CLSCTX_ALL},
         UI::Accessibility::{
             CUIAutomation, IUIAutomation, IUIAutomationElement,
@@ -57,6 +58,16 @@ impl UiAutomation {
             return None;
         }
         Some(UiAutomationElement::obtain(self.0.clone(), el.unwrap()))
+    }
+
+    /// 根据坐标获取ui元素
+    pub fn element_from_point(&self, x: i32, y: i32) -> Option<UiAutomationElement> {
+        let el = unsafe {
+            self.0
+                .ElementFromPoint(POINT { x, y })
+                .expect("Can't get the element from point.")
+        };
+        Some(UiAutomationElement::obtain(self.0.clone(), el))
     }
 
     /**
