@@ -13,8 +13,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// 鼠标配置项
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MouseConfig {
+pub(crate) struct MouseConfig {
+    /// 是否朗读鼠标元素
     pub(crate) is_read: bool,
 }
 
