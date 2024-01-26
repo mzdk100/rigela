@@ -42,7 +42,6 @@ pub enum CommandType {
  * */
 #[derive(Clone, Debug)]
 pub struct Commander {
-    // 键盘钩子对象
     keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
     mouse_hook: Arc<Mutex<Option<WindowsHook>>>,
 }

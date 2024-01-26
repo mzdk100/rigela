@@ -13,5 +13,4 @@
 
 mod browseable;
 pub(crate) use browseable::Browsable;
-
-pub mod form_browser;
+pub(crate) mod form_browser;

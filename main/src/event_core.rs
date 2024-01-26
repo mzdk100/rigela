@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::{get_foreground_window, HWND};
 
 /// 事件处理中心
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct EventCore;
 
 impl EventCore {
@@ -34,31 +34,10 @@ impl EventCore {
         watch_foreground_window(context.clone()).await;
 
         // 订阅输入事件
-        let ctx = context.clone();
-        context
-            .peeper_server
-            .add_on_input_char_listener(move |c| {
-                let performer = ctx.performer.clone();
-                ctx.main_handler.spawn(async move {
-                    performer.speak_with_sapi5(&c).await;
-
-                    // 这里是测试代码
-                    performer.speak_with_vvtts(&c).await;
-                });
-            })
-            .await;
+        speak_input(context.clone()).await;
 
         // 订阅输入法候选事件
-        let ctx = context.clone();
-        context
-            .peeper_server
-            .add_on_ime_candidate_list_listener(move |candidate_list| {
-                let performer = ctx.performer.clone();
-                ctx.main_handler.spawn(async move {
-                    performer.speak_with_sapi5(&candidate_list).await;
-                });
-            })
-            .await;
+        speak_candidate(context).await;
     }
 }
 
@@ -73,7 +52,7 @@ async fn speak_focus_item(context: Arc<Context>) {
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
-            performer.speak_with_sapi5(&x).await;
+            performer.speak(&x).await;
         });
     });
 }
@@ -106,4 +85,38 @@ async fn watch_foreground_window(context: Arc<Context>) {
             main_handler.spawn(async move { form_browser.render(Arc::new(root)).await });
         }
     });
+}
+
+// 朗读输入
+async fn speak_input(context: Arc<Context>) {
+    let ctx = context.clone();
+
+    context
+        .peeper_server
+        .add_on_input_char_listener(move |c| {
+            let performer = ctx.performer.clone();
+
+            ctx.main_handler.spawn(async move {
+                performer
+                    .speak_text(String::from_utf16_lossy(&[c]).as_str())
+                    .await;
+            });
+        })
+        .await;
+}
+
+// 朗读输入法切换
+async fn speak_candidate(context: Arc<Context>) {
+    let ctx = context.clone();
+
+    context
+        .peeper_server
+        .add_on_ime_candidate_list_listener(move |candidate_list| {
+            let performer = ctx.performer.clone();
+
+            ctx.main_handler.spawn(async move {
+                performer.speak(&candidate_list).await;
+            });
+        })
+        .await;
 }
