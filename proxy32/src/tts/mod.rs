@@ -14,25 +14,3 @@
 //noinspection SpellCheckingInspection
 #[cfg(target_arch = "x86")]
 pub(crate) mod ibmeci;
-
-#[cfg(target_arch = "x86")]
-use crate::tts::ibmeci::Ibmeci;
-
-//noinspection SpellCheckingInspection
-#[cfg(target_arch = "x86")]
-pub(crate) async fn create_ibmeci() -> Ibmeci {
-    use log::error;
-    use rigela_resources::clone_resource;
-    use rigela_utils::{get_program_directory, SERVER_HOME_URI};
-
-    const LIB_NAME: &str = "ibmeci.dll";
-    let url = format!("{}/{}", SERVER_HOME_URI, LIB_NAME);
-
-    let eci_path = get_program_directory().join(LIB_NAME);
-    let file = clone_resource(url, eci_path.clone()).await;
-    if let Err(e) = file {
-        error!("{}", e);
-        return Ibmeci::null();
-    }
-    Ibmeci::new(&eci_path.to_str().unwrap())
-}

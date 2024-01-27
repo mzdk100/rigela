@@ -83,6 +83,10 @@ impl Performer {
         }
         let str = speakable.get_sentence();
         let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
+        self.output_stream.flush();
+        self.output_stream.stop();
+        self.output_stream.start();
+
         self.output_stream.write(&data).await;
     }
 

@@ -20,7 +20,6 @@ use log::error;
 #[cfg(target_arch = "x86")]
 use rigela_utils::pipe::{server_run, PipeStream, PipeStreamError};
 #[cfg(target_arch = "x86")]
-use std::sync::{Arc, OnceLock};
 #[cfg(target_arch = "x86")]
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
@@ -28,7 +27,6 @@ use tokio::net::windows::named_pipe::NamedPipeServer;
 #[cfg(target_arch = "x86")]
 pub struct Proxy32Server {
     stream: PipeStream<Proxy32Packet, NamedPipeServer>,
-    ibmeci: Arc<OnceLock<Ibmeci>>,
 }
 
 #[cfg(target_arch = "x86")]
@@ -39,10 +37,7 @@ impl Proxy32Server {
      * */
     pub async fn new(pipe_name: &str) -> Self {
         let stream = server_run(pipe_name).await;
-        Self {
-            stream,
-            ibmeci: OnceLock::new().into(),
-        }
+        Self { stream }
     }
 
     /**
@@ -79,12 +74,7 @@ impl Proxy32Server {
 
     #[cfg(target_arch = "x86")]
     async fn eci_synth(&self, text: &str) -> Vec<u8> {
-        let mut eci = self.ibmeci.get();
-        if eci.is_none() {
-            use crate::tts::create_ibmeci;
-            self.ibmeci.set(create_ibmeci().await).unwrap_or(());
-            eci = self.ibmeci.get();
-        }
-        eci.unwrap().synth(text).await
+        let eci = Ibmeci::get().await.unwrap();
+        eci.synth(text).await
     }
 }

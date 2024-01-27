@@ -11,22 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::{
-    core::HSTRING,
-    Win32::{
-        Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
-        Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
-        System::{
-            Diagnostics::Debug::Beep,
-            LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
-        },
-        UI::WindowsAndMessaging::{
-            CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
-        },
-    },
-};
+use std::ffi::CString;
 pub use windows::{
-    core::{Result, PCSTR, PCWSTR},
+    core::Result,
     Win32::{
         Foundation::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
@@ -37,6 +24,20 @@ pub use windows::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
         UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+    },
+};
+use windows::{
+    core::{HSTRING, PCSTR},
+    Win32::{
+        Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
+        Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
+        System::{
+            Diagnostics::Debug::Beep,
+            LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
+        },
+        UI::WindowsAndMessaging::{
+            CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
+        },
     },
 };
 
@@ -149,8 +150,8 @@ pub fn free_library(h_lib_module: HMODULE) {
  * `proc_name` 函数或变量名称，或函数的序号值。如果此参数是序号值，则它必须在低序位字中；高序位字必须为零。
  * */
 pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
-    let name = String::from(proc_name);
-    unsafe { GetProcAddress(h_module, PCSTR::from_raw(name.as_ptr())) }
+    let name = CString::new(proc_name).unwrap();
+    unsafe { GetProcAddress(h_module, PCSTR::from_raw(name.as_ptr().cast())) }
 }
 
 /**

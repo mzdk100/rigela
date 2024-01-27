@@ -22,8 +22,10 @@ mod tts;
 async fn main() {
     use crate::server::Proxy32Server;
     use peeper;
+    use rigela_utils::logger;
     use std::env;
 
+    logger::init_logger(Some(module_path!()));
     put_peeper32().await;
     peeper::mount();
 

@@ -33,8 +33,8 @@ const LOG_FILE_NAME: &str = "run.log";
 
 /**
  * 初始化日志收集器。
+ * `path` 日志文件存放的文件夹路径，是相对于本项目用户目录的路径。
  * */
-
 pub fn init_logger(path: Option<&str>) {
     let level = LevelFilter::Info;
     let file_path = get_program_directory()
