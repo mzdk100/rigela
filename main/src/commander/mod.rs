@@ -12,6 +12,7 @@
  */
 
 mod hooks;
+mod keys;
 
 use crate::commander::hooks::{set_keyboard_hook, set_mouse_hook};
 use crate::{context::Context, talent::Talented};
