@@ -12,14 +12,15 @@
  */
 
 use crate::{context::Context, talent::Talented};
+use log::debug;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use win_wrap::hook::HOOK_TYPE_MOUSE_LL;
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN},
+    input::{VirtualKey, WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
 type Talent = Arc<dyn Talented + Send + Sync>;
@@ -146,22 +147,41 @@ fn execute(context: Arc<Context>, talent: Talent) {
     });
 }
 
+// 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中
+fn get_old_point() -> &'static Mutex<(i32, i32)> {
+    static INSTANCE: OnceLock<Mutex<(i32, i32)>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new((0, 0)))
+}
+
 // 设置鼠标钩子
 fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
     let context = context.clone();
 
-    WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |_w_param, _l_param, next| {
-        // 获取鼠标事件信息
-        let info: &MsLlHookStruct = _l_param.to();
-        println!("x:{},y:{}", info.pt.x, info.pt.y);
+    debug!("Setting mouse hook...");
+
+    WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {
+        debug!("Mouse hook called");
+
+        if w_param.0 != WM_MOUSEMOVE as usize {
+            return next();
+        }
+
+        let info: &MsLlHookStruct = l_param.to();
+        let (x, y) = (info.pt.x, info.pt.y);
+
+        // 如果坐标差值小于10个像素，不处理直接返回
+        let (old_x, old_y) = get_old_point().lock().unwrap().clone();
+        if (x - old_x) * (x - old_x) + (y - old_y) * (y - old_y) < 100 {
+            return next();
+        }
+        {
+            *get_old_point().lock().unwrap() = (x, y);
+        }
 
         let ctx = context.clone();
-
-        // Todo:  去除_w_param前导下划线，解析坐标值
-        let (x, y) = (300, 300);
-
         context.main_handler.spawn(async move {
             if ctx.config_manager.get_config().await.mouse_config.is_read {
+                debug!("x: {}, y: {}", x, y);
                 mouse_read(ctx.clone(), x, y).await;
             }
         });
