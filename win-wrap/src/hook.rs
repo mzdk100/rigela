@@ -20,6 +20,7 @@ use crate::{
     threading::{get_current_thread_id, ThreadNotify},
 };
 use std::fmt::{Debug, Formatter};
+use std::sync::{Mutex, OnceLock};
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
@@ -68,7 +69,7 @@ pub type CwpRStruct = CWPRETSTRUCT;
 type NextHookFunc = dyn Fn() -> LRESULT;
 type HookCbFunc = Arc<dyn Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static>;
 static H_HOOK: RwLock<Option<HashMap<i32, ThreadNotify>>> = RwLock::new(None);
-static HOOK_MAP: RwLock<Option<HashMap<i32, Vec<WindowsHook>>>> = RwLock::new(None);
+static HOOK_MAP: OnceLock<Mutex<HashMap<i32, Vec<WindowsHook>>>> = OnceLock::new();
 
 /* Windows 的钩子。 */
 #[derive(Clone)]
@@ -97,21 +98,20 @@ impl WindowsHook {
         cb: impl Fn(&WPARAM, &LPARAM, &NextHookFunc) -> LRESULT + Sync + Send + 'static,
     ) -> Self {
         let info = Self(hook_type, Arc::new(cb), SystemTime::now());
-        let mut lock = HOOK_MAP.write().unwrap();
-        let mut map = match lock.as_ref() {
+
+        let mut lock = HOOK_MAP
+            .get_or_init(|| HashMap::<i32, Vec<WindowsHook>>::new().into())
+            .lock()
+            .unwrap();
+        let mut vec = match lock.get(&hook_type.0) {
             None => {
                 install(hook_type);
-                HashMap::<i32, Vec<WindowsHook>>::new()
+                Vec::new()
             }
             Some(x) => x.clone(),
         };
-        let mut vec = match map.get(&hook_type.0) {
-            None => Vec::new(),
-            Some(x) => x.clone(),
-        };
         vec.insert(0, info.clone());
-        map.insert(hook_type.0, vec);
-        *lock = Some(map);
+        lock.insert(hook_type.0, vec);
         info
     }
 
@@ -119,14 +119,12 @@ impl WindowsHook {
      * 卸载钩子。
      * */
     pub fn unhook(&self) {
-        let mut lock = HOOK_MAP.write().unwrap();
-        let mut map = match lock.as_ref() {
-            None => {
-                return;
-            }
-            Some(x) => x.clone(),
-        };
-        match map.get(&self.0 .0) {
+        let lock = HOOK_MAP.get();
+        if lock.is_none() {
+            return;
+        }
+        let mut lock = lock.unwrap().lock().unwrap();
+        match lock.get(&self.0 .0) {
             None => {
                 uninstall(self.0);
             }
@@ -141,24 +139,21 @@ impl WindowsHook {
                 }
                 if x.len() < 1 {
                     uninstall(self.0);
-                    map.remove(&self.0 .0);
+                    lock.remove(&self.0 .0);
                 } else {
-                    map.insert(self.0 .0, x);
-                }
-                if map.is_empty() {
-                    *lock = None;
-                } else {
-                    *lock = Some(map);
+                    lock.insert(self.0 .0, x);
                 }
             }
         }
     }
 }
+
 impl PartialEq for WindowsHook {
     fn eq(&self, other: &Self) -> bool {
         self.2 == other.2
     }
 }
+
 fn next_hook(
     vec: Vec<WindowsHook>,
     index: usize,
@@ -176,26 +171,25 @@ fn next_hook(
         }),
     }
 }
+
 impl Debug for WindowsHook {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "WindowsHook({})", self.0 .0)
     }
 }
+
 macro_rules! define_hook_proc {
     ($name:tt, $id:tt) => {
         unsafe extern "system" fn $name(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
             if code < 0 {
                 return call_next_hook_ex(code, w_param, l_param);
             }
-            let lock = HOOK_MAP.read().unwrap();
-            let vec = match lock.as_ref() {
-                None => {
-                    drop(lock);
-                    return call_next_hook_ex(code, w_param, l_param);
-                }
-                Some(x) => x.get(&$id.0),
-            };
-            let vec = match vec {
+            let lock = HOOK_MAP.get();
+            if lock.is_none() {
+                return call_next_hook_ex(code, w_param, l_param);
+            }
+            let lock = lock.unwrap().lock().unwrap();
+            let vec = match lock.get(&$id.0) {
                 None => {
                     drop(lock);
                     return call_next_hook_ex(code, w_param, l_param);
@@ -221,6 +215,7 @@ fn install(hook_type: HookType) {
         }
     }
     drop(lock);
+
     thread::spawn(move || {
         let proc = match hook_type {
             HOOK_TYPE_KEYBOARD_LL => proc_keyboard_ll,
