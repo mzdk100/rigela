@@ -18,7 +18,7 @@ use win_wrap::hook::HOOK_TYPE_MOUSE_LL;
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
-    hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
+    hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
     input::{VirtualKey, WM_KEYDOWN, WM_SYSKEYDOWN},
 };
 
@@ -151,6 +151,10 @@ fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
     let context = context.clone();
 
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |_w_param, _l_param, next| {
+        // 获取鼠标事件信息
+        let info: &MsLlHookStruct = _l_param.to();
+        println!("x:{},y:{}", info.pt.x, info.pt.y);
+
         let ctx = context.clone();
 
         // Todo:  去除_w_param前导下划线，解析坐标值
