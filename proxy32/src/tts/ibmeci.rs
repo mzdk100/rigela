@@ -11,9 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use encoding_rs::GBK;
 use log::{error, info};
 use rigela_resources::clone_resource;
-use rigela_utils::{get_program_directory, SERVER_HOME_URI};
+use rigela_utils::{call_proc, get_program_directory, SERVER_HOME_URI};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -26,20 +27,6 @@ use std::{
 };
 use tokio::{sync::oneshot, time::sleep};
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
-
-macro_rules! call_proc {
-    ($module:expr,$name:ident,$def:ty,$($arg:expr),*) => {{
-        let f = get_proc_address($module, stringify!($name));
-        if !f.is_none() {
-            unsafe {
-                let r = (&*((&f) as *const FARPROC as *const $def)) ($($arg),*);
-                Some(r)
-            }
-        } else {
-            None
-        }
-    }};
-}
 
 macro_rules! eci {
     ($module:expr,new) => {
@@ -231,6 +218,7 @@ impl Ibmeci {
         if let Some(eci) = unsafe { IBMECI.get_mut() } {
             eci.data.clear();
         }
+        let (text, _, _) = GBK.encode(text);
         eci!(self.h_module, add_text, self.h_eci, text);
         eci!(self.h_module, synthesize, self.h_eci);
         // eci!(self.h_module, synchronize, self.h_eci);

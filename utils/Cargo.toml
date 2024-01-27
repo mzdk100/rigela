@@ -30,3 +30,9 @@ features = [
 
 [dependencies.serde_json_bytes]
 version = "0.2.2"
+
+[dependencies.rigela-resources]
+path = "../resources"
+
+[dependencies.win-wrap]
+path = "../win-wrap"

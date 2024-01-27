@@ -12,6 +12,7 @@
  */
 
 use crate::{configs::config_operations::apply_tts_config, context::Context};
+use rigela_utils::resample::resample_audio;
 use std::{
     collections::HashMap,
     io::SeekFrom,
@@ -76,7 +77,7 @@ impl Performer {
      * 使用VVTTS语音输出，播报对象的信息。
      * `speakable` 实现了Speakable特征的对象。
      * */
-    pub(crate) async fn speak_with_vvtts(&self, speakable: &(dyn Speakable + Sync)) {
+    pub(crate) async fn speak_with_vvtts(&self, speakable: impl Speakable) {
         let ctx = self.context.get();
         if ctx.is_none() {
             return;
@@ -86,6 +87,8 @@ impl Performer {
         self.output_stream.flush();
         self.output_stream.stop();
         self.output_stream.start();
+
+        let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
 
         self.output_stream.write(&data).await;
     }

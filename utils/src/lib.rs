@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod bass;
 pub mod logger;
 pub mod pipe;
+pub mod resample;
 
 use clipboard::{ClipboardContext, ClipboardProvider};
 use home::home_dir;
@@ -21,6 +23,21 @@ use tokio::{
     fs::OpenOptions,
     io::{AsyncReadExt, AsyncWriteExt},
 };
+
+#[macro_export]
+macro_rules! call_proc {
+    ($module:expr,$name:ident,$def:ty,$($arg:expr),*) => {{
+        let f = get_proc_address($module, stringify!($name));
+        if !f.is_none() {
+            unsafe {
+                let r = (&*((&f) as *const FARPROC as *const $def)) ($($arg),*);
+                Some(r)
+            }
+        } else {
+            None
+        }
+    }};
+}
 
 pub const DIR_NAME: &str = ".rigela";
 

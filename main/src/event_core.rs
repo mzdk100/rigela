@@ -52,7 +52,7 @@ async fn speak_focus_item(context: Arc<Context>) {
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
-            performer.speak_with_sapi5(x).await;
+            performer.speak_with_vvtts(x).await;
         });
     });
 }
@@ -100,7 +100,7 @@ async fn speak_input(context: Arc<Context>) {
                 performer.speak_with_sapi5(c).await;
 
                 // 这里是测试代码
-                performer.speak_with_vvtts(&c).await;
+                performer.speak_with_vvtts(c).await;
             });
         })
         .await;
