@@ -11,17 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    configs::config_operations::apply_tts_config,
-    context::Context
-};
+use crate::{configs::config_operations::apply_tts_config, context::Context};
 use std::{
     collections::HashMap,
     io::SeekFrom,
-    sync::{
-        Arc,
-        OnceLock
-    }
+    sync::{Arc, OnceLock},
 };
 use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
@@ -72,7 +66,7 @@ impl Performer {
      * 使用SAPI5语音输出，播报对象的信息。
      * `speakable` 实现了Speakable特征的对象。
      * */
-    pub(crate) async fn speak_with_sapi5(&self, speakable: &(dyn Speakable + Sync)) {
+    pub(crate) async fn speak_with_sapi5(&self, speakable: impl Speakable) {
         let str = speakable.get_sentence();
         self.tts.speak(str.as_str()).await;
     }

@@ -39,7 +39,7 @@ use std::sync::Arc;
  * 一个能力的抽象接口。
  * */
 #[async_trait]
-pub trait Talented {
+pub(crate) trait Talented {
     /**
      * 获取能力可支持的命令类型。
      * */
@@ -53,7 +53,7 @@ pub trait Talented {
 }
 
 /// 技能访问器对象，包含所有技能对象列表
-pub struct TalentAccessor {
+pub(crate) struct TalentAccessor {
     // 技能对象集合
     pub(crate) talents: Arc<Vec<Arc<dyn Talented + Send + Sync + 'static>>>,
 }

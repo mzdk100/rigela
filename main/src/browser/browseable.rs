@@ -17,7 +17,7 @@ use std::sync::Arc;
 use win_wrap::common::RECT;
 
 /// 传递给窗口浏览器的控件接口
-pub trait Browsable {
+pub(crate) trait Browsable {
     fn get_name(&self) -> String;
     fn get_role(&self) -> String;
     fn get_child_count(&self) -> usize;
@@ -27,7 +27,7 @@ pub trait Browsable {
 }
 
 /// 为浏览控件接口对象实现朗读接口
-impl Speakable for Arc<dyn Browsable + Sync + Send> {
+impl Speakable for Arc<dyn Browsable + Send + Sync> {
     fn get_sentence(&self) -> String {
         format!("{}: {}", self.get_name(), self.get_role())
     }

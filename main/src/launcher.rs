@@ -23,7 +23,7 @@ use tokio::time::sleep;
 use win_wrap::com::co_initialize_multi_thread;
 
 /// 启动器对象
-pub struct Launcher {
+pub(crate) struct Launcher {
     context: Arc<Context>,
     waiter: Option<Box<TerminationWaiter>>,
 }
@@ -94,7 +94,7 @@ impl Launcher {
 /// 朗读桌面
 async fn speak_desktop(context: Arc<Context>) {
     let root = context.ui_automation.get_root_element();
-    context.performer.speak_with_sapi5(&root).await;
+    context.performer.speak_with_sapi5(root).await;
 
     sleep(Duration::from_millis(1000)).await;
 }

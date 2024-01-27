@@ -19,7 +19,7 @@ use tokio::sync::RwLock;
 pub(crate) type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
-pub struct FormBrowser {
+pub(crate) struct FormBrowser {
     // 焦点控件索引
     index: RwLock<i32>,
     // 子控件索引
@@ -29,7 +29,7 @@ pub struct FormBrowser {
 }
 
 impl FormBrowser {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             index: RwLock::new(0),
             child_index: RwLock::new(-1),

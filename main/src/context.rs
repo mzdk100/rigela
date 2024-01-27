@@ -26,7 +26,7 @@ const CONFIG_FILE_NAME: &str = "config.toml";
 
 /// 核心上下文对象，通过此对象可以访问整个程序API
 #[derive(Debug)]
-pub struct Context {
+pub(crate) struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) main_handler: Arc<Handle>,

@@ -21,14 +21,14 @@ use tokio::sync::RwLock;
 
 /// 配置项目的根元素
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ConfigRoot {
+pub(crate) struct ConfigRoot {
     pub(crate) tts_config: TtsConfig,
     pub(crate) mouse_config: MouseConfig,
 }
 
 /// 配置管理器
-#[derive(Debug,)]
-pub struct ConfigManager {
+#[derive(Debug)]
+pub(crate) struct ConfigManager {
     // 配置文件的路径
     path: PathBuf,
     // 当前的配置

@@ -93,5 +93,5 @@ async fn speak_tts_prop(context: Arc<Context>) {
         TtsProperty::Volume => format!("音量: {}", cfg.volume),
         TtsProperty::Pitch => format!("语调: {}", cfg.pitch),
     };
-    context.performer.speak_with_sapi5(&info).await;
+    context.performer.speak_with_sapi5(info).await;
 }

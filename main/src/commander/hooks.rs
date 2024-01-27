@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. The RigelA open source project team and
+ * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,83 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{context::Context, talent::Talented};
+use crate::{
+    commander::{CommandType, Talent},
+    context::Context,
+};
 use log::debug;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock, RwLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, OnceLock, RwLock},
+};
 use win_wrap::hook::HOOK_TYPE_MOUSE_LL;
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{VirtualKey, WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
+    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
-type Talent = Arc<dyn Talented + Send + Sync>;
-
-/**
- * 命令类型枚举。
- * */
-#[allow(dead_code)]
-pub enum CommandType {
-    // 键盘命令
-    Key(Vec<(VirtualKey, bool)>),
-    // 触摸命令
-    Touch,
-    // 语音命令
-    Voice,
-}
-
-/**
- * 指挥官结构。
- * */
-#[derive(Clone, Debug)]
-pub struct Commander {
-    keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
-    mouse_hook: Arc<Mutex<Option<WindowsHook>>>,
-}
-
-impl Commander {
-    /**
-     * 创建一个指挥官对象。
-     * 负责收集用户的操作请求，例如快捷键、触摸动作、语音命令等，之后把这些命令调度给具体的任务。
-     * */
-    pub(crate) fn new() -> Self {
-        Self {
-            keyboard_hook: Arc::new(Mutex::new(None)),
-            mouse_hook: Arc::new(Mutex::new(None)),
-        }
-    }
-
-    /**
-     * 让指挥官开始工作。
-     * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
-     * */
-    pub(crate) fn apply(&self, context: Arc<Context>) {
-        let talents = context.talent_accessor.talents.clone();
-
-        self.keyboard_hook
-            .lock()
-            .unwrap()
-            .replace(set_keyboard_hook(context.clone(), talents));
-
-        self.mouse_hook
-            .lock()
-            .unwrap()
-            .replace(set_mouse_hook(context.clone()));
-    }
-
-    /**
-     * 清理环境，后续不可以重复使用。
-     * */
-    pub(crate) fn dispose(&self) {
-        self.keyboard_hook.lock().unwrap().clone().unwrap().unhook();
-        self.mouse_hook.lock().unwrap().clone().unwrap().unhook();
-    }
-}
-
-// 设置键盘钩子
-fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
+/// 设置键盘钩子
+pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
 
@@ -153,15 +95,11 @@ fn get_old_point() -> &'static Mutex<(i32, i32)> {
     INSTANCE.get_or_init(|| Mutex::new((0, 0)))
 }
 
-// 设置鼠标钩子
-fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
+/// 设置鼠标钩子
+pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
     let context = context.clone();
 
-    debug!("Setting mouse hook...");
-
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {
-        debug!("Mouse hook called");
-
         if w_param.0 != WM_MOUSEMOVE as usize {
             return next();
         }
@@ -194,5 +132,5 @@ fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
 async fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
     let uia = context.ui_automation.clone();
     let ele = uia.element_from_point(x, y).unwrap();
-    context.performer.speak_with_sapi5(&ele).await
+    context.performer.speak_with_sapi5(ele).await
 }

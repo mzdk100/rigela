@@ -14,9 +14,9 @@
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Clone, Debug)]
-pub struct Terminator(Sender<()>);
+pub(crate) struct Terminator(Sender<()>);
 
-pub struct TerminationWaiter(Receiver<()>);
+pub(crate) struct TerminationWaiter(Receiver<()>);
 
 impl Terminator {
     /**
