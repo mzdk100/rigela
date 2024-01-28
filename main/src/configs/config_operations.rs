@@ -22,9 +22,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 // ------ TTS 配置操作 ------
 
 /// 设置TTS的参数。 `diff` 属性值的差值， 传0初始化tts属性值
-pub(crate) async fn apply_tts_config(context: Arc<Context>, diff: i32) {
+pub(crate) fn apply_tts_config(context: Arc<Context>, diff: i32) {
     let performer = &context.performer.clone();
-    let mut config = context.config_manager.get_config().await;
+    let mut config = context.config_manager.get_config();
     let mut tts_config = config.tts_config.clone();
 
     // 如果差值等于0，直接设置TTS属性值参数，返回
@@ -60,7 +60,7 @@ pub(crate) async fn apply_tts_config(context: Arc<Context>, diff: i32) {
 
     performer.set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch);
     config.tts_config = tts_config;
-    context.config_manager.set_config(config).await;
+    context.config_manager.set_config(config);
 }
 
 // 当前调节的TTS属性, 内部静态值，有对外公开方法
@@ -89,8 +89,8 @@ pub(crate) fn prev_tts_prop() {
 // ------  鼠标配置  ------
 
 /// 设置是否开启朗读鼠标
-pub(crate) async fn apply_mouse_config(context: Arc<Context>, is_read: bool) {
-    let mut config = context.config_manager.get_config().await;
+pub(crate) fn apply_mouse_config(context: Arc<Context>, is_read: bool) {
+    let mut config = context.config_manager.get_config();
     config.mouse_config = MouseConfig { is_read };
-    context.config_manager.set_config(config).await;
+    context.config_manager.set_config(config);
 }

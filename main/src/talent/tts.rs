@@ -33,28 +33,28 @@ use win_wrap::input::{
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
 async fn increase(context: Arc<Context>) {
-    apply_tts_config(context.clone(), 1).await;
+    apply_tts_config(context.clone(), 1);
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
 async fn increase_r(context: Arc<Context>) {
-    apply_tts_config(context.clone(), 1).await;
+    apply_tts_config(context.clone(), 1);
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
 async fn reduce(context: Arc<Context>) {
-    apply_tts_config(context.clone(), -1).await;
+    apply_tts_config(context.clone(), -1);
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
 async fn reduce_r(context: Arc<Context>) {
-    apply_tts_config(context.clone(), -1).await;
+    apply_tts_config(context.clone(), -1);
     speak_tts_prop(context).await;
 }
 
@@ -87,7 +87,7 @@ async fn prev_prop_r(context: Arc<Context>) {
 }
 
 async fn speak_tts_prop(context: Arc<Context>) {
-    let cfg = context.config_manager.get_config().await.tts_config.clone();
+    let cfg = context.config_manager.get_config().tts_config.clone();
     let info = match get_cur_tts_prop() {
         TtsProperty::Speed => format!("语速: {}", cfg.speed),
         TtsProperty::Volume => format!("音量: {}", cfg.volume),

@@ -40,18 +40,10 @@ async fn right_click(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "鼠标朗读", key = ((VK_INSERT, false), (VK_M, false)))]
 async fn read_mouse(context: Arc<Context>) {
-    let is_read = !context
-        .config_manager
-        .get_config()
-        .await
-        .mouse_config
-        .is_read;
-    apply_mouse_config(context.clone(), is_read).await;
+    let is_read = !context.config_manager.get_config().mouse_config.is_read;
+    apply_mouse_config(context.clone(), is_read);
     let state = if is_read { "开启" } else { "关闭" };
-    context
-        .performer
-        .speak_with_sapi5(format!("{}鼠标朗读", state))
-        .await;
+    context.performer.speak_with_sapi5(format!("{}鼠标朗读", state)).await;
 }
 
 async fn get_point(context: Arc<Context>) -> (i32, i32) {

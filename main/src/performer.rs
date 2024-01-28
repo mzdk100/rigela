@@ -127,7 +127,7 @@ impl Performer {
     pub(crate) async fn apply(&self, context: Arc<Context>) {
         self.context.set(context.clone()).unwrap_or(());
         // 初始化TTS属性
-        apply_tts_config(context.clone(), 0).await;
+        apply_tts_config(context.clone(), 0);
 
         // 初始化音效播放器
         let list = vec!["boundary.wav"];

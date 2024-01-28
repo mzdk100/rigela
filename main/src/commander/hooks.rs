@@ -118,7 +118,7 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
 
         let ctx = context.clone();
         context.main_handler.spawn(async move {
-            if ctx.config_manager.get_config().await.mouse_config.is_read {
+            if ctx.config_manager.get_config().mouse_config.is_read {
                 debug!("x: {}, y: {}", x, y);
                 mouse_read(ctx.clone(), x, y).await;
             }
