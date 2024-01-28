@@ -11,12 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{call_proc, get_program_directory, SERVER_HOME_URI};
+use crate::{call_proc, get_program_directory};
 use log::{error, info};
-use rigela_resources::clone_resource;
-use std::time::Duration;
-use tokio::time::sleep;
-use win_wrap::common::{get_proc_address, load_library, FARPROC, HMODULE};
+use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
 
 macro_rules! bass {
     ($module:expr,init,$device:expr,$freq:expr,$flags:expr,$win:expr,$clsid:expr) => {
@@ -42,13 +39,13 @@ macro_rules! bass {
                 i32,
                 i32,
                 i32,
-                Option<extern "system" fn(i32, i32, i32, i32) -> i32>,
+                *const extern "system" fn(i32, i32, i32, i32) -> i32,
                 i32,
             ) -> i32,
             $freq,
             $chans,
             $flags,
-            $proc,
+            $proc as *const extern "system" fn(i32, i32, i32, i32) -> i32,
             $user
         )
     };
@@ -60,34 +57,93 @@ macro_rules! bass {
             $handle
         )
     };
+    ($module:expr,channel_play,$handle:expr,$restart:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelPlay,
+            extern "system" fn(i32, bool) -> bool,
+            $handle,
+            $restart
+        )
+    };
+    ($module:expr,channel_pause,$handle:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelPause,
+            extern "system" fn(i32) -> bool,
+            $handle
+        )
+    };
+    ($module:expr,channel_stop,$handle:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelStop,
+            extern "system" fn(i32) -> bool,
+            $handle
+        )
+    };
+    ($module:expr,channel_start,$handle:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelStart,
+            extern "system" fn(i32) -> bool,
+            $handle
+        )
+    };
+    ($module:expr,stream_put_data,$handle:expr,$data:expr) => {
+        call_proc!(
+            $module,
+            BASS_StreamPutData,
+            extern "system" fn(i32, *const u8, i32) -> i32,
+            $handle,
+            $data.as_ptr(),
+            $data.len() as i32
+        )
+    };
 }
 
-pub struct BassChannelStream {
+const LIB_NAME: &str = "bass.dll";
+
+//noinspection SpellCheckingInspection
+const STREAMPROC_PUSH: usize = usize::MAX;
+
+#[derive(Debug)]
+pub struct BassChannelOutputStream {
     h_bass: i32,
     h_module: HMODULE,
 }
 
-impl BassChannelStream {
-    pub async fn new(sample_rate: u32, num_channels: u32) -> Self {
-        const LIB_NAME: &str = "bass.dll";
-        let url = format!("{}/{}", SERVER_HOME_URI, LIB_NAME);
+impl BassChannelOutputStream {
+    //noinspection RsUnresolvedReference
+    /**
+     * 创建一个通道输出流。
+     * `sample_rate` 采样率。
+     * `num_channels` 声道数量。
+     * */
+    pub fn new(sample_rate: u32, num_channels: u32) -> Self {
+        #[cfg(target_arch = "x86_64")]
+        use std::{fs::OpenOptions, io::Write};
 
-        let eci_path = get_program_directory().join(LIB_NAME);
-        let file = clone_resource(url, eci_path.clone()).await;
-        if let Err(e) = file {
-            error!("{}", e);
-            return Self::null();
+        let bass_path = get_program_directory().join(LIB_NAME);
+        #[cfg(target_arch = "x86_64")]
+        if !bass_path.exists() {
+            let lib_bin = include_bytes!("../lib/bass.dll");
+            OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(&bass_path)
+                .unwrap()
+                .write_all(lib_bin)
+                .unwrap();
         }
-        drop(file);
-        let h_module = loop {
-            // 文件刚释放可能被安全软件锁定，推迟加载他
-            sleep(Duration::from_millis(1000)).await;
-            match load_library(eci_path.to_str().unwrap()) {
-                Ok(h) => break h,
-                Err(e) => error!("Can't open the library ({}). {}", eci_path.display(), e),
+        let h_module = match load_library(bass_path.to_str().unwrap()) {
+            Ok(h) => h,
+            Err(e) => {
+                error!("Can't open the library ({}). {}", bass_path.display(), e);
+                return Self::null();
             }
         };
-        info!("{} loaded.", eci_path.display());
+        info!("{} loaded.", bass_path.display());
         bass!(h_module, init, -1, 44100, 0, 0, 0);
         let h_bass = bass!(
             h_module,
@@ -95,7 +151,7 @@ impl BassChannelStream {
             sample_rate as i32,
             num_channels as i32,
             0,
-            None,
+            STREAMPROC_PUSH,
             0
         )
         .unwrap();
@@ -108,8 +164,57 @@ impl BassChannelStream {
             h_module: HMODULE::default(),
         }
     }
+
+    /**
+     * 清理释放。
+     * */
     pub fn dispose(&self) {
         bass!(self.h_module, stream_free, self.h_bass);
         bass!(self.h_module, free);
+    }
+
+    /**
+     * 播放操作。
+     * `restart` 重新开始。
+     * */
+    pub fn play(&self, restart: bool) {
+        bass!(self.h_module, channel_play, self.h_bass, restart);
+    }
+
+    /**
+     * 暂停操作。
+     * */
+    pub fn pause(&self) {
+        bass!(self.h_module, channel_pause, self.h_bass);
+    }
+
+    /**
+     * 停止操作。
+     * */
+    pub fn stop(&self) {
+        bass!(self.h_module, channel_stop, self.h_bass);
+    }
+
+    /**
+     * 开始或继续播放操作。
+     * */
+    pub fn start(&self) {
+        bass!(self.h_module, channel_start, self.h_bass);
+    }
+
+    /**
+     * 写入数据。
+     * `data` 音频数据。
+     * */
+    pub fn put_data(&self, data: &[u8]) {
+        bass!(self.h_module, stream_put_data, self.h_bass, data);
+    }
+}
+
+impl Drop for BassChannelOutputStream {
+    fn drop(&mut self) {
+        if !self.h_module.is_invalid() {
+            free_library(self.h_module);
+        }
     }
 }

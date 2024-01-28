@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::audio::AudioOutputStream;
 use std::{
     ops::Add,
     sync::{Arc, Mutex},
@@ -21,24 +20,20 @@ use windows::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Tts {
+pub struct Sapi5TtsSynthesizer {
     synth: Arc<SpeechSynthesizer>,
-    output_stream: Arc<AudioOutputStream>,
     task_id: Arc<Mutex<u32>>,
 }
 
-impl Tts {
+impl Sapi5TtsSynthesizer {
     /**
      * 创建一个TTS对象（语音合成，SAPI5）
      * */
     pub fn new() -> Self {
         // 创建语音合成器
         let synth = SpeechSynthesizer::new().expect("Can't create the speech synthesizer.");
-        // 创建音频输出流
-        let stream = AudioOutputStream::new(16000, 1);
         Self {
             synth: synth.into(),
-            output_stream: stream.into(),
             task_id: Arc::new(0u32.into()),
         }
     }
@@ -48,7 +43,7 @@ impl Tts {
      * 某些语音的最低语速快于 0.5，最大语速低于 6.0。
      * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
      * */
-    pub fn set_prop(&self, speed: f64, volume: f64, pitch: f64) {
+    pub fn set_properties(&self, speed: f64, volume: f64, pitch: f64) {
         // https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
         let options = self.synth.Options().unwrap();
         options
@@ -63,11 +58,11 @@ impl Tts {
     }
 
     /**
-     * 朗读一段文字（直接播放）
+     * 合成语音。
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。
      * */
-    pub async fn speak(&self, text: &str) {
+    pub async fn synth(&self, text: &str) -> Vec<u8> {
         let current_id = {
             let mut lock = self.task_id.lock().unwrap();
             let index = lock.add(1);
@@ -83,12 +78,10 @@ impl Tts {
         let size = stream.Size().unwrap();
         let reader = DataReader::CreateDataReader(&stream).unwrap();
         reader.LoadAsync(size as u32).unwrap().await.unwrap();
-        self.output_stream.flush();
-        self.output_stream.stop();
-        self.output_stream.start();
         // 跳过音频文件头的44个字节
         let mut data: [u8; 44] = [0; 44];
         reader.ReadBytes(&mut data).unwrap();
+        let mut vec = vec![];
         loop {
             // 获取合成任务的id
             let id = match self.task_id.lock() {
@@ -96,15 +89,15 @@ impl Tts {
                 Err(_) => 0u32,
             };
             if id != current_id {
-                // 这里检查是否已经有新的合成任务，如果有就打断当前的合成任务
-                break;
+                // 这里检查是否已经有新地合成任务，如果有就打断当前的合成任务
+                break vec;
             }
             let mut data: [u8; 3200] = [0; 3200];
             reader.ReadBytes(&mut data).unwrap_or(());
-            self.output_stream.write(&data).await;
+            vec.extend(data);
             if let Ok(x) = reader.UnconsumedBufferLength() {
                 if x < data.len() as u32 {
-                    break;
+                    break vec;
                 }
             }
         }

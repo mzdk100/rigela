@@ -31,13 +31,13 @@ use windows::Win32::Media::Audio::{
 };
 
 #[allow(dead_code)]
-pub struct AudioOutputStream {
+pub struct XAudio2OutputStream {
     engine: Arc<IXAudio2>,
     mastering_voice: Arc<IXAudio2MasteringVoice>,
     source_voice: Arc<IXAudio2SourceVoice>,
 }
 
-impl AudioOutputStream {
+impl XAudio2OutputStream {
     /**
      * 创建一个音频输出流。
      * `sample_rate` 采样率。
@@ -122,13 +122,13 @@ impl AudioOutputStream {
         unsafe { self.source_voice.Start(0, XAUDIO2_COMMIT_NOW) }.expect("Can't start.");
     }
 }
-impl Debug for AudioOutputStream {
+impl Debug for XAudio2OutputStream {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AudioOutputStream")
     }
 }
-unsafe impl Send for AudioOutputStream {}
-unsafe impl Sync for AudioOutputStream {}
+unsafe impl Send for XAudio2OutputStream {}
+unsafe impl Sync for XAudio2OutputStream {}
 pub struct StreamState(Arc<IXAudio2SourceVoice>);
 impl StreamState {
     fn new(source_voice: Arc<IXAudio2SourceVoice>, data: &[u8]) -> Self {
