@@ -12,7 +12,7 @@
  */
 
 use crate::{configs::config_operations::apply_tts_config, context::Context};
-use rigela_utils::resample::resample_audio;
+use rigela_utils::{bass::BassChannelOutputStream, resample::resample_audio};
 use std::{
     collections::HashMap,
     io::SeekFrom,
@@ -22,7 +22,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
     sync::Mutex,
 };
-use win_wrap::{audio::AudioOutputStream, tts::Tts};
+use win_wrap::tts::Sapi5TtsSynthesizer;
 
 const SAMPLE_RATE: u32 = 16000;
 const NUM_CHANNELS: u32 = 1;
@@ -43,9 +43,9 @@ pub(crate) trait Speakable {
 #[derive(Debug)]
 pub(crate) struct Performer {
     context: OnceLock<Arc<Context>>,
-    pub(crate) tts: Tts,
+    sapi5_synth: Sapi5TtsSynthesizer,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
-    output_stream: Arc<AudioOutputStream>,
+    output_stream: Arc<BassChannelOutputStream>,
 }
 
 impl Performer {
@@ -53,11 +53,11 @@ impl Performer {
      * 创建表演者对象。
      * */
     pub(crate) fn new() -> Self {
-        let output_stream = AudioOutputStream::new(SAMPLE_RATE, NUM_CHANNELS);
-        let tts = Tts::new();
+        let output_stream = BassChannelOutputStream::new(SAMPLE_RATE, NUM_CHANNELS);
+        let tts = Sapi5TtsSynthesizer::new();
         Self {
             context: OnceLock::new(),
-            tts,
+            sapi5_synth: tts,
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
         }
@@ -69,7 +69,13 @@ impl Performer {
      * */
     pub(crate) async fn speak_with_sapi5(&self, speakable: impl Speakable) {
         let str = speakable.get_sentence();
-        self.tts.speak(str.as_str()).await;
+        let data = self.sapi5_synth.synth(str.as_str()).await;
+        self.output_stream.stop();
+        self.output_stream.start();
+
+        //let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
+
+        self.output_stream.put_data(&data);
     }
 
     //noinspection SpellCheckingInspection
@@ -84,13 +90,12 @@ impl Performer {
         }
         let str = speakable.get_sentence();
         let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
-        self.output_stream.flush();
         self.output_stream.stop();
         self.output_stream.start();
 
         let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
 
-        self.output_stream.write(&data).await;
+        self.output_stream.put_data(&data);
     }
 
     /**
@@ -102,17 +107,16 @@ impl Performer {
         let data = lock.get(res_name).unwrap().clone();
         drop(lock);
 
-        self.output_stream.flush();
         self.output_stream.stop();
         self.output_stream.start();
 
         let len = data.len();
         for i in (0..len).step_by(CHUNK_SIZE) {
             if i + CHUNK_SIZE >= len {
-                self.output_stream.write(&data[i..len]).await;
+                self.output_stream.put_data(&data[i..len]);
                 break;
             }
-            self.output_stream.write(&data[i..i + CHUNK_SIZE]).await;
+            self.output_stream.put_data(&data[i..i + CHUNK_SIZE]);
         }
     }
 
@@ -135,5 +139,19 @@ impl Performer {
             file.read_to_end(&mut data).await.unwrap();
             self.sound_table.lock().await.insert(i.to_string(), data);
         }
+    }
+
+    /**
+     * 设置sapi5语音合成器的参数。
+     * `speed` 速度，0到100。
+     * `volume` 音量，0到100。
+     * `pitch` 音高，0到100。
+     * */
+    pub fn set_tts_properties_with_sapi5(&self, speed: i32, volume: i32, pitch: i32) {
+        self.sapi5_synth.set_properties(
+            3.0 + (speed as f64 - 50.0) * 0.06,
+            0.5 + (volume as f64 - 50.0) * 0.01,
+            1.0 + (pitch as f64 - 50.0) * 0.01,
+        );
     }
 }

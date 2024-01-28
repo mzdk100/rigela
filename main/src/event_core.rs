@@ -52,7 +52,7 @@ async fn speak_focus_item(context: Arc<Context>) {
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
-            performer.speak_with_vvtts(x).await;
+            performer.speak_with_sapi5(x).await;
         });
     });
 }
