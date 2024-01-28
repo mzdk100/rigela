@@ -11,16 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::mouse::MouseConfig;
-use crate::configs::tts::TtsConfig;
-use log::{error, info};
+use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig};
+use log::{debug, error, info};
 use rigela_utils::{read_file, write_file};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use tokio::sync::RwLock;
+use std::{
+    path::PathBuf,
+    time::{Duration, Instant},
+};
+use tokio::{sync::RwLock, time::sleep};
 
 /// 配置项目的根元素
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub(crate) struct ConfigRoot {
     pub(crate) tts_config: TtsConfig,
     pub(crate) mouse_config: MouseConfig,
@@ -33,6 +35,9 @@ pub(crate) struct ConfigManager {
     path: PathBuf,
     // 当前的配置
     config: RwLock<ConfigRoot>,
+
+    update_time: RwLock<Instant>,
+    write_finished: RwLock<bool>,
 }
 
 impl ConfigManager {
@@ -40,13 +45,11 @@ impl ConfigManager {
      * 创建一个配置管理器
      * */
     pub(crate) fn new(path: PathBuf) -> Self {
-        let config = ConfigRoot {
-            tts_config: TtsConfig::default(),
-            mouse_config: MouseConfig::default(),
-        };
         Self {
             path,
-            config: RwLock::new(config),
+            config: RwLock::new(ConfigRoot::default()),
+            update_time: RwLock::new(Instant::now()),
+            write_finished: RwLock::new(true),
         }
     }
 
@@ -65,7 +68,11 @@ impl ConfigManager {
     pub(crate) async fn set_config(&self, config: ConfigRoot) {
         let mut cur_config = self.config.write().await;
         *cur_config = config.clone();
-        self.write(&config).await;
+
+        debug!("config changed");
+
+        *self.update_time.write().await = Instant::now();
+        self.write().await;
     }
 
     /*
@@ -85,14 +92,14 @@ impl ConfigManager {
                 None
             }
         };
+
         if let Some(cfg) = config {
             cfg
         } else {
-            let cfg = ConfigRoot {
-                tts_config: TtsConfig::default(),
-                mouse_config: MouseConfig::default(),
-            };
-            self.write(&cfg).await;
+            let cfg: ConfigRoot = Default::default();
+            *self.config.write().await = cfg.clone();
+            self.write().await;
+
             cfg
         }
     }
@@ -101,8 +108,27 @@ impl ConfigManager {
      * 写出配置数据。
      * `config_root` 完整的配置数据。
      * */
-    pub(crate) async fn write(&self, config_root: &ConfigRoot) {
+    pub(crate) async fn write(&self) {
+        if !*self.write_finished.read().await {
+            return;
+        }
+        {
+            *self.write_finished.write().await = false;
+        }
+
+        loop {
+            debug!("prepare writing config");
+
+            if Instant::now() >= *self.update_time.read().await + Duration::from_secs(10) {
+                break;
+            }
+            sleep(Duration::from_secs(10)).await;
+        }
+
+        debug!("start writing config");
+
         let path = self.path.clone();
+        let config_root = &self.get_config().await;
 
         match toml::to_string(config_root) {
             Ok(content) => {
@@ -112,5 +138,7 @@ impl ConfigManager {
             }
             Err(e) => error!("{}", e),
         }
+
+        *self.write_finished.write().await = true;
     }
 }
