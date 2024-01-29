@@ -22,7 +22,7 @@ use std::sync::Arc;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标单击", key = (VkNumpadDiv))]
+#[talent(doc = "鼠标单击", key = (VkNumPadDiv))]
 async fn click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
@@ -30,7 +30,7 @@ async fn click(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标右击", key = (VkNumpadMul))]
+#[talent(doc = "鼠标右击", key = (VkNumPadMul))]
 async fn right_click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);

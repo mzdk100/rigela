@@ -49,6 +49,9 @@ use win_wrap::input::{
     VK_VOLUME_UP, VK_W, VK_X, VK_XBUTTON1, VK_XBUTTON2, VK_Y, VK_Z,
 };
 
+// 特别注意： 命名没有完善， 小键盘 VkNumPad 开头， 不要与 VkNumpad 混淆
+
+/// 键盘枚举
 //noinspection SpellCheckingInspection
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -63,8 +66,8 @@ pub(crate) enum Keys {
     VkNumPad7,
     VkNumPad8,
     VkNumPad9,
-    VkNumpadDiv,
-    VkNumpadMul,
+    VkNumPadDiv,
+    VkNumPadMul,
     VkCtrl,
     Vk0,
     Vk1,
@@ -303,17 +306,17 @@ impl From<(u32, bool)> for Keys {
         match (vk, ext) {
             (VK_INSERT, false) => Self::VkRigelA,
             (VK_INSERT, true) => Self::VkRigelA,
-            (VK_END, false) => Self::VkNumpad1,
-            (VK_DOWN, false) => Self::VkNumpad2,
-            (VK_NEXT, false) => Self::VkNumpad3,
-            (VK_LEFT, false) => Self::VkNumpad4,
-            (VK_CLEAR, false) => Self::VkNumpad5,
-            (VK_RIGHT, false) => Self::VkNumpad6,
-            (VK_HOME, false) => Self::VkNumpad7,
-            (VK_UP, false) => Self::VkNumpad8,
-            (VK_PRIOR, false) => Self::VkNumpad9,
-            (VK_DIVIDE, true) => Self::VkNumpadDiv,
-            (VK_MULTIPLY, false) => Self::VkNumpadMul,
+            (VK_END, false) => Self::VkNumPad1,
+            (VK_DOWN, false) => Self::VkNumPad2,
+            (VK_NEXT, false) => Self::VkNumPad3,
+            (VK_LEFT, false) => Self::VkNumPad4,
+            (VK_CLEAR, false) => Self::VkNumPad5,
+            (VK_RIGHT, false) => Self::VkNumPad6,
+            (VK_HOME, false) => Self::VkNumPad7,
+            (VK_UP, false) => Self::VkNumPad8,
+            (VK_PRIOR, false) => Self::VkNumPad9,
+            (VK_DIVIDE, true) => Self::VkNumPadDiv,
+            (VK_MULTIPLY, false) => Self::VkNumPadMul,
             (VK_LCONTROL, false) => Self::VkCtrl,
             (VK_RCONTROL, true) => Self::VkCtrl,
             (VK_0, false) => Self::Vk0,

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use super::keys::Keys;
 use crate::{
     commander::{CommandType, Talent},
     context::Context,
@@ -27,7 +28,6 @@ use win_wrap::{
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
     input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
-use super::keys::Keys;
 
 /// 设置键盘钩子
 pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
@@ -68,13 +68,12 @@ fn match_keys(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
             CommandType::Key(y) => {
                 for key in y {
                     match map.get(key) {
-                        None => return false,
-                        Some(x) => match *x {
-                            true => continue,
-                            false => return false,
-                        },
+                        // 能匹配到按键，并且按键状态为按下，进入下一轮循环
+                        Some(x) if *x => continue,
+                        _ => return false,
                     }
                 }
+                // 所有按键都匹配成功
                 true
             }
             _ => false,
