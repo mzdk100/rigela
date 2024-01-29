@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use log::{error, info};
 use rigela_proxy32::client::Proxy32Client;
 use tokio::process::Child;
 use tokio::sync::RwLock;
@@ -41,7 +42,6 @@ impl Proxy32 {
      * */
     #[cfg(target_arch = "x86_64")]
     pub(crate) async fn spawn(&self) -> &Self {
-        use log::error;
         use rigela_utils::{get_program_directory, write_file};
         use std::time::Duration;
         use tokio::{process::Command, time::sleep};
@@ -68,6 +68,7 @@ impl Proxy32 {
                 break x;
             }
         };
+        info!("The process is ready.");
 
         {
             let mut process = self.process.write().await;
@@ -85,7 +86,6 @@ impl Proxy32 {
     #[cfg(target_arch = "x86")]
     pub(crate) async fn spawn(&self) -> &Self {
         // 如果主程序本身就是32位，则无需执行此操作（proxy32模块没有用武之地）
-        use log::info;
         info!("Loaded proxy32.");
         self
     }
@@ -100,7 +100,17 @@ impl Proxy32 {
         }
         let mut process = self.process.write().await;
         if let Some(p) = process.as_mut() {
-            p.kill().await.unwrap_or(());
+            match p.wait().await {
+                Ok(s) => {
+                    info!(
+                        "The process has exited successfully. Exit code is {}.",
+                        s.code().unwrap()
+                    );
+                }
+                Err(e) => {
+                    error!("The process has exited with errors. {}", e);
+                }
+            };
         }
         self
     }
