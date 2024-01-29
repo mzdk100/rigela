@@ -25,7 +25,7 @@ async fn main() {
     use rigela_utils::logger;
     use std::env;
 
-    logger::init_logger(Some(module_path!()));
+    logger::init_logger(Some(format!("{}.log", module_path!()).as_str()));
     put_peeper32().await;
     peeper::mount();
 
