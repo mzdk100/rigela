@@ -27,11 +27,12 @@ use win_wrap::{
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
     input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
+use super::keys::Keys;
 
 /// 设置键盘钩子
 pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
     // 跟踪每一个键的按下状态
-    let key_track: RwLock<HashMap<(u32, bool), bool>> = RwLock::new(HashMap::new());
+    let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         let info: &KbdLlHookStruct = l_param.to();
@@ -39,7 +40,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
         let mut map = key_track.write().unwrap();
-        map.insert((info.vkCode, is_extended), pressed);
+        map.insert((info.vkCode, is_extended).into(), pressed);
 
         if !pressed {
             drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -59,14 +60,14 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 }
 
 // 匹配技能项的热键列表是否与当前Hook到的按键相同
-fn match_keys(talent: Talent, map: &HashMap<(u32, bool), bool>) -> bool {
+fn match_keys(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
     !talent
         .get_supported_cmd_list()
         .iter()
         .find(|x| match *x {
             CommandType::Key(y) => {
-                for (vk, ext) in y {
-                    match map.get(&(vk.0 as u32, *ext)) {
+                for key in y {
+                    match map.get(key) {
                         None => return false,
                         Some(x) => match *x {
                             true => continue,

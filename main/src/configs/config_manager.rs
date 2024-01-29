@@ -14,15 +14,15 @@
 use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use std::fs::{read_to_string, File};
+use std::io::Write;
+use std::ops::{Deref, DerefMut};
+use std::sync::{Mutex, OnceLock};
+use std::thread::{sleep, spawn};
 use std::{
     path::PathBuf,
     time::{Duration, Instant},
 };
-use std::fs::{File, read_to_string};
-use std::io::Write;
-use std::ops::{Deref, DerefMut};
-use std::sync::{ Mutex, OnceLock};
-use std::thread::{spawn, sleep};
 
 /// 配置项目的根元素
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -52,7 +52,7 @@ impl ConfigManager {
     }
 
     /// 初始化当前配置，从配置文件获取配置信息
-    pub(crate)  fn init(&self) {
+    pub(crate) fn init(&self) {
         *self.config.lock().unwrap().deref_mut() = self.read();
     }
 
@@ -69,7 +69,7 @@ impl ConfigManager {
         *current_config().lock().unwrap().deref_mut() = config.clone();
 
         let path = self.path.clone();
-        spawn(move||write_config(path));
+        spawn(move || write_config(path));
     }
 
     /*
@@ -97,7 +97,7 @@ impl ConfigManager {
             *self.config.lock().unwrap().deref_mut() = cfg.clone();
 
             let path = self.path.clone();
-            spawn(move ||write_config(path));
+            spawn(move || write_config(path));
 
             cfg
         }
@@ -140,10 +140,10 @@ fn write_config(path: PathBuf) {
 
     match toml::to_string(current_config().lock().unwrap().deref()) {
         Ok(content) => {
-            if let  Ok(mut file) = File::create(&path){
+            if let Ok(mut file) = File::create(&path) {
                 file.write(&content.into_bytes())
                     .expect("write config file failed");
-            }else{
+            } else {
                 error!("create config file failed");
             }
         }

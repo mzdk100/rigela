@@ -17,14 +17,13 @@ mod program;
 mod tts;
 
 use crate::talent::mouse::{ClickTalent, ReadMouseTalent, RightClickTalent};
-use crate::talent::tts::{NextPropRTalent, NextPropTalent, PrevPropRTalent, PrevPropTalent};
+use crate::talent::tts::{NextPropTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
     context::Context,
     talent::form_browser::{
         CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent,
     },
-    talent::tts::{IncreaseRTalent, ReduceRTalent},
     talent::{
         form_browser::{CurrElementTalent, ModeNextTalent, NextElementTalent, PrevElementTalent},
         program::{CurrentTimeTalent, ExitTalent},
@@ -77,13 +76,9 @@ impl TalentAccessor {
             Arc::new(CurrChildElementTalent),
             // 语音调节技能
             Arc::new(IncreaseTalent),
-            Arc::new(IncreaseRTalent),
             Arc::new(ReduceTalent),
-            Arc::new(ReduceRTalent),
             Arc::new(NextPropTalent),
-            Arc::new(NextPropRTalent),
             Arc::new(PrevPropTalent),
-            Arc::new(PrevPropRTalent),
             // 鼠标技能
             Arc::new(ClickTalent),
             Arc::new(RightClickTalent),

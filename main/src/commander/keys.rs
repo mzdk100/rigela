@@ -49,9 +49,23 @@ use win_wrap::input::{
     VK_VOLUME_UP, VK_W, VK_X, VK_XBUTTON1, VK_XBUTTON2, VK_Y, VK_Z,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum Keys {
-    RigelA,
+    VkRigelA,
+    VkNumPad1,
+    VkNumPad2,
+    VkNumPad3,
+    VkNumPad4,
+    VkNumPad5,
+    VkNumPad6,
+    VkNumPad7,
+    VkNumPad8,
+    VkNumPad9,
+    VkNumpadDiv,
+    VkNumpadMul,
+    VkCtrl,
     Vk0,
     Vk1,
     Vk2,
@@ -177,7 +191,6 @@ pub(crate) enum Keys {
     VkLaunchMail,
     VkLaunchMediaSelect,
     VkLbutton,
-    VkLcontrol,
     VkLeft,
     VkLmenu,
     VkLshift,
@@ -250,7 +263,6 @@ pub(crate) enum Keys {
     VkQ,
     VkR,
     VkRbutton,
-    VkRcontrol,
     VkReturn,
     VkRight,
     VkRmenu,
@@ -280,14 +292,30 @@ pub(crate) enum Keys {
     VkY,
     VkZ,
 
-    None,
+    VkNone,
 }
 
 impl From<(u32, bool)> for Keys {
+    //noinspection SpellCheckingInspection
     fn from(info: (u32, bool)) -> Self {
         let (vk, ext) = (VirtualKey { 0: info.0 as u16 }, info.1);
 
         match (vk, ext) {
+            (VK_INSERT, false) => Self::VkRigelA,
+            (VK_INSERT, true) => Self::VkRigelA,
+            (VK_END, false) => Self::VkNumpad1,
+            (VK_DOWN, false) => Self::VkNumpad2,
+            (VK_NEXT, false) => Self::VkNumpad3,
+            (VK_LEFT, false) => Self::VkNumpad4,
+            (VK_CLEAR, false) => Self::VkNumpad5,
+            (VK_RIGHT, false) => Self::VkNumpad6,
+            (VK_HOME, false) => Self::VkNumpad7,
+            (VK_UP, false) => Self::VkNumpad8,
+            (VK_PRIOR, false) => Self::VkNumpad9,
+            (VK_DIVIDE, true) => Self::VkNumpadDiv,
+            (VK_MULTIPLY, false) => Self::VkNumpadMul,
+            (VK_LCONTROL, false) => Self::VkCtrl,
+            (VK_RCONTROL, true) => Self::VkCtrl,
             (VK_0, false) => Self::Vk0,
             (VK_1, false) => Self::Vk1,
             (VK_2, false) => Self::Vk2,
@@ -317,7 +345,7 @@ impl From<(u32, bool)> for Keys {
             (VK_C, false) => Self::VkC,
             (VK_CANCEL, false) => Self::VkCancel,
             (VK_CAPITAL, false) => Self::VkCapital,
-            (VK_CLEAR, false) => Self::VkClear,
+            (VK_CLEAR, true) => Self::VkClear,
             (VK_CONTROL, false) => Self::VkControl,
             (VK_CONVERT, false) => Self::VkConvert,
             (VK_CRSEL, false) => Self::VkCrsel,
@@ -339,9 +367,9 @@ impl From<(u32, bool)> for Keys {
             (VK_DECIMAL, false) => Self::VkDecimal,
             (VK_DELETE, false) => Self::VkDelete,
             (VK_DIVIDE, false) => Self::VkDivide,
-            (VK_DOWN, false) => Self::VkDown,
+            (VK_DOWN, true) => Self::VkDown,
             (VK_E, false) => Self::VkE,
-            (VK_END, false) => Self::VkEnd,
+            (VK_END, true) => Self::VkEnd,
             // (VK_EREOF, false) => Self::VkEreof,
             (VK_ESCAPE, false) => Self::VkEscape,
             (VK_EXECUTE, false) => Self::VkExecute,
@@ -402,14 +430,13 @@ impl From<(u32, bool)> for Keys {
             // (VK_HANGUL, false) => Self::VkHangul,
             (VK_HANJA, false) => Self::VkHanja,
             (VK_HELP, false) => Self::VkHelp,
-            (VK_HOME, false) => Self::VkHome,
+            (VK_HOME, true) => Self::VkHome,
             (VK_I, false) => Self::VkI,
             (VK_ICO_00, false) => Self::VkIco00,
             (VK_ICO_CLEAR, false) => Self::VkIcoClear,
             (VK_ICO_HELP, false) => Self::VkIcoHelp,
             (VK_IME_OFF, false) => Self::VkImeOff,
             (VK_IME_ON, false) => Self::VkImeOn,
-            (VK_INSERT, false) => Self::RigelA,
             (VK_J, false) => Self::VkJ,
             (VK_JUNJA, false) => Self::VkJunja,
             (VK_K, false) => Self::VkK,
@@ -421,8 +448,8 @@ impl From<(u32, bool)> for Keys {
             (VK_LAUNCH_MAIL, false) => Self::VkLaunchMail,
             (VK_LAUNCH_MEDIA_SELECT, false) => Self::VkLaunchMediaSelect,
             (VK_LBUTTON, false) => Self::VkLbutton,
-            (VK_LCONTROL, false) => Self::VkLcontrol,
-            (VK_LEFT, false) => Self::VkLeft,
+
+            (VK_LEFT, true) => Self::VkLeft,
             (VK_LMENU, false) => Self::VkLmenu,
             (VK_LSHIFT, false) => Self::VkLshift,
             (VK_LWIN, false) => Self::VkLwin,
@@ -434,7 +461,7 @@ impl From<(u32, bool)> for Keys {
             (VK_MEDIA_STOP, false) => Self::VkMediaStop,
             (VK_MENU, false) => Self::VkMenu,
             (VK_MODECHANGE, false) => Self::VkModechange,
-            (VK_MULTIPLY, false) => Self::VkMultiply,
+            (VK_MULTIPLY, true) => Self::VkMultiply,
             (VK_N, false) => Self::VkN,
             (VK_NAVIGATION_ACCEPT, false) => Self::VkNavigationAccept,
             (VK_NAVIGATION_CANCEL, false) => Self::VkNavigationCancel,
@@ -444,7 +471,7 @@ impl From<(u32, bool)> for Keys {
             (VK_NAVIGATION_RIGHT, false) => Self::VkNavigationRight,
             (VK_NAVIGATION_UP, false) => Self::VkNavigationUp,
             (VK_NAVIGATION_VIEW, false) => Self::VkNavigationView,
-            (VK_NEXT, false) => Self::VkNext,
+            (VK_NEXT, true) => Self::VkNext,
             // (VK_NONAME, false) => Self::VkNoname,
             (VK_NONCONVERT, false) => Self::VkNonconvert,
             (VK_NUMLOCK, false) => Self::VkNumlock,
@@ -499,14 +526,14 @@ impl From<(u32, bool)> for Keys {
             (VK_PAUSE, false) => Self::VkPause,
             // (VK_PLAY, false) => Self::VkPlay,
             (VK_PRINT, false) => Self::VkPrint,
-            (VK_PRIOR, false) => Self::VkPrior,
+            (VK_PRIOR, true) => Self::VkPrior,
             (VK_PROCESSKEY, false) => Self::VkProcesskey,
             (VK_Q, false) => Self::VkQ,
             (VK_R, false) => Self::VkR,
             (VK_RBUTTON, false) => Self::VkRbutton,
-            (VK_RCONTROL, false) => Self::VkRcontrol,
+
             (VK_RETURN, false) => Self::VkReturn,
-            (VK_RIGHT, false) => Self::VkRight,
+            (VK_RIGHT, true) => Self::VkRight,
             (VK_RMENU, false) => Self::VkRmenu,
             (VK_RSHIFT, false) => Self::VkRshift,
             (VK_RWIN, false) => Self::VkRwin,
@@ -522,7 +549,7 @@ impl From<(u32, bool)> for Keys {
             (VK_T, false) => Self::VkT,
             (VK_TAB, false) => Self::VkTab,
             (VK_U, false) => Self::VkU,
-            (VK_UP, false) => Self::VkUp,
+            (VK_UP, true) => Self::VkUp,
             (VK_V, false) => Self::VkV,
             (VK_VOLUME_DOWN, false) => Self::VkVolumeDown,
             (VK_VOLUME_MUTE, false) => Self::VkVolumeMute,
@@ -534,7 +561,7 @@ impl From<(u32, bool)> for Keys {
             (VK_Y, false) => Self::VkY,
             (VK_Z, false) => Self::VkZ,
             // (VK_ZOOM, false) => Self::VkZoom,
-            _ => Self::None,
+            _ => Self::VkNone,
         }
     }
 }
@@ -542,7 +569,7 @@ impl From<(u32, bool)> for Keys {
 impl From<&str> for Keys {
     fn from(s: &str) -> Self {
         match s {
-            "RigelA" => Self::RigelA,
+            "RigelA" => Self::VkRigelA,
             "0" => Self::Vk0,
             "1" => Self::Vk1,
             "2" => Self::Vk2,
@@ -579,7 +606,7 @@ impl From<&str> for Keys {
             "X" => Self::VkX,
             "Y" => Self::VkY,
             "Z" => Self::VkZ,
-            _ => Self::None,
+            _ => Self::VkNone,
         }
     }
 }
@@ -587,7 +614,7 @@ impl From<&str> for Keys {
 impl Into<String> for Keys {
     fn into(self) -> String {
         let res = match self {
-            Keys::RigelA => "RigelA",
+            Keys::VkRigelA => "RigelA",
             Keys::Vk0 => "0",
             Keys::Vk1 => "1",
             Keys::Vk2 => "2",
@@ -624,12 +651,13 @@ impl Into<String> for Keys {
             Keys::VkX => "X",
             Keys::VkY => "Y",
             Keys::VkZ => "Z",
-            Keys::None => "None",
-            _ => "None",
+            Keys::VkNone => "None",
+            _ => "NoneKey",
         };
         String::from(res)
     }
 }
+
 mod tests {
     #[allow(unused_imports)]
     use super::*;

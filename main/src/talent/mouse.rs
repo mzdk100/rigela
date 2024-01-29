@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[allow(unused_imports)]
+use crate::commander::keys::Keys::*;
 use crate::configs::config_operations::apply_mouse_config;
 use crate::context::Context;
 use async_trait::async_trait;
@@ -18,11 +20,9 @@ use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
-#[allow(unused_imports)]
-use win_wrap::input::{VK_DIVIDE, VK_INSERT, VK_M, VK_MULTIPLY};
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标单击", key = ((VK_DIVIDE, true)))]
+#[talent(doc = "鼠标单击", key = (VkNumpadDiv))]
 async fn click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
@@ -30,7 +30,7 @@ async fn click(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标右击", key = ((VK_MULTIPLY, false)))]
+#[talent(doc = "鼠标右击", key = (VkNumpadMul))]
 async fn right_click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
@@ -38,12 +38,15 @@ async fn right_click(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标朗读", key = ((VK_INSERT, false), (VK_M, false)))]
+#[talent(doc = "鼠标朗读", key = (VkRigelA, VkM))]
 async fn read_mouse(context: Arc<Context>) {
     let is_read = !context.config_manager.get_config().mouse_config.is_read;
     apply_mouse_config(context.clone(), is_read);
     let state = if is_read { "开启" } else { "关闭" };
-    context.performer.speak_with_sapi5(format!("{}鼠标朗读", state)).await;
+    context
+        .performer
+        .speak_with_sapi5(format!("{}鼠标朗读", state))
+        .await;
 }
 
 async fn get_point(context: Arc<Context>) -> (i32, i32) {

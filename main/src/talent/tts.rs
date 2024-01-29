@@ -12,6 +12,8 @@
  */
 
 /* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
+#[allow(unused_imports)]
+use crate::commander::keys::Keys::*;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
@@ -24,64 +26,31 @@ use crate::{
     context::Context,
 };
 use async_trait::async_trait;
-#[allow(unused_imports)]
-use win_wrap::input::{
-    VK_DOWN, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_OEM_MINUS, VK_OEM_PLUS, VK_RCONTROL, VK_RIGHT,
-    VK_UP,
-};
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_UP, true)))]
+#[talent(doc = "语音加速", key = (VkRigelA, VkCtrl, VkUp))]
 async fn increase(context: Arc<Context>) {
     apply_tts_config(context.clone(), 1);
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音加速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_UP, true)))]
-async fn increase_r(context: Arc<Context>) {
-    apply_tts_config(context.clone(), 1);
-    speak_tts_prop(context).await;
-}
-
-//noinspection RsUnresolvedReference
-#[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_DOWN, true)))]
+#[talent(doc = "语音减速", key = (VkRigelA, VkCtrl, VkDown))]
 async fn reduce(context: Arc<Context>) {
     apply_tts_config(context.clone(), -1);
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音减速", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_DOWN, true)))]
-async fn reduce_r(context: Arc<Context>) {
-    apply_tts_config(context.clone(), -1);
-    speak_tts_prop(context).await;
-}
-
-//noinspection RsUnresolvedReference
-#[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_RIGHT, true)))]
+#[talent(doc = "语音下一属性", key = (VkRigelA, VkCtrl, VkRight))]
 async fn next_prop(context: Arc<Context>) {
     next_tts_prop();
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音下一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_RIGHT, true)))]
-async fn next_prop_r(context: Arc<Context>) {
-    next_tts_prop();
-    speak_tts_prop(context).await;
-}
-
-//noinspection RsUnresolvedReference
-#[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_LCONTROL, false), (VK_LEFT, true)))]
+#[talent(doc = "语音上一属性", key = (VkRigelA, VkCtrl, VkLeft))]
 async fn prev_prop(context: Arc<Context>) {
-    prev_tts_prop();
-    speak_tts_prop(context).await;
-}
-
-//noinspection RsUnresolvedReference
-#[talent(doc = "语音上一属性", key = ((VK_INSERT, false), (VK_RCONTROL, true), (VK_LEFT, true)))]
-async fn prev_prop_r(context: Arc<Context>) {
     prev_tts_prop();
     speak_tts_prop(context).await;
 }

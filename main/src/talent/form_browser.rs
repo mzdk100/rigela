@@ -13,19 +13,19 @@
 
 /* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
 #[allow(unused_imports)]
+use crate::commander::keys::Keys::*;
+#[allow(unused_imports)]
 use crate::context::Context;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
-
 /* 使用talent macro可选导入的条目 */
 use async_trait::async_trait;
-#[allow(unused_imports)]
-use win_wrap::input::{VK_ADD, VK_CLEAR, VK_HOME, VK_LEFT, VK_PRIOR, VK_RIGHT, VK_UP};
+
 const WAVE: &str = "boundary.wav";
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "上一个控件", key = ((VK_HOME, false)))]
+#[talent(doc = "上一个控件", key = (VkNumPad7))]
 async fn prev_element(context: Arc<Context>) {
     match context.form_browser.prev().await.current().await {
         Some(element) => context.performer.speak_with_sapi5(element).await,
@@ -34,7 +34,7 @@ async fn prev_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "下一个控件", key = ((VK_PRIOR, false)))]
+#[talent(doc = "下一个控件", key = (VkNumPad9))]
 async fn next_element(context: Arc<Context>) {
     match context.form_browser.next().await.current().await {
         Some(element) => context.performer.speak_with_sapi5(element).await,
@@ -43,7 +43,7 @@ async fn next_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "当前控件", key = ((VK_UP, false)))]
+#[talent(doc = "当前控件", key = (VkNumPad8))]
 async fn curr_element(context: Arc<Context>) {
     match context.form_browser.current().await {
         Some(element) => context.performer.speak_with_sapi5(element).await,
@@ -52,7 +52,7 @@ async fn curr_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "上一个子控件", key = ((VK_LEFT, false)))]
+#[talent(doc = "上一个子控件", key = (VkNumPad4))]
 async fn prev_child_element(context: Arc<Context>) {
     match context
         .form_browser
@@ -67,7 +67,7 @@ async fn prev_child_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "下一个子控件", key = ((VK_RIGHT, false)))]
+#[talent(doc = "下一个子控件", key = (VkNumPad6))]
 async fn next_child_element(context: Arc<Context>) {
     match context
         .form_browser
@@ -82,7 +82,7 @@ async fn next_child_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "当前子控件", key = ((VK_CLEAR, false)))]
+#[talent(doc = "当前子控件", key = (VkNumPad5))]
 async fn curr_child_element(context: Arc<Context>) {
     match context.form_browser.current_child().await {
         Some(element) => context.performer.speak_with_sapi5(element).await,
@@ -91,7 +91,7 @@ async fn curr_child_element(context: Arc<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "下一个模式", key = ((VK_ADD, false)))]
+#[talent(doc = "下一个模式", key = (VkAdd))]
 async fn mode_next(context: Arc<Context>) {
     context.performer.play_sound(WAVE).await;
 }

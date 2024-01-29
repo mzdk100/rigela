@@ -12,12 +12,16 @@
  */
 
 mod hooks;
-mod keys;
+pub(crate) mod keys;
 
-use crate::commander::hooks::{set_keyboard_hook, set_mouse_hook};
-use crate::{context::Context, talent::Talented};
+use crate::{
+    commander::hooks::{set_keyboard_hook, set_mouse_hook},
+    context::Context,
+    talent::Talented,
+};
+use keys::Keys;
 use std::sync::{Arc, Mutex};
-use win_wrap::{hook::WindowsHook, input::VirtualKey};
+use win_wrap::hook::WindowsHook;
 
 type Talent = Arc<dyn Talented + Send + Sync>;
 
@@ -27,7 +31,7 @@ type Talent = Arc<dyn Talented + Send + Sync>;
 #[allow(dead_code)]
 pub(crate) enum CommandType {
     // 键盘命令
-    Key(Vec<(VirtualKey, bool)>),
+    Key(Vec<Keys>),
     // 触摸命令
     Touch,
     // 语音命令
