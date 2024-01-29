@@ -49,7 +49,7 @@ use win_wrap::input::{
     VK_VOLUME_UP, VK_W, VK_X, VK_XBUTTON1, VK_XBUTTON2, VK_Y, VK_Z,
 };
 
-// 特别注意： 命名没有完善， 小键盘 VkNumPad 开头， 不要与 VkNumpad 混淆
+// 特别注意： 命名没有完善， 小键盘 VkNumPad 开头(大写P)， 不要与 VkNumpad (小写p)混淆
 
 /// 键盘枚举
 //noinspection SpellCheckingInspection
@@ -304,8 +304,12 @@ impl From<(u32, bool)> for Keys {
         let (vk, ext) = (VirtualKey { 0: info.0 as u16 }, info.1);
 
         match (vk, ext) {
+            // 读屏主热键
             (VK_INSERT, false) => Self::VkRigelA,
             (VK_INSERT, true) => Self::VkRigelA,
+            (VK_CAPITAL, false) => Self::VkRigelA,
+
+            // 小键盘数字键
             (VK_END, false) => Self::VkNumPad1,
             (VK_DOWN, false) => Self::VkNumPad2,
             (VK_NEXT, false) => Self::VkNumPad3,
@@ -317,8 +321,11 @@ impl From<(u32, bool)> for Keys {
             (VK_PRIOR, false) => Self::VkNumPad9,
             (VK_DIVIDE, true) => Self::VkNumPadDiv,
             (VK_MULTIPLY, false) => Self::VkNumPadMul,
+
+            // Ctrl键
             (VK_LCONTROL, false) => Self::VkCtrl,
             (VK_RCONTROL, true) => Self::VkCtrl,
+
             (VK_0, false) => Self::Vk0,
             (VK_1, false) => Self::Vk1,
             (VK_2, false) => Self::Vk2,
@@ -347,7 +354,6 @@ impl From<(u32, bool)> for Keys {
             (VK_BROWSER_STOP, false) => Self::VkBrowserStop,
             (VK_C, false) => Self::VkC,
             (VK_CANCEL, false) => Self::VkCancel,
-            (VK_CAPITAL, false) => Self::VkCapital,
             (VK_CLEAR, true) => Self::VkClear,
             (VK_CONTROL, false) => Self::VkControl,
             (VK_CONVERT, false) => Self::VkConvert,
