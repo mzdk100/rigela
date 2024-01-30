@@ -16,19 +16,20 @@ use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
 use windows_interface::interface;
 
-/** @defgroup grpRelations Relations
-  Use the following constants to compare against the BSTRs returned by
-  IAccessibleRelation::relationType.
-*/
-///@{
+/**
+ * grpRelations Relations
+ * Use the following constants to compare against the BSTRs returned by
+ * IAccessibleRelation::relationType.
+ * */
 
 /** The target object is the containing application object. */
 #[allow(unused)]
 const IA2_RELATION_CONTAINING_APPLICATION: &str = "containingApplication";
 
-/** The target object is the containing document object. The target object implements
- the IAccessibleDocument interface.
-*/
+/**
+ * The target object is the containing document object.
+ * The target object implements the IAccessibleDocument interface.
+ * */
 #[allow(unused)]
 const IA2_RELATION_CONTAINING_DOCUMENT: &str = "containingDocument";
 
@@ -40,7 +41,9 @@ const IA2_RELATION_CONTAINING_TAB_PANE: &str = "containingTabPane";
 #[allow(unused)]
 const IA2_RELATION_CONTAINING_WINDOW: &str = "containingWindow";
 
-/** Some attribute of this object is affected by a target object. */
+/**
+ * A target object affects some attribute of this object.
+ * */
 #[allow(unused)]
 const IA2_RELATION_CONTROLLED_BY: &str = "controlledBy";
 
@@ -52,7 +55,7 @@ const IA2_RELATION_CONTROLLER_FOR: &str = "controllerFor";
 #[allow(unused)]
 const IA2_RELATION_DESCRIBED_BY: &str = "describedBy";
 
-/** This object is describes the target object. */
+/** This object is describing the target object. */
 #[allow(unused)]
 const IA2_RELATION_DESCRIPTION_FOR: &str = "descriptionFor";
 
@@ -60,18 +63,20 @@ const IA2_RELATION_DESCRIPTION_FOR: &str = "descriptionFor";
 #[allow(unused)]
 const IA2_RELATION_EMBEDDED_BY: &str = "embeddedBy";
 
-/** This object embeds a target object. This relation can be used on the
- OBJID_CLIENT accessible for a top level window to show where the content
- areas are.
-*/
+//noinspection SpellCheckingInspection
+/**
+ * This object embeds a target object.
+ * This relation can be used on the OBJID_CLIENT accessible for a top level window
+ * to show where the content areas are.
+ * */
 #[allow(unused)]
 const IA2_RELATION_EMBEDS: &str = "embeds";
 
-/** Content flows to this object from a target object.
- This relation and IA2_RELATION_FLOWS_TO are useful to tie text and non-text
- objects together in order to allow assistive technology to follow the
- intended reading order.
-*/
+/**
+ * Content flows to this object from a target object.
+ * This relation and IA2_RELATION_FLOWS_TO are useful to tie text and non-text objects together
+ * to allow assistive technology to follow the intended reading order.
+ * */
 #[allow(unused)]
 const IA2_RELATION_FLOWS_FROM: &str = "flowsFrom";
 
@@ -83,22 +88,26 @@ const IA2_RELATION_FLOWS_TO: &str = "flowsTo";
 #[allow(unused)]
 const IA2_RELATION_LABEL_FOR: &str = "labelFor";
 
-/** This object is labelled by a target object. Note that the double L spelling
- which follows is preferred.  Please use it instead.  This single L version may
- be removed in a later version.
-*/
+/**
+ * This object is labeled by a target object.
+ * Note that the double L spelling which follows is preferred.
+ * Please use it instead.
+ * This single L version may be removed in a later version.
+ * */
 #[allow(unused)]
 const IA2_RELATION_LABELED_BY: &str = "labelledBy";
 
-/** This object is labelled by a target object. */
+/** This object is labeled by a target object. */
 #[allow(unused)]
 const IA2_RELATION_LABELLED_BY: &str = "labelledBy";
 
-/** This object is a member of a group of one or more objects. When
- there is more than one object in the group each member may have one and the
- same target, e.g. a grouping object.  It is also possible that each member has
- multiple additional targets, e.g. one for every other member in the group.
-*/
+/**
+ * This object is a member of a group of one or more objects.
+ * When there is more than one object in the group,
+ * each member may have one and the same target, e.g., a grouping object.
+ * It is also possible that each member has multiple additional targets,
+ * e.g., one for every other member in the group.
+ * */
 #[allow(unused)]
 const IA2_RELATION_MEMBER_OF: &str = "memberOf";
 
@@ -106,17 +115,25 @@ const IA2_RELATION_MEMBER_OF: &str = "memberOf";
 #[allow(unused)]
 const IA2_RELATION_NEXT_TABBABLE: &str = "nextTabbable";
 
-/** This object is a logical child of a target object.  This relation is the reciprocal
-of the IA2_RELATION_NODE_PARENT_OF relation. In some cases an application's accessible
-tree is such that objects can be in a logical parent-child relationship which is
-different from the hierarchy of the accessible tree. */
+/**
+ * This object is a logical child of a target object.
+ * This relation is the reciprocal of the IA2_RELATION_NODE_PARENT_OF relation.
+ * In some cases,
+ * an application's accessible tree is such
+ * that objects can be in a logical parent-child relationship
+ * that is different from the hierarchy of the accessible tree.
+ * */
 #[allow(unused)]
 const IA2_RELATION_NODE_CHILD_OF: &str = "nodeChildOf";
 
-/** This object is a logical parent of a target object. This relation is the reciprocal
-of the IA2_RELATION_NODE_CHILD_OF relation. In some cases an application's accessible
-tree is such that objects can be in a logical parent-child relationship which is
-different from the hierarchy of the accessible tree. */
+/**
+ * This object is a logical parent of a target object.
+ * This relation is the reciprocal of the IA2_RELATION_NODE_CHILD_OF relation.
+ * In some cases,
+ * an application's accessible tree is such
+ * that objects can be in a logical parent-child relationship
+ * that is different from the hierarchy of the accessible tree.
+ * */
 #[allow(unused)]
 const IA2_RELATION_NODE_PARENT_OF: &str = "nodeParentOf";
 
@@ -124,9 +141,10 @@ const IA2_RELATION_NODE_PARENT_OF: &str = "nodeParentOf";
 #[allow(unused)]
 const IA2_RELATION_PARENT_WINDOW_OF: &str = "parentWindowOf";
 
-/** This object is a transient component related to the target object.
- When this object is activated the target object doesn't lose focus.
-*/
+/**
+ * This object is a transient component related to the target object.
+ * When this object is activated, the target object doesn't lose focus.
+ * */
 #[allow(unused)]
 const IA2_RELATION_POPUP_FOR: &str = "popupFor";
 
@@ -134,21 +152,28 @@ const IA2_RELATION_POPUP_FOR: &str = "popupFor";
 #[allow(unused)]
 const IA2_RELATION_PREVIOUS_TABBABLE: &str = "previousTabbable";
 
+//noinspection SpellCheckingInspection
 /** This object is a sub window of a target object. */
 #[allow(unused)]
 const IA2_RELATION_SUBWINDOW_OF: &str = "subwindowOf";
 
-/** The target object provides the detailed, extended description for this
-object. It provides more detailed information than would normally be provided
-using the IA2_RELATION_DESCRIBED_BY relation. A common use for this relation is
-in digital publishing where an extended description needs to be conveyed in
-a book that requires structural markup or the embedding of other technology to
-provide illustrative content. */
+/**
+ * The target object provides a detailed, extended description for this object.
+ * It provides more detailed information
+ * than would normally be provided using the IA2_RELATION_DESCRIBED_BY relation.
+ * A common use for this relation is in digital publishing
+ * where an extended description needs
+ * to be conveyed in a book
+ * that requires structural markup or the embedding of other technology
+ * to provide illustrative content.
+ * */
 #[allow(unused)]
 const IA2_RELATION_DETAILS: &str = "details";
 
-/** This object provides the detailed, extended description for the target
-object. See IA2_RELATION_DETAILS. */
+/**
+ * This object provides a detailed, extended description for the target object.
+ * See IA2_RELATION_DETAILS.
+ * */
 #[allow(unused)]
 const IA2_RELATION_DETAILS_FOR: &str = "detailsFor";
 
@@ -160,10 +185,9 @@ const IA2_RELATION_ERROR: &str = "error";
 #[allow(unused)]
 const IA2_RELATION_ERROR_FOR: &str = "errorFor";
 
-///@}
-
-/** This interface gives access to an object's set of relations.
-*/
+/**
+ * This interface gives access to an object's set of relations.
+ * */
 #[interface("7CDF86EE-C3DA-496a-BDA4-281B336E1FDC")]
 pub(crate) unsafe trait IAccessibleRelation: IUnknown {
     /** Returns the type of the relation.
@@ -182,24 +206,26 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
 
     fn nTargets(&self, nTargets: *mut i32) -> HRESULT;
 
-    /** Returns one accessible relation target.
-     `targetIndex` 0 based index
-     `target` @retval E_INVALIDARG if bad [in] passed
-     @note Use QueryInterface to get IAccessible2.
-    */
-
+    //noinspection SpellCheckingInspection
+    /**
+     * Returns one accessible relation target.
+     * `targetIndex` zero based index
+     * `target` retrieval E_INVALIDARG if bad [in] passed
+     * @note Use QueryInterface to get IAccessible2.
+     * */
     fn target(&self, targetIndex: i32, target: *mut *mut IUnknown) -> HRESULT;
 
-    /** Returns multiple accessible relation targets
-      `maxTargets` maximum size of the array allocated by the client
-      `targets` The array of target objects.  Note that this array is to be allocated by the
-    client and freed when no longer needed.  Refer to @ref _arrayConsideration
-    "Special Consideration when using Arrays" for more details.  You will need to use
-    QueryInterface on the IUnknown to get the IAccessible2.
-      `nTargets` actual number of targets in the returned array (not more than maxTargets)
-      @retval E_INVALIDARG if bad [in] passed, e.g. a negative value
-     */
-
+    //noinspection SpellCheckingInspection
+    /**
+     * Returns multiple accessible relation targets
+     * `maxTargets` maximum size of the array allocated by the client
+     * `targets` The array of target objects.
+     * Note that this array is to be allocated by the client and freed when no longer needed.
+     * Refer to @ref _arrayConsideration "Special Consideration when using Arrays" for more details.
+     * You will need to use QueryInterface on the IUnknown to get the IAccessible2.
+     * `nTargets` actual number of targets in the returned array (not more than maxTargets)
+     * retrieval E_INVALIDARG if bad [in] passed, e.g., a negative value
+     * */
     fn targets(&self, maxTargets: i32, targets: *mut *mut IUnknown, nTargets: *mut i32) -> HRESULT;
 }
 
@@ -216,8 +242,7 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
  *   
  *   
  *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
+ *  modification, are permitted if the following conditions are met:
  *   
  *   1. Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
@@ -233,7 +258,7 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
  *      permission.
  *   
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- *  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * CONTRIBUTORS "AS ARE" AND ANY EXPRESS OR IMPLIED WARRANTIES,
  *  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  *  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR

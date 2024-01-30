@@ -108,18 +108,17 @@ pub(crate) enum IA2CoordinateType {
     /// The coordinates are relative to the screen.
     IA2_COORDTYPE_SCREEN_RELATIVE,
 
-    /** The coordinates are relative to the upper left corner of the bounding box
-     of the immediate parent.
-    */
+    /**
+     * The coordinates are relative to the upper-left corner of the immediate parent's bounding box.
+     * */
     IA2_COORDTYPE_PARENT_RELATIVE,
 }
 
-/** Special offsets for use in IAccessibleText and IAccessibleEditableText methods
-
-  Refer to @ref _specialOffsets
-  "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods"
-  for more information.
-*/
+/**
+ * Special offsets for use in IAccessibleText and IAccessibleEditableText methods
+ * Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods"
+ * for more information.
+ * */
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -132,11 +131,11 @@ pub(crate) enum IA2TextSpecialOffsets {
     IA2_TEXT_OFFSET_CARET = -2,
 }
 
-/** These constants specify the kind of change made to a table.
-
-   This enum is used in the IA2TableModelChange struct which in turn is used by
-   IAccessibleTable::modelChange and IAccessibleTable2::modelChange.
-*/
+/**
+ * These constants specify the kind of change made to a table.
+ * This enum is used in the IA2TableModelChange struct, which in turn is used by
+ * IAccessibleTable::modelChange and IAccessibleTable2::modelChange.
+ * */
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -146,14 +145,16 @@ pub(crate) enum IA2TableModelChangeType {
     IA2_TABLE_MODEL_CHANGE_UPDATE,
 }
 
-/** A structure defining the type of and extents of changes made to a table
-
- IAccessibleTable::modelChange and IAccessibleTable2::modelChange return this struct.
- In the case of an insertion or change the row and column offsets define the boundaries
- of the inserted or changed sub-table after the operation.  In the case of a deletion
- the row and column offsets define the boundaries of the sub-table being removed before
- the removal.
-*/
+/**
+ * A structure
+ * defining the type of and extents of changes
+ * made to a table IAccessibleTable::modelChange and IAccessibleTable2::modelChange return this struct.
+ * In the case of an insertion or change,
+ * the row and column offsets define the boundaries of the inserted or changed sub-table after the operation.
+ * In the case of a deletion,
+ * the row and column offsets define the boundaries of the sub-table
+ * being removed before the removal.
+ * */
 #[allow(dead_code)]
 struct IA2TableModelChange {
     r#type: IA2TableModelChangeType, // insert, delete, update
@@ -176,7 +177,7 @@ struct IA2TableModelChange {
  *   
  *   
  *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
+ *  modification, are permitted if the following conditions
  *  are met:
  *   
  *   1. Redistributions of source code must retain the above copyright
@@ -193,7 +194,7 @@ struct IA2TableModelChange {
  *      permission.
  *   
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- *  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ *  CONTRIBUTORS "AS ARE" AND ANY EXPRESS OR IMPLIED WARRANTIES,
  *  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  *  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
