@@ -33,6 +33,11 @@ use win_wrap::{
 pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
+    let talent_keys = context
+        .config_manager
+        .get_config()
+        .hotkeys_config
+        .talent_keys;
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         let info: &KbdLlHookStruct = l_param.to();
@@ -48,7 +53,15 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         for i in talents.iter() {
-            if match_keys(Arc::clone(i), &map) {
+            if let Some(keys) = talent_keys.get(&i.get_id()) {
+                // 如果用户自定义过热键优先使用他定义的。
+                if match_keys(keys, &map) {
+                    execute(context.clone(), Arc::clone(i));
+                    return LRESULT(1);
+                }
+            }
+            if match_cmd_list(Arc::clone(i), &map) {
+                // 如果用户没定义过这个能力的热键就使用默认的。
                 execute(context.clone(), Arc::clone(i));
                 return LRESULT(1);
             }
@@ -60,22 +73,23 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 }
 
 // 匹配技能项的热键列表是否与当前Hook到的按键相同
-fn match_keys(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
+fn match_keys(keys: &Vec<Keys>, map: &HashMap<Keys, bool>) -> bool {
+    for key in keys {
+        match map.get(key) {
+            // 能匹配到按键，并且按键状态为按下，进入下一轮循环
+            Some(x) if *x => continue,
+            _ => return false,
+        }
+    }
+    // 所有按键都匹配成功
+    true
+}
+fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
     !talent
         .get_supported_cmd_list()
         .iter()
         .find(|x| match *x {
-            CommandType::Key(y) => {
-                for key in y {
-                    match map.get(key) {
-                        // 能匹配到按键，并且按键状态为按下，进入下一轮循环
-                        Some(x) if *x => continue,
-                        _ => return false,
-                    }
-                }
-                // 所有按键都匹配成功
-                true
-            }
+            CommandType::Key(y) => match_keys(y, map),
             _ => false,
         })
         .is_none()

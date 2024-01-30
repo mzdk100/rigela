@@ -65,8 +65,10 @@ impl Parse for Metadata {
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
     let doc = metadata.doc;
+    let doc_raw = doc.to_token_stream().to_string();
     let cmd_list = metadata.cmd_list;
     let input: ItemFn = syn::parse2(item).unwrap();
+    let id_raw = input.sig.ident.to_string();
     let id = get_struct_name(&input.sig.ident, "Talent");
     let id2 = format!("get_{}_talent", input.sig.ident.to_string());
     let id2 = Ident::new(id2.as_str(), Span::call_site());
@@ -79,6 +81,12 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
         impl crate::talent::Talented for #id {
             fn get_supported_cmd_list(&self) -> Vec<crate::commander::CommandType> {
                 #cmd_list
+            }
+            fn get_id(&self) -> String {
+                #id_raw.to_string()
+            }
+            fn get_doc(&self) -> String {
+                #doc_raw.to_string()
             }
             async  fn perform(&self, context: std::sync::Arc<Context>) {
                 #body
