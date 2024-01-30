@@ -6,8 +6,6 @@
       <sourceFolder url="file://$MODULE_DIR$/peeper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bass-wrap/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bass-wrap/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/jab-sys/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/jab-sys/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/win-wrap/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/macros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources/src" isTestSource="false" />
@@ -16,6 +14,8 @@
       <sourceFolder url="file://$MODULE_DIR$/proxy32/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build_helper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/access-lib/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/access-lib/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
