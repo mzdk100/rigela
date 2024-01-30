@@ -25,15 +25,11 @@ use crate::gui::popup_menu;
 use crate::performer::Speakable;
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
-use std::time::Duration;
-use tokio::time::sleep;
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
 async fn exit(context: Arc<Context>) {
-    context.performer.speak_with_sapi5(t!("program.exit")).await;
-    sleep(Duration::from_millis(1000)).await;
-    context.terminator.exit().await;
+    context.exit_program().await;
 }
 
 impl Speakable for DateTime<Local> {

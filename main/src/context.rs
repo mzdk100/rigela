@@ -19,7 +19,9 @@ use crate::{
 use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::runtime::{Builder, Handle, Runtime};
+use tokio::time::sleep;
 use win_wrap::uia::automation::UiAutomation;
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -116,6 +118,13 @@ impl Context {
         self.main_handler.spawn(async move {
             ctx.performer.apply(ctx.clone()).await;
         });
+    }
+
+    // 退出程序
+    pub(crate) async fn exit_program(&self) {
+        self.performer.speak_with_sapi5(t!("program.exit")).await;
+        sleep(Duration::from_millis(1000)).await;
+        self.terminator.exit().await;
     }
 
     /**

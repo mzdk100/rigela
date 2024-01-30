@@ -68,7 +68,8 @@ impl Launcher {
         thread::spawn(|| welcome::show());
 
         // 显示托盘图标
-        thread::spawn(|| system_tray::show());
+        let ctx_tray = self.context.clone();
+        thread::spawn(|| system_tray::show(ctx_tray));
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
         let proxy32 = self.context.proxy32.clone();
