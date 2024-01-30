@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::hotkeys::HotKeysConfig;
 use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
@@ -29,6 +30,7 @@ use std::{
 pub(crate) struct ConfigRoot {
     pub(crate) tts_config: TtsConfig,
     pub(crate) mouse_config: MouseConfig,
+    pub(crate) hotkeys_config: HotKeysConfig,
 }
 
 /// 配置管理器

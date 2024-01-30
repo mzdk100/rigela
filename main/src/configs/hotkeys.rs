@@ -11,8 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod config_manager;
-pub(crate) mod config_operations;
-pub(crate) mod hotkeys;
-pub(crate) mod mouse;
-pub(crate) mod tts;
+use crate::commander::keys::Keys;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub(crate) struct HotKeysConfig {
+    pub(crate) pairs: HashMap<String, Vec<Keys>>,
+}
+
+impl Default for HotKeysConfig {
+    fn default() -> Self {
+        let mut pairs = HashMap::new();
+
+        pairs.insert("退出程序".to_string(), vec![Keys::VkRigelA, Keys::VkEscape]);
+        pairs.insert("朗读时间".to_string(), vec![Keys::VkRigelA, Keys::VkF12]);
+
+        Self { pairs }
+    }
+}

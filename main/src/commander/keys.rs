@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use serde::{Deserialize, Serialize};
 use win_wrap::input::{
     VirtualKey, VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_ABNT_C1,
     VK_ABNT_C2, VK_ACCEPT, VK_ADD, VK_APPS, VK_ATTN, VK_B, VK_BACK, VK_BROWSER_BACK,
@@ -54,7 +55,7 @@ use win_wrap::input::{
 /// 键盘枚举
 //noinspection SpellCheckingInspection
 #[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) enum Keys {
     VkRigelA,
     VkNumPad1,
