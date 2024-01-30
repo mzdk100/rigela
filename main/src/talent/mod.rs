@@ -41,6 +41,16 @@ use std::sync::Arc;
 #[async_trait]
 pub(crate) trait Talented {
     /**
+     * 获取能力的ID。
+     * */
+    fn get_id(&self) -> String;
+
+    /**
+     * 获取能力的描述文字。
+     * */
+    fn get_doc(&self) -> String;
+
+    /**
      * 获取能力可支持的命令类型。
      * */
     fn get_supported_cmd_list(&self) -> Vec<CommandType>;

@@ -17,16 +17,13 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct HotKeysConfig {
-    pub(crate) pairs: HashMap<String, Vec<Keys>>,
+    pub(crate) talent_keys: HashMap<String, Vec<Keys>>,
 }
 
 impl Default for HotKeysConfig {
     fn default() -> Self {
-        let mut pairs = HashMap::new();
-
-        pairs.insert("退出程序".to_string(), vec![Keys::VkRigelA, Keys::VkEscape]);
-        pairs.insert("朗读时间".to_string(), vec![Keys::VkRigelA, Keys::VkF12]);
-
-        Self { pairs }
+        Self {
+            talent_keys: HashMap::new(),
+        }
     }
 }
