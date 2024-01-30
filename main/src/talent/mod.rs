@@ -17,6 +17,7 @@ mod program;
 mod tts;
 
 use crate::talent::mouse::{ClickTalent, ReadMouseTalent, RightClickTalent};
+use crate::talent::program::PopupMenuTalent;
 use crate::talent::tts::{NextPropTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
@@ -66,8 +67,9 @@ impl TalentAccessor {
             // 程序技能
             Arc::new(ExitTalent),
             Arc::new(CurrentTimeTalent),
-            Arc::new(ModeNextTalent),
+            Arc::new(PopupMenuTalent),
             // 窗口浏览技能
+            Arc::new(ModeNextTalent),
             Arc::new(PrevElementTalent),
             Arc::new(NextElementTalent),
             Arc::new(CurrElementTalent),

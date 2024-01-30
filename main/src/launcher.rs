@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::welcome::show_form;
+use crate::gui::{system_tray, welcome};
 use crate::{
     context::Context,
     terminator::{TerminationWaiter, Terminator},
@@ -65,7 +65,10 @@ impl Launcher {
         });
 
         // 显示欢迎页面。
-        thread::spawn(|| show_form());
+        thread::spawn(|| welcome::show());
+
+        // 显示托盘图标
+        thread::spawn(|| system_tray::show());
 
         // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
         let proxy32 = self.context.proxy32.clone();

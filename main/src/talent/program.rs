@@ -14,13 +14,14 @@
 /* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
 #[allow(unused_imports)]
 use crate::commander::keys::Keys::*;
-#[allow(unused_imports)]
 use crate::context::Context;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
+use std::thread;
 /* 使用talent macro可选导入的条目 */
 /* 业务逻辑使用的条目 */
+use crate::gui::popup_menu;
 use crate::performer::Speakable;
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
@@ -34,8 +35,6 @@ async fn exit(context: Arc<Context>) {
     sleep(Duration::from_millis(1000)).await;
     context.terminator.exit().await;
 }
-#[allow(unused_imports)]
-use crate::commander::keys::Keys::*;
 
 impl Speakable for DateTime<Local> {
     fn get_sentence(&self) -> String {
@@ -47,4 +46,10 @@ impl Speakable for DateTime<Local> {
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
 async fn current_time(context: Arc<Context>) {
     context.performer.speak_with_sapi5(Local::now()).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
+async fn popup_menu(context: Arc<Context>) {
+    thread::spawn(|| popup_menu::show());
 }
