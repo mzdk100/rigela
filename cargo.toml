@@ -5,12 +5,12 @@ opt-level = "s"
 
 [workspace]
 members = [
+    'access-lib',
     "build_helper",
     "macros",
     "main",
     "peeper",
     "proxy32",
-    "jab-sys",
     "resources",
     "utils",
     "win-wrap"

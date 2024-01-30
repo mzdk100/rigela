@@ -1,16 +1,13 @@
 [package]
-name = "jab-sys"
+name = "access-lib"
 version = "0.1.0"
 edition = "2021"
-build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+windows-interface = "0.52.0"
 
-[build-dependencies]
-bindgen = "0.69.1"
-cc = "1.0.83"
-
-[[example]]
-name = "jab_sys_test"
+[dependencies.windows]
+version = "0.52.0"
+features = ["Win32_System_Com", "Win32_UI_Accessibility"]
