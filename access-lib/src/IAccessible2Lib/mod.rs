@@ -21,6 +21,7 @@ pub(crate) mod AccessibleApplication;
 pub(crate) mod AccessibleComponent;
 pub(crate) mod AccessibleDocument;
 pub(crate) mod AccessibleEditableText;
+pub(crate) mod AccessibleEventID;
 pub(crate) mod AccessibleRelation;
 pub(crate) mod AccessibleStates;
 pub(crate) mod IA2CommonTypes;
