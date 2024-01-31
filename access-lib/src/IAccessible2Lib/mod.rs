@@ -18,6 +18,7 @@ pub(crate) mod Accessible2_2;
 pub(crate) mod Accessible2_3;
 pub(crate) mod AccessibleAction;
 pub(crate) mod AccessibleApplication;
+pub(crate) mod AccessibleComponent;
 pub(crate) mod AccessibleRelation;
 pub(crate) mod AccessibleStates;
 pub(crate) mod IA2CommonTypes;
