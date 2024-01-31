@@ -12,6 +12,7 @@
  */
 
 use crate::context::Context;
+use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NativeUi;
 use std::ops::DerefMut;
@@ -68,7 +69,10 @@ impl SystemTray {
         if let Some(context) = context {
             let ctx = context.clone();
             context.main_handler.spawn(async move {
-                ctx.exit_program().await;
+                ctx.talent_accessor
+                    .get_exit_talent()
+                    .perform(ctx.clone())
+                    .await;
             });
         }
         nwg::stop_thread_dispatch();
