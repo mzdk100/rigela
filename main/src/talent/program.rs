@@ -22,7 +22,7 @@ use std::thread;
 use std::time::Duration;
 /* 使用talent macro可选导入的条目 */
 /* 业务逻辑使用的条目 */
-use crate::gui::popup_menu;
+use crate::gui::{hotkeys, popup_menu};
 use crate::performer::Speakable;
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
@@ -52,4 +52,11 @@ async fn current_time(context: Arc<Context>) {
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
 async fn popup_menu(context: Arc<Context>) {
     thread::spawn(|| popup_menu::show());
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "自定义热键", key = (VkRigelA, VkK))]
+async fn hotkeys(context: Arc<Context>) {
+    let context = context.clone();
+    thread::spawn(|| hotkeys::show(context));
 }
