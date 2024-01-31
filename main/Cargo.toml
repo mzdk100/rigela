@@ -21,8 +21,9 @@ default-locale = "zh-CN"
 # 这个配置让'cargo i18n'命令行工具知道在哪里可以找到你的翻译。要保证和传给“rust_i18n::i18n！”方法的路径相同。
 load-path = "locale"
 
-[build-dependencies]
-embed-manifest = "1.4.0"
+[[bin]]
+path = "src/updater/main.rs"
+name = "updater"
 
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
@@ -46,7 +47,11 @@ features = [
 
 [build-dependencies.embed-resource]
 # 嵌入资源信息到程序中
-version = "2.4.0"
+version = "2.4.1"
+
+[build-dependencies.embed-manifest]
+# 嵌入清单信息到程序中
+version = "1.4.0"
 
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
@@ -65,7 +70,7 @@ path = "../utils"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
-version = "1.0.145"
+version = "1.0.196"
 features = ["derive"]
 
 [dependencies.toml]
@@ -87,3 +92,8 @@ nwd = { version = "1.0.5", package = "native-windows-derive"}
 
 # 异步trait
 async-trait = "0.1.77"
+
+# 网络请求
+reqwest = "0.11.23"
+# 解析html
+select = "0.6.0"
