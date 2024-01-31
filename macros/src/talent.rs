@@ -10,6 +10,7 @@
  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
+
 use heck::ToUpperCamelCase;
 
 use crate::utils::get_struct_name;
@@ -65,7 +66,7 @@ impl Parse for Metadata {
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
     let doc = metadata.doc;
-    let doc_raw = doc.to_token_stream().to_string();
+    let doc_raw = doc.value.clone();
     let cmd_list = metadata.cmd_list;
     let input: ItemFn = syn::parse2(item).unwrap();
     let id_raw = input.sig.ident.to_string();
