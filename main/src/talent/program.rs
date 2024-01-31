@@ -19,17 +19,21 @@ use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 /* 使用talent macro可选导入的条目 */
 /* 业务逻辑使用的条目 */
 use crate::gui::{hotkeys, popup_menu};
 use crate::performer::Speakable;
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
+use tokio::time::sleep;
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
 async fn exit(context: Arc<Context>) {
-    context.exit_program().await;
+    context.performer.speak_with_sapi5(t!("program.exit")).await;
+    sleep(Duration::from_millis(1000)).await;
+    context.terminator.exit().await;
 }
 
 impl Speakable for DateTime<Local> {
