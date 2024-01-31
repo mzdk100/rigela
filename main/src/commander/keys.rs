@@ -625,6 +625,40 @@ impl Into<String> for Keys {
     fn into(self) -> String {
         let res = match self {
             Keys::VkRigelA => "RigelA",
+            Keys::VkNumPad1 => "小键盘1",
+            Keys::VkNumPad2 => "小键盘2",
+            Keys::VkNumPad3 => "小键盘3",
+            Keys::VkNumPad4 => "小键盘4",
+            Keys::VkNumPad5 => "小键盘5",
+            Keys::VkNumPad6 => "小键盘6",
+            Keys::VkNumPad7 => "小键盘7",
+            Keys::VkNumPad8 => "小键盘8",
+            Keys::VkNumPad9 => "小键盘9",
+
+            Keys::VkNumPadDiv => "小键盘/",
+            Keys::VkNumPadMul => "小键盘*",
+
+            Keys::VkCtrl => "Ctrl",
+            Keys::VkEscape => "Esc",
+
+            Keys::VkLeft => "左光标",
+            Keys::VkRight => "右光标",
+            Keys::VkUp => "上光标",
+            Keys::VkDown => "下光标",
+
+            Keys::VkF1 => "F1",
+            Keys::VkF2 => "F2",
+            Keys::VkF3 => "F3",
+            Keys::VkF4 => "F4",
+            Keys::VkF5 => "F5",
+            Keys::VkF6 => "F6",
+            Keys::VkF7 => "F7",
+            Keys::VkF8 => "F8",
+            Keys::VkF9 => "F9",
+            Keys::VkF10 => "F10",
+            Keys::VkF11 => "F11",
+            Keys::VkF12 => "F12",
+
             Keys::Vk0 => "0",
             Keys::Vk1 => "1",
             Keys::Vk2 => "2",
@@ -661,8 +695,9 @@ impl Into<String> for Keys {
             Keys::VkX => "X",
             Keys::VkY => "Y",
             Keys::VkZ => "Z",
-            Keys::VkNone => "None",
-            _ => "NoneKey",
+
+            Keys::VkNone => "",
+            _ => "",
         };
         String::from(res)
     }
