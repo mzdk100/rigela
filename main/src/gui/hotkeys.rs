@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::commander::CommandType::Key;
-use crate::context::Context;
+use crate::{commander::CommandType::Key, context::Context};
 use nwd::NwgUi;
 use nwg::{InsertListViewItem, NativeUi};
 use std::cell::RefCell;
@@ -83,18 +81,13 @@ impl HotKeysForm {
             for (i, talent) in talents.iter().enumerate() {
                 dv.insert_item(talent.get_doc());
 
-                let cmd_list = talent.get_supported_cmd_list();
-                for cmd_type in cmd_list.iter() {
+                for cmd_type in talent.get_supported_cmd_list() {
                     if let Key(keys) = cmd_type {
                         let mut key_str = String::new();
-                        for key in keys.iter() {
-                            let k: Keys = key.clone();
-                            let k: String = k.into();
-                            
-                            key_str.push_str(k.as_str());
-                            key_str.push_str(" ");
+                        for k in keys {
+                            let k: &str = k.clone().into();
+                            key_str.push_str(format!("{k} ").as_str());
                         }
-
                         dv.insert_item(InsertListViewItem {
                             index: Some(i as i32),
                             column_index: 1,

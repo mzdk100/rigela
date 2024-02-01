@@ -576,132 +576,98 @@ impl From<(u32, bool)> for Keys {
     }
 }
 
-impl From<&str> for Keys {
-    fn from(s: &str) -> Self {
-        match s {
-            "RigelA" => Self::VkRigelA,
-            "0" => Self::Vk0,
-            "1" => Self::Vk1,
-            "2" => Self::Vk2,
-            "3" => Self::Vk3,
-            "4" => Self::Vk4,
-            "5" => Self::Vk5,
-            "6" => Self::Vk6,
-            "7" => Self::Vk7,
-            "8" => Self::Vk8,
-            "9" => Self::Vk9,
-            "A" => Self::VkA,
-            "B" => Self::VkB,
-            "C" => Self::VkC,
-            "D" => Self::VkD,
-            "E" => Self::VkE,
-            "F" => Self::VkF,
-            "G" => Self::VkG,
-            "H" => Self::VkH,
-            "I" => Self::VkI,
-            "J" => Self::VkJ,
-            "K" => Self::VkK,
-            "L" => Self::VkL,
-            "M" => Self::VkM,
-            "N" => Self::VkN,
-            "O" => Self::VkO,
-            "P" => Self::VkP,
-            "Q" => Self::VkQ,
-            "R" => Self::VkR,
-            "S" => Self::VkS,
-            "T" => Self::VkT,
-            "U" => Self::VkU,
-            "V" => Self::VkV,
-            "W" => Self::VkW,
-            "X" => Self::VkX,
-            "Y" => Self::VkY,
-            "Z" => Self::VkZ,
-            _ => Self::VkNone,
+macro_rules! impl_keys_str_into {
+    ($($k:tt => $v:path), *) => {
+        impl From<&str> for Keys {
+            fn from(value: &str) -> Self {
+                match value {
+                    $($k => $v,) *
+                    _ => unreachable!()
+                }
+            }
         }
-    }
+
+        impl From<Keys> for &str {
+            fn from(value: Keys) -> Self {
+                match value {
+                    $($v => $k,) *
+                    _ => unreachable!()
+                }
+            }
+        }
+    };
 }
 
-impl Into<String> for Keys {
-    fn into(self) -> String {
-        let res = match self {
-            Keys::VkRigelA => "RigelA",
-            Keys::VkNumPad1 => "小键盘1",
-            Keys::VkNumPad2 => "小键盘2",
-            Keys::VkNumPad3 => "小键盘3",
-            Keys::VkNumPad4 => "小键盘4",
-            Keys::VkNumPad5 => "小键盘5",
-            Keys::VkNumPad6 => "小键盘6",
-            Keys::VkNumPad7 => "小键盘7",
-            Keys::VkNumPad8 => "小键盘8",
-            Keys::VkNumPad9 => "小键盘9",
-
-            Keys::VkNumPadDiv => "小键盘/",
-            Keys::VkNumPadMul => "小键盘*",
-
-            Keys::VkCtrl => "Ctrl",
-            Keys::VkEscape => "Esc",
-
-            Keys::VkLeft => "左光标",
-            Keys::VkRight => "右光标",
-            Keys::VkUp => "上光标",
-            Keys::VkDown => "下光标",
-
-            Keys::VkF1 => "F1",
-            Keys::VkF2 => "F2",
-            Keys::VkF3 => "F3",
-            Keys::VkF4 => "F4",
-            Keys::VkF5 => "F5",
-            Keys::VkF6 => "F6",
-            Keys::VkF7 => "F7",
-            Keys::VkF8 => "F8",
-            Keys::VkF9 => "F9",
-            Keys::VkF10 => "F10",
-            Keys::VkF11 => "F11",
-            Keys::VkF12 => "F12",
-
-            Keys::Vk0 => "0",
-            Keys::Vk1 => "1",
-            Keys::Vk2 => "2",
-            Keys::Vk3 => "3",
-            Keys::Vk4 => "4",
-            Keys::Vk5 => "5",
-            Keys::Vk6 => "6",
-            Keys::Vk7 => "7",
-            Keys::Vk8 => "8",
-            Keys::Vk9 => "9",
-            Keys::VkA => "A",
-            Keys::VkB => "B",
-            Keys::VkC => "C",
-            Keys::VkD => "D",
-            Keys::VkE => "E",
-            Keys::VkF => "F",
-            Keys::VkG => "G",
-            Keys::VkH => "H",
-            Keys::VkI => "I",
-            Keys::VkJ => "J",
-            Keys::VkK => "K",
-            Keys::VkL => "L",
-            Keys::VkM => "M",
-            Keys::VkN => "N",
-            Keys::VkO => "O",
-            Keys::VkP => "P",
-            Keys::VkQ => "Q",
-            Keys::VkR => "R",
-            Keys::VkS => "S",
-            Keys::VkT => "T",
-            Keys::VkU => "U",
-            Keys::VkV => "V",
-            Keys::VkW => "W",
-            Keys::VkX => "X",
-            Keys::VkY => "Y",
-            Keys::VkZ => "Z",
-
-            Keys::VkNone => "",
-            _ => "",
-        };
-        String::from(res)
-    }
-}
+impl_keys_str_into!(
+    "RigelA" => Keys::VkRigelA,
+    "小键盘1" => Keys::VkNumPad1,
+    "小键盘2" => Keys::VkNumPad2,
+    "小键盘3" => Keys::VkNumPad3,
+    "小键盘4" => Keys::VkNumPad4,
+    "小键盘5" => Keys::VkNumPad5,
+    "小键盘6" => Keys::VkNumPad6,
+    "小键盘7" => Keys::VkNumPad7,
+    "小键盘8" => Keys::VkNumPad8,
+    "小键盘9" => Keys::VkNumPad9,
+    "小键盘/" => Keys::VkNumPadDiv,
+    "小键盘*" => Keys::VkNumPadMul,
+    "小键盘+" => Keys::VkAdd,
+    "Ctrl" => Keys::VkCtrl,
+    "Esc" => Keys::VkEscape,
+    "左光标" => Keys::VkLeft,
+    "右光标" => Keys::VkRight,
+    "上光标" => Keys::VkUp,
+    "下光标" => Keys::VkDown,
+    "F1" => Keys::VkF1,
+    "F2" => Keys::VkF2,
+    "F3" => Keys::VkF3,
+    "F4" => Keys::VkF4,
+    "F5" => Keys::VkF5,
+    "F6" => Keys::VkF6,
+    "F7" => Keys::VkF7,
+    "F8" => Keys::VkF8,
+    "F9" => Keys::VkF9,
+    "F10" => Keys::VkF10,
+    "F11" => Keys::VkF11,
+    "F12" => Keys::VkF12,
+    "0" => Keys::Vk0,
+    "1" => Keys::Vk1,
+    "2" => Keys::Vk2,
+    "3" => Keys::Vk3,
+    "4" => Keys::Vk4,
+    "5" => Keys::Vk5,
+    "6" => Keys::Vk6,
+    "7" => Keys::Vk7,
+    "8" => Keys::Vk8,
+    "9" => Keys::Vk9,
+    "A" => Keys::VkA,
+    "B" => Keys::VkB,
+    "C" => Keys::VkC,
+    "D" => Keys::VkD,
+    "E" => Keys::VkE,
+    "F" => Keys::VkF,
+    "G" => Keys::VkG,
+    "H" => Keys::VkH,
+    "I" => Keys::VkI,
+    "J" => Keys::VkJ,
+    "K" => Keys::VkK,
+    "L" => Keys::VkL,
+    "M" => Keys::VkM,
+    "N" => Keys::VkN,
+    "O" => Keys::VkO,
+    "P" => Keys::VkP,
+    "Q" => Keys::VkQ,
+    "R" => Keys::VkR,
+    "S" => Keys::VkS,
+    "T" => Keys::VkT,
+    "U" => Keys::VkU,
+    "V" => Keys::VkV,
+    "W" => Keys::VkW,
+    "X" => Keys::VkX,
+    "Y" => Keys::VkY,
+    "Z" => Keys::VkZ,
+    "" => Keys::VkNone
+);
 
 mod tests {
     #[allow(unused_imports)]
@@ -721,8 +687,7 @@ mod tests {
 
     #[test]
     fn test_vk_to_str() {
-        let key: Keys = Keys::VkA;
-        let key_str: String = key.into();
-        assert_eq!(key_str, String::from("A"));
+        let key_str: &str = Keys::VkA.into();
+        assert_eq!(key_str, "A");
     }
 }
