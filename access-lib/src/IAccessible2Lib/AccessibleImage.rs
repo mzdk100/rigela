@@ -11,65 +11,49 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use super::Accessible2::{IAccessible2, IAccessible2_Impl, IAccessible2_Vtbl};
-use windows::core::IUnknown;
+use super::IA2CommonTypes::IA2CoordinateType;
 use windows::core::BSTR;
 use windows::core::HRESULT;
-use windows::Win32::System::Variant::VARIANT;
+use windows::core::{IUnknown, IUnknown_Vtbl};
 use windows_interface::interface;
 
 /**
- * This interface exposes the primary set of information about an IAccessible2 enabled accessible object.
- * This interface must always be provided for objects that support some portion of the collection of the %IAccessible2 interfaces.
- * Please refer to @ref _changingInterfaces "Changing between Accessible Interfaces" for special considerations related to use of the MSAA IAccessible interface and
- * the set of %IAccessible2 interfaces.
+ * This interface represents images and icons.
+ * This interface is used for a representation of images like icons on buttons.
+ * %IAccessibleImage only needs to be implemented in certain situations.  Some examples are:
+ * <ol>
+ * <li>The accessible name and description are not enough to fully describe the image, e.g., when the accessible description is used to define the behavior of an actionable image and the image itself conveys semantically significant information. </li>
+ *  <li>The user can edit the content that includes an image and therefore the user needs to be able to review the image's position. </li>
+ * </ol>
  * */
-#[interface("6C9430E9-299D-4E6F-BD01-A82A1E88D3FF")]
-pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
-    //noinspection SpellCheckingInspection
+#[interface("FE5ABB3D-615E-4f7b-909F-5F0EDA9E8DDE")]
+pub(crate) unsafe trait IAccessibleImage: IUnknown {
     /**
-     * Returns the attribute value of a specified attribute specific to this object.
-     * `name` `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
-     * retrieval E_INVALIDARG if bad [in] passed.
-     * @note The output value is a VARIANT.  Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.  Refer to the <a href=
-     * "http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2">
-     * Object Attributes specification</a> for more information.
+     * Returns the localized description of the image.
+     * `description` retrieval S_FALSE if there is nothing to return, [out] value is NULL
      * */
-    fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
+    fn description(&self, description: *mut BSTR) -> HRESULT;
 
     /**
-     * Returns the deepest hypertext accessible in the subtree of this object, and the caret offset within it.
-     * `accessible` `caretOffset` retrieval S_FALSE returned if there is no caret in any of the objects in the subtree, [out] accessible is NULL and [out] caretOffset is -1.
-     * */
-    fn accessibleWithCaret(&self, accessible: *mut *mut IUnknown, caretOffset: *mut i32)
+     * Returns the coordinates of the image.
+     * `coordinateType` Specifies whether the returned coordinates should be relative to the screen or the parent object.
+     * `x` `y` */
+    fn imagePosition(&self, coordinateType: IA2CoordinateType, x: *mut i32, y: *mut i32)
         -> HRESULT;
 
-    //noinspection SpellCheckingInspection
     /**
-     * Returns relation targets for a specified target type.
-     * `type` The requested @ref grpRelations "relation type".
-     * `maxTargets` The number of targets requested.  Zero indicates that all targets should be returned.
-     * `targets` This array is allocated by the server.  The client must free it with CoTaskMemFree.
-     * `nTargets` The number of targets returned; the size of the returned array.
-     * retrieval S_FALSE if there are no targets, [out] values are NULL and 0 respectively.
-     * retrieval E_INVALIDARG if bad [in] passed.
-     * */
-    fn relationTargetsOfType(
-        &self,
-        r#type: BSTR,
-        maxTargets: i32,
-        targets: *mut *mut *mut IUnknown,
-        nTargets: *mut i32,
-    ) -> HRESULT;
+     * Returns the size of the image in units specified by parent's coordinate system.
+     * `height` `width` */
+    fn imageSize(&self, height: *mut i32, width: *mut i32) -> HRESULT;
 }
 
 /**
  * Idl file copyright information:
- *  File Name (Accessible2_2.idl)
+ *  File Name (AccessibleImage.idl)
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) 2007, 2013 Linux Foundation
+ *  Copyright (c) 2007, 2010 Linux Foundation
  *  Copyright (c) 2006 IBM Corporation
  *  Copyright (c) 2000, 2006 Sun Microsystems, Inc.
  *  All rights reserved.

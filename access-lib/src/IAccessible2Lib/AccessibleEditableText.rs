@@ -57,7 +57,7 @@ pub(crate) unsafe trait IAccessibleEditableText: IUnknown {
      * The valid range is from zero to length.
      * Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleEditableText methods.
      * `text` Text that is inserted.
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn insertText(&self, offset: i32, text: *mut BSTR) -> HRESULT;
 

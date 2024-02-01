@@ -156,7 +156,7 @@ pub(crate) enum IA2TableModelChangeType {
  * being removed before the removal.
  * */
 #[allow(dead_code)]
-struct IA2TableModelChange {
+pub(crate) struct IA2TableModelChange {
     r#type: IA2TableModelChangeType, // insert, delete, update
     firstRow: i32,                   // 0 based, inclusive
     lastRow: i32,                    // 0 based, inclusive

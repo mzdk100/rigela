@@ -11,65 +11,57 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use super::Accessible2::{IAccessible2, IAccessible2_Impl, IAccessible2_Vtbl};
-use windows::core::IUnknown;
-use windows::core::BSTR;
+use super::{
+    AccessibleHyperlink::IAccessibleHyperlink,
+    AccessibleText::{IAccessibleText, IAccessibleText_Impl, IAccessibleText_Vtbl},
+};
 use windows::core::HRESULT;
-use windows::Win32::System::Variant::VARIANT;
 use windows_interface::interface;
 
 /**
- * This interface exposes the primary set of information about an IAccessible2 enabled accessible object.
- * This interface must always be provided for objects that support some portion of the collection of the %IAccessible2 interfaces.
- * Please refer to @ref _changingInterfaces "Changing between Accessible Interfaces" for special considerations related to use of the MSAA IAccessible interface and
- * the set of %IAccessible2 interfaces.
+ * This interface exposes information about hypertext in a document.
+ * The %IAccessibleHypertext interface is the main interface to expose hyperlinks in a document, typically a text document, that are used to reference other documents.  A typical implementation is to implement this interface on the smallest text object such as a paragraph of text.
  * */
-#[interface("6C9430E9-299D-4E6F-BD01-A82A1E88D3FF")]
-pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
-    //noinspection SpellCheckingInspection
+#[interface("6B4F8BBF-F1F2-418a-B35E-A195BC4103B9")]
+pub(crate) unsafe trait IAccessibleHypertext: IAccessibleText {
     /**
-     * Returns the attribute value of a specified attribute specific to this object.
-     * `name` `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
-     * retrieval E_INVALIDARG if bad [in] passed.
-     * @note The output value is a VARIANT.  Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.  Refer to the <a href=
-     * "http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2">
-     * Object Attributes specification</a> for more information.
+     * Returns the number of links and link groups contained within this hypertext paragraph.
+     * `hyperlinkCount` The number of links and link groups within this hypertext paragraph.
+     * Returns 0 if there is no link.
      * */
-    fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
-
-    /**
-     * Returns the deepest hypertext accessible in the subtree of this object, and the caret offset within it.
-     * `accessible` `caretOffset` retrieval S_FALSE returned if there is no caret in any of the objects in the subtree, [out] accessible is NULL and [out] caretOffset is -1.
-     * */
-    fn accessibleWithCaret(&self, accessible: *mut *mut IUnknown, caretOffset: *mut i32)
-        -> HRESULT;
+    fn nHyperlinks(&self, hyperlinkCount: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
-     * Returns relation targets for a specified target type.
-     * `type` The requested @ref grpRelations "relation type".
-     * `maxTargets` The number of targets requested.  Zero indicates that all targets should be returned.
-     * `targets` This array is allocated by the server.  The client must free it with CoTaskMemFree.
-     * `nTargets` The number of targets returned; the size of the returned array.
-     * retrieval S_FALSE if there are no targets, [out] values are NULL and 0 respectively.
-     * retrieval E_INVALIDARG if bad [in] passed.
+     * Returns the specified link.
+     * The returned IAccessibleHyperlink object encapsulates the hyperlink and provides several kinds of information describing it.
+     * `index` This 0 based index specifies the hyperlink to return.
+     * `hyperlink` If the given index is valid, i.e., lies in the interval from 0 to the number of links minus one; a reference to the specified hyperlink object is returned.
+     * If the index is invalid, then a NULL pointer is returned.
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn relationTargetsOfType(
-        &self,
-        r#type: BSTR,
-        maxTargets: i32,
-        targets: *mut *mut *mut IUnknown,
-        nTargets: *mut i32,
-    ) -> HRESULT;
+    fn hyperlink(&self, index: i32, hyperlink: *mut *mut IAccessibleHyperlink) -> HRESULT;
+
+    //noinspection SpellCheckingInspection
+    /**
+     * Returns the index of the hyperlink that is associated with this character index.
+     * This is the case when a link spans the given character index.
+     * `charIndex` A 0 based index of the character for which to return the link index.  If
+     * IAccessibleText is used to represent the text containing the link, then the character index is only valid if it is greater than or equal to zero and lower than the number of characters in the text.
+     * `hyperlinkIndex` Returns the zero-based index of the hyperlink that is associated with this character index, or -1 if charIndex is not on a link.
+     * retrieval S_FALSE if there is nothing to return, [out] value is -1
+     * retrieval E_INVALIDARG if bad [in] passed
+     * */
+    fn hyperlinkIndex(&self, charIndex: i32, hyperlinkIndex: *mut i32) -> HRESULT;
 }
 
 /**
  * Idl file copyright information:
- *  File Name (Accessible2_2.idl)
+ *  File Name (AccessibleHypertext.idl)
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) 2007, 2013 Linux Foundation
+ *  Copyright (c) 2007, 2010 Linux Foundation
  *  Copyright (c) 2006 IBM Corporation
  *  Copyright (c) 2000, 2006 Sun Microsystems, Inc.
  *  All rights reserved.
