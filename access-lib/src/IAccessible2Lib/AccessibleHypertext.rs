@@ -50,7 +50,7 @@ pub(crate) unsafe trait IAccessibleHypertext: IAccessibleText {
      * IAccessibleText is used to represent the text containing the link, then the character index is only valid if it is greater than or equal to zero and lower than the number of characters in the text.
      * `hyperlinkIndex` Returns the zero-based index of the hyperlink that is associated with this character index, or -1 if charIndex is not on a link.
      * retrieval S_FALSE if there is nothing to return, [out] value is -1
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn hyperlinkIndex(&self, charIndex: i32, hyperlinkIndex: *mut i32) -> HRESULT;
 }

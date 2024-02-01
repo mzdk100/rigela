@@ -257,7 +257,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `endOffset` 0 based offset of one past the last character.
      * `text` Returns the requested text portion.  This portion may be empty or invalid when no appropriate text portion is found or a text type is invalid.
      * retrieval S_FALSE if the requested boundary type is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, or if there is nothing to return; [out] values are 0s and NULL respectively
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn textAfterOffset(
         &self,
@@ -282,7 +282,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `endOffset` 0 based offset of one past the last character.
      * `text` Returns the requested text portion.  This portion may be empty or invalid when no appropriate text portion is found or a text type is invalid.
      * retrieval S_FALSE if the requested boundary type is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, or if there is nothing to return; [out] values are 0s and NULL respectively
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn textAtOffset(
         &self,
@@ -309,7 +309,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * When the new caret position differs from the old one (which is the standard case), this is notified to the accessibility event listeners with an IA2_EVENT_TEXT_CARET_MOVED event.
      * `offset` The new index of the caret.  This caret is actually placed to the left side of the character with that index.  An index of 0 places the caret so that the next insertion goes before the first character.  An index of IAccessibleText::nCharacters leads to insertion after the last character.  Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * retrieval E_FAIL if the caret cannot be set
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn setCaretOffset(&self, offset: i32) -> HRESULT;
 

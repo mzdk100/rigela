@@ -65,7 +65,7 @@ pub(crate) unsafe trait IAccessibleAction: IUnknown {
      * Performs the specified Action on the object.
      * `actionIndex` zero-based index specifying the action to perform.  If it lies outside the valid range, no action is performed.
      * retrieval S_FALSE if action could not be performed
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * @note If implementing support for media, refer to the predefined constants in the: IA2Actions enum.
      * */
     fn doAction(&self, actionIndex: i32) -> HRESULT;
@@ -108,8 +108,8 @@ pub(crate) unsafe trait IAccessibleAction: IUnknown {
     /**
      * Returns the non-localized name of specified action.
      * `actionIndex` zero-based index specifying which action's non-localized name should be returned.
-     * `name` retval S_FALSE if there is nothing to return, [out] value is NULL
-     * retval E_INVALIDARG if bad [in] passed
+     * `name` retrieval S_FALSE if there is nothing to return, [out] value is NULL
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn name(&self, actionIndex: i32, name: *mut BSTR) -> HRESULT;
 
@@ -117,8 +117,8 @@ pub(crate) unsafe trait IAccessibleAction: IUnknown {
     /**
      * Returns the localized name of specified action.
      * `actionIndex` zero-based index specifying which action's localized name should be returned.
-     * `localizedName` retval S_FALSE if there is nothing to return, [out] value is NULL
-     * retval E_INVALIDARG if bad [in] passed
+     * `localizedName` retrieval S_FALSE if there is nothing to return, [out] value is NULL
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn localizedName(&self, actionIndex: i32, localizedName: *mut BSTR) -> HRESULT;
 }

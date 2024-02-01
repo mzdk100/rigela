@@ -46,7 +46,7 @@ pub(crate) unsafe trait IAccessibleHyperlink: IAccessibleAction {
      * `anchorTarget` This is an implementation dependent value.  For example, this method could return a BSTR VARIANT of the URI.
      * Alternatively, this method could return an IUnknown VARIANT of a COM interface representing a target object to be activated when the link is activated.  See the section about
      * @ref _variants "VARIANTs" for additional information.
-     * retval E_INVALIDARG if bad [in] passed
+     * retrieval E_INVALIDARG if bad [in] passed
      * */
     fn anchorTarget(&self, index: i32, anchorTarget: *mut VARIANT) -> HRESULT;
 
@@ -69,7 +69,7 @@ pub(crate) unsafe trait IAccessibleHyperlink: IAccessibleAction {
      * This has also been used to indicate whether the URI of the anchorTarget is malformed.
      * `valid` If false, one or more of the object's links are invalid.
      * If true, all the object's links are valid.
-     * retval S_FALSE if there is nothing to return, [out] value is FALSE
+     * retrieval S_FALSE if there is nothing to return, [out] value is FALSE
      * @note This method is not being used, is deprecated, and should not be implemented or used.  It is likely that this method will be removed in a later version of the IDL.
      * */
     fn valid(&self, valid: *mut bool) -> HRESULT;
