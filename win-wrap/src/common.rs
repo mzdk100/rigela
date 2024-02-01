@@ -12,7 +12,6 @@
  */
 
 use std::ffi::CString;
-use windows::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
 pub use windows::{
     core::Result,
     Win32::{
@@ -37,7 +36,8 @@ use windows::{
             LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
         },
         UI::WindowsAndMessaging::{
-            CallNextHookEx, GetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
+            CallNextHookEx, GetDesktopWindow, GetForegroundWindow, SetForegroundWindow,
+            SetWindowsHookExW, UnhookWindowsHookEx,
         },
     },
 };
@@ -51,12 +51,36 @@ pub fn beep(freq: u32, duration: u32) {
     unsafe { Beep(freq, duration) }.unwrap();
 }
 
-/// 获取当前前台窗口句柄。
+/**
+ * 查询用户当前窗口（前台窗口的句柄）。
+ * 系统为创建前台窗口的线程分配的优先级略高于其他线程。
+ * 返回值是前台窗口的句柄。
+ * 在某些情况下，前台窗口可以为
+ * NULL
+ * ，例如，当窗口失去激活时。
+ * */
 pub fn get_foreground_window() -> HWND {
     unsafe { GetForegroundWindow() }
 }
-pub fn set_foreground_window(hwnd: HWND) {
-    unsafe { SetForegroundWindow(hwnd) };
+
+/**
+ * 将创建指定窗口的线程引入前台并激活窗口。
+ * 键盘输入将定向到窗口，并为用户更改各种视觉提示。
+ * 系统为创建前台窗口的线程分配的优先级略高于其他线程的优先级。
+ * `h_wnd`
+ * 应激活并带到前台的窗口的句柄。
+ * */
+pub fn set_foreground_window(h_wnd: HWND) {
+    unsafe { SetForegroundWindow(h_wnd) };
+}
+
+/**
+ * 查询桌面窗口的句柄。
+ * 桌面窗口覆盖整个屏幕。
+ * 桌面窗口是在上面绘制其他窗口的区域。
+ * */
+pub fn get_desktop_window() -> HWND {
+    unsafe { GetDesktopWindow() }
 }
 
 /**

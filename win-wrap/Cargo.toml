@@ -20,6 +20,7 @@ features = [
     "Win32_Media_Audio_XAudio2",
     # Win32基础框架
     "Foundation",
+    "Win32_Foundation",
     "Win32_System_Diagnostics_Debug",
     "Win32_System_Kernel",
     "Win32_Globalization",

@@ -11,4 +11,4 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod IAccessible2Lib;
+pub(crate) mod IAccessible2Lib;
