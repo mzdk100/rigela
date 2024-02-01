@@ -19,6 +19,7 @@ pub mod form;
 
 const LOG_URL: &str = "https://gitcode.net/mzdk100/rigela/-/commits/master/";
 //noinspection HttpUrlsUsage
+#[allow(unused)]
 const DOWNLOAD_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/main.exe";
 
 #[tokio::main]

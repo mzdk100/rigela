@@ -12,6 +12,7 @@
  */
 
 use std::ffi::CString;
+use windows::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
 pub use windows::{
     core::Result,
     Win32::{
@@ -53,6 +54,9 @@ pub fn beep(freq: u32, duration: u32) {
 /// 获取当前前台窗口句柄。
 pub fn get_foreground_window() -> HWND {
     unsafe { GetForegroundWindow() }
+}
+pub fn set_foreground_window(hwnd: HWND) {
+    unsafe { SetForegroundWindow(hwnd) };
 }
 
 /**
