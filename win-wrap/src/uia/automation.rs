@@ -11,24 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::uia::element::UiAutomationElement;
+use crate::uia::{
+    element::UiAutomationElement,
+    event::{OnFocusChangedCallback, UiAutomationEventHandlerGroup},
+};
 use std::sync::Arc;
-use windows::{
-    core::{implement, Result},
-    Win32::{
-        Foundation::HWND,
-        Foundation::POINT,
-        System::Com::{CoCreateInstance, CLSCTX_ALL},
-        UI::Accessibility::{
-            CUIAutomation, IUIAutomation, IUIAutomationElement,
-            IUIAutomationFocusChangedEventHandler, IUIAutomationFocusChangedEventHandler_Impl,
-        },
-    },
+
+use windows::Win32::UI::Accessibility::IUIAutomationFocusChangedEventHandler;
+use windows::Win32::{
+    Foundation::{HWND, POINT},
+    System::Com::{CoCreateInstance, CLSCTX_ALL},
+    UI::Accessibility::{CUIAutomation8, IUIAutomation6},
 };
 
 /// UIAutomation接口本地封装
 #[derive(Clone, Debug)]
-pub struct UiAutomation(Arc<IUIAutomation>);
+pub struct UiAutomation(Arc<IUIAutomation6>);
 
 impl UiAutomation {
     /**
@@ -36,7 +34,7 @@ impl UiAutomation {
      * */
     pub fn new() -> Self {
         let automation =
-            unsafe { CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_ALL) }
+            unsafe { CoCreateInstance::<_, IUIAutomation6>(&CUIAutomation8, None, CLSCTX_ALL) }
                 .expect("Can't create the ui automation.");
         UiAutomation {
             0: automation.into(),
@@ -71,7 +69,19 @@ impl UiAutomation {
     }
 
     /**
-     * 注册一个焦点改变时的通知函数
+     * 创建事件处理器组。
+     * */
+    pub fn create_event_handler_group(&self) -> UiAutomationEventHandlerGroup {
+        unsafe {
+            UiAutomationEventHandlerGroup::obtain(
+                self.0.clone(),
+                &self.0.CreateEventHandlerGroup().unwrap(),
+            )
+        }
+    }
+
+    /**
+     * 注册一个焦点改变时的通知函数。
      * 处理函数运行在单独的子线程中。
      * `func` 用于接收事件的函数。
      * */
@@ -84,44 +94,15 @@ impl UiAutomation {
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
             .expect("Can't add the focus changed listener.")
     }
+
+    /**
+     * 移除已经注册的所有监听器。
+     * */
+    pub fn remove_all_event_listeners(&self) {
+        unsafe { self.0.RemoveAllEventHandlers() }.unwrap_or(());
+    }
 }
 
 unsafe impl Sync for UiAutomation {}
 
 unsafe impl Send for UiAutomation {}
-
-#[implement(IUIAutomationFocusChangedEventHandler)]
-struct OnFocusChangedCallback<CB>
-where
-    CB: Fn(UiAutomationElement) -> () + 'static,
-{
-    _automation: Arc<IUIAutomation>,
-    _cb: Box<CB>,
-}
-
-impl<CB> OnFocusChangedCallback<CB>
-where
-    CB: Fn(UiAutomationElement) -> () + 'static,
-{
-    fn new(func: CB, automation: Arc<IUIAutomation>) -> Self {
-        Self {
-            _automation: automation,
-            _cb: func.into(),
-        }
-    }
-}
-
-impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<CB>
-where
-    CB: Fn(UiAutomationElement) -> () + 'static,
-{
-    #[allow(non_snake_case)]
-    fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
-        let func = &*self._cb;
-        func(UiAutomationElement::obtain(
-            self._automation.clone(),
-            sender.unwrap().clone(),
-        ));
-        Ok(())
-    }
-}

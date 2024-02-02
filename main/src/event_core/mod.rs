@@ -11,22 +11,30 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod editor;
+
 use crate::context::Context;
+use crate::event_core::editor::subscribe_events;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::{get_foreground_window, HWND};
 
 /// 事件处理中心
 #[derive(Clone, Debug)]
-pub(crate) struct EventCore;
+pub(crate) struct EventCore {
+    context: OnceLock<Arc<Context>>,
+}
 
 impl EventCore {
     pub(crate) fn new() -> Self {
-        Self
+        Self {
+            context: OnceLock::new(),
+        }
     }
 
     /// 启动事件监听
     pub(crate) async fn run(&self, context: Arc<Context>) {
+        self.context.set(context.clone()).unwrap_or(());
         // 订阅UIA的焦点元素改变事件
         speak_focus_item(context.clone()).await;
 
@@ -37,7 +45,26 @@ impl EventCore {
         speak_input(context.clone()).await;
 
         // 订阅输入法候选事件
-        speak_candidate(context).await;
+        speak_candidate(context.clone()).await;
+
+        // 处理编辑框朗读
+        let ctx = context.clone();
+        context
+            .main_handler
+            .spawn(subscribe_events(ctx))
+            .await
+            .unwrap();
+    }
+
+    /**
+     * 停止所有事件处理。
+     * */
+    pub(crate) fn shutdown(&self) {
+        self.context
+            .get()
+            .unwrap()
+            .ui_automation
+            .remove_all_event_listeners();
     }
 }
 

@@ -11,7 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod automation;
-pub mod element;
-mod event;
-pub mod pattern;
+use crate::context::Context;
+use std::sync::Arc;
+use win_wrap::common::beep;
+
+pub(crate) async fn subscribe_events(context: Arc<Context>) {
+    let group = context.ui_automation.create_event_handler_group();
+    group.add_active_text_position_changed_listener(|element, range| {
+        beep(400, 40);
+    });
+    group.add_text_edit_text_changed_listener(|element| {});
+}

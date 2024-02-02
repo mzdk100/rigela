@@ -13,14 +13,18 @@
 
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use windows::Win32::Foundation::RECT;
-use windows::Win32::UI::Accessibility::{IUIAutomation, TreeScope_Children};
-use windows::{core::BSTR, Win32::UI::Accessibility::IUIAutomationElement};
+use windows::{
+    core::BSTR,
+    Win32::{
+        Foundation::RECT,
+        UI::Accessibility::{IUIAutomation6, IUIAutomationElement, TreeScope_Children},
+    },
+};
 
 /// UiAutomationElement 的本地封装
 #[derive(Clone)]
 pub struct UiAutomationElement {
-    _automation: Arc<IUIAutomation>,
+    _automation: Arc<IUIAutomation6>,
     _current: IUIAutomationElement,
 }
 
@@ -32,7 +36,7 @@ impl UiAutomationElement {
         &self._current
     }
 
-    pub(crate) fn obtain(automation: Arc<IUIAutomation>, element: IUIAutomationElement) -> Self {
+    pub(crate) fn obtain(automation: Arc<IUIAutomation6>, element: IUIAutomationElement) -> Self {
         Self {
             _automation: automation,
             _current: element,

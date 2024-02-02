@@ -17,7 +17,7 @@ use crate::performer::Speakable;
 use std::sync::Arc;
 use win_wrap::common::RECT;
 use win_wrap::uia::element::UiAutomationElement;
-use win_wrap::uia::pattern::UiAutomationLegacyIAccessiblePattern;
+use win_wrap::uia::pattern::legacy::UiAutomationIAccessiblePattern;
 
 trait ElementNameExt {
     fn get_name_better(&self) -> String;
@@ -27,7 +27,7 @@ impl ElementNameExt for UiAutomationElement {
         let mut name = self.get_name();
 
         if name.is_empty() {
-            let accessible = UiAutomationLegacyIAccessiblePattern::obtain(self);
+            let accessible = UiAutomationIAccessiblePattern::obtain(self);
             if accessible.is_err() {
                 return String::new();
             }

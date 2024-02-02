@@ -123,6 +123,7 @@ impl Context {
      * */
     pub(crate) fn dispose(&self) {
         self.commander.dispose();
+        self.event_core.shutdown();
     }
 }
 

@@ -19,9 +19,9 @@ use windows::{
     },
 };
 
-pub struct UiAutomationLegacyIAccessiblePattern(IUIAutomationLegacyIAccessiblePattern);
+pub struct UiAutomationIAccessiblePattern(IUIAutomationLegacyIAccessiblePattern);
 
-impl UiAutomationLegacyIAccessiblePattern {
+impl UiAutomationIAccessiblePattern {
     /**
      * 获取元素名称。
      * */

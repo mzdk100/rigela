@@ -12,12 +12,15 @@
  */
 
 use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
-pub use windows::Win32::UI::WindowsAndMessaging::{HWND_BROADCAST, MSG, WM_QUIT};
+pub use windows::Win32::UI::WindowsAndMessaging::{
+    HWND_BROADCAST, MSG, SEND_MESSAGE_TIMEOUT_FLAGS, SMTO_ABORTIFHUNG, SMTO_BLOCK,
+    SMTO_ERRORONEXIT, SMTO_NORMAL, SMTO_NOTIMEOUTIFNOTHUNG, WM_QUIT,
+};
 use windows::{
     core::HSTRING,
     Win32::UI::WindowsAndMessaging::{
-        DispatchMessageW, GetMessageW, PostThreadMessageW, RegisterWindowMessageW, SendMessageW,
-        TranslateMessage,
+        DispatchMessageW, GetMessageW, PostThreadMessageW, RegisterWindowMessageW,
+        SendMessageTimeoutW, SendMessageW, TranslateMessage,
     },
 };
 
@@ -63,6 +66,47 @@ pub fn post_thread_message(id_thread: u32, msg: u32, w_param: WPARAM, l_param: L
  * */
 pub fn send_message(h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
     unsafe { SendMessageW(h_wnd, msg, w_param, l_param) }
+}
+
+//noinspection StructuralWrap,SpellCheckingInspection
+/**
+ * 将指定的消息发送到一个或多个窗口。
+ * 此函数为指定的窗口调用窗口程序，并且，如果指定的窗口属于不同的线程，直到窗口程序处理完消息或指定的超时周期结束函数才返回。
+ * 如果接收消息的窗口和当前线程属于同一个队列，窗口程序立即调用，超时值无用。
+ * `h_wnd` 窗口程序将接收消息的窗口的句柄。如果此参数为HWND_BROADCAST，则消息将被发送到系统中所有顶层窗口，包括无效或不可见的非自身拥有的窗口。
+ * `msg` 指定被发送的消息。
+ * `w_param` 指定附加的消息指定信息。
+ * `l_param` 指定附加的消息指定信息。
+ * `flags` 指定如何发送消息。此参数可为下列值的组合：
+ * - SMTO_ABORTIFHUNG：如果接收进程处于“hung”状态，不等待超时周期结束就返回。
+ * - SMTO_BLOCK：阻止调用线程处理其他任何请求，直到函数返回。
+ * - SMTO_NORMAL：调用线程等待函数返回时，不被阻止处理其他请求。
+ * - SMTO_NOTIMEOUTIFNOTHUNG：Windows 95及更高版本：如果接收线程没被挂起，当超时周期结束时不返回。
+ * `timeout` 为超时周期指定以毫秒为单位的持续时间。如果该消息是一个广播消息，每个窗口可使用全超时周期。例如，如果指定5秒的超时周期，有3个顶层窗口未能处理消息，可以有最多15秒的延迟。
+ * */
+pub fn send_message_timeout(
+    h_wnd: HWND,
+    msg: u32,
+    w_param: WPARAM,
+    l_param: LPARAM,
+    flags: SEND_MESSAGE_TIMEOUT_FLAGS,
+    timeout: u32,
+) -> (LRESULT, usize) {
+    let mut result: usize = 0;
+    (
+        unsafe {
+            SendMessageTimeoutW(
+                h_wnd,
+                msg,
+                w_param,
+                l_param,
+                flags,
+                timeout,
+                Some(&mut result),
+            )
+        },
+        result,
+    )
 }
 
 /**

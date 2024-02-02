@@ -17,7 +17,10 @@ use crate::{
 };
 use log::{error, trace};
 use rigela_utils::pipe::PipeStream;
-use std::sync::{Arc, OnceLock};
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 use tokio::{
     net::windows::named_pipe::{ClientOptions, NamedPipeClient},
     runtime::{Builder, Runtime},
@@ -103,6 +106,9 @@ impl PeeperClient {
      * */
     pub fn quit(&mut self) {
         self.push(PeeperData::Quit);
-        self.rt.take().unwrap().shutdown_background();
+        self.rt
+            .take()
+            .unwrap()
+            .shutdown_timeout(Duration::from_millis(1000));
     }
 }

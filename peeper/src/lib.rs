@@ -39,7 +39,10 @@ use win_wrap::{
     ext::{FarProcExt, LParamExt},
     hook::{CwpStruct, HOOK_TYPE_CALL_WND_PROC, HOOK_TYPE_GET_MESSAGE},
     input::{WM_CHAR, WM_IME_NOTIFY},
-    message::{message_loop, register_window_message, send_message, HWND_BROADCAST, MSG},
+    message::{
+        message_loop, register_window_message, send_message_timeout, HWND_BROADCAST, MSG,
+        SMTO_ABORTIFHUNG, SMTO_BLOCK,
+    },
     threading::{get_current_thread_id, ThreadNotify},
 };
 
@@ -58,7 +61,7 @@ macro_rules! handle_event {
 }
 
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
-static mut HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
+static HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子需要初始化，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
 static WM_HOOK_INIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_INIT));
@@ -71,14 +74,13 @@ static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
 
 fn activate_transaction() {
     let mut lock = CLIENT.write().unwrap();
-    lock.get_or_insert({
+    if let None = lock.as_ref() {
         let module = get_module_file_name(HMODULE::default());
         debug!("Injected into {}.", module.as_str());
         let client = PeeperClient::new(module);
         debug!("Hooked.");
-        client
-    });
-    drop(lock);
+        *lock = Some(client);
+    };
 }
 
 fn deactivate_transaction() {
@@ -154,7 +156,7 @@ unsafe extern "system" fn hook_proc_get_message(
  * */
 pub fn mount() {
     debug!("mounted.");
-    thread::spawn(|| {
+    thread::spawn(move || {
         #[cfg(target_arch = "x86_64")]
         let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
         #[cfg(target_arch = "x86")]
@@ -206,25 +208,31 @@ pub fn mount() {
         );
 
         // 通知所有进程需要初始化
-        send_message(
+        send_message_timeout(
             HWND_BROADCAST,
             WM_HOOK_INIT.clone(),
             WPARAM::default(),
             LPARAM::default(),
+            SMTO_BLOCK | SMTO_ABORTIFHUNG,
+            1000,
         );
 
         let notify = ThreadNotify::new(get_current_thread_id());
-        unsafe { HOOK_THREAD.set(notify.clone()) }.unwrap_or(());
+        if let Ok(_) = HOOK_THREAD.set(notify.clone()) {
+            debug!("The thread of the hook is ready.");
+        }
         message_loop();
 
         // 在卸载钩子之前，我们必须先通知所有的远进程即将卸载钩子，让他们有机会清理资源，否则将可能引起系统不稳定
-        send_message(
+        send_message_timeout(
             HWND_BROADCAST,
             WM_HOOK_UNINIT.clone(),
             WPARAM::default(),
             LPARAM::default(),
+            SMTO_BLOCK | SMTO_ABORTIFHUNG,
+            1000,
         );
-        // 因为send_message把消息发送到窗口过程函数中，所以他是同步运行，当他返回（也就是运行到这里）时，理论上所有的远进程都已经清理资源完毕（除非有一些意外），这时候无论如何都应该卸载钩子了
+        // 因为send_message把消息发送到窗口过程函数中，所以他是同步运行，当他返回（也就是运行到这里）时，理论上所有的远进程都已经清理资源完毕（除非有一些意外或超时），这时候无论如何都应该卸载钩子了
         if let Err(e) = unhook_windows_hook_ex(h_hook_get_message) {
             error!("Can't unhook, because {}.", e);
         }
@@ -237,13 +245,14 @@ pub fn mount() {
 
 /** 停止亏叹气。 */
 pub fn unmount() {
-    unsafe {
-        match HOOK_THREAD.get() {
-            None => {}
-            Some(x) => {
-                x.quit();
-                x.join(5000);
-            }
+    match HOOK_THREAD.get() {
+        None => {
+            debug!("Exiting.");
+        }
+        Some(x) => {
+            x.quit();
+            debug!("Waiting the thread of the hook exit.");
+            x.join(5000);
         }
     }
     debug!("unmounted.")
