@@ -20,7 +20,7 @@ use crate::{
     talent::Talented,
 };
 use keys::Keys;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::hook::WindowsHook;
 
 type Talent = Arc<dyn Talented + Send + Sync>;
@@ -43,8 +43,8 @@ pub(crate) enum CommandType {
  * */
 #[derive(Clone, Debug)]
 pub(crate) struct Commander {
-    keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
-    mouse_hook: Arc<Mutex<Option<WindowsHook>>>,
+    keyboard_hook: OnceLock<WindowsHook>,
+    mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
 }
 
@@ -55,8 +55,8 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            keyboard_hook: Arc::new(Mutex::new(None)),
-            mouse_hook: Arc::new(Mutex::new(None)),
+            keyboard_hook: OnceLock::new(),
+            mouse_hook: OnceLock::new(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
         }
     }
@@ -69,22 +69,20 @@ impl Commander {
         let talents = context.talent_accessor.talents.clone();
 
         self.keyboard_hook
-            .lock()
-            .unwrap()
-            .replace(set_keyboard_hook(context.clone(), talents));
+            .set(set_keyboard_hook(context.clone(), talents))
+            .unwrap_or(());
 
         self.mouse_hook
-            .lock()
-            .unwrap()
-            .replace(set_mouse_hook(context.clone()));
+            .set(set_mouse_hook(context.clone()))
+            .unwrap_or(());
     }
 
     /**
      * 清理环境，后续不可以重复使用。
      * */
     pub(crate) fn dispose(&self) {
-        self.keyboard_hook.lock().unwrap().clone().unwrap().unhook();
-        self.mouse_hook.lock().unwrap().clone().unwrap().unhook();
+        self.keyboard_hook.get().unwrap().unhook();
+        self.mouse_hook.get().unwrap().unhook();
     }
 
     /**
