@@ -11,13 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::form_browser::BrowserElement;
-use crate::browser::Browsable;
-use crate::performer::Speakable;
+use crate::{
+    browser::{form_browser::BrowserElement, Browsable},
+    performer::Speakable,
+};
 use std::sync::Arc;
-use win_wrap::common::RECT;
-use win_wrap::uia::element::UiAutomationElement;
-use win_wrap::uia::pattern::legacy::UiAutomationIAccessiblePattern;
+use win_wrap::{
+    common::RECT,
+    uia::{
+        element::UiAutomationElement,
+        pattern::{legacy::UiAutomationIAccessiblePattern, text::UiAutomationTextRange},
+    },
+};
 
 trait ElementNameExt {
     fn get_name_better(&self) -> String;
@@ -74,5 +79,12 @@ impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
         let name = self.get_name_better();
         format!("{}: {}", name, self.get_localized_control_type())
+    }
+}
+
+/// 给UIA文本范围实现朗读接口
+impl Speakable for &UiAutomationTextRange {
+    fn get_sentence(&self) -> String {
+        self.get_text(-1)
     }
 }

@@ -11,12 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::fmt::{Debug, Formatter};
+use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
+use tokio::sync::Mutex;
 
-#[derive(Clone, Debug)]
-pub(crate) struct Terminator(Sender<()>);
+#[derive(Clone)]
+pub(crate) struct Terminator(
+    Sender<()>,
+    Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>,
+);
 
-pub(crate) struct TerminationWaiter(Receiver<()>);
+pub(crate) struct TerminationWaiter(
+    Receiver<()>,
+    Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>,
+);
 
 impl Terminator {
     /**
@@ -24,7 +33,19 @@ impl Terminator {
      * */
     pub(crate) fn new() -> (Self, TerminationWaiter) {
         let (tx, rx) = channel(1);
-        (Self(tx), TerminationWaiter(rx))
+        let listeners = Arc::new(Mutex::new(vec![]));
+        (
+            Self(tx, listeners.clone()),
+            TerminationWaiter(rx, listeners),
+        )
+    }
+
+    /**
+     * * 添加一个监听器，当正在退出主程序时，发出通知。
+     * `func` 一个监听函数。
+     * */
+    pub(crate) async fn add_exiting_listener(&self, func: impl Fn() + Sync + Send + 'static) {
+        self.1.lock().await.push(Box::new(func))
     }
 
     /* 发送退出信号。 */
@@ -39,5 +60,15 @@ impl TerminationWaiter {
      * */
     pub(crate) async fn wait(&mut self) {
         self.0.recv().await;
+        let listeners = self.1.lock().await;
+        for i in listeners.iter() {
+            (&*i)()
+        }
+    }
+}
+
+impl Debug for Terminator {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Terminator")
     }
 }

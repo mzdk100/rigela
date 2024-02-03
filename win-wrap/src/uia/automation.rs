@@ -11,17 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::uia::{
-    element::UiAutomationElement,
-    event::{OnFocusChangedCallback, UiAutomationEventHandlerGroup},
+use crate::{
+    common::Result,
+    uia::{
+        element::UiAutomationElement,
+        event::{OnFocusChangedCallback, UiAutomationEventHandlerGroup},
+    },
 };
 use std::sync::Arc;
-
-use windows::Win32::UI::Accessibility::IUIAutomationFocusChangedEventHandler;
 use windows::Win32::{
     Foundation::{HWND, POINT},
     System::Com::{CoCreateInstance, CLSCTX_ALL},
-    UI::Accessibility::{CUIAutomation8, IUIAutomation6},
+    UI::Accessibility::{CUIAutomation8, IUIAutomation6, IUIAutomationFocusChangedEventHandler},
 };
 
 /// UIAutomation接口本地封装
@@ -80,6 +81,23 @@ impl UiAutomation {
         }
     }
 
+    //noinspection StructuralWrap
+    /**
+     * 添加事件处理器组，以便于处理各种事件。
+     * `element` 要监听的元素。
+     * `group` 通过调用create_event_handler_group函数返回的事件处理器组。
+     * */
+    pub fn add_event_handler_group(
+        &self,
+        element: &UiAutomationElement,
+        group: &UiAutomationEventHandlerGroup,
+    ) -> Result<()> {
+        unsafe {
+            self.0
+                .AddEventHandlerGroup(element.get_raw(), group.get_raw())
+        }
+    }
+
     /**
      * 注册一个焦点改变时的通知函数。
      * 处理函数运行在单独的子线程中。
@@ -100,6 +118,23 @@ impl UiAutomation {
      * */
     pub fn remove_all_event_listeners(&self) {
         unsafe { self.0.RemoveAllEventHandlers() }.unwrap_or(());
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 移除一个事件处理器组。
+     * `group` 一个事件处理器组对象的引用。
+     * */
+    pub fn remove_event_handler_group(
+        &self,
+        element: &UiAutomationElement,
+        group: &UiAutomationEventHandlerGroup,
+    ) {
+        unsafe {
+            self.0
+                .RemoveEventHandlerGroup(element.get_raw(), group.get_raw())
+        }
+        .unwrap_or(())
     }
 }
 

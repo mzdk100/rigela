@@ -22,12 +22,15 @@ use windows::{
         System::Com::SAFEARRAY,
         UI::Accessibility::{
             IUIAutomation6, IUIAutomationActiveTextPositionChangedEventHandler,
-            IUIAutomationActiveTextPositionChangedEventHandler_Impl, IUIAutomationElement,
-            IUIAutomationEventHandlerGroup, IUIAutomationFocusChangedEventHandler,
+            IUIAutomationActiveTextPositionChangedEventHandler_Impl,
+            IUIAutomationChangesEventHandler, IUIAutomationChangesEventHandler_Impl,
+            IUIAutomationElement, IUIAutomationEventHandler, IUIAutomationEventHandlerGroup,
+            IUIAutomationEventHandler_Impl, IUIAutomationFocusChangedEventHandler,
             IUIAutomationFocusChangedEventHandler_Impl,
             IUIAutomationTextEditTextChangedEventHandler,
             IUIAutomationTextEditTextChangedEventHandler_Impl, IUIAutomationTextRange,
             TextEditChangeType, TextEditChangeType_None, TreeScope_Subtree,
+            UIA_Text_TextSelectionChangedEventId, UiaChangeInfo, UIA_EVENT_ID,
         },
     },
 };
@@ -38,6 +41,9 @@ pub struct UiAutomationEventHandlerGroup {
 }
 
 impl UiAutomationEventHandlerGroup {
+    pub(crate) fn get_raw(&self) -> &IUIAutomationEventHandlerGroup {
+        &self._group
+    }
     pub(crate) fn obtain(
         automation: Arc<IUIAutomation6>,
         group: &IUIAutomationEventHandlerGroup,
@@ -87,7 +93,53 @@ impl UiAutomationEventHandlerGroup {
         }
         .expect("Can't add the active text position changed listener.");
     }
+
+    //noinspection StructuralWrap
+    /**
+     * 注册一个元素改变时的通知函数。
+     * 处理函数运行在单独的子线程中。
+     * `func` 用于接收事件的函数。
+     * */
+    pub fn add_changes_listener<CB>(&self, func: CB)
+    where
+        CB: Fn() -> () + 'static,
+    {
+        let handler: IUIAutomationChangesEventHandler =
+            OnChangesCallback::new(func, self._automation.clone()).into();
+        unsafe {
+            self._group
+                .AddChangesEventHandler(TreeScope_Subtree, &[0], None, &handler)
+        }
+        .expect("Can't add the changes listener.");
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 注册一个文字选择区改变时的通知函数。
+     * 处理函数运行在单独的子线程中。
+     * `func` 用于接收事件的函数。
+     * */
+    pub fn add_text_selection_changed_listener<CB>(&self, func: CB)
+    where
+        CB: Fn(UiAutomationElement) -> () + 'static,
+    {
+        let handler: IUIAutomationEventHandler =
+            OnCallback::new(func, self._automation.clone()).into();
+        unsafe {
+            self._group.AddAutomationEventHandler(
+                UIA_Text_TextSelectionChangedEventId,
+                TreeScope_Subtree,
+                None,
+                &handler,
+            )
+        }
+        .expect("Can't add the text selection changed listener.");
+    }
 }
+
+unsafe impl Send for UiAutomationEventHandlerGroup {}
+
+unsafe impl Sync for UiAutomationEventHandlerGroup {}
 
 #[implement(IUIAutomationFocusChangedEventHandler)]
 pub(crate) struct OnFocusChangedCallback<CB>
@@ -115,10 +167,7 @@ where
     CB: Fn(UiAutomationElement) -> () + 'static,
 {
     #[allow(non_snake_case)]
-    fn HandleFocusChangedEvent(
-        &self,
-        sender: Option<&IUIAutomationElement>,
-    ) -> crate::common::Result<()> {
+    fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
         let func = &*self._cb;
         func(UiAutomationElement::obtain(
             self._automation.clone(),
@@ -159,7 +208,7 @@ where
         &self,
         sender: Option<&IUIAutomationElement>,
         range: Option<&IUIAutomationTextRange>,
-    ) -> crate::common::Result<()> {
+    ) -> Result<()> {
         let func = &*self._cb;
         let element =
             UiAutomationElement::obtain(self._automation.clone(), sender.unwrap().clone());
@@ -203,6 +252,87 @@ where
         event_strings: *const SAFEARRAY,
     ) -> Result<()> {
         beep(400, 40);
+        Ok(())
+    }
+}
+
+//noinspection IdentifierGrammar
+#[implement(IUIAutomationChangesEventHandler)]
+struct OnChangesCallback<CB>
+where
+    CB: Fn() -> () + 'static,
+{
+    _automation: Arc<IUIAutomation6>,
+    _cb: Box<CB>,
+}
+
+impl<CB> OnChangesCallback<CB>
+where
+    CB: Fn() -> () + 'static,
+{
+    fn new(func: CB, automation: Arc<IUIAutomation6>) -> Self {
+        Self {
+            _automation: automation,
+            _cb: func.into(),
+        }
+    }
+}
+
+impl<CB> IUIAutomationChangesEventHandler_Impl for OnChangesCallback<CB>
+where
+    CB: Fn() -> () + 'static,
+{
+    //noinspection SpellCheckingInspection
+    #[allow(non_snake_case)]
+    #[allow(unused_variables)]
+    fn HandleChangesEvent(
+        &self,
+        sender: Option<&IUIAutomationElement>,
+        uiachanges: *const UiaChangeInfo,
+        changescount: i32,
+    ) -> Result<()> {
+        beep(400, 40);
+        Ok(())
+    }
+}
+
+#[implement(IUIAutomationEventHandler)]
+struct OnCallback<CB>
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
+{
+    _automation: Arc<IUIAutomation6>,
+    _cb: Box<CB>,
+}
+
+impl<CB> OnCallback<CB>
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
+{
+    fn new(func: CB, automation: Arc<IUIAutomation6>) -> Self {
+        Self {
+            _automation: automation,
+            _cb: func.into(),
+        }
+    }
+}
+
+impl<CB> IUIAutomationEventHandler_Impl for OnCallback<CB>
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
+{
+    #[allow(non_snake_case)]
+    #[allow(unused_variables)]
+    fn HandleAutomationEvent(
+        &self,
+        sender: Option<&IUIAutomationElement>,
+        event_id: UIA_EVENT_ID,
+    ) -> Result<()> {
+        let func = &*self._cb;
+        func(UiAutomationElement::obtain(
+            self._automation.clone(),
+            sender.unwrap().clone(),
+        ));
         Ok(())
     }
 }

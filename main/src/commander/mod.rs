@@ -45,6 +45,7 @@ pub(crate) enum CommandType {
 pub(crate) struct Commander {
     keyboard_hook: Arc<Mutex<Option<WindowsHook>>>,
     mouse_hook: Arc<Mutex<Option<WindowsHook>>>,
+    last_pressed_key: Arc<Mutex<Keys>>,
 }
 
 impl Commander {
@@ -56,6 +57,7 @@ impl Commander {
         Self {
             keyboard_hook: Arc::new(Mutex::new(None)),
             mouse_hook: Arc::new(Mutex::new(None)),
+            last_pressed_key: Mutex::new(Keys::VkNone).into(),
         }
     }
 
@@ -83,5 +85,20 @@ impl Commander {
     pub(crate) fn dispose(&self) {
         self.keyboard_hook.lock().unwrap().clone().unwrap().unhook();
         self.mouse_hook.lock().unwrap().clone().unwrap().unhook();
+    }
+
+    /**
+     * 获取最后一次按下的键。
+     * */
+    pub(crate) fn get_last_pressed_key(&self) -> Keys {
+        *self.last_pressed_key.lock().unwrap()
+    }
+
+    /**
+     * 设置最后一次按下的键。
+     * `key` 键盘枚举。
+     * */
+    pub(crate) fn set_last_pressed_key(&self, key: Keys) {
+        *self.last_pressed_key.lock().unwrap() = key;
     }
 }
