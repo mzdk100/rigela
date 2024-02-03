@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{commander::CommandType::Key, context::Context};
+use crate::{bring_window_front, commander::CommandType::Key, context::Context};
 use nwd::NwgUi;
 use nwg::{InsertListViewItem, NativeUi};
 use std::cell::RefCell;
@@ -116,7 +116,8 @@ impl HotKeysForm {
 
 pub(crate) fn show(context: Arc<Context>) {
     nwg::init().expect("Failed to init Native Windows GUI");
-    let app = HotKeysForm::build_ui(Default::default()).expect("Failed to build UI");
-    app.set_context(context);
+    let ui = HotKeysForm::build_ui(Default::default()).expect("Failed to build UI");
+    ui.set_context(context);
+    bring_window_front!(ui.window);
     nwg::dispatch_thread_events();
 }

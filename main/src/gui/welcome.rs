@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::bring_window_front;
 use nwd::NwgUi;
 use nwg::{EventData, NativeUi};
 
@@ -55,6 +56,7 @@ impl WelcomeForm {
 /// 显示欢迎窗口
 pub(crate) fn show() {
     nwg::init().expect("Failed to init Native Windows GUI");
-    let _app = WelcomeForm::build_ui(Default::default()).expect("Failed to build UI");
+    let ui = WelcomeForm::build_ui(Default::default()).expect("Failed to build UI");
+    bring_window_front!(ui.window);
     nwg::dispatch_thread_events();
 }

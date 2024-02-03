@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::bring_window_front;
 use nwd::NwgUi;
 use nwg::NativeUi;
 
@@ -63,6 +64,7 @@ impl PopupMenu {
 
 pub(crate) fn show() {
     nwg::init().expect("Failed to init Native Windows GUI");
-    let _ui = PopupMenu::build_ui(Default::default()).expect("Failed to build UI");
+    let ui = PopupMenu::build_ui(Default::default()).expect("Failed to build UI");
+    bring_window_front!(&ui.window);
     nwg::dispatch_thread_events();
 }

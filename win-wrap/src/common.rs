@@ -12,9 +12,7 @@
  */
 
 use std::ffi::CString;
-use windows::Win32::UI::Accessibility::{
-    SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK, WINEVENTPROC,
-};
+use windows::Win32::System::Threading::AttachThreadInput;
 pub use windows::{
     core::Result,
     Win32::{
@@ -38,9 +36,12 @@ use windows::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
         },
-        UI::WindowsAndMessaging::{
-            CallNextHookEx, GetDesktopWindow, GetForegroundWindow, SetForegroundWindow,
-            SetWindowsHookExW, UnhookWindowsHookEx,
+        UI::{
+            Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK, WINEVENTPROC},
+            WindowsAndMessaging::{
+                CallNextHookEx, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
+                GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
+            },
         },
     },
 };
@@ -66,15 +67,30 @@ pub fn get_foreground_window() -> HWND {
     unsafe { GetForegroundWindow() }
 }
 
+//noinspection StructuralWrap
 /**
  * 将创建指定窗口的线程引入前台并激活窗口。
  * 键盘输入将定向到窗口，并为用户更改各种视觉提示。
  * 系统为创建前台窗口的线程分配的优先级略高于其他线程的优先级。
- * `h_wnd`
- * 应激活并带到前台的窗口的句柄。
+ * `h_wnd` 应激活并带到前台的窗口的句柄。
  * */
 pub fn set_foreground_window(h_wnd: HWND) {
     unsafe { SetForegroundWindow(h_wnd) };
+}
+
+/**
+ * 将一个线程的输入处理机制附加到或分离另一个线程的输入处理机制。
+ * 通过使用 attach_thread_input 函数，线程可以共享其输入状态 (例如键盘状态，当前焦点窗口) 另一个线程。 通过再次调用 attach_thread_input 并为 attach 参数指定 FALSE，将按照两个线程接收的顺序处理这两个线程接收的键盘和鼠标事件，直到这些线程被分离。
+ * 如果任一指定的线程没有消息队列， 则此函数将失败。当线程首次调用 USER 或 GDI 函数之一时，系统会创建线程的消息队列。
+ * 如果安装了日志记录挂钩， attach_thread_input 函数也会失败。日志记录挂钩将所有输入队列附加到一起。
+ * 请注意，键状态（可通过调用 get_key_state 或 get_keyboard_state 函数确定）在调用 attach_thread_input 后重置。
+ * 不能将线程附加到另一个桌面中的线程。
+ * `id_attach` 要附加到另一个线程的线程的标识符。要附加的线程不能是系统线程。
+ * `id_attach_to` 将附加到的线程的标识符。此线程不能是系统线程。线程无法附加到自身。因此， id_attach_to 不能等于 id_attach。
+ * `attach` 如果此参数为 TRUE，则附加两个线程。如果参数为 FALSE，则分离线程。
+ * */
+pub fn attach_thread_input(id_attach: u32, id_attach_to: u32, attach: BOOL) -> BOOL {
+    unsafe { AttachThreadInput(id_attach, id_attach_to, attach) }
 }
 
 /**
@@ -84,6 +100,32 @@ pub fn set_foreground_window(h_wnd: HWND) {
  * */
 pub fn get_desktop_window() -> HWND {
     unsafe { GetDesktopWindow() }
+}
+
+/**
+ * 如果目标窗口由当前进程拥有，则get_window_text将会把WM_GETTEXT消息发送到指定的窗口或控件。
+ * 如果目标窗口由另一个进程拥有，并且具有描述文字，则get_window_text将查询描述文字文本的窗口。
+ * 如果窗口没有描述文字，则返回值为 null 字符串。此行为是设计使然。
+ * 如果拥有目标窗口的进程没有响应，它允许应用程序调用 get_window_text ，而不会变得无响应。
+ * 但是，如果目标窗口没有响应，并且它属于调用应用程序， 则 get_window_text 将导致调用应用程序变得无响应。
+ * 若要在另一个进程中检索控件的文本，请直接发送 WM_GETTEXT 消息，而不是调用 get_window_text。
+ * `h_wnd` 包含文本的窗口或控件的句柄。
+ * */
+pub fn get_window_text(h_wnd: HWND) -> String {
+    let mut text: [u16; 255] = [0; 255];
+    let len = unsafe { GetWindowTextW(h_wnd, &mut text) };
+    String::from_utf16_lossy(&text[..len as usize])
+}
+
+//noinspection StructuralWrap
+/**
+ * 查询指定窗口所属的类的名称。
+ * `h_wnd` 窗口的句柄，以及窗口所属的类的间接句柄。
+ * */
+pub fn get_class_name(h_wnd: HWND) -> String {
+    let mut text: [u16; 255] = [0; 255];
+    let len = unsafe { GetClassNameW(h_wnd, &mut text) };
+    String::from_utf16_lossy(&text[..len as usize])
 }
 
 /**

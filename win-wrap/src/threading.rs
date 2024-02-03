@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    common::{close_handle, BOOL, FALSE, HANDLE, LPARAM, TRUE, WAIT_EVENT, WPARAM},
+    common::{close_handle, BOOL, FALSE, HANDLE, HWND, LPARAM, TRUE, WAIT_EVENT, WPARAM},
     message::post_thread_message,
 };
 pub use windows::Win32::Security::SECURITY_ATTRIBUTES;
@@ -20,7 +20,7 @@ use windows::{
     core::HSTRING,
     Win32::{
         System::Threading::{CreateEventW, GetCurrentThreadId, SetEvent, WaitForSingleObject},
-        UI::WindowsAndMessaging::WM_QUIT,
+        UI::WindowsAndMessaging::{GetWindowThreadProcessId, WM_QUIT},
     },
 };
 
@@ -29,6 +29,19 @@ use windows::{
  * */
 pub fn get_current_thread_id() -> u32 {
     unsafe { GetCurrentThreadId() }
+}
+
+//noinspection StructuralWrap
+/**
+ * 查询创建指定窗口的线程的标识符，以及创建该窗口的进程的标识符。
+ * `h_wnd` 窗口的句柄。
+ * */
+pub fn get_window_thread_process_id(h_wnd: HWND) -> (u32, u32) {
+    let mut pid = 0u32;
+    (
+        unsafe { GetWindowThreadProcessId(h_wnd, Some(&mut pid)) },
+        pid,
+    )
 }
 
 /**
