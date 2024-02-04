@@ -20,16 +20,20 @@ pub(crate) mod welcome;
 macro_rules! bring_window_front {
     ($window:expr) => {
         if let nwg::ControlHandle::Hwnd(h) = $window.handle {
-            let h_foreground = win_wrap::common::get_foreground_window();
             let current_thread_id = win_wrap::threading::get_current_thread_id();
+            let h_foreground = win_wrap::common::get_foreground_window();
             let (remote_thread_id, _) =
                 win_wrap::threading::get_window_thread_process_id(h_foreground);
+
             win_wrap::common::attach_thread_input(
                 current_thread_id,
                 remote_thread_id,
                 win_wrap::common::TRUE,
             );
+
             win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
+            win_wrap::common::set_active_window(win_wrap::common::HWND(h as isize));
+
             win_wrap::common::attach_thread_input(
                 current_thread_id,
                 remote_thread_id,

@@ -148,6 +148,7 @@ impl TextRangeArray for IUIAutomationTextRangeArray {
  * 该接口使用两个端点来分隔文本范围的开始和结束位置。
  * 文本的不相交范围由 IUIAutomationTextRangeArray 接口表示。
  * */
+#[derive(Clone, Debug)]
 pub struct UiAutomationTextRange(IUIAutomationTextRange);
 
 impl UiAutomationTextRange {

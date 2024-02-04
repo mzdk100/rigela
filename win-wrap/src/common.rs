@@ -13,6 +13,7 @@
 
 use std::ffi::CString;
 use windows::Win32::System::Threading::AttachThreadInput;
+use windows::Win32::UI::Input::KeyboardAndMouse::SetActiveWindow;
 pub use windows::{
     core::Result,
     Win32::{
@@ -76,6 +77,11 @@ pub fn get_foreground_window() -> HWND {
  * */
 pub fn set_foreground_window(h_wnd: HWND) {
     unsafe { SetForegroundWindow(h_wnd) };
+}
+
+/** 激活指定窗口  **/
+pub fn set_active_window(h_wnd: HWND) {
+    unsafe { SetActiveWindow(h_wnd) };
 }
 
 /**

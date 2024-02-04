@@ -83,7 +83,7 @@ impl Speakable for UiAutomationElement {
 }
 
 /// 给UIA文本范围实现朗读接口
-impl Speakable for &UiAutomationTextRange {
+impl Speakable for UiAutomationTextRange {
     fn get_sentence(&self) -> String {
         self.get_text(-1)
     }

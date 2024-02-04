@@ -83,11 +83,12 @@ impl HotKeysForm {
 
                 for cmd_type in talent.get_supported_cmd_list() {
                     if let Key(keys) = cmd_type {
-                        let mut key_str = String::new();
-                        for k in keys {
-                            let k: &str = k.clone().into();
-                            key_str.push_str(format!("{k} ").as_str());
-                        }
+                        let key_str = keys
+                            .iter()
+                            .map(|k| -> &str { (*k).into() })
+                            .collect::<Vec<&str>>()
+                            .join(" + ");
+
                         dv.insert_item(InsertListViewItem {
                             index: Some(i as i32),
                             column_index: 1,

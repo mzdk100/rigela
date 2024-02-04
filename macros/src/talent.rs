@@ -31,10 +31,13 @@ impl Parse for Metadata {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let r = Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
         let mut iter = r.iter();
+
         let doc = iter.next().unwrap().clone();
+
         let mut cmd_list = TokenStream::new();
         cmd_list.append(Ident::new("vec", Span::call_site()));
         cmd_list.append(Punct::new('!', Spacing::Alone));
+
         cmd_list.append(Group::new(Bracket, {
             let mut items = TokenStream::new();
             for i in iter {
