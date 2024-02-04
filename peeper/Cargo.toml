@@ -22,7 +22,7 @@ features = ["Win32_Foundation"]
 
 [dependencies.serde]
 features = ["derive"]
-version = "1.0.195"
+version = "1.0.196"
 
 [dependencies.tokio]
 features = [
@@ -32,7 +32,7 @@ features = [
     "net",
     "sync"
 ]
-version = "1.35.1"
+version = "1.36.0"
 
 [lib]
 name = "peeper"
