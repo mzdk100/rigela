@@ -58,6 +58,33 @@ impl Sapi5TtsSynthesizer {
     }
 
     /**
+     * 获取所有已安装的语音合成发音人。
+     * */
+    pub fn get_voice_list(&self) -> Vec<(String, String)> {
+        let mut v: Vec<(String, String)> = vec![];
+        for x in SpeechSynthesizer::AllVoices().unwrap() {
+            v.push((
+                x.Id().unwrap().to_string(),
+                x.DisplayName().unwrap().to_string(),
+            ))
+        }
+        v
+    }
+
+    /**
+     * 设置发音人。
+     * `voice` 发音人id。
+     * */
+    pub fn set_voice(&self, voice: String) {
+        for x in SpeechSynthesizer::AllVoices().unwrap() {
+            if x.Id().unwrap().to_string() == voice {
+                self.synth.SetVoice(&x).unwrap_or(());
+                return;
+            }
+        }
+    }
+
+    /**
      * 合成语音。
      * 此函数是异步函数，需要使用.await。
      * `text` 要朗读的文字。

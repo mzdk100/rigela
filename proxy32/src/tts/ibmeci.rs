@@ -11,17 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::model::IbmeciVoiceParams;
 use encoding_rs::GBK;
 use log::{error, info};
 use rigela_resources::clone_resource;
 use rigela_utils::{call_proc, get_program_directory, SERVER_HOME_URI};
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll};
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
     ffi::{c_char, CString},
+    future::Future,
+    pin::Pin,
     sync::OnceLock,
+    task::{Context, Poll},
     thread,
     time::Duration,
 };
@@ -88,6 +89,37 @@ macro_rules! eci {
     ($module:expr,synchronize,$handle:expr) => {
         call_proc!($module, eciSynchronize, extern "system" fn(i32), $handle)
     };
+    ($module:expr,set_voice_param,$handle:expr,$voice:expr,$key:expr,$value:expr) => {
+        call_proc!(
+            $module,
+            eciSetVoiceParam,
+            extern "system" fn(i32, i32, u32, i32),
+            $handle,
+            $voice,
+            $key,
+            $value
+        )
+    };
+    ($module:expr,get_voice_param,$handle:expr,$voice:expr,$key:expr) => {
+        call_proc!(
+            $module,
+            eciGetVoiceParam,
+            extern "system" fn(i32, i32, u32) -> i32,
+            $handle,
+            $voice,
+            $key
+        )
+    };
+    ($module:expr,copy_voice,$handle:expr,$copy_from:expr,$copy_to:expr) => {
+        call_proc!(
+            $module,
+            eciCopyVoice,
+            extern "system" fn(i32, u32, u32),
+            $handle,
+            $copy_from,
+            $copy_to
+        )
+    };
 }
 
 #[allow(unused)]
@@ -106,6 +138,23 @@ const RETURN_DATA_NOT_PROCESSED: u32 = 0;
 const RETURN_DATA_PROCESSED: u32 = 1;
 #[allow(unused)]
 const RETURN_DATA_ABORT: u32 = 2;
+#[allow(unused)]
+const VP_GENDER: u32 = 0;
+#[allow(unused)]
+const VP_HEAD_SIZE: u32 = 1;
+#[allow(unused)]
+const VP_PITCH_BASELINE: u32 = 2;
+#[allow(unused)]
+const VP_PITCH_FLUCTUATION: u32 = 3;
+#[allow(unused)]
+const VP_ROUGHNESS: u32 = 4;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const VP_BREATHINESS: u32 = 5;
+#[allow(unused)]
+const VP_SPEED: u32 = 6;
+#[allow(unused)]
+const VP_VOLUME: u32 = 7;
 
 //noinspection SpellCheckingInspection
 static mut IBMECI: OnceLock<Ibmeci> = OnceLock::new();
@@ -228,6 +277,143 @@ impl Ibmeci {
         } else {
             vec![]
         }
+    }
+
+    /**
+     * 设置语音参数。
+     * `params` 参数数据。
+     * */
+    pub fn set_voice_params(&self, params: &IbmeciVoiceParams) {
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_BREATHINESS,
+            params.breathiness
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_HEAD_SIZE,
+            params.head_size
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_GENDER,
+            params.gender
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_ROUGHNESS,
+            params.roughness
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_SPEED,
+            params.speed
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_PITCH_BASELINE,
+            params.pitch_baseline
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_PITCH_FLUCTUATION,
+            params.pitch_fluctuation
+        );
+        eci!(
+            self.h_module,
+            set_voice_param,
+            self.h_eci,
+            0,
+            VP_VOLUME,
+            params.volume
+        );
+    }
+
+    /**
+     * 获取语音参数。
+     * */
+    pub fn get_voice_params(&self) -> IbmeciVoiceParams {
+        IbmeciVoiceParams {
+            gender: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_GENDER).unwrap_or(0),
+            head_size: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_HEAD_SIZE)
+                .unwrap_or(0),
+            pitch_baseline: eci!(
+                self.h_module,
+                get_voice_param,
+                self.h_eci,
+                0,
+                VP_PITCH_BASELINE
+            )
+            .unwrap_or(0),
+            pitch_fluctuation: eci!(
+                self.h_module,
+                get_voice_param,
+                self.h_eci,
+                0,
+                VP_PITCH_BASELINE
+            )
+            .unwrap_or(0),
+            roughness: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_ROUGHNESS)
+                .unwrap_or(0),
+            breathiness: eci!(
+                self.h_module,
+                get_voice_param,
+                self.h_eci,
+                0,
+                VP_BREATHINESS
+            )
+            .unwrap_or(0),
+            speed: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_SPEED).unwrap_or(0),
+            volume: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_VOLUME).unwrap_or(0),
+        }
+    }
+
+    /**
+     * 获取发音人列表。
+     * */
+    pub(crate) fn get_voices(&self) -> Vec<(u32, String)> {
+        vec![
+            (1, "Adult Male 1"),
+            (2, "Adult Female 1"),
+            (3, "Child 1"),
+            (4, "Adult Male 2"),
+            (5, "Adult Male 3"),
+            (6, "Adult Female 2"),
+            (7, "Elderly Female 1"),
+            (8, "Elderly Male 1"),
+        ]
+        .iter()
+        .map(|i| (i.0, i.1.to_string()))
+        .collect()
+    }
+
+    /**
+     * 设置当前发音人。
+     * `voice_id` 声音id。
+     * */
+    pub(crate) fn set_voice(&self, voice_id: u32) {
+        eci!(self.h_module, copy_voice, self.h_eci, voice_id, 0);
     }
 }
 

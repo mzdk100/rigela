@@ -30,14 +30,14 @@ use async_trait::async_trait;
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音加速", key = (VkRigelA, VkCtrl, VkUp))]
 async fn increase(context: Arc<Context>) {
-    apply_tts_config(context.clone(), 1);
+    apply_tts_config(context.clone(), 1).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音减速", key = (VkRigelA, VkCtrl, VkDown))]
 async fn reduce(context: Arc<Context>) {
-    apply_tts_config(context.clone(), -1);
+    apply_tts_config(context.clone(), -1).await;
     speak_tts_prop(context).await;
 }
 

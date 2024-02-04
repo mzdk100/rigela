@@ -15,10 +15,45 @@ use serde::{Deserialize, Serialize};
 
 //noinspection SpellCheckingInspection
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct IbmeciVoiceParams {
+    pub gender: i32,
+    pub head_size: i32,
+    pub pitch_baseline: i32,
+    pub pitch_fluctuation: i32,
+    pub roughness: i32,
+    pub breathiness: i32,
+    pub speed: i32,
+    pub volume: i32,
+}
+impl Default for IbmeciVoiceParams {
+    fn default() -> Self {
+        Self {
+            gender: 0,
+            head_size: 50,
+            pitch_baseline: 69,
+            pitch_fluctuation: 69,
+            roughness: 0,
+            breathiness: 0,
+            speed: 50,
+            volume: 92,
+        }
+    }
+}
+
+//noinspection SpellCheckingInspection
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Proxy32Data {
-    Quit,                      // 退出
-    EciSynthRequest(String),   // vvtts合成请求
-    EciSynthResponse(Vec<u8>), // vvtts合成响应
+    Quit,                                     // 退出
+    EciSetParamsRequest(IbmeciVoiceParams),   // vvtts设置参数请求
+    EciSetParamsResponse(()),                 // vvtts设置参数响应
+    EciGetParamsRequest,                      // vvtts获取参数请求
+    EciGetParamsResponse(IbmeciVoiceParams),  // vvtts获取参数响应
+    EciSetVoiceRequest(u32),                  // vvtts设置发音人请求
+    EciSetVoiceResponse(()),                  // vvtts设置发音人响应
+    EciGetVoicesRequest,                      // vvtts获取发音人列表请求
+    EciGetVoicesResponse(Vec<(u32, String)>), // vvtts获取发音人列表响应
+    EciSynthRequest(String),                  // vvtts合成请求
+    EciSynthResponse(Vec<u8>),                // vvtts合成响应
 }
 
 #[derive(Debug, Deserialize, Serialize)]
