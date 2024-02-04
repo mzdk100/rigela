@@ -22,18 +22,19 @@ use std::sync::{Arc, Mutex, OnceLock};
 // ------ TTS 配置操作 ------
 
 /// 设置TTS的参数。 `diff` 属性值的差值， 传0初始化tts属性值
-pub(crate) fn apply_tts_config(context: Arc<Context>, diff: i32) {
+pub(crate) async fn apply_tts_config(context: Arc<Context>, diff: i32) {
     let performer = &context.performer.clone();
     let mut config = context.config_manager.get_config();
     let mut tts_config = config.tts_config.clone();
 
     // 如果差值等于0，直接设置TTS属性值参数，返回
     if diff == 0 {
-        performer.set_tts_properties_with_sapi5(
-            tts_config.speed,
-            tts_config.volume,
-            tts_config.pitch,
-        );
+        performer
+            .set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch)
+            .await;
+        performer
+            .set_tts_properties_with_vvtts(tts_config.speed, tts_config.volume, tts_config.pitch)
+            .await;
         return;
     }
 
@@ -58,7 +59,13 @@ pub(crate) fn apply_tts_config(context: Arc<Context>, diff: i32) {
         },
     };
 
-    performer.set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch);
+    performer
+        .set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch)
+        .await;
+    performer
+        .set_tts_properties_with_vvtts(tts_config.speed, tts_config.volume, tts_config.pitch)
+        .await;
+
     config.tts_config = tts_config;
     context.config_manager.set_config(config);
 }

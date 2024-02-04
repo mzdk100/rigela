@@ -13,6 +13,7 @@
 
 use log::{error, info};
 use rigela_proxy32::client::Proxy32Client;
+use rigela_proxy32::model::IbmeciVoiceParams;
 use tokio::process::Child;
 use tokio::sync::RwLock;
 
@@ -141,6 +142,56 @@ impl Proxy32 {
             c.eci_synth(text).await
         } else {
             vec![]
+        }
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts语音的参数。
+     * `params` 参数数据。
+     * */
+    pub async fn eci_set_voice_params(&self, params: &IbmeciVoiceParams) {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.eci_set_voice_params(params).await;
+        }
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 获取vvtts语音的参数。
+     * */
+    pub async fn eci_get_voice_params(&self) -> IbmeciVoiceParams {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.eci_get_voice_params().await
+        } else {
+            IbmeciVoiceParams::default()
+        }
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 获取vvtts发音人列表。
+     * */
+    pub async fn eci_get_voices(&self) -> Vec<(u32, String)> {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.eci_get_voices().await
+        } else {
+            vec![]
+        }
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts发音人。
+     * `voice_id` 发音人id。
+     * */
+    pub async fn eci_set_voice(&self, voice_id: u32) {
+        let mut client = self.client.write().await;
+        if let Some(c) = client.as_mut() {
+            c.eci_set_voice(voice_id).await;
         }
     }
 }

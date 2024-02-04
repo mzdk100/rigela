@@ -12,14 +12,14 @@
  */
 
 #[cfg(target_arch = "x86")]
-use crate::model::{Proxy32Data, Proxy32Packet};
-#[cfg(target_arch = "x86")]
-use crate::tts::ibmeci::Ibmeci;
+use crate::{
+    model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet},
+    tts::ibmeci::Ibmeci,
+};
 #[cfg(target_arch = "x86")]
 use log::error;
 #[cfg(target_arch = "x86")]
 use rigela_utils::pipe::{server_run, PipeStream, PipeStreamError};
-#[cfg(target_arch = "x86")]
 #[cfg(target_arch = "x86")]
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
@@ -68,6 +68,18 @@ impl Proxy32Server {
             Proxy32Data::EciSynthRequest(text) => {
                 Proxy32Data::EciSynthResponse(self.eci_synth(text).await)
             }
+            Proxy32Data::EciSetParamsRequest(params) => {
+                Proxy32Data::EciSetParamsResponse(self.eci_set_voice_params(params).await)
+            }
+            Proxy32Data::EciGetParamsRequest => {
+                Proxy32Data::EciGetParamsResponse(self.eci_get_voice_params().await)
+            }
+            Proxy32Data::EciSetVoiceRequest(v) => {
+                Proxy32Data::EciSetVoiceResponse(self.eci_set_voice(v.clone()).await)
+            }
+            Proxy32Data::EciGetVoicesRequest => {
+                Proxy32Data::EciGetVoicesResponse(self.eci_get_voices().await)
+            }
             _ => data.clone(),
         }
     }
@@ -76,5 +88,29 @@ impl Proxy32Server {
     async fn eci_synth(&self, text: &str) -> Vec<u8> {
         let eci = Ibmeci::get().await.unwrap();
         eci.synth(text).await
+    }
+
+    #[cfg(target_arch = "x86")]
+    async fn eci_set_voice_params(&self, params: &IbmeciVoiceParams) {
+        let eci = Ibmeci::get().await.unwrap();
+        eci.set_voice_params(params);
+    }
+
+    #[cfg(target_arch = "x86")]
+    async fn eci_get_voice_params(&self) -> IbmeciVoiceParams {
+        let eci = Ibmeci::get().await.unwrap();
+        eci.get_voice_params()
+    }
+
+    #[cfg(target_arch = "x86")]
+    async fn eci_get_voices(&self) -> Vec<(u32, String)> {
+        let eci = Ibmeci::get().await.unwrap();
+        eci.get_voices()
+    }
+
+    #[cfg(target_arch = "x86")]
+    async fn eci_set_voice(&self, voice_id: u32) {
+        let eci = Ibmeci::get().await.unwrap();
+        eci.set_voice(voice_id)
     }
 }

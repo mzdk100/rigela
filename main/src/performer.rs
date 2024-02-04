@@ -16,6 +16,7 @@ use rigela_utils::{bass::BassChannelOutputStream, resample::resample_audio};
 use std::{
     collections::HashMap,
     io::SeekFrom,
+    str::FromStr,
     sync::{Arc, OnceLock},
 };
 use tokio::{
@@ -127,7 +128,7 @@ impl Performer {
     pub(crate) async fn apply(&self, context: Arc<Context>) {
         self.context.set(context.clone()).unwrap_or(());
         // 初始化TTS属性
-        apply_tts_config(context.clone(), 0);
+        apply_tts_config(context.clone(), 0).await;
 
         // 初始化音效播放器
         let list = vec!["boundary.wav"];
@@ -147,11 +148,83 @@ impl Performer {
      * `volume` 音量，0到100。
      * `pitch` 音高，0到100。
      * */
-    pub fn set_tts_properties_with_sapi5(&self, speed: i32, volume: i32, pitch: i32) {
+    pub(crate) async fn set_tts_properties_with_sapi5(&self, speed: i32, volume: i32, pitch: i32) {
         self.sapi5_synth.set_properties(
             3.0 + (speed as f64 - 50.0) * 0.06,
             0.5 + (volume as f64 - 50.0) * 0.01,
             1.0 + (pitch as f64 - 50.0) * 0.01,
         );
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts语音合成器的参数。
+     * `speed` 速度，0到100。
+     * `volume` 音量，0到100。
+     * `pitch` 音高，0到100。
+     * */
+    pub(crate) async fn set_tts_properties_with_vvtts(&self, speed: i32, volume: i32, pitch: i32) {
+        let ctx = self.context.get();
+        if ctx.is_none() {
+            return;
+        }
+        let ctx = ctx.unwrap();
+        let mut params = ctx.proxy32.eci_get_voice_params().await;
+        params.volume = volume;
+        params.speed = speed;
+        params.pitch_baseline = pitch; // vvtts的默认音高是69
+                                       // params.pitch_fluctuation = pitch;
+        ctx.proxy32.eci_set_voice_params(&params).await;
+    }
+
+    /**
+     * 获取sapi5发音人列表。
+     * 返回的每一个元祖中第一个成员是发音人id，第二个成员是发音人名称。
+     * */
+    pub fn get_tts_voices_with_sapi5(&self) -> Vec<(String, String)> {
+        self.sapi5_synth.get_voice_list()
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 获取vvtts发音人列表。
+     * 返回的每一个元祖中第一个成员是发音人id，第二个成员是发音人名称。
+     * */
+    pub(crate) async fn get_tts_voices_with_vvtts(&self) -> Vec<(String, String)> {
+        let ctx = self.context.get();
+        if ctx.is_none() {
+            return vec![];
+        }
+        ctx.unwrap()
+            .proxy32
+            .eci_get_voices()
+            .await
+            .iter()
+            .map(|i| (i.0.to_string(), i.1.clone()))
+            .collect()
+    }
+
+    /**
+     * 设置sapi5的当前发音人。
+     * `voice_id` 发音人id。
+     * */
+    pub(crate) async fn set_tts_voice_with_sapi5(&self, voice_id: String) {
+        self.sapi5_synth.set_voice(voice_id)
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts的当前发音人。
+     * `voice_id` 发音人id。
+     * */
+    pub(crate) async fn set_tts_voice_with_vvtts(&self, voice_id: String) {
+        let ctx = self.context.get();
+        if ctx.is_none() {
+            return;
+        }
+        ctx.unwrap()
+            .proxy32
+            .eci_set_voice(u32::from_str(&voice_id).unwrap())
+            .await
     }
 }

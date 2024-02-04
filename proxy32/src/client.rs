@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::model::{Proxy32Data, Proxy32Packet};
+use crate::model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet};
 use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
@@ -74,6 +74,7 @@ impl Proxy32Client {
         self.exec(&Proxy32Data::Quit).await;
     }
 
+    //noinspection SpellCheckingInspection
     /**
      * 使用vvtts合成语音。
      * `text` 文字内容。
@@ -87,5 +88,50 @@ impl Proxy32Client {
         } else {
             vec![]
         }
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts语音参数。
+     * `params` 参数数据。
+     * */
+    pub async fn eci_set_voice_params(&mut self, params: &IbmeciVoiceParams) {
+        self.exec(&Proxy32Data::EciSetParamsRequest(params.clone()))
+            .await;
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 获取vvtts语音参数。
+     * */
+    pub async fn eci_get_voice_params(&mut self) -> IbmeciVoiceParams {
+        if let Some(Proxy32Data::EciGetParamsResponse(r)) =
+            self.exec(&Proxy32Data::EciGetParamsRequest).await
+        {
+            return r;
+        }
+        IbmeciVoiceParams::default()
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 获取vvtts发音人列表。
+     * */
+    pub async fn eci_get_voices(&mut self) -> Vec<(u32, String)> {
+        if let Some(Proxy32Data::EciGetVoicesResponse(r)) =
+            self.exec(&Proxy32Data::EciGetVoicesRequest).await
+        {
+            return r;
+        }
+        vec![]
+    }
+
+    //noinspection SpellCheckingInspection
+    /**
+     * 设置vvtts发音人。
+     * `voice_id` 发音人id。
+     * */
+    pub async fn eci_set_voice(&mut self, voice_id: u32) {
+        self.exec(&Proxy32Data::EciSetVoiceRequest(voice_id)).await;
     }
 }

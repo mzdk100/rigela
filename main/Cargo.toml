@@ -35,7 +35,7 @@ path = "../win-wrap"
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
-version = "1.35.1"
+version = "1.36.0"
 features = [
     "rt",
     "rt-multi-thread",
@@ -44,10 +44,6 @@ features = [
     "process",
     "time"
 ]
-
-[build-dependencies.embed-resource]
-# 嵌入资源信息到程序中
-version = "2.4.1"
 
 [build-dependencies.embed-manifest]
 # 嵌入清单信息到程序中
@@ -74,26 +70,31 @@ version = "1.0.196"
 features = ["derive"]
 
 [dependencies.toml]
-version = "0.8.8"
+version = "0.8.9"
 
 [dependencies]
 # 查看日期和时间
-chrono = "0.4.31"
+chrono = "0.4.33"
 
 # 配置I18N国际化多语言支持
-rust-i18n = "3.0.0"
+rust-i18n = "3.0.1"
 
 # 日志库
 log = "0.4.20"
-
-# GUI
-nwg = { version = "1.0.13", package = "native-windows-gui" }
-nwd = { version = "1.0.5", package = "native-windows-derive"}
 
 # 异步trait
 async-trait = "0.1.77"
 
 # 网络请求
-reqwest = "0.11.23"
+reqwest = "0.11.24"
+
 # 解析html
 select = "0.6.0"
+
+[dependencies.nwd]
+version = "1.0.5"
+package = "native-windows-derive"
+
+[dependencies.nwg]
+version = "1.0.13"
+package = "native-windows-gui"
