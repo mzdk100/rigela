@@ -47,8 +47,9 @@ pub struct HotKeysForm {
     #[nwg_layout_item(layout: layout, col: 0, row: 6)]
     label: nwg::Label,
 
-    #[nwg_control(readonly: true, text: "")]
+    #[nwg_control(readonly: true, text: "请输入新的热键!")]
     #[nwg_layout_item(layout: layout, col: 1, row: 6, col_span: 3)]
+    #[nwg_events(OnKeyPress: [HotKeysForm::tb_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextInput,
 
     #[nwg_control(text: "设置 (&S)")]
@@ -64,6 +65,10 @@ pub struct HotKeysForm {
     #[nwg_control()]
     #[nwg_events(OnNotice: [HotKeysForm::new_hotkeys])]
     new_hotkeys: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [HotKeysForm::next_control])]
+    next_control: nwg::Notice,
 }
 
 impl HotKeysForm {
@@ -84,7 +89,6 @@ impl HotKeysForm {
         dv.set_headers_enabled(true);
         self.update_list();
 
-        *self.enable_hook.lock().unwrap() = true;
         *self.hook.borrow_mut() = Some(self.set_hook());
     }
 
@@ -135,7 +139,8 @@ impl HotKeysForm {
     fn set_hook(&self) -> WindowsHook {
         let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
         let enable_hook: Arc<Mutex<bool>> = Arc::clone(&self.enable_hook);
-        let sender = self.new_hotkeys.sender();
+        let new_hotkeys_sender = self.new_hotkeys.sender();
+        let next_ctrl_sender = self.next_control.sender();
 
         WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
             let info: &KbdLlHookStruct = l_param.to();
@@ -151,17 +156,21 @@ impl HotKeysForm {
             }
 
             if *enable_hook.lock().unwrap() {
-                *hotkeys().lock().unwrap() = vec![];
+                let keys = map
+                    .iter()
+                    .filter(|(_, p)| **p)
+                    .map(|(x, _)| *x)
+                    .collect::<Vec<Keys>>();
 
-                hotkeys().lock().unwrap().extend(
-                    map.iter()
-                        .filter(|(_, p)| **p)
-                        .map(|(x, _)| *x)
-                        .collect::<Vec<Keys>>(),
-                );
+                if keys.len() == 1 && keys[0] == Keys::VkTab {
+                    next_ctrl_sender.notice();
+                    return LRESULT(1);
+                }
 
-                drop(map);
-                sender.notice();
+                hotkeys().lock().unwrap().clear();
+                hotkeys().lock().unwrap().extend(keys);
+
+                new_hotkeys_sender.notice();
                 return LRESULT(1);
             }
 
@@ -179,6 +188,17 @@ impl HotKeysForm {
             .collect::<Vec<&str>>()
             .join("+");
         self.text_box.set_text(&key_str);
+    }
+
+    fn next_control(&self) {
+        *self.enable_hook.lock().unwrap() = false;
+        self.set_btn.set_focus();
+    }
+
+    fn tb_key_press(&self, data: &nwg::EventData) {
+        if data.on_key() != nwg::keys::TAB {
+            *self.enable_hook.lock().unwrap() = true;
+        }
     }
 
     fn set_context(&self, context: Arc<Context>) {
