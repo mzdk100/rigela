@@ -20,6 +20,7 @@ use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
+use win_wrap::msaa::Msaa;
 use win_wrap::uia::automation::UiAutomation;
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -30,6 +31,7 @@ pub(crate) struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) main_handler: Arc<Handle>,
+    pub(crate) msaa: Arc<Msaa>,
     pub(crate) work_runtime: Arc<Runtime>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) peeper_server: Arc<PeeperServer>,
@@ -59,6 +61,9 @@ impl Context {
 
         // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
         let main_handler = Handle::current();
+
+        // MSAA(Microsoft Active Accessibility，辅助功能）接口
+        let msaa = Msaa::new();
 
         // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
         let work_runtime = Builder::new_multi_thread()
@@ -92,6 +97,7 @@ impl Context {
             commander: commander.into(),
             config_manager: config_manager.into(),
             main_handler: main_handler.into(),
+            msaa: msaa.into(),
             peeper_server: peeper_server.into(),
             performer: performer.into(),
             proxy32: proxy32.into(),
@@ -133,6 +139,7 @@ impl Clone for Context {
             commander: self.commander.clone(),
             config_manager: self.config_manager.clone(),
             main_handler: self.main_handler.clone(),
+            msaa: self.msaa.clone(),
             peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
             proxy32: self.proxy32.clone(),
