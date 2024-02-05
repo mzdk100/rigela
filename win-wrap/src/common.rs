@@ -25,7 +25,12 @@ pub use windows::{
         },
         UI::{
             Accessibility::{HWINEVENTHOOK, WINEVENTPROC},
-            WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+            WindowsAndMessaging::{
+                HHOOK, HOOKPROC, SHOW_WINDOW_CMD, SW_FORCEMINIMIZE, SW_HIDE, SW_MAXIMIZE,
+                SW_MINIMIZE, SW_NORMAL, SW_RESTORE, SW_SHOW, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED,
+                SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_SHOWNOACTIVATE, SW_SHOWNORMAL,
+                WINDOWS_HOOK_ID,
+            },
         },
     },
 };
@@ -34,17 +39,18 @@ use windows::{
     Win32::{
         Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
-        System::Threading::AttachThreadInput,
         System::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
+            Threading::AttachThreadInput,
         },
-        UI::Input::KeyboardAndMouse::SetActiveWindow,
         UI::{
             Accessibility::{SetWinEventHook, UnhookWinEvent},
+            Input::KeyboardAndMouse::SetActiveWindow,
             WindowsAndMessaging::{
                 CallNextHookEx, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
-                GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,
+                GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, ShowWindow,
+                UnhookWindowsHookEx,
             },
         },
     },
@@ -135,6 +141,28 @@ pub fn get_class_name(h_wnd: HWND) -> String {
     let mut text: [u16; 255] = [0; 255];
     let len = unsafe { GetClassNameW(h_wnd, &mut text) };
     String::from_utf16_lossy(&text[..len as usize])
+}
+
+//noinspection SpellCheckingInspection
+/**
+ * 设置指定窗口的显示状态。
+ * `h_wnd` 窗口的句柄。
+ * `cmd_show` 控制窗口的显示方式。 如果启动应用程序的程序提供 STARTUPINFO 结构，则应用程序首次调用 ShowWindow 时将忽略此参数。 否则，首次调用 ShowWindow 时，该值应为 WinMain 函数在其 nCmdShow 参数中获取的值。 在后续调用中，此参数可以是以下值之一。
+ * - SW_HIDE，隐藏窗口并激活另一个窗口。
+ * - SW_SHOWNORMAL SW_NORMAL，激活并显示窗口。 如果窗口最小化、最大化或排列，系统会将其还原到其原始大小和位置。 应用程序应在首次显示窗口时指定此标志。
+ * - SW_SHOWMINIMIZED，激活窗口并将其显示为最小化窗口。
+ * - SW_SHOWMAXIMIZED SW_MAXIMIZE，激活窗口并显示最大化的窗口。
+ * - SW_SHOWNOACTIVATE，以最近的大小和位置显示窗口。 此值类似于 SW_SHOWNORMAL，只是窗口未激活。
+ * - SW_SHOW，激活窗口并以当前大小和位置显示窗口。
+ * - SW_MINIMIZE，最小化指定的窗口，并按 Z 顺序激活下一个顶级窗口。
+ * - SW_SHOWMINNOACTIVE，将窗口显示为最小化窗口。 此值类似于 SW_SHOWMINIMIZED，但窗口未激活。
+ * - SW_SHOWNA，以当前大小和位置显示窗口。 此值类似于 SW_SHOW，只是窗口未激活。
+ * - SW_RESTORE，激活并显示窗口。 如果窗口最小化、最大化或排列，系统会将其还原到其原始大小和位置。 还原最小化窗口时，应用程序应指定此标志。
+ * - SW_SHOWDEFAULT，根据启动应用程序的程序传递给 CreateProcess 函数的 STARTUPINFO 结构中指定的SW_值设置显示状态。
+ * - SW_FORCEMINIMIZE，最小化窗口，即使拥有窗口的线程没有响应。 仅当最小化不同线程的窗口时，才应使用此标志。
+ * */
+pub fn show_window(h_wnd: HWND, cmd_show: SHOW_WINDOW_CMD) -> BOOL {
+    unsafe { ShowWindow(h_wnd, cmd_show) }
 }
 
 /**

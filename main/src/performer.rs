@@ -74,7 +74,6 @@ impl Performer {
             return;
         }
         let data = self.sapi5_synth.synth(string.as_str()).await;
-        dbg!(string);
         self.output_stream.stop();
         self.output_stream.start();
 
