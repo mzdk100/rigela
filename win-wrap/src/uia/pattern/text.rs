@@ -142,6 +142,7 @@ impl TextRangeArray for IUIAutomationTextRangeArray {
         v
     }
 }
+
 /**
  * 提供对支持 IUIAutomationTextPattern 接口的容器中连续文本范围的访问。
  * 客户端应用程序可以使用 IUIAutomationTextRange 接口从文本范围中选择、比较和查询嵌入对象。
@@ -151,6 +152,7 @@ impl TextRangeArray for IUIAutomationTextRangeArray {
 #[derive(Clone, Debug)]
 pub struct UiAutomationTextRange(IUIAutomationTextRange);
 
+/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextrange
 impl UiAutomationTextRange {
     /* 获取一个实例。 */
     pub(crate) fn obtain(range: &IUIAutomationTextRange) -> Self {

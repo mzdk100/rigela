@@ -125,9 +125,6 @@ async fn speak_input(context: Arc<Context>) {
 
             ctx.main_handler.spawn(async move {
                 performer.speak_with_sapi5(c).await;
-
-                // 这里是测试代码
-                performer.speak_with_vvtts(c).await;
             });
         })
         .await;
