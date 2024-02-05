@@ -69,12 +69,14 @@ impl Performer {
      * `speakable` 实现了Speakable特征的对象。
      * */
     pub(crate) async fn speak_with_sapi5(&self, speakable: impl Speakable) {
-        let str = speakable.get_sentence();
-        let data = self.sapi5_synth.synth(str.as_str()).await;
+        let string = speakable.get_sentence();
+        if string.is_empty() {
+            return;
+        }
+        let data = self.sapi5_synth.synth(string.as_str()).await;
+        dbg!(string);
         self.output_stream.stop();
         self.output_stream.start();
-
-        //let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
 
         self.output_stream.put_data(&data);
     }
@@ -85,12 +87,15 @@ impl Performer {
      * `speakable` 实现了Speakable特征的对象。
      * */
     pub(crate) async fn speak_with_vvtts(&self, speakable: impl Speakable) {
+        let string = speakable.get_sentence();
+        if string.is_empty() {
+            return;
+        }
         let ctx = self.context.get();
         if ctx.is_none() {
             return;
         }
-        let str = speakable.get_sentence();
-        let data = ctx.unwrap().proxy32.eci_synth(str.as_str()).await;
+        let data = ctx.unwrap().proxy32.eci_synth(string.as_str()).await;
         self.output_stream.stop();
         self.output_stream.start();
 

@@ -12,8 +12,6 @@
  */
 
 use std::ffi::CString;
-use windows::Win32::System::Threading::AttachThreadInput;
-use windows::Win32::UI::Input::KeyboardAndMouse::SetActiveWindow;
 pub use windows::{
     core::Result,
     Win32::{
@@ -25,7 +23,10 @@ pub use windows::{
         System::SystemServices::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
-        UI::WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+        UI::{
+            Accessibility::{HWINEVENTHOOK, WINEVENTPROC},
+            WindowsAndMessaging::{HHOOK, HOOKPROC, WINDOWS_HOOK_ID},
+        },
     },
 };
 use windows::{
@@ -33,12 +34,14 @@ use windows::{
     Win32::{
         Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
+        System::Threading::AttachThreadInput,
         System::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
         },
+        UI::Input::KeyboardAndMouse::SetActiveWindow,
         UI::{
-            Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK, WINEVENTPROC},
+            Accessibility::{SetWinEventHook, UnhookWinEvent},
             WindowsAndMessaging::{
                 CallNextHookEx, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
                 GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, UnhookWindowsHookEx,

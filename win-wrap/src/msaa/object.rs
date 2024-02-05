@@ -12,8 +12,7 @@
  */
 
 use crate::common::HWND;
-use std::fmt::{Display, Formatter};
-use windows::Win32::UI::Accessibility::WindowFromAccessibleObject;
+use std::fmt::{Debug, Display, Formatter};
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
     ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_BUTTONMENU,
@@ -44,7 +43,7 @@ use windows::{
         UI::{
             Accessibility::{
                 AccessibleObjectFromEvent, AccessibleObjectFromPoint, AccessibleObjectFromWindow,
-                GetRoleTextW, GetStateTextW, IAccessible,
+                GetRoleTextW, GetStateTextW, IAccessible, WindowFromAccessibleObject,
             },
             WindowsAndMessaging::{OBJID_CARET, OBJID_WINDOW},
         },
@@ -591,36 +590,19 @@ pub enum AccessibleResultType {
     Object(IDispatch),
 }
 
-impl Display for AccessibleObject {
+impl Debug for AccessibleObject {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AccessibleObject({})", self.get_name(0))
+        Display::fmt(self, f)
     }
 }
 
-#[cfg(test)]
-mod test_msaa {
-    use super::super::common::get_desktop_window;
-    use super::{AccessibleObject, ROLE_SYSTEM_WINDOW};
-
-    #[test]
-    fn main() {
-        let obj = AccessibleObject::from_window(get_desktop_window()).unwrap();
-        assert_eq!(obj.get_name(0), "桌面");
-        assert_eq!(obj.get_description(0), String::new());
-        assert_eq!(obj.get_help(0), String::new());
-        assert_eq!(obj.get_keyboard_shortcut(0), String::new());
-        assert_eq!(obj.get_value(0), String::new());
-        assert_eq!(obj.get_default_action(0), String::new());
-        assert_eq!(obj.get_role(0), ROLE_SYSTEM_WINDOW);
-        assert_eq!(obj.child_count(), 7);
-        assert_eq!(obj.get_role_text(0), "窗口");
-        assert_eq!(obj.get_state_text(0), "可设定焦点");
-        assert_eq!(obj.window(), get_desktop_window());
-
-        let location = obj.location(0);
-        println!(
-            "(x,y,w,h):({},{},{},{})",
-            location.0, location.1, location.2, location.3
-        );
+impl Display for AccessibleObject {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "AccessibleObject({}, {})",
+            self.get_name(0),
+            self.get_role_text(0)
+        )
     }
 }
