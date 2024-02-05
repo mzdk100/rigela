@@ -12,9 +12,10 @@
  */
 
 use crate::commander::keys::Keys;
+use crate::talent::Talented;
 use crate::{bring_window_front, commander::CommandType::Key, context::Context};
 use nwd::NwgUi;
-use nwg::{InsertListViewItem, NativeUi};
+use nwg::{modal_info_message, InsertListViewItem, NativeUi};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
@@ -25,9 +26,14 @@ use win_wrap::{
     input::{WM_KEYDOWN, WM_SYSKEYDOWN},
 };
 
+type Talent = Arc<dyn Talented + Send + Sync>;
+
 #[derive(Default, NwgUi)]
 pub struct HotKeysForm {
     context: RefCell<Option<Arc<Context>>>,
+    talents: RefCell<Option<Arc<Vec<Talent>>>>,
+    talent_keys: RefCell<Option<HashMap<String, Vec<Keys>>>>,
+
     hook: RefCell<Option<WindowsHook>>,
     enable_hook: Arc<Mutex<bool>>,
 
@@ -41,6 +47,7 @@ pub struct HotKeysForm {
     #[nwg_control(size: (580, 400), list_style: nwg::ListViewStyle::Detailed, focus: true,
     ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 6)]
+    #[nwg_events(OnKeyPress: [HotKeysForm::dv_key_press(SELF, EVT_DATA)])]
     data_view: nwg::ListView,
 
     #[nwg_control(text: "自定义: ")]
@@ -72,9 +79,19 @@ pub struct HotKeysForm {
 }
 
 impl HotKeysForm {
+    // 窗口初始化
     fn load_data(&self) {
+        self.init_list_cols();
+        self.init_data();
+        self.update_list();
+        *self.hook.borrow_mut() = Some(self.set_hook());
+    }
+
+    // 初始化列表表头
+    fn init_list_cols(&self) {
         const COL_DATA: [(i32, &str); 3] =
             [(100, "技能名称"), (240, "初始热键"), (240, "自定义热键")];
+
         let dv = &self.data_view;
 
         for (i, (n, s)) in COL_DATA.into_iter().enumerate() {
@@ -87,55 +104,68 @@ impl HotKeysForm {
         }
 
         dv.set_headers_enabled(true);
-        self.update_list();
-
-        *self.hook.borrow_mut() = Some(self.set_hook());
     }
 
+    // 初始化数据
+    fn init_data(&self) {
+        let context = self.context.borrow().clone().unwrap();
+        *self.talents.borrow_mut() = Some(context.talent_accessor.talents.clone());
+        *self.talent_keys.borrow_mut() = Some(
+            context
+                .config_manager
+                .get_config()
+                .hotkeys_config
+                .clone()
+                .talent_keys,
+        );
+    }
+
+    // 更新列表项目
     fn update_list(&self) {
         let dv = &self.data_view;
         dv.clear();
 
-        if let Some(context) = self.context.borrow().clone() {
-            let talents = context.talent_accessor.talents.clone();
+        let talents = self.talents.borrow().clone().unwrap();
+        for (i, talent) in talents.iter().enumerate() {
+            dv.insert_item(talent.get_doc());
 
-            for (i, talent) in talents.iter().enumerate() {
-                dv.insert_item(talent.get_doc());
+            for cmd_type in talent.get_supported_cmd_list() {
+                if let Key(keys) = cmd_type {
+                    let key_str = keys
+                        .iter()
+                        .map(|k| -> &str { (*k).into() })
+                        .collect::<Vec<&str>>()
+                        .join(" + ");
 
-                for cmd_type in talent.get_supported_cmd_list() {
-                    if let Key(keys) = cmd_type {
-                        let key_str = keys
-                            .iter()
-                            .map(|k| -> &str { (*k).into() })
-                            .collect::<Vec<&str>>()
-                            .join(" + ");
-
-                        dv.insert_item(InsertListViewItem {
-                            index: Some(i as i32),
-                            column_index: 1,
-                            text: Some(key_str),
-                            image: None,
-                        });
-                        break;
-                    }
+                    dv.insert_item(InsertListViewItem {
+                        index: Some(i as i32),
+                        column_index: 1,
+                        text: Some(key_str),
+                        image: None,
+                    });
+                    break;
                 }
             }
         }
     }
 
+    // 设置钩子按钮事件
     fn set_hotkey(&self) {
         nwg::modal_info_message(&self.window, "Hotkey", "Press a hotkey");
     }
 
+    // 清楚钩子按钮事件
     fn clear_hotkey(&self) {
         nwg::modal_info_message(&self.window, "Hotkey", "Clear hotkey");
     }
 
+    // 退出程序事件
     fn exit(&self) {
         self.hook.take().unwrap().unhook();
         nwg::stop_thread_dispatch();
     }
 
+    // 设置钩子
     fn set_hook(&self) -> WindowsHook {
         let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
         let enable_hook: Arc<Mutex<bool>> = Arc::clone(&self.enable_hook);
@@ -179,6 +209,7 @@ impl HotKeysForm {
         })
     }
 
+    // 产生新的热键
     fn new_hotkeys(&self) {
         let key_str = hotkeys()
             .lock()
@@ -190,17 +221,45 @@ impl HotKeysForm {
         self.text_box.set_text(&key_str);
     }
 
+    // 编辑框切换到下一个控件
     fn next_control(&self) {
         *self.enable_hook.lock().unwrap() = false;
         self.set_btn.set_focus();
     }
 
+    // 编辑框键盘事件
     fn tb_key_press(&self, data: &nwg::EventData) {
         if data.on_key() != nwg::keys::TAB {
             *self.enable_hook.lock().unwrap() = true;
         }
     }
 
+    // 列表框键盘事件
+    fn dv_key_press(&self, data: &nwg::EventData) {
+        const INFO: &str = "请在键盘上按下您喜欢的热键，ESC取消";
+        let pf = self.context.borrow().clone().unwrap().performer.clone();
+
+        nwg::modal_info_message(
+            &self.window,
+            "info",
+            format!("{:#?}", data.on_key()).as_str(),
+        );
+
+        if data.on_key() == nwg::keys::RETURN {
+            self.context
+                .borrow()
+                .clone()
+                .unwrap()
+                .main_handler
+                .spawn(async move {
+                    pf.speak_with_sapi5(INFO.to_string()).await;
+                });
+
+            *self.enable_hook.lock().unwrap() = true;
+        }
+    }
+
+    // 传入程序上下文对象
     fn set_context(&self, context: Arc<Context>) {
         *self.context.borrow_mut() = Some(context);
     }

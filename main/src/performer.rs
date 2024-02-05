@@ -85,6 +85,7 @@ impl Performer {
      * 使用VVTTS语音输出，播报对象的信息。
      * `speakable` 实现了Speakable特征的对象。
      * */
+    #[allow(unused)]
     pub(crate) async fn speak_with_vvtts(&self, speakable: impl Speakable) {
         let string = speakable.get_sentence();
         if string.is_empty() {
