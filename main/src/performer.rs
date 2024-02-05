@@ -181,6 +181,7 @@ impl Performer {
      * 获取sapi5发音人列表。
      * 返回的每一个元祖中第一个成员是发音人id，第二个成员是发音人名称。
      * */
+    #[allow(dead_code)]
     pub fn get_tts_voices_with_sapi5(&self) -> Vec<(String, String)> {
         self.sapi5_synth.get_voice_list()
     }
@@ -190,6 +191,7 @@ impl Performer {
      * 获取vvtts发音人列表。
      * 返回的每一个元祖中第一个成员是发音人id，第二个成员是发音人名称。
      * */
+    #[allow(dead_code)]
     pub(crate) async fn get_tts_voices_with_vvtts(&self) -> Vec<(String, String)> {
         let ctx = self.context.get();
         if ctx.is_none() {
@@ -208,6 +210,7 @@ impl Performer {
      * 设置sapi5的当前发音人。
      * `voice_id` 发音人id。
      * */
+    #[allow(dead_code)]
     pub(crate) async fn set_tts_voice_with_sapi5(&self, voice_id: String) {
         self.sapi5_synth.set_voice(voice_id)
     }
@@ -217,6 +220,7 @@ impl Performer {
      * 设置vvtts的当前发音人。
      * `voice_id` 发音人id。
      * */
+    #[allow(dead_code)]
     pub(crate) async fn set_tts_voice_with_vvtts(&self, voice_id: String) {
         let ctx = self.context.get();
         if ctx.is_none() {

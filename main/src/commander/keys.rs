@@ -614,6 +614,7 @@ impl_keys_str_into!(
     "小键盘+" => Keys::VkAdd,
     "Ctrl" => Keys::VkCtrl,
     "Esc" => Keys::VkEscape,
+    "Tab" => Keys::VkTab,
     "左光标" => Keys::VkLeft,
     "右光标" => Keys::VkRight,
     "上光标" => Keys::VkUp,

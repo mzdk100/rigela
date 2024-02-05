@@ -21,12 +21,12 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
-use win_wrap::hook::HOOK_TYPE_MOUSE_LL;
 use win_wrap::{
+    hook::HOOK_TYPE_MOUSE_LL,
     common::LRESULT,
     ext::LParamExt,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
+    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN}
 };
 
 /// 设置键盘钩子

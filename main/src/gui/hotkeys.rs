@@ -11,18 +11,28 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use crate::{bring_window_front, commander::CommandType::Key, context::Context};
 use nwd::NwgUi;
 use nwg::{InsertListViewItem, NativeUi};
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
+use win_wrap::{
+    common::LRESULT,
+    ext::LParamExt,
+    hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
+    input::{WM_KEYDOWN, WM_SYSKEYDOWN},
+};
 
 #[derive(Default, NwgUi)]
 pub struct HotKeysForm {
     context: RefCell<Option<Arc<Context>>>,
+    hook: RefCell<Option<WindowsHook>>,
+    enable_hook: Arc<Mutex<bool>>,
 
     #[nwg_control(size: (600, 480), position: (300, 300), title: "热键自定义", flags: "WINDOW|VISIBLE")]
-    #[nwg_events(OnWindowClose: [nwg::stop_thread_dispatch()], OnInit: [HotKeysForm::load_data])]
+    #[nwg_events(OnWindowClose: [HotKeysForm::exit], OnInit: [HotKeysForm::load_data])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 10)]
@@ -50,6 +60,10 @@ pub struct HotKeysForm {
     #[nwg_layout_item(layout: layout, col: 5, row: 6)]
     #[nwg_events(OnButtonClick: [HotKeysForm::clear_hotkey])]
     clear_btn: nwg::Button,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [HotKeysForm::new_hotkeys])]
+    new_hotkeys: nwg::Notice,
 }
 
 impl HotKeysForm {
@@ -69,6 +83,9 @@ impl HotKeysForm {
 
         dv.set_headers_enabled(true);
         self.update_list();
+
+        *self.enable_hook.lock().unwrap() = true;
+        *self.hook.borrow_mut() = Some(self.set_hook());
     }
 
     fn update_list(&self) {
@@ -110,9 +127,68 @@ impl HotKeysForm {
         nwg::modal_info_message(&self.window, "Hotkey", "Clear hotkey");
     }
 
+    fn exit(&self) {
+        self.hook.take().unwrap().unhook();
+        nwg::stop_thread_dispatch();
+    }
+
+    fn set_hook(&self) -> WindowsHook {
+        let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
+        let enable_hook: Arc<Mutex<bool>> = Arc::clone(&self.enable_hook);
+        let sender = self.new_hotkeys.sender();
+
+        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+            let info: &KbdLlHookStruct = l_param.to();
+            let is_extended = info.flags.contains(LLKHF_EXTENDED);
+            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+
+            let mut map = key_track.write().unwrap();
+            map.insert((info.vkCode, is_extended).into(), pressed);
+
+            if !pressed {
+                drop(map); // 必须先释放锁再next()，否则可能会死锁
+                return next();
+            }
+
+            if *enable_hook.lock().unwrap() {
+                *hotkeys().lock().unwrap() = vec![];
+
+                hotkeys().lock().unwrap().extend(
+                    map.iter()
+                        .filter(|(_, p)| **p)
+                        .map(|(x, _)| *x)
+                        .collect::<Vec<Keys>>(),
+                );
+
+                drop(map);
+                sender.notice();
+                return LRESULT(1);
+            }
+
+            drop(map); // 必须先释放锁再next()，否则可能会死锁
+            next()
+        })
+    }
+
+    fn new_hotkeys(&self) {
+        let key_str = hotkeys()
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|x| -> &str { (*x).into() })
+            .collect::<Vec<&str>>()
+            .join("+");
+        self.text_box.set_text(&key_str);
+    }
+
     fn set_context(&self, context: Arc<Context>) {
         *self.context.borrow_mut() = Some(context);
     }
+}
+
+fn hotkeys() -> &'static Mutex<Vec<Keys>> {
+    static INSTANCE: OnceLock<Mutex<Vec<Keys>>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(vec![]))
 }
 
 pub(crate) fn show(context: Arc<Context>) {
