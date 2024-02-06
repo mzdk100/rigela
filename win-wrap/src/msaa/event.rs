@@ -30,11 +30,11 @@ static EVENTS: RwLock<Vec<WinEventHook>> = RwLock::new(vec![]);
 #[derive(Clone, Debug)]
 #[allow(dead_code)]
 pub struct WinEventSource {
-    h_wnd: HWND,
-    id_object: u32,
-    id_child: u32,
-    id_thread: u32,
-    ms_time: u32,
+    pub h_wnd: HWND,
+    pub id_object: u32,
+    pub id_child: u32,
+    pub id_thread: u32,
+    pub ms_time: u32,
 }
 
 impl WinEventSource {

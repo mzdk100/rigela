@@ -18,7 +18,7 @@
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub(crate) enum IA2ScrollType {
+pub enum IA2ScrollType {
     /** Scroll the top left corner of the object or substring such that the top left
      corner (and as much as possible of the rest of the object or substring) is within
      the top level window.  In cases where the entire object or substring fits within
@@ -104,7 +104,7 @@ pub(crate) enum IA2ScrollType {
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub(crate) enum IA2CoordinateType {
+pub enum IA2CoordinateType {
     /// The coordinates are relative to the screen.
     IA2_COORDTYPE_SCREEN_RELATIVE,
 

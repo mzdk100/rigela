@@ -339,7 +339,7 @@ use windows_interface::interface;
  * IAccessible2::locale returns this struct.
  * */
 #[allow(dead_code)]
-struct IA2Locale {
+pub struct IA2Locale {
     language: BSTR, // ISO 639-1 Alpha-2 two character language code
     country: BSTR,  // ISO 3166-1 Alpha-2 two character country codes
     variant: BSTR,  // Application-specific variant of the locale
@@ -366,7 +366,11 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * `relationIndex` 0 based
      * `relation` retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn relation(&self, relationIndex: i32, relation: *mut *mut IAccessibleRelation) -> HRESULT;
+    pub(crate) fn relation(
+        &self,
+        relationIndex: i32,
+        relation: *mut *mut IAccessibleRelation,
+    ) -> HRESULT;
 
     /**
      * Returns multiple accessible relations for this object.
@@ -379,7 +383,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * note As a performant alternative,
      * client code should consider using IAccessible2_2::relationTargetsOfType.
      * */
-    fn relations(
+    pub(crate) fn relations(
         &self,
         maxRelations: i32,
         relations: *mut *mut IAccessibleRelation,
@@ -401,7 +405,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * @li This method is missing a [propget] prefix in the IDL.
      * The result is the method is named role in generated C++ code instead-of-get_role.
      * */
-    fn role(&self, role: *mut i32) -> HRESULT;
+    pub(crate) fn role(&self, role: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -409,7 +413,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * `scrollType` Defines where the object should be placed on the screen.
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn scrollTo(&self, scrollType: IA2ScrollType) -> HRESULT;
+    pub(crate) fn scrollTo(&self, scrollType: IA2ScrollType) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -419,7 +423,12 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * `y` Defines the y coordinate.
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn scrollToPoint(&self, coordinateType: IA2CoordinateType, x: i32, y: i32) -> HRESULT;
+    pub(crate) fn scrollToPoint(
+        &self,
+        coordinateType: IA2CoordinateType,
+        x: i32,
+        y: i32,
+    ) -> HRESULT;
 
     /**
      * Returns grouping information.
@@ -445,7 +454,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * this method is implemented on the combo box itself.
      * ATs can use this interface if a child list is not found.
      * */
-    fn groupPosition(
+    pub fn groupPosition(
         &self,
         groupLevel: *mut i32,
         similarItemsInGroup: *mut i32,
@@ -456,7 +465,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * Returns the bit strip containing any IAccessible2 states.
      * The IAccessible2 states are in addition to the MSAA states and are defined in the IA2States enum.
      * `states` */
-    fn states(&self, states: *mut AccessibleStates) -> HRESULT;
+    pub(crate) fn states(&self, states: *mut AccessibleStates) -> HRESULT;
 
     /**
      * Returns the extended role.
@@ -464,18 +473,18 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * It is not predefined by the %IAccessible2 specification.
      * `extendedRole` @retrieval S_FALSE if there is nothing to return, [out] value is NULL
      * */
-    fn extendedRole(&self, extendedRole: *mut BSTR) -> HRESULT;
+    pub(crate) fn extendedRole(&self, extendedRole: *mut BSTR) -> HRESULT;
 
     /**
      * Returns the localized extended role.
      * `localizedExtendedRole` @retrieval S_FALSE if there is nothing to return, [out] value is NULL
      * */
-    fn localizedExtendedRole(&self, localizedExtendedRole: *mut BSTR) -> HRESULT;
+    pub fn localizedExtendedRole(&self, localizedExtendedRole: *mut BSTR) -> HRESULT;
 
     /**
      * Returns the number of extended states.
      * `nExtendedStates` */
-    fn nExtendedStates(&self, nExtendedStates: *mut i32) -> HRESULT;
+    pub(crate) fn nExtendedStates(&self, nExtendedStates: *mut i32) -> HRESULT;
 
     /**
      * Returns the extended states (array of strings).
@@ -488,7 +497,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * `nExtendedStates` The number of extended states returned; the size of the returned array.
      * retrieval S_FALSE if there are no states, [out] values are NULL and 0 respectively
      * */
-    fn extendedStates(
+    pub(crate) fn extendedStates(
         &self,
         maxExtendedStates: i32,
         extendedStates: *mut *mut BSTR,
@@ -505,7 +514,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * the size of the returned array.
      * retrieval S_FALSE if there are no states, [out] values are NULL and 0 respectively
      * */
-    fn localizedExtendedStates(
+    pub(crate) fn localizedExtendedStates(
         &self,
         maxLocalizedExtendedStates: i32,
         localizedExtendedStates: *mut *mut BSTR,
@@ -545,7 +554,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * e.g., an object's address.
      * That would be unique because no two active objects can use the same allocated memory space.
      * `uniqueID` */
-    fn uniqueID(&self, uniqueID: *mut i32) -> HRESULT;
+    pub(crate) fn uniqueID(&self, uniqueID: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -565,7 +574,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * This is implemented by oleacc.dll.
      * However, with the availability of windowHandle, this process can be avoided.
      * `windowHandle` */
-    fn windowHandle(&self, windowHandle: *mut HWND) -> HRESULT;
+    pub(crate) fn windowHandle(&self, windowHandle: *mut HWND) -> HRESULT;
 
     /**
      * Returns the index of this object in its parent object.
@@ -573,18 +582,18 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * the upper bound is the value returned by the parent's IAccessible::get_accChildCount.
      * retrieval S_FALSE if no parent, [out] value is -1
      * */
-    fn indexInParent(&self, indexInParent: *mut i32) -> HRESULT;
+    pub(crate) fn indexInParent(&self, indexInParent: *mut i32) -> HRESULT;
 
     /**
      * Returns the IA2Locale of the accessible object.
      * `locale` */
-    fn locale(&self, locale: *mut IA2Locale) -> HRESULT;
+    pub(crate) fn locale(&self, locale: *mut IA2Locale) -> HRESULT;
 
     /**
      * Returns the attributes specific to this object, such as a cell's formula.
      * `attributes` @retrieval S_FALSE returned if there is nothing to return, [out] value is NULL
      * */
-    fn attributes(&self, attributes: *mut BSTR) -> HRESULT;
+    pub(crate) fn attributes(&self, attributes: *mut BSTR) -> HRESULT;
 }
 
 /**

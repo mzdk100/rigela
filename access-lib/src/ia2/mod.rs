@@ -12,6 +12,7 @@
  */
 
 pub mod object;
+pub mod relation;
 
 use crate::IAccessible2Lib::AccessibleEventID::IA2EventID::{
     IA2_EVENT_ACTION_CHANGED, IA2_EVENT_ACTIVE_DESCENDANT_CHANGED,
@@ -569,6 +570,12 @@ mod test_ia2 {
             let (obj, child) = src.get_object().unwrap();
             dbg!(child);
             let obj = Accessible2Object::from_accessible_object(obj).unwrap();
+            let group_position = obj.group_position();
+            dbg!(group_position);
+            let h_wnd = obj.window_handle();
+            assert_eq!(h_wnd, src.h_wnd);
+            let index_in_parent = obj.index_in_parent();
+            dbg!(index_in_parent);
             dbg!(obj);
         });
         std::thread::sleep(std::time::Duration::from_millis(20000));
