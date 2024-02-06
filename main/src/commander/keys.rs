@@ -58,6 +58,10 @@ use win_wrap::input::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) enum Keys {
     VkRigelA,
+    VkCtrl,
+    VkShift,
+    VkAlt,
+    VkWin,
     VkNumPad1,
     VkNumPad2,
     VkNumPad3,
@@ -69,7 +73,8 @@ pub(crate) enum Keys {
     VkNumPad9,
     VkNumPadDiv,
     VkNumPadMul,
-    VkCtrl,
+    VkNumPadDot,
+    VkNumPadReturn,
     Vk0,
     Vk1,
     Vk2,
@@ -186,6 +191,7 @@ pub(crate) enum Keys {
     VkIcoHelp,
     VkImeOff,
     VkImeOn,
+    VkInsert,
     VkJ,
     VkJunja,
     VkK,
@@ -195,6 +201,7 @@ pub(crate) enum Keys {
     VkLaunchMail,
     VkLaunchMediaSelect,
     VkLbutton,
+    VkLcontrol,
     VkLeft,
     VkLmenu,
     VkLshift,
@@ -267,6 +274,7 @@ pub(crate) enum Keys {
     VkQ,
     VkR,
     VkRbutton,
+    VkRcontrol,
     VkReturn,
     VkRight,
     VkRmenu,
@@ -276,7 +284,7 @@ pub(crate) enum Keys {
     VkScroll,
     VkSelect,
     VkSeparator,
-    VkShift,
+    VkShift_,
     VkSleep,
     VkSnapshot,
     VkSpace,
@@ -322,10 +330,24 @@ impl From<(u32, bool)> for Keys {
             (VK_PRIOR, false) => Self::VkNumPad9,
             (VK_DIVIDE, true) => Self::VkNumPadDiv,
             (VK_MULTIPLY, false) => Self::VkNumPadMul,
+            (VK_DELETE, false) => Self::VkNumPadDot,
+            (VK_RETURN, true) => Self::VkNumPadReturn,
 
             // Ctrl键
             (VK_LCONTROL, false) => Self::VkCtrl,
             (VK_RCONTROL, true) => Self::VkCtrl,
+
+            //Shift
+            (VK_LSHIFT, false) => Self::VkShift,
+            (VK_RSHIFT, true) => Self::VkShift,
+
+            //Alt
+            (VK_LMENU, false) => Self::VkAlt,
+            (VK_RMENU, true) => Self::VkAlt,
+
+            //Win
+            (VK_LWIN, true) => Self::VkWin,
+            (VK_RWIN, true) => Self::VkWin,
 
             (VK_0, false) => Self::Vk0,
             (VK_1, false) => Self::Vk1,
@@ -342,7 +364,7 @@ impl From<(u32, bool)> for Keys {
             (VK_ABNT_C2, false) => Self::VkAbntC2,
             (VK_ACCEPT, false) => Self::VkAccept,
             (VK_ADD, false) => Self::VkAdd,
-            (VK_APPS, false) => Self::VkApps,
+            (VK_APPS, true) => Self::VkApps,
             (VK_ATTN, false) => Self::VkAttn,
             (VK_B, false) => Self::VkB,
             (VK_BACK, false) => Self::VkBack,
@@ -375,7 +397,7 @@ impl From<(u32, bool)> for Keys {
             (VK_DBE_ROMAN, false) => Self::VkDbeRoman,
             (VK_DBE_SBCSCHAR, false) => Self::VkDbeSbcschar,
             (VK_DECIMAL, false) => Self::VkDecimal,
-            (VK_DELETE, false) => Self::VkDelete,
+            (VK_DELETE, true) => Self::VkDelete,
             (VK_DIVIDE, false) => Self::VkDivide,
             (VK_DOWN, true) => Self::VkDown,
             (VK_E, false) => Self::VkE,
@@ -458,11 +480,7 @@ impl From<(u32, bool)> for Keys {
             (VK_LAUNCH_MAIL, false) => Self::VkLaunchMail,
             (VK_LAUNCH_MEDIA_SELECT, false) => Self::VkLaunchMediaSelect,
             (VK_LBUTTON, false) => Self::VkLbutton,
-
             (VK_LEFT, true) => Self::VkLeft,
-            (VK_LMENU, false) => Self::VkLmenu,
-            (VK_LSHIFT, false) => Self::VkLshift,
-            (VK_LWIN, false) => Self::VkLwin,
             (VK_M, false) => Self::VkM,
             (VK_MBUTTON, false) => Self::VkMbutton,
             (VK_MEDIA_NEXT_TRACK, false) => Self::VkMediaNextTrack,
@@ -484,7 +502,7 @@ impl From<(u32, bool)> for Keys {
             (VK_NEXT, true) => Self::VkNext,
             // (VK_NONAME, false) => Self::VkNoname,
             (VK_NONCONVERT, false) => Self::VkNonconvert,
-            (VK_NUMLOCK, false) => Self::VkNumlock,
+            (VK_NUMLOCK, true) => Self::VkNumlock,
             (VK_NUMPAD0, false) => Self::VkNumpad0,
             (VK_NUMPAD1, false) => Self::VkNumpad1,
             (VK_NUMPAD2, false) => Self::VkNumpad2,
@@ -544,16 +562,14 @@ impl From<(u32, bool)> for Keys {
 
             (VK_RETURN, false) => Self::VkReturn,
             (VK_RIGHT, true) => Self::VkRight,
-            (VK_RMENU, false) => Self::VkRmenu,
-            (VK_RSHIFT, false) => Self::VkRshift,
-            (VK_RWIN, false) => Self::VkRwin,
+
             (VK_S, false) => Self::VkS,
             (VK_SCROLL, false) => Self::VkScroll,
             (VK_SELECT, false) => Self::VkSelect,
             (VK_SEPARATOR, false) => Self::VkSeparator,
             (VK_SHIFT, false) => Self::VkShift,
             (VK_SLEEP, false) => Self::VkSleep,
-            (VK_SNAPSHOT, false) => Self::VkSnapshot,
+            (VK_SNAPSHOT, true) => Self::VkSnapshot,
             (VK_SPACE, false) => Self::VkSpace,
             (VK_SUBTRACT, false) => Self::VkSubtract,
             (VK_T, false) => Self::VkT,
@@ -600,6 +616,7 @@ macro_rules! impl_keys_str_into {
 
 impl_keys_str_into!(
     "RigelA" => Keys::VkRigelA,
+
     "小键盘1" => Keys::VkNumPad1,
     "小键盘2" => Keys::VkNumPad2,
     "小键盘3" => Keys::VkNumPad3,
@@ -609,16 +626,54 @@ impl_keys_str_into!(
     "小键盘7" => Keys::VkNumPad7,
     "小键盘8" => Keys::VkNumPad8,
     "小键盘9" => Keys::VkNumPad9,
+    "小键盘点" => Keys::VkNumPadDot,
+    "小回车" => Keys::VkNumPadReturn,
+
     "小键盘/" => Keys::VkNumPadDiv,
     "小键盘*" => Keys::VkNumPadMul,
     "小键盘+" => Keys::VkAdd,
+    "小键盘-" => Keys::VkSubtract,
+
     "Ctrl" => Keys::VkCtrl,
+    "Shift" => Keys::VkShift,
+    "Alt"=> Keys::VkAlt,
+    "Win" =>  Keys::VkWin,
+
+    "空格"=> Keys::VkSpace,
     "Esc" => Keys::VkEscape,
     "Tab" => Keys::VkTab,
+    "回车" => Keys::VkReturn,
+    "菜单" => Keys::VkApps,
+    "退格" => Keys::VkBack,
+
     "左光标" => Keys::VkLeft,
     "右光标" => Keys::VkRight,
     "上光标" => Keys::VkUp,
     "下光标" => Keys::VkDown,
+    "删除" => Keys::VkDelete,
+    "插入"=> Keys::VkInsert,
+    "Home"=> Keys::VkHome,
+    "End"=> Keys::VkEnd,
+    "PageUp"=> Keys::VkPrior,
+    "PageDown"=> Keys::VkNext,
+
+    "~" => Keys::VkOem3,
+    "-" => Keys::VkOemMinus,
+    "=" => Keys::VkOemPlus,
+    "[" => Keys::VkOem4,
+    "]" => Keys::VkOem6,
+    "\\" => Keys::VkOem5,
+    ";" => Keys::VkOem1,
+    "'" => Keys::VkOem7,
+    "," => Keys::VkOemComma,
+    "." => Keys::VkOemPeriod,
+    "/" => Keys::VkOem2,
+
+    "截图" => Keys::VkSnapshot,
+    "Scroll"=> Keys::VkScroll,
+    "Pause"=> Keys::VkPause,
+    "NumLock"=> Keys::VkNumlock,
+
     "F1" => Keys::VkF1,
     "F2" => Keys::VkF2,
     "F3" => Keys::VkF3,
@@ -667,6 +722,19 @@ impl_keys_str_into!(
     "X" => Keys::VkX,
     "Y" => Keys::VkY,
     "Z" => Keys::VkZ,
+
+    "Num0" => Keys::VkNumpad0,
+    "Num1" => Keys::VkNumpad1,
+    "Num2" => Keys::VkNumpad2,
+    "Num3" => Keys::VkNumpad3,
+    "Num4" => Keys::VkNumpad4,
+    "Num5" => Keys::VkNumpad5,
+    "Num6" => Keys::VkNumpad6,
+    "Num7" => Keys::VkNumpad7,
+    "Num8" => Keys::VkNumpad8,
+    "Num9" => Keys::VkNumpad9,
+    "Num." => Keys::VkDecimal,
+
     "" => Keys::VkNone
 );
 
