@@ -22,7 +22,7 @@ use windows_interface::interface;
  * IAccessibleText::newText and IAccessibleText::oldText return this struct.
  * */
 #[allow(dead_code)]
-struct IA2TextSegment {
+pub struct IA2TextSegment {
     text: BSTR, // A segment's copy of a text taken from an enclosing paragraph.
     start: i32, // The first character's index of the segment in the enclosing text.
     end: i32, // Index of the character following the last character of the segment in the enclosing text.
@@ -39,7 +39,7 @@ struct IA2TextSegment {
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-pub(crate) enum IA2TextBoundaryType {
+pub enum IA2TextBoundaryType {
     /**
      * Typically, a single character is returned. In some cases, more than one character is returned, for example, when a document contains field data such as a field containing a date, time, or footnote reference. In this case, the caret can move over several characters in one movement of the caret.
      * Note that after the caret moves, the caret offset changes by the number of characters in the field, e.g., by eight characters in the following date: 03/26/07.
@@ -97,7 +97,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval E_INVALIDARG if bad [in] passed
      * @note Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * */
-    fn addSelection(&self, startOffset: i32, endOffset: i32) -> HRESULT;
+    pub(crate) fn addSelection(&self, startOffset: i32, endOffset: i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -110,7 +110,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if there is nothing to return, [out] values are 0s and NULL respectively
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn attributes(
+    pub(crate) fn attributes(
         &self,
         offset: i32,
         startOffset: *mut i32,
@@ -131,7 +131,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if the caret is not currently active on this object, i.e., the caret is located on some other object.  The returned offset value will be -1.
      * @note S_FALSE (and an offset of -1) will not be returned if the caret is somewhere in the text object or one of its descendants.
      * */
-    fn caretOffset(&self, offset: *mut i32) -> HRESULT;
+    pub(crate) fn caretOffset(&self, offset: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -147,7 +147,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `height` The bounding box's height of the referenced character.
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn characterExtents(
+    pub(crate) fn characterExtents(
         &self,
         offset: i32,
         coordType: IA2CoordinateType,
@@ -160,7 +160,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
     /**
      * Returns the number of active non-contiguous selections
      * `nSelections` */
-    fn nSelections(&self, nSelections: *mut i32) -> HRESULT;
+    pub(crate) fn nSelections(&self, nSelections: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -174,7 +174,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if nothing to return, [out] value is -1
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn offsetAtPoint(
+    pub(crate) fn offsetAtPoint(
         &self,
         x: i32,
         y: i32,
@@ -199,8 +199,12 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `endOffset` 0 based offset of one past the last selected character.
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn selection(&self, selectionIndex: i32, startOffset: *mut i32, endOffset: *mut i32)
-        -> HRESULT;
+    pub(crate) fn selection(
+        &self,
+        selectionIndex: i32,
+        startOffset: *mut i32,
+        endOffset: *mut i32,
+    ) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -216,7 +220,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * @li The returned string may be longer than endOffset-startOffset bytes if a text contains multibyte characters.
      * @li Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * */
-    fn text(&self, startOffset: i32, endOffset: i32, text: *mut BSTR) -> HRESULT;
+    pub(crate) fn text(&self, startOffset: i32, endOffset: i32, text: *mut BSTR) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -234,7 +238,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if the requested boundary type is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, or if there is nothing to return; [out] values are 0s and NULL respectively
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn textBeforeOffset(
+    pub(crate) fn textBeforeOffset(
         &self,
         offset: i32,
         boundaryType: IA2TextBoundaryType,
@@ -259,7 +263,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if the requested boundary type is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, or if there is nothing to return; [out] values are 0s and NULL respectively
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn textAfterOffset(
+    pub(crate) fn textAfterOffset(
         &self,
         offset: i32,
         boundaryType: IA2TextBoundaryType,
@@ -284,7 +288,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval S_FALSE if the requested boundary type is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, or if there is nothing to return; [out] values are 0s and NULL respectively
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn textAtOffset(
+    pub(crate) fn textAtOffset(
         &self,
         offset: i32,
         boundaryType: IA2TextBoundaryType,
@@ -299,7 +303,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `selectionIndex` Index of selection to remove (zero based).
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn removeSelection(&self, selectionIndex: i32) -> HRESULT;
+    pub(crate) fn removeSelection(&self, selectionIndex: i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -311,7 +315,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval E_FAIL if the caret cannot be set
      * retrieval E_INVALIDARG if bad [in] passed
      * */
-    fn setCaretOffset(&self, offset: i32) -> HRESULT;
+    pub(crate) fn setCaretOffset(&self, offset: i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -322,13 +326,18 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval E_INVALIDARG if bad [in] passed
      * @note Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * */
-    fn setSelection(&self, selectionIndex: i32, startOffset: i32, endOffset: i32) -> HRESULT;
+    pub(crate) fn setSelection(
+        &self,
+        selectionIndex: i32,
+        startOffset: i32,
+        endOffset: i32,
+    ) -> HRESULT;
 
     /**
      * Returns total number of characters.
      * Note that this may be different from the total number of bytes required to store the text, if the text contains multibyte characters.
      * `nCharacters` */
-    fn nCharacters(&self, nCharacters: *mut i32) -> HRESULT;
+    pub(crate) fn nCharacters(&self, nCharacters: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -339,7 +348,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval E_INVALIDARG if bad [in] passed
      * @note Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * */
-    fn scrollSubstringTo(
+    pub(crate) fn scrollSubstringTo(
         &self,
         startIndex: i32,
         endIndex: i32,
@@ -358,7 +367,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * retrieval E_INVALIDARG if bad [in] passed
      * @note Refer to @ref _specialOffsets "Special Offsets for use in the IAccessibleText and IAccessibleEditableText Methods" for information about special offsets that can be used in %IAccessibleText methods.
      * */
-    fn scrollSubstringToPoint(
+    pub(crate) fn scrollSubstringToPoint(
         &self,
         startIndex: i32,
         endIndex: i32,
@@ -375,7 +384,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `newText` The text that was just inserted.
      * retrieval S_FALSE If there is nothing to return, the values of IA2TextSegment struct are set as follows: text = NULL, start = 0, end = 0.
      * */
-    fn newText(&self, newText: *mut IA2TextSegment) -> HRESULT;
+    pub(crate) fn newText(&self, newText: *mut IA2TextSegment) -> HRESULT;
 
     /**
      * Returns any removed text.
@@ -384,7 +393,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
      * `oldText` The text that was just removed.
      * retrieval S_FALSE If there is nothing to return, the values of IA2TextSegment struct are set as follows: text = NULL, start = 0, end = 0.
      * */
-    fn oldText(&self, oldText: *mut IA2TextSegment) -> HRESULT;
+    pub(crate) fn oldText(&self, oldText: *mut IA2TextSegment) -> HRESULT;
 }
 
 /**

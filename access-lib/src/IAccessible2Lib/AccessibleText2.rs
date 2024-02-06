@@ -35,7 +35,7 @@ pub(crate) unsafe trait IAccessibleText2: IAccessibleText {
      * retrieval S_FALSE if nothing to return, [out] values are -1, NULL respectively.
      * retrieval E_INVALIDARG if bad [in] passed.
      * */
-    fn attributeRange(
+    pub(crate) fn attributeRange(
         &self,
         offset: i32,
         filter: BSTR,

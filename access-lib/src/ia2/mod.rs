@@ -13,6 +13,7 @@
 
 pub mod object;
 pub mod relation;
+pub mod text;
 
 use crate::IAccessible2Lib::AccessibleEventID::IA2EventID::{
     IA2_EVENT_ACTION_CHANGED, IA2_EVENT_ACTIVE_DESCENDANT_CHANGED,
@@ -557,7 +558,9 @@ impl Ia2 {
 #[cfg(test)]
 mod test_ia2 {
     use crate::ia2::object::Accessible2Object;
+    use crate::ia2::text::AccessibleText;
     use crate::ia2::Ia2;
+    use crate::IAccessible2Lib::IA2CommonTypes::IA2CoordinateType;
     use win_wrap::com::co_initialize_multi_thread;
     use win_wrap::common::beep;
 
@@ -577,6 +580,11 @@ mod test_ia2 {
             let index_in_parent = obj.index_in_parent();
             dbg!(index_in_parent);
             dbg!(obj);
+            let (obj, _) = src.get_object().unwrap();
+            let text = AccessibleText::from_accessible_object(obj).unwrap();
+            // text.add_selection(0, 1);
+            dbg!(text.character_extents(0, IA2CoordinateType::IA2_COORDTYPE_PARENT_RELATIVE));
+            dbg!(text);
         });
         std::thread::sleep(std::time::Duration::from_millis(20000));
         dbg!(ia2);
