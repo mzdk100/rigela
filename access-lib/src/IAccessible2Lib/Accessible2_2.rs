@@ -29,20 +29,24 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
     //noinspection SpellCheckingInspection
     /**
      * Returns the attribute value of a specified attribute specific to this object.
-     * `name` `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
+     * `name`
+     * `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
      * retrieval E_INVALIDARG if bad [in] passed.
      * @note The output value is a VARIANT.  Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.  Refer to the <a href=
      * "http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2">
      * Object Attributes specification</a> for more information.
      * */
-    fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
+    pub(crate) fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
 
     /**
      * Returns the deepest hypertext accessible in the subtree of this object, and the caret offset within it.
      * `accessible` `caretOffset` retrieval S_FALSE returned if there is no caret in any of the objects in the subtree, [out] accessible is NULL and [out] caretOffset is -1.
      * */
-    fn accessibleWithCaret(&self, accessible: *mut *mut IUnknown, caretOffset: *mut i32)
-        -> HRESULT;
+    pub(crate) fn accessibleWithCaret(
+        &self,
+        accessible: *mut *mut IUnknown,
+        caretOffset: *mut i32,
+    ) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -54,7 +58,7 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
      * retrieval S_FALSE if there are no targets, [out] values are NULL and 0 respectively.
      * retrieval E_INVALIDARG if bad [in] passed.
      * */
-    fn relationTargetsOfType(
+    pub(crate) fn relationTargetsOfType(
         &self,
         r#type: BSTR,
         maxTargets: i32,

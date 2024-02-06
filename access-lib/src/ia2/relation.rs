@@ -11,6 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod IAccessible2Lib;
+use crate::IAccessible2Lib::AccessibleRelation::IAccessibleRelation;
 
-pub mod ia2;
+pub struct AccessibleRelation(IAccessibleRelation);
+impl AccessibleRelation {
+    pub(crate) fn from_raw(raw: &IAccessibleRelation) -> Self {
+        Self(raw.clone())
+    }
+}

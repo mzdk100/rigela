@@ -16,6 +16,7 @@ use crate::{
     configs::config_manager::ConfigManager, event_core, performer::Performer, proxy32::Proxy32,
     resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
 };
+use access_lib::ia2::Ia2;
 use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
@@ -32,6 +33,7 @@ pub(crate) struct Context {
     pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) msaa: Arc<Msaa>,
+    pub(crate) ia2: Arc<Ia2>,
     pub(crate) work_runtime: Arc<Runtime>,
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) peeper_server: Arc<PeeperServer>,
@@ -64,6 +66,9 @@ impl Context {
 
         // MSAA(Microsoft Active Accessibility，辅助功能）接口
         let msaa = Msaa::new();
+
+        // IA2（扩展了MSAA)
+        let ia2 = Ia2::new();
 
         // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
         let work_runtime = Builder::new_multi_thread()
@@ -98,6 +103,7 @@ impl Context {
             config_manager: config_manager.into(),
             main_handler: main_handler.into(),
             msaa: msaa.into(),
+            ia2: ia2.into(),
             peeper_server: peeper_server.into(),
             performer: performer.into(),
             proxy32: proxy32.into(),
@@ -130,6 +136,9 @@ impl Context {
     pub(crate) fn dispose(&self) {
         self.commander.dispose();
         self.event_core.shutdown();
+        self.msaa.remove_all_listeners();
+        self.ia2.remove_all_listeners();
+        self.ui_automation.remove_all_event_listeners();
     }
 }
 
@@ -140,6 +149,7 @@ impl Clone for Context {
             config_manager: self.config_manager.clone(),
             main_handler: self.main_handler.clone(),
             msaa: self.msaa.clone(),
+            ia2: self.ia2.clone(),
             peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
             proxy32: self.proxy32.clone(),
