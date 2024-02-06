@@ -31,8 +31,8 @@ static EVENTS: RwLock<Vec<WinEventHook>> = RwLock::new(vec![]);
 #[allow(dead_code)]
 pub struct WinEventSource {
     h_wnd: HWND,
-    id_object: i32,
-    id_child: i32,
+    id_object: u32,
+    id_child: u32,
     id_thread: u32,
     ms_time: u32,
 }
@@ -57,8 +57,8 @@ unsafe extern "system" fn hook_proc(
 ) {
     let source = WinEventSource {
         h_wnd,
-        id_object,
-        id_child,
+        id_object: id_object as u32,
+        id_child: id_child as u32,
         id_thread: id_event_thread,
         ms_time: ms_event_time,
     };
@@ -71,7 +71,7 @@ unsafe extern "system" fn hook_proc(
 }
 
 #[derive(Clone)]
-pub(crate) struct WinEventHook(Arc<dyn Fn(WinEventSource) + Send + Sync>, SystemTime, u32);
+pub struct WinEventHook(Arc<dyn Fn(WinEventSource) + Send + Sync>, SystemTime, u32);
 
 impl WinEventHook {
     /**
@@ -79,7 +79,7 @@ impl WinEventHook {
      * `event` 事件类型。
      * `func` 接收事件的函数。
      * */
-    pub(crate) fn new(event: u32, func: impl Fn(WinEventSource) + Send + Sync + 'static) -> Self {
+    pub fn new(event: u32, func: impl Fn(WinEventSource) + Send + Sync + 'static) -> Self {
         let h_win_event = { *H_WIN_EVENT.read().unwrap() };
         if h_win_event.is_invalid() {
             thread::spawn(|| {
@@ -108,7 +108,7 @@ impl WinEventHook {
 
         self_
     }
-    pub(crate) fn unhook(&self) {
+    pub fn unhook(&self) {
         let mut lock = EVENTS.write().unwrap();
         for i in 0..lock.len() {
             if let Some(x) = lock.get(i) {

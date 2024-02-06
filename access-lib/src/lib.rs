@@ -12,3 +12,5 @@
  */
 
 pub(crate) mod IAccessible2Lib;
+
+pub mod ia2;

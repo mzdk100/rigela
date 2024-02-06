@@ -59,13 +59,7 @@ impl EventCore {
     /**
      * 停止所有事件处理。
      * */
-    pub(crate) fn shutdown(&self) {
-        self.context
-            .get()
-            .unwrap()
-            .ui_automation
-            .remove_all_event_listeners();
-    }
+    pub(crate) fn shutdown(&self) {}
 }
 
 /// 朗读焦点元素

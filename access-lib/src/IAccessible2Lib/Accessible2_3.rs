@@ -31,8 +31,9 @@ use windows_interface::interface;
  * the range is the active point, as the user moves this to manipulate
  * the selection.
  */
+#[derive(Copy, Clone)]
 #[allow(dead_code)]
-struct IA2Range {
+pub struct IA2Range {
     anchor: *mut IUnknown,
     anchorOffset: i32,
     active: *mut IUnknown,
@@ -51,5 +52,5 @@ pub(crate) unsafe trait IAccessible2_3: IAccessible2_2 {
      * `nRanges` the array length
      * retrieval S_FALSE returned if there is no selection within the accessible
      * */
-    fn selectionRanges(&self, ranges: *mut *mut IA2Range, nRanges: *mut i32) -> HRESULT;
+    pub(crate) fn selectionRanges(&self, ranges: *mut *mut IA2Range, nRanges: *mut i32) -> HRESULT;
 }

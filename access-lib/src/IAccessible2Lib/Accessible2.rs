@@ -358,7 +358,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
     /**
      * Returns the number of accessible relations for this object.
      * `nRelations` */
-    fn nRelations(&self, nRelations: *mut i32) -> HRESULT;
+    pub(crate) fn nRelations(&self, nRelations: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**

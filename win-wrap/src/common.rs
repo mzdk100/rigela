@@ -12,6 +12,7 @@
  */
 
 use std::ffi::CString;
+use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
 pub use windows::{
     core::Result,
     Win32::{
@@ -115,6 +116,15 @@ pub fn attach_thread_input(id_attach: u32, id_attach_to: u32, attach: BOOL) -> B
  * */
 pub fn get_desktop_window() -> HWND {
     unsafe { GetDesktopWindow() }
+}
+
+/**
+ * 查询处理顶级窗口的类名和窗口名称匹配指定的字符串。这个函数不搜索子窗口。
+ * `class_name` 指向一个以NULL字符结尾的、用来指定类名的字符串或一个可以确定类名字符串的原子。如果这个参数是一个原子，那么它必须是一个在调用此函数前已经通过GlobalAddAtom函数创建好的全局原子。这个原子（一个16bit的值），必须被放置在class_name的低位字节中，class_name的高位字节置零。如果该参数为null时，将会寻找任何与window_name参数匹配的窗口。
+ * `window_name` 指向一个以NULL字符结尾的、用来指定窗口名（即窗口标题）的字符串。如果此参数为NULL，则匹配所有窗口名。
+ * */
+pub fn find_window(class_name: &str, window_name: &str) -> HWND {
+    unsafe { FindWindowW(&HSTRING::from(class_name), &HSTRING::from(window_name)) }
 }
 
 /**

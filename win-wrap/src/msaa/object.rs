@@ -53,6 +53,10 @@ use windows::{
 pub struct AccessibleObject(IAccessible);
 
 impl AccessibleObject {
+    pub fn get_raw(&self) -> &IAccessible {
+        &self.0
+    }
+
     /**
      * 从窗口获取对象。
      * `h_wnd` 窗口句柄。
@@ -139,8 +143,8 @@ impl AccessibleObject {
     pub fn from_event(h_wnd: HWND, id: u32, child_id: u32) -> Result<(Self, u32), String> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessibleobjectfromevent
         let acc = unsafe {
-            let mut p_acc: Option<IAccessible> = None;
-            let mut var = VariantInit();
+            let mut p_acc = std::mem::zeroed();
+            let mut var = std::mem::zeroed();
             if let Err(e) = AccessibleObjectFromEvent(h_wnd, id, child_id, &mut p_acc, &mut var) {
                 return Err(format!("Can't obtain the accessible object. ({})", e));
             }
@@ -149,11 +153,10 @@ impl AccessibleObject {
                     return Err(format!(
                         "Can't obtain the accessible object, the h_wnd is {}.",
                         h_wnd.0
-                    ))
+                    ));
                 }
                 Some(r) => (r, var.Anonymous.Anonymous.Anonymous.uintVal),
             };
-            VariantClear(&mut var).unwrap_or(());
             val
         };
         Ok((Self(acc.0), acc.1))

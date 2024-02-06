@@ -25,6 +25,10 @@ load-path = "locale"
 path = "src/updater/main.rs"
 name = "updater"
 
+[dependencies.access-lib]
+# 一个辅助功能API库，封装了非微软官方提供的无障碍技术
+path = "../access-lib"
+
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
 path = "../peeper"
