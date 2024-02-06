@@ -50,39 +50,23 @@ pub struct Accessible2Object {
 impl Accessible2Object {
     pub fn from_accessible_object(obj: AccessibleObject) -> Option<Self> {
         if let Ok(sp) = obj.get_raw().cast::<IServiceProvider>() {
-            let ia2 = match unsafe { sp.QueryService::<IAccessible2_3>(&IAccessible::IID) } {
+            let ia2_3 = match unsafe { sp.QueryService::<IAccessible2_3>(&IAccessible::IID) } {
                 Err(_) => None,
                 Ok(x) => Some(x),
             };
-            if !ia2.is_none() {
-                return Some(Self {
-                    _ia2: None,
-                    _ia2_2: None,
-                    _ia2_3: ia2,
-                });
-            }
-            let ia2 = match unsafe { sp.QueryService::<IAccessible2_2>(&IAccessible::IID) } {
+            let ia2_2 = match unsafe { sp.QueryService::<IAccessible2_2>(&IAccessible::IID) } {
                 Err(_) => None,
                 Ok(x) => Some(x),
             };
-            if !ia2.is_none() {
-                return Some(Self {
-                    _ia2: None,
-                    _ia2_3: None,
-                    _ia2_2: ia2,
-                });
-            }
             let ia2 = match unsafe { sp.QueryService::<IAccessible2>(&IAccessible::IID) } {
                 Err(_) => None,
                 Ok(x) => Some(x),
             };
-            if !ia2.is_none() {
-                return Some(Self {
-                    _ia2: ia2,
-                    _ia2_2: None,
-                    _ia2_3: None,
-                });
-            }
+            return Some(Self {
+                _ia2: ia2,
+                _ia2_2: ia2_2,
+                _ia2_3: ia2_3,
+            });
         }
         None
     }
