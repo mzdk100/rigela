@@ -15,7 +15,7 @@ pub mod event;
 pub mod object;
 
 use crate::{
-    common::get_desktop_window,
+    common::{get_desktop_window, Result},
     msaa::{
         event::{WinEventHook, WinEventSource},
         object::AccessibleObject,
@@ -64,7 +64,7 @@ impl Msaa {
     /**
      * 获取桌面窗口的可访问性对象。
      * */
-    pub fn get_desktop_object(&self) -> Result<AccessibleObject, String> {
+    pub fn get_desktop_object(&self) -> Result<AccessibleObject> {
         AccessibleObject::from_window(get_desktop_window())
     }
 
