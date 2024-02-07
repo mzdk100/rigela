@@ -15,25 +15,55 @@ pub mod object;
 pub mod relation;
 pub mod text;
 
-use crate::IAccessible2Lib::AccessibleEventID::IA2EventID::{
-    IA2_EVENT_ACTION_CHANGED, IA2_EVENT_ACTIVE_DESCENDANT_CHANGED,
-    IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED, IA2_EVENT_DOCUMENT_CONTENT_CHANGED,
-    IA2_EVENT_DOCUMENT_LOAD_COMPLETE, IA2_EVENT_DOCUMENT_LOAD_STOPPED, IA2_EVENT_DOCUMENT_RELOAD,
-    IA2_EVENT_HYPERLINK_END_INDEX_CHANGED, IA2_EVENT_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED,
-    IA2_EVENT_HYPERLINK_SELECTED_LINK_CHANGED, IA2_EVENT_HYPERLINK_START_INDEX_CHANGED,
-    IA2_EVENT_HYPERTEXT_CHANGED, IA2_EVENT_HYPERTEXT_LINK_ACTIVATED,
-    IA2_EVENT_HYPERTEXT_LINK_SELECTED, IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,
-    IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED, IA2_EVENT_PAGE_CHANGED, IA2_EVENT_ROLE_CHANGED,
-    IA2_EVENT_SECTION_CHANGED, IA2_EVENT_TABLE_CAPTION_CHANGED,
-    IA2_EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED, IA2_EVENT_TABLE_COLUMN_HEADER_CHANGED,
-    IA2_EVENT_TABLE_MODEL_CHANGED, IA2_EVENT_TABLE_ROW_DESCRIPTION_CHANGED,
-    IA2_EVENT_TABLE_ROW_HEADER_CHANGED, IA2_EVENT_TABLE_SUMMARY_CHANGED,
-    IA2_EVENT_TEXT_ATTRIBUTE_CHANGED, IA2_EVENT_TEXT_CARET_MOVED, IA2_EVENT_TEXT_COLUMN_CHANGED,
-    IA2_EVENT_TEXT_INSERTED, IA2_EVENT_TEXT_REMOVED, IA2_EVENT_TEXT_SELECTION_CHANGED,
-    IA2_EVENT_TEXT_UPDATED, IA2_EVENT_VISIBLE_DATA_CHANGED,
+use crate::{
+    ia2::{object::Accessible2Object, text::AccessibleText},
+    IAccessible2Lib::AccessibleEventID::IA2EventID::{
+        IA2_EVENT_ACTION_CHANGED, IA2_EVENT_ACTIVE_DESCENDANT_CHANGED,
+        IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED, IA2_EVENT_DOCUMENT_CONTENT_CHANGED,
+        IA2_EVENT_DOCUMENT_LOAD_COMPLETE, IA2_EVENT_DOCUMENT_LOAD_STOPPED,
+        IA2_EVENT_DOCUMENT_RELOAD, IA2_EVENT_HYPERLINK_END_INDEX_CHANGED,
+        IA2_EVENT_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED, IA2_EVENT_HYPERLINK_SELECTED_LINK_CHANGED,
+        IA2_EVENT_HYPERLINK_START_INDEX_CHANGED, IA2_EVENT_HYPERTEXT_CHANGED,
+        IA2_EVENT_HYPERTEXT_LINK_ACTIVATED, IA2_EVENT_HYPERTEXT_LINK_SELECTED,
+        IA2_EVENT_HYPERTEXT_NLINKS_CHANGED, IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,
+        IA2_EVENT_PAGE_CHANGED, IA2_EVENT_ROLE_CHANGED, IA2_EVENT_SECTION_CHANGED,
+        IA2_EVENT_TABLE_CAPTION_CHANGED, IA2_EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED,
+        IA2_EVENT_TABLE_COLUMN_HEADER_CHANGED, IA2_EVENT_TABLE_MODEL_CHANGED,
+        IA2_EVENT_TABLE_ROW_DESCRIPTION_CHANGED, IA2_EVENT_TABLE_ROW_HEADER_CHANGED,
+        IA2_EVENT_TABLE_SUMMARY_CHANGED, IA2_EVENT_TEXT_ATTRIBUTE_CHANGED,
+        IA2_EVENT_TEXT_CARET_MOVED, IA2_EVENT_TEXT_COLUMN_CHANGED, IA2_EVENT_TEXT_INSERTED,
+        IA2_EVENT_TEXT_REMOVED, IA2_EVENT_TEXT_SELECTION_CHANGED, IA2_EVENT_TEXT_UPDATED,
+        IA2_EVENT_VISIBLE_DATA_CHANGED,
+    },
 };
 use std::sync::RwLock;
-use win_wrap::msaa::event::{WinEventHook, WinEventSource};
+use win_wrap::{
+    common::Result,
+    msaa::event::{WinEventHook, WinEventSource},
+};
+
+pub trait WinEventSourceExt {
+    fn get_object2(&self) -> Result<Accessible2Object>;
+    fn get_text(&self) -> Result<AccessibleText>;
+}
+
+impl WinEventSourceExt for WinEventSource {
+    fn get_object2(&self) -> Result<Accessible2Object> {
+        let obj = match self.get_object() {
+            Ok((obj, _)) => obj,
+            Err(e) => return Err(e),
+        };
+        Accessible2Object::from_accessible_object(obj)
+    }
+
+    fn get_text(&self) -> Result<AccessibleText> {
+        let obj = match self.get_object() {
+            Ok((obj, _)) => obj,
+            Err(e) => return Err(e),
+        };
+        AccessibleText::from_accessible_object(obj)
+    }
+}
 
 #[derive(Debug)]
 pub struct Ia2 {
@@ -559,7 +589,7 @@ impl Ia2 {
 mod test_ia2 {
     use crate::ia2::object::Accessible2Object;
     use crate::ia2::text::AccessibleText;
-    use crate::ia2::Ia2;
+    use crate::ia2::{Ia2, WinEventSourceExt};
     use crate::IAccessible2Lib::IA2CommonTypes::IA2CoordinateType;
     use win_wrap::com::co_initialize_multi_thread;
     use win_wrap::common::beep;
@@ -580,8 +610,7 @@ mod test_ia2 {
             let index_in_parent = obj.index_in_parent();
             dbg!(index_in_parent);
             dbg!(obj);
-            let (obj, _) = src.get_object().unwrap();
-            let text = AccessibleText::from_accessible_object(obj).unwrap();
+            let text = src.get_text().unwrap();
             // text.add_selection(0, 1);
             dbg!(text.character_extents(0, IA2CoordinateType::IA2_COORDTYPE_PARENT_RELATIVE));
             dbg!(text);

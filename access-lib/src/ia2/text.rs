@@ -24,7 +24,7 @@ use windows::{
 };
 
 pub struct AccessibleText {
-    _iat: Option<IAccessibleText>,
+    _iat: IAccessibleText,
     _iat2: Option<IAccessibleText2>,
 }
 
@@ -33,22 +33,22 @@ impl AccessibleText {
      * 获取一个新实例。
      * `obj` 一个MSAA对象。
      * */
-    pub fn from_accessible_object(obj: AccessibleObject) -> Option<Self> {
+    pub fn from_accessible_object(obj: AccessibleObject) -> Result<Self> {
         if let Ok(sp) = obj.get_raw().cast::<IServiceProvider>() {
             let iat = match unsafe { sp.QueryService::<IAccessibleText>(&IAccessible::IID) } {
-                Err(_) => None,
-                Ok(x) => Some(x),
+                Err(e) => return Err(e),
+                Ok(x) => x,
             };
             let iat2 = match unsafe { sp.QueryService::<IAccessibleText2>(&IAccessible::IID) } {
                 Err(_) => None,
                 Ok(x) => Some(x),
             };
-            return Some(Self {
+            return Ok(Self {
                 _iat: iat,
                 _iat2: iat2,
             });
         }
-        None
+        Err(Error::new(S_FALSE, HSTRING::from("Not supported.")))
     }
 
     /**
@@ -91,16 +91,7 @@ impl AccessibleText {
      * 有关可以在%IAccessibleText方法中使用的特殊偏移的信息，请参阅@ref _specialOffsets“在IAccessibleText和IAccessibleEditableText方法中的特殊偏移”。
      * */
     pub fn add_selection(&self, start_offset: i32, end_offset: i32) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
-        unsafe {
-            self._iat
-                .as_ref()
-                .unwrap()
-                .addSelection(start_offset, end_offset)
-                .is_ok()
-        }
+        unsafe { self._iat.addSelection(start_offset, end_offset).is_ok() }
     }
 
     /**
@@ -111,15 +102,10 @@ impl AccessibleText {
      * `offset` 文本偏移量（从零开始）。有关%IAccessibleText方法中可以使用的特殊偏移的信息，请参阅@ref _specialOffsets“在IAccessibleText和IAccessibleEditableText方法中使用的特殊偏置”。
      * */
     pub fn attributes(&self, offset: i32) -> (i32, i32, String) {
-        if self._iat.is_none() {
-            return (0, 0, String::new());
-        }
         unsafe {
             let (mut start_offset, mut end_offset, mut text_attributes) = std::mem::zeroed();
             if self
                 ._iat
-                .as_ref()
-                .unwrap()
                 .attributes(
                     offset,
                     &mut start_offset,
@@ -147,16 +133,13 @@ impl AccessibleText {
      * 注意： 上述翻译可能存在错误。
      * */
     pub fn caret_offset(&self) -> Result<i32> {
-        if self._iat.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut offset = std::mem::zeroed();
-            self._iat
-                .as_ref()
-                .unwrap()
-                .caretOffset(&mut offset)
-                .from_abi(offset)
+            let res = self._iat.caretOffset(&mut offset);
+            if res.is_err() {
+                return Err(Error::new(S_FALSE, res.message()));
+            }
+            Ok(offset)
         }
     }
 
@@ -176,15 +159,10 @@ impl AccessibleText {
         offset: i32,
         coord_type: IA2CoordinateType,
     ) -> (i32, i32, i32, i32) {
-        if self._iat.is_none() {
-            return (0, 0, 0, 0);
-        }
         unsafe {
             let (mut x, mut y, mut width, mut height) = std::mem::zeroed();
             if self
                 ._iat
-                .as_ref()
-                .unwrap()
                 .characterExtents(offset, coord_type, &mut x, &mut y, &mut width, &mut height)
                 .is_err()
             {
@@ -198,12 +176,9 @@ impl AccessibleText {
      * 返回活动的非连续选区数
      * */
     pub fn n_selections(&self) -> i32 {
-        if self._iat.is_none() {
-            return 0;
-        }
         unsafe {
             let mut num = std::mem::zeroed();
-            if self._iat.as_ref().unwrap().nSelections(&mut num).is_err() {
+            if self._iat.nSelections(&mut num).is_err() {
                 return 0;
             }
             num
@@ -219,14 +194,9 @@ impl AccessibleText {
      * `coord_type` 屏幕坐标或窗口坐标。
      * */
     pub fn offset_at_point(&self, x: i32, y: i32, coord_type: IA2CoordinateType) -> i32 {
-        if self._iat.is_none() {
-            return 0;
-        }
         unsafe {
             let mut offset = std::mem::zeroed();
             self._iat
-                .as_ref()
-                .unwrap()
                 .offsetAtPoint(x, y, coord_type, &mut offset)
                 .from_abi(offset)
                 .unwrap_or(-1)
@@ -245,16 +215,11 @@ impl AccessibleText {
      * `selection_index` 选区的索引（从零开始）。
      * */
     pub fn selection(&self, selection_index: i32) -> Result<(i32, i32)> {
-        if self._iat.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let (mut start_offset, mut end_offset) = std::mem::zeroed();
-            let res = self._iat.as_ref().unwrap().selection(
-                selection_index,
-                &mut start_offset,
-                &mut end_offset,
-            );
+            let res = self
+                ._iat
+                .selection(selection_index, &mut start_offset, &mut end_offset);
             if res.is_err() {
                 return Err(Error::new(S_FALSE, res.message()));
             }
@@ -273,18 +238,9 @@ impl AccessibleText {
      * `end_offset` 返回字符串中要排除的最后一个字符的索引。有效范围是从零到长度。
      * */
     pub fn text(&self, start_offset: i32, end_offset: i32) -> String {
-        if self._iat.is_none() {
-            return String::new();
-        }
         unsafe {
             let mut text = std::mem::zeroed();
-            if self
-                ._iat
-                .as_ref()
-                .unwrap()
-                .text(start_offset, end_offset, &mut text)
-                .is_err()
-            {
+            if self._iat.text(start_offset, end_offset, &mut text).is_err() {
                 return String::new();
             }
             text.to_string()
@@ -307,15 +263,10 @@ impl AccessibleText {
         offset: i32,
         boundary_type: IA2TextBoundaryType,
     ) -> (i32, i32, String) {
-        if self._iat.is_none() {
-            return (0, 0, String::new());
-        }
         unsafe {
             let (mut start_offset, mut end_offset, mut text) = std::mem::zeroed();
             if self
                 ._iat
-                .as_ref()
-                .unwrap()
                 .textBeforeOffset(
                     offset,
                     boundary_type,
@@ -348,15 +299,10 @@ impl AccessibleText {
         offset: i32,
         boundary_type: IA2TextBoundaryType,
     ) -> (i32, i32, String) {
-        if self._iat.is_none() {
-            return (0, 0, String::new());
-        }
         unsafe {
             let (mut start_offset, mut end_offset, mut text) = std::mem::zeroed();
             if self
                 ._iat
-                .as_ref()
-                .unwrap()
                 .textAfterOffset(
                     offset,
                     boundary_type,
@@ -389,15 +335,10 @@ impl AccessibleText {
         offset: i32,
         boundary_type: IA2TextBoundaryType,
     ) -> (i32, i32, String) {
-        if self._iat.is_none() {
-            return (0, 0, String::new());
-        }
         unsafe {
             let (mut start_offset, mut end_offset, mut text) = std::mem::zeroed();
             if self
                 ._iat
-                .as_ref()
-                .unwrap()
                 .textAtOffset(
                     offset,
                     boundary_type,
@@ -418,16 +359,7 @@ impl AccessibleText {
      * `selection_index` 要删除选区的索引（从零开始）。
      * */
     pub fn remove_selection(&self, selection_index: i32) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
-        unsafe {
-            self._iat
-                .as_ref()
-                .unwrap()
-                .removeSelection(selection_index)
-                .is_ok()
-        }
+        unsafe { self._iat.removeSelection(selection_index).is_ok() }
     }
 
     /**
@@ -438,10 +370,7 @@ impl AccessibleText {
      * `offset` 插入符号的新索引。这个插入符号实际上被放置在具有该索引的字符的左侧。索引0放置插入符号，以便下一次插入位于第一个字符之前。n_characters的索引导致插入最后一个字符之后。有关特殊偏移的信息，请参阅@ref _specialOffsets“在IAccessibleText和IAccessibleEditableText方法中使用的特殊偏移”
      * */
     pub fn set_caret_offset(&self, offset: i32) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
-        unsafe { self._iat.as_ref().unwrap().setCaretOffset(offset).is_ok() }
+        unsafe { self._iat.setCaretOffset(offset).is_ok() }
     }
 
     /**
@@ -451,13 +380,8 @@ impl AccessibleText {
      * `end_offset` 新地结束偏移量（从零开始）-字符刚好超过所选最后一个字符的偏移量。
      * */
     pub fn set_selection(&self, selection_index: i32, start_offset: i32, end_offset: i32) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
         unsafe {
             self._iat
-                .as_ref()
-                .unwrap()
                 .setSelection(selection_index, start_offset, end_offset)
                 .is_ok()
         }
@@ -468,17 +392,9 @@ impl AccessibleText {
      * 请注意，如果文本包含多字节字符，则这可能与存储文本所需的总字节数不同。
      * */
     pub fn n_characters(&self) -> i32 {
-        if self._iat.is_none() {
-            return 0;
-        }
         unsafe {
             let mut num = std::mem::zeroed();
-            self._iat
-                .as_ref()
-                .unwrap()
-                .nCharacters(&mut num)
-                .from_abi(num)
-                .unwrap_or(0)
+            self._iat.nCharacters(&mut num).from_abi(num).unwrap_or(0)
         }
     }
 
@@ -495,13 +411,8 @@ impl AccessibleText {
         end_index: i32,
         scroll_type: IA2ScrollType,
     ) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
         unsafe {
             self._iat
-                .as_ref()
-                .unwrap()
                 .scrollSubstringTo(start_index, end_index, scroll_type)
                 .is_ok()
         }
@@ -525,13 +436,8 @@ impl AccessibleText {
         x: i32,
         y: i32,
     ) -> bool {
-        if self._iat.is_none() {
-            return false;
-        }
         unsafe {
             self._iat
-                .as_ref()
-                .unwrap()
                 .scrollSubstringToPoint(start_index, end_index, coordinate_type, x, y)
                 .is_ok()
         }
@@ -544,12 +450,9 @@ impl AccessibleText {
      * 此外，请注意，根据控件是否管理其子控件，服务器可能具有不同的控件生命周期管理策略。列表、树和表可以有大量的子对象，因此这些控件的子对象可能只会根据需要创建。服务器应记录其生命周期策略，因为这将对辅助技术或脚本引擎访问进程外或其他线程的数据感兴趣。服务器只需要保存最后插入的文本块，整个应用程序的范围就足够了。
      * */
     pub fn new_text(&self) -> Result<IA2TextSegment> {
-        if self._iat.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut text = std::mem::zeroed();
-            let res = self._iat.as_ref().unwrap().newText(&mut text);
+            let res = self._iat.newText(&mut text);
             if res.is_err() {
                 return Err(Error::new(S_FALSE, res.message()));
             }
@@ -564,12 +467,9 @@ impl AccessibleText {
      * 此外，请注意，根据控件是否管理其子控件，服务器可能具有不同的控件生命周期管理策略。列表、树和表可以有大量的子对象，因此这些控件的子对象可能只会根据需要创建。服务器应记录其生命周期策略，因为这将对辅助技术或脚本引擎访问进程外或其他线程的数据感兴趣。服务器只需要保存最后删除的文本块，整个应用程序的范围就足够了。
      * */
     pub fn old_text(&self) -> Result<IA2TextSegment> {
-        if self._iat.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut text = std::mem::zeroed();
-            let res = self._iat.as_ref().unwrap().oldText(&mut text);
+            let res = self._iat.oldText(&mut text);
             if res.is_err() {
                 return Err(Error::new(S_FALSE, res.message()));
             }

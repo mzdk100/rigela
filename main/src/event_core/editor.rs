@@ -15,11 +15,18 @@ use crate::{
     commander::keys::Keys::{VkDown, VkUp},
     context::Context,
 };
+use access_lib::ia2::text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE};
+use access_lib::ia2::WinEventSourceExt;
 use log::error;
 use std::sync::Arc;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
 
 pub(crate) async fn subscribe_events(context: Arc<Context>) {
+    subscribe_uia_events(context.clone()).await;
+    subscribe_ia2_events(context).await;
+}
+
+async fn subscribe_uia_events(context: Arc<Context>) {
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
     let commander = context.commander.clone();
@@ -62,4 +69,30 @@ pub(crate) async fn subscribe_events(context: Arc<Context>) {
         .terminator
         .add_exiting_listener(move || ui_automation.remove_event_handler_group(&root, &group))
         .await;
+}
+
+async fn subscribe_ia2_events(context: Arc<Context>) {
+    let commander = context.commander.clone();
+    let main_handler = context.main_handler.clone();
+    let performer = context.performer.clone();
+
+    context.ia2.add_on_text_caret_moved_listener(move |src| {
+        let text = match src.get_text() {
+            Ok(t) => t,
+            Err(e) => {
+                error!("{}", e);
+                return;
+            }
+        };
+        let caret = text.caret_offset().unwrap_or(0);
+        dbg!(caret);
+        let (_, _, text) = match commander.get_last_pressed_key() {
+            VkDown | VkUp => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+            _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
+        };
+        let performer = performer.clone();
+        main_handler.spawn(async move {
+            performer.speak_with_sapi5(text).await;
+        });
+    })
 }

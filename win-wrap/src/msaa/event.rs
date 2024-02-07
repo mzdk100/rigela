@@ -11,15 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::msaa::object::AccessibleObject;
 use crate::{
-    common::{set_win_event_hook, unhook_win_event, HMODULE, HWINEVENTHOOK, HWND},
+    common::{set_win_event_hook, unhook_win_event, Result, HMODULE, HWINEVENTHOOK, HWND},
     message::message_loop,
+    msaa::object::AccessibleObject,
 };
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
-use std::time::SystemTime;
-use std::{sync::RwLock, thread};
+use std::{
+    fmt::{Debug, Formatter},
+    sync::{Arc, RwLock},
+    thread,
+    time::SystemTime,
+};
 use windows::Win32::UI::WindowsAndMessaging::{
     EVENT_MAX, EVENT_MIN, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
 };
@@ -41,8 +43,8 @@ impl WinEventSource {
     /**
      * 获取事件对应的可访问性对象。
      * */
-    pub fn get_object(&self) -> Result<(AccessibleObject, u32), String> {
-        AccessibleObject::from_event(self.h_wnd, self.id_object as u32, self.id_child as u32)
+    pub fn get_object(&self) -> Result<(AccessibleObject, u32)> {
+        AccessibleObject::from_event(self.h_wnd, self.id_object, self.id_child)
     }
 }
 

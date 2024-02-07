@@ -26,7 +26,6 @@ use crate::{
 use std::{
     ffi::c_void,
     fmt::{Debug, Formatter},
-    mem::MaybeUninit,
 };
 use win_wrap::msaa::object::AccessibleObject;
 use windows::{
@@ -42,14 +41,18 @@ use windows::{
 };
 
 pub struct Accessible2Object {
-    _ia2: Option<IAccessible2>,
+    _ia2: IAccessible2,
     _ia2_2: Option<IAccessible2_2>,
     _ia2_3: Option<IAccessible2_3>,
 }
 
 impl Accessible2Object {
-    pub fn from_accessible_object(obj: AccessibleObject) -> Option<Self> {
+    pub fn from_accessible_object(obj: AccessibleObject) -> Result<Self> {
         if let Ok(sp) = obj.get_raw().cast::<IServiceProvider>() {
+            let ia2 = match unsafe { sp.QueryService::<IAccessible2>(&IAccessible::IID) } {
+                Err(e) => return Err(e),
+                Ok(x) => x,
+            };
             let ia2_3 = match unsafe { sp.QueryService::<IAccessible2_3>(&IAccessible::IID) } {
                 Err(_) => None,
                 Ok(x) => Some(x),
@@ -58,17 +61,13 @@ impl Accessible2Object {
                 Err(_) => None,
                 Ok(x) => Some(x),
             };
-            let ia2 = match unsafe { sp.QueryService::<IAccessible2>(&IAccessible::IID) } {
-                Err(_) => None,
-                Ok(x) => Some(x),
-            };
-            return Some(Self {
+            return Ok(Self {
                 _ia2: ia2,
                 _ia2_2: ia2_2,
                 _ia2_3: ia2_3,
             });
         }
-        None
+        Err(Error::new(S_FALSE, HSTRING::from("Not supported.")))
     }
 
     /**
@@ -166,13 +165,9 @@ impl Accessible2Object {
      * 返回此对象的可访问关系数。
      * */
     pub fn n_relations(&self) -> i32 {
-        if self._ia2.is_none() {
-            return 0;
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
             let mut num = 0;
-            if ia2.nRelations(&mut num).is_err() {
+            if self._ia2.nRelations(&mut num).is_err() {
                 return 0;
             }
             num
@@ -185,13 +180,10 @@ impl Accessible2Object {
      * `index` 从0开始的关系对象索引。
      * */
     pub fn relation(&self, index: i32) -> Result<AccessibleRelation> {
-        if self._ia2.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
             let mut relation = std::mem::zeroed();
-            if let Ok(relation) = ia2
+            if let Ok(relation) = self
+                ._ia2
                 .relation(index, &mut relation)
                 .from_abi(relation as *mut c_void)
             {
@@ -208,14 +200,10 @@ impl Accessible2Object {
      * `max_relations` 要获取关系对象的数量。
      * */
     pub fn relations(&self, max_relations: i32) -> Vec<AccessibleRelation> {
-        if self._ia2.is_none() {
-            return vec![];
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
             let mut relations = std::mem::zeroed();
             let mut num = 0;
-            let res = ia2.relations(max_relations, &mut relations, &mut num);
+            let res = self._ia2.relations(max_relations, &mut relations, &mut num);
             if res.is_err() {
                 return vec![];
             }
@@ -239,13 +227,9 @@ impl Accessible2Object {
      * 此方法在IDL中缺少[propget]前缀。结果是该方法在生成的C++代码中被命名为role，而不是get_role。
      * */
     pub fn role(&self) -> i32 {
-        if self._ia2.is_none() {
-            return 0;
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
             let mut role = std::mem::zeroed();
-            ia2.role(&mut role).from_abi(role)
+            self._ia2.role(&mut role).from_abi(role)
         }
         .unwrap_or(0)
     }
@@ -256,10 +240,7 @@ impl Accessible2Object {
      * `scroll_type` 定义对象应放在屏幕上的位置。
      * */
     pub fn scroll_to(&self, scroll_type: IA2ScrollType) -> bool {
-        if self._ia2.is_none() {
-            return false;
-        }
-        unsafe { self._ia2.as_ref().unwrap().scrollTo(scroll_type).is_ok() }
+        unsafe { self._ia2.scrollTo(scroll_type).is_ok() }
     }
 
     /**
@@ -268,16 +249,7 @@ impl Accessible2Object {
      * `x` 定义x坐标。
      * `y` 定义y坐标。*/
     pub fn scroll_to_point(&self, coordinate_type: IA2CoordinateType, x: i32, y: i32) -> bool {
-        if self._ia2.is_none() {
-            return false;
-        }
-        unsafe {
-            self._ia2
-                .as_ref()
-                .unwrap()
-                .scrollToPoint(coordinate_type, x, y)
-                .is_ok()
-        }
+        unsafe { self._ia2.scrollToPoint(coordinate_type, x, y).is_ok() }
     }
 
     //noinspection StructuralWrap
@@ -291,16 +263,11 @@ impl Accessible2Object {
      * 一般的，这通常不会在组合框上实现，以描述其内容的性质。
      * */
     pub fn group_position(&self) -> (i32, i32, i32) {
-        if self._ia2.is_none() {
-            return (0, 0, 0);
-        }
         unsafe {
             let (mut group_level, mut similar_items_in_group, mut position_in_group) =
                 std::mem::zeroed();
             if self
                 ._ia2
-                .as_ref()
-                .unwrap()
                 .groupPosition(
                     &mut group_level,
                     &mut similar_items_in_group,
@@ -319,16 +286,9 @@ impl Accessible2Object {
      * IAccessible2状态是MSAA状态之外的状态，在IA2States枚举中定义。
      * */
     pub fn states(&self) -> Result<AccessibleStates> {
-        if self._ia2.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2
-                .as_ref()
-                .unwrap()
-                .states(&mut states)
-                .from_abi(states)
+            self._ia2.states(&mut states).from_abi(states)
         }
     }
 
@@ -337,46 +297,28 @@ impl Accessible2Object {
      * 扩展角色是由应用程序动态生成的角色。
      * 它不是由%IAccessible2规范预定义的。
      * */
-    pub fn extended_role(&self) -> String {
-        if self._ia2.is_none() {
-            return String::new();
-        }
+    pub fn extended_role(&self) -> Result<String> {
         unsafe {
-            let mut role = MaybeUninit::new(BSTR::new());
-            if let Ok(s) = self
-                ._ia2
-                .as_ref()
-                .unwrap()
-                .extendedRole(role.as_mut_ptr())
-                .from_abi::<BSTR>(role)
-            {
-                s.to_string()
-            } else {
-                String::new()
+            let mut role = std::mem::zeroed();
+            let res = self._ia2.extendedRole(&mut role);
+            if res.is_err() {
+                return Err(Error::new(S_FALSE, res.message()));
             }
+            Ok(role.to_string())
         }
     }
 
     /**
      * 返回本地化的扩展角色。
      * */
-    pub fn localized_extended_role(&self) -> String {
-        if self._ia2.is_none() {
-            return String::new();
-        }
+    pub fn localized_extended_role(&self) -> Result<String> {
         unsafe {
-            let mut role = MaybeUninit::new(BSTR::new());
-            if let Ok(s) = self
-                ._ia2
-                .as_ref()
-                .unwrap()
-                .localizedExtendedRole(role.as_mut_ptr())
-                .from_abi::<BSTR>(role)
-            {
-                s.to_string()
-            } else {
-                String::new()
+            let mut role = std::mem::zeroed();
+            let res = self._ia2.localizedExtendedRole(&mut role);
+            if res.is_err() {
+                return Err(Error::new(S_FALSE, res.message()));
             }
+            Ok(role.to_string())
         }
     }
 
@@ -384,16 +326,9 @@ impl Accessible2Object {
      * 返回扩展状态的数目。
      * */
     pub fn n_extended_states(&self) -> Result<i32> {
-        if self._ia2.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2
-                .as_ref()
-                .unwrap()
-                .nExtendedStates(&mut states)
-                .from_abi(states)
+            self._ia2.nExtendedStates(&mut states).from_abi(states)
         }
     }
 
@@ -401,14 +336,9 @@ impl Accessible2Object {
      * 返回扩展状态（字符串数组）。扩展状态是由应用程序动态生成的状态。它不是由%IAccessible2规范预定义的。
      * */
     pub fn extended_states(&self) -> Vec<String> {
-        if self._ia2.is_none() {
-            return vec![];
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
-            let mut states = std::mem::zeroed();
-            let mut num = std::mem::zeroed();
-            let res = ia2.extendedStates(0, &mut states, &mut num);
+            let (mut states, mut num) = std::mem::zeroed();
+            let res = self._ia2.extendedStates(0, &mut states, &mut num);
             if res.is_err() {
                 return vec![];
             }
@@ -426,14 +356,9 @@ impl Accessible2Object {
      * 返回本地化的扩展状态（字符串数组）。
      * */
     pub fn localized_extended_states(&self) -> Vec<String> {
-        if self._ia2.is_none() {
-            return vec![];
-        }
-        let ia2 = self._ia2.as_ref().unwrap();
         unsafe {
-            let mut states = std::mem::zeroed();
-            let mut num = std::mem::zeroed();
-            let res = ia2.localizedExtendedStates(0, &mut states, &mut num);
+            let (mut states, mut num) = std::mem::zeroed();
+            let res = self._ia2.localizedExtendedStates(0, &mut states, &mut num);
             if res.is_err() {
                 return vec![];
             }
@@ -463,12 +388,9 @@ impl Accessible2Object {
      * 创建唯一ID的另一种方法是根据指针值（例如对象的地址）生成唯一ID。这将是唯一的，因为没有两个活动对象可以使用相同的分配内存空间。
      * */
     pub fn unique_id(&self) -> Result<i32> {
-        if self._ia2.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut id = std::mem::zeroed();
-            self._ia2.as_ref().unwrap().uniqueID(&mut id).from_abi(id)
+            self._ia2.uniqueID(&mut id).from_abi(id)
         }
     }
 
@@ -479,17 +401,9 @@ impl Accessible2Object {
      * 然而，有了windowHandle的可用性，可以避免这个过程。
      * */
     pub fn window_handle(&self) -> HWND {
-        if self._ia2.is_none() {
-            return HWND::default();
-        }
         unsafe {
             let mut h_wnd = std::mem::zeroed();
-            self._ia2
-                .as_ref()
-                .unwrap()
-                .windowHandle(&mut h_wnd)
-                .from_abi(h_wnd)
-                .unwrap()
+            self._ia2.windowHandle(&mut h_wnd).from_abi(h_wnd).unwrap()
         }
     }
 
@@ -498,17 +412,9 @@ impl Accessible2Object {
      * 从0开始，-1表示没有父级；
      * */
     pub fn index_in_parent(&self) -> i32 {
-        if self._ia2.is_none() {
-            return -1;
-        }
         unsafe {
             let mut index = std::mem::zeroed();
-            let res = self
-                ._ia2
-                .as_ref()
-                .unwrap()
-                .indexInParent(&mut index)
-                .from_abi(index);
+            let res = self._ia2.indexInParent(&mut index).from_abi(index);
             if res.is_err() {
                 -1
             } else {
@@ -521,12 +427,9 @@ impl Accessible2Object {
      * 返回可访问对象的IA2Locale。
      * */
     pub fn locale(&self) -> Result<IA2Locale> {
-        if self._ia2.is_none() {
-            return Err(Error::new(S_FALSE, HSTRING::from("Not supported.")));
-        }
         unsafe {
             let mut locale = std::mem::zeroed();
-            let res = self._ia2.as_ref().unwrap().locale(&mut locale);
+            let res = self._ia2.locale(&mut locale);
             if res.is_err() {
                 return Err(Error::new(S_FALSE, res.message()));
             }
@@ -538,18 +441,9 @@ impl Accessible2Object {
      * 返回特定于此对象的属性，例如单元格的公式。
      * */
     pub fn attributes(&self) -> String {
-        if self._ia2.is_none() {
-            return String::new();
-        }
         unsafe {
             let mut attributes = std::mem::zeroed();
-            if self
-                ._ia2
-                .as_ref()
-                .unwrap()
-                .attributes(&mut attributes)
-                .is_err()
-            {
+            if self._ia2.attributes(&mut attributes).is_err() {
                 return String::new();
             }
             attributes.to_string()

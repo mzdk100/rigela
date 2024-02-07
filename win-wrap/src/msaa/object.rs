@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::common::HWND;
+use crate::common::{Result, HWND};
 use std::fmt::{Debug, Display, Formatter};
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
@@ -33,9 +33,9 @@ pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_WHITESPACE, ROLE_SYSTEM_WINDOW, STATE_SYSTEM_HASPOPUP, STATE_SYSTEM_NORMAL,
 };
 use windows::{
-    core::{ComInterface, Type, BSTR},
+    core::{ComInterface, Error, Type, BSTR, HSTRING},
     Win32::{
-        Foundation::POINT,
+        Foundation::{POINT, S_FALSE},
         System::{
             Com::IDispatch,
             Variant::{VariantClear, VariantInit, VT_DISPATCH, VT_EMPTY, VT_I4},
@@ -61,7 +61,7 @@ impl AccessibleObject {
      * 从窗口获取对象。
      * `h_wnd` 窗口句柄。
      * */
-    pub fn from_window(h_wnd: HWND) -> Result<Self, String> {
+    pub fn from_window(h_wnd: HWND) -> Result<Self> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessibleobjectfromwindow
         let acc = unsafe {
             let mut p_acc = std::mem::zeroed();
@@ -71,10 +71,10 @@ impl AccessibleObject {
                 &IAccessible::IID,
                 &mut p_acc,
             ) {
-                return Err(format!("Can't obtain the accessible object. ({})", e));
+                return Err(e);
             }
             match IAccessible::from_abi(p_acc) {
-                Err(e) => return Err(format!("Can't obtain the accessible object. {}", e)),
+                Err(e) => return Err(e),
                 Ok(r) => r,
             }
         };
@@ -84,7 +84,7 @@ impl AccessibleObject {
     /**
      * 从插入点获取对象。
      * */
-    pub fn from_caret() -> Result<Self, String> {
+    pub fn from_caret() -> Result<Self> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessibleobjectfromwindow
         let acc = unsafe {
             let mut p_acc = std::mem::zeroed();
@@ -94,10 +94,10 @@ impl AccessibleObject {
                 &IAccessible::IID,
                 &mut p_acc,
             ) {
-                return Err(format!("Can't obtain the accessible object. ({})", e));
+                return Err(e);
             }
             match IAccessible::from_abi(p_acc) {
-                Err(e) => return Err(format!("Can't obtain the accessible object. {}", e)),
+                Err(e) => return Err(e),
                 Ok(r) => r,
             }
         };
@@ -109,20 +109,23 @@ impl AccessibleObject {
      * `x` 横坐标。
      * `y` 纵坐标。
      * */
-    pub fn from_point(x: i32, y: i32) -> Result<(Self, u32), String> {
+    pub fn from_point(x: i32, y: i32) -> Result<(Self, u32)> {
         // https://learn.microsoft.com/zh-cn/previous-versions/ms696163(v=vs.85)
         let acc = unsafe {
             let mut p_acc: Option<IAccessible> = None;
             let point = POINT { x, y };
             let mut var = VariantInit();
             if let Err(e) = AccessibleObjectFromPoint(point, &mut p_acc, &mut var) {
-                return Err(format!("Can't obtain the accessible object. ({})", e));
+                return Err(e);
             }
             let val = match p_acc {
                 None => {
-                    return Err(format!(
-                        "Can't obtain the accessible object at ({}, {}).",
-                        x, y
+                    return Err(Error::new(
+                        S_FALSE,
+                        HSTRING::from(format!(
+                            "Can't obtain the accessible object at ({}, {}).",
+                            x, y
+                        )),
                     ))
                 }
                 Some(r) => (r, var.Anonymous.Anonymous.Anonymous.uintVal),
@@ -140,19 +143,22 @@ impl AccessibleObject {
      * `id` 指定生成事件的 对象的对象 ID。 此值必须是发送到事件挂钩函数的对象 ID。
      * `child_id` 指定事件是由对象还是由其子元素之一触发。如果对象触发了事件，则 child_id = CHILDID_SELF。如果子元素触发了事件， 则 child_id 是元素的子 ID。此值必须是发送到事件挂钩函数的子 ID。
      * */
-    pub fn from_event(h_wnd: HWND, id: u32, child_id: u32) -> Result<(Self, u32), String> {
+    pub fn from_event(h_wnd: HWND, id: u32, child_id: u32) -> Result<(Self, u32)> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessibleobjectfromevent
         let acc = unsafe {
             let mut p_acc = std::mem::zeroed();
             let mut var = std::mem::zeroed();
             if let Err(e) = AccessibleObjectFromEvent(h_wnd, id, child_id, &mut p_acc, &mut var) {
-                return Err(format!("Can't obtain the accessible object. ({})", e));
+                return Err(e);
             }
             let val = match p_acc {
                 None => {
-                    return Err(format!(
-                        "Can't obtain the accessible object, the h_wnd is {}.",
-                        h_wnd.0
+                    return Err(Error::new(
+                        S_FALSE,
+                        HSTRING::from(format!(
+                            "Can't obtain the accessible object, the h_wnd is {}.",
+                            h_wnd.0
+                        )),
                     ));
                 }
                 Some(r) => (r, var.Anonymous.Anonymous.Anonymous.uintVal),
