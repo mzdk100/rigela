@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use crate::{
     configs::mouse::MouseConfig,
     configs::tts::{TtsConfig, TtsProperty},
     context::Context,
 };
+use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -99,5 +101,24 @@ pub(crate) fn prev_tts_prop() {
 pub(crate) fn apply_mouse_config(context: Arc<Context>, is_read: bool) {
     let mut config = context.config_manager.get_config();
     config.mouse_config = MouseConfig { is_read };
+    context.config_manager.set_config(config);
+}
+
+// ------  键盘配置  -------
+
+/// 获取当前的热键配置
+pub(crate) fn get_hotkeys(context: Arc<Context>) -> HashMap<String, Vec<Keys>> {
+    context
+        .config_manager
+        .get_config()
+        .hotkeys_config
+        .talent_keys
+        .clone()
+}
+
+///  存储热键配置
+pub(crate) fn save_hotkeys(context: Arc<Context>, hotkeys: HashMap<String, Vec<Keys>>) {
+    let mut config = context.config_manager.get_config();
+    config.hotkeys_config.talent_keys = hotkeys;
     context.config_manager.set_config(config);
 }

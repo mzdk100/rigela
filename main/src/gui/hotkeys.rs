@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_manager::ConfigRoot;
+use crate::configs::config_operations::{get_hotkeys, save_hotkeys};
 use crate::{
     bring_window_front,
     commander::{keys::Keys, CommandType::Key},
@@ -94,7 +94,7 @@ impl HotKeysForm {
     fn init_list_cols(&self) {
         const COL_DATA: [(i32, &str); 3] =
             [(100, "技能名称"), (240, "初始热键"), (240, "自定义热键")];
-        
+
         for (i, (n, s)) in COL_DATA.into_iter().enumerate() {
             self.data_view.insert_column(nwg::InsertListViewColumn {
                 index: Some(i as i32),
@@ -103,7 +103,7 @@ impl HotKeysForm {
                 text: Some(s.into()),
             });
         }
-        
+
         self.data_view.set_headers_enabled(true);
     }
 
@@ -111,8 +111,7 @@ impl HotKeysForm {
     fn init_data(&self) {
         let context = self.context.borrow().clone().unwrap();
         *self.talents.borrow_mut() = context.talent_accessor.talents.clone();
-        let cfg = context.config_manager.get_config().hotkeys_config.clone();
-        *self.talent_keys.borrow_mut() = cfg.talent_keys;
+        *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
     // 更新列表项目
@@ -126,7 +125,7 @@ impl HotKeysForm {
 
             let talent_keys = self.talent_keys.borrow().clone();
             let keys = talent_keys.get(&talent.get_id());
-            
+
             // 获取默认的热键组合字符串
             let get_str = |t: &Talent| {
                 for cmd_type in t.get_supported_cmd_list() {
@@ -136,7 +135,7 @@ impl HotKeysForm {
                 }
                 "".to_string()
             };
-            
+
             // 如果存在自定义热键，就仅显示自定义热键，否则显示默认热键
             let (keys_str, col) = match keys {
                 Some(keys) => (Self::keys_to_string(keys), 2),
@@ -228,15 +227,9 @@ impl HotKeysForm {
             }
 
             let context = self.context.borrow().clone().unwrap();
-            let mng = context.config_manager.clone();
-            let cfg = mng.get_config();
-            let mut hk_cfg = cfg.hotkeys_config.clone();
-            hk_cfg.talent_keys.remove(&id_);
-            let cfg = ConfigRoot {
-                hotkeys_config: hk_cfg,
-                ..cfg
-            };
-            mng.set_config(cfg);
+            let mut talent_keys = self.talent_keys.borrow_mut().clone();
+            talent_keys.remove(&id_);
+            save_hotkeys(context.clone(), talent_keys);
         }
 
         self.init_data();
@@ -270,15 +263,9 @@ impl HotKeysForm {
             }
 
             let context = self.context.borrow().clone().unwrap();
-            let mng = context.config_manager.clone();
-            let cfg = mng.get_config();
-            let mut hk_cfg = cfg.hotkeys_config.clone();
-            hk_cfg.talent_keys.insert(id_, hotkeys);
-            let cfg = ConfigRoot {
-                hotkeys_config: hk_cfg,
-                ..cfg
-            };
-            mng.set_config(cfg);
+            let mut talent_keys = self.talent_keys.borrow_mut().clone();
+            talent_keys.insert(id_.to_string(), hotkeys);
+            save_hotkeys(context.clone(), talent_keys);
         }
 
         self.init_data();

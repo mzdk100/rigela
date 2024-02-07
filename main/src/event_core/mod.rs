@@ -17,7 +17,7 @@ use crate::context::Context;
 use crate::event_core::editor::subscribe_events;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::common::{get_foreground_window, HWND};
+use win_wrap::common::get_foreground_window;
 
 /// 事件处理中心
 #[derive(Clone, Debug)]
@@ -78,26 +78,23 @@ async fn speak_focus_item(context: Arc<Context>) {
     });
 }
 
-// 存储前台窗口句柄
-fn get_old_foreground_window_hwnd() -> &'static Mutex<HWND> {
-    static INSTANCE: OnceLock<Mutex<HWND>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(HWND::default()))
-}
-
 /// 监测前台窗口变动，发送控件元素到form_browser
 async fn watch_foreground_window(context: Arc<Context>) {
     let ctx = context.clone();
+    let old_hwnd = Arc::new(Mutex::new(get_foreground_window()));
 
     // 给UI Automation的焦点改变绑定处理事件
     context.ui_automation.add_focus_changed_listener(move |_| {
         // 如果前台窗口没有变动直接返回
         let handle = get_foreground_window();
-        if handle == *get_old_foreground_window_hwnd().lock().unwrap() {
+        if handle == *old_hwnd.lock().unwrap() {
             return;
         }
 
         // 保存新的前台窗口句柄
-        *get_old_foreground_window_hwnd().lock().unwrap().deref_mut() = handle;
+        {
+            *old_hwnd.lock().unwrap().deref_mut() = handle;
+        }
 
         // form_browser需要异步操作
         let main_handler = ctx.main_handler.clone();

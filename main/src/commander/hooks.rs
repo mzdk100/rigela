@@ -12,6 +12,7 @@
  */
 
 use super::keys::Keys;
+use crate::configs::config_operations::get_hotkeys;
 use crate::{
     commander::{CommandType, Talent},
     context::Context,
@@ -22,22 +23,18 @@ use std::{
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
 use win_wrap::{
-    hook::HOOK_TYPE_MOUSE_LL,
     common::LRESULT,
     ext::LParamExt,
+    hook::HOOK_TYPE_MOUSE_LL,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN}
+    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
 /// 设置键盘钩子
 pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
+    let context = context.clone();
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
-    let talent_keys = context
-        .config_manager
-        .get_config()
-        .hotkeys_config
-        .talent_keys;
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         let info: &KbdLlHookStruct = l_param.to();
@@ -53,7 +50,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         for i in talents.iter() {
-            if let Some(keys) = talent_keys.get(&i.get_id()) {
+            if let Some(keys) = get_hotkeys(context.clone()).get(&i.get_id()) {
                 // 如果用户自定义过热键优先使用他定义的。
                 if match_keys(keys, &map) {
                     execute(context.clone(), Arc::clone(i));
@@ -87,14 +84,10 @@ fn match_keys(keys: &Vec<Keys>, map: &HashMap<Keys, bool>) -> bool {
     true
 }
 fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
-    !talent
-        .get_supported_cmd_list()
-        .iter()
-        .find(|x| match *x {
-            CommandType::Key(y) => match_keys(y, map),
-            _ => false,
-        })
-        .is_none()
+    talent.get_supported_cmd_list().iter().any(|x| match x {
+        CommandType::Key(y) => match_keys(y, map),
+        _ => false,
+    })
 }
 
 // 执行技能项的操作
@@ -124,7 +117,7 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
         let (x, y) = (info.pt.x, info.pt.y);
 
         // 如果坐标差值小于10个像素，不处理直接返回
-        let (old_x, old_y) = get_old_point().lock().unwrap().clone();
+        let (old_x, old_y) = *get_old_point().lock().unwrap();
         if (x - old_x) * (x - old_x) + (y - old_y) * (y - old_y) < 100 {
             return next();
         }

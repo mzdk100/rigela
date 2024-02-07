@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::{read_to_string, File};
 use std::io::Write;
 use std::ops::{Deref, DerefMut};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
 use std::{
     path::PathBuf,
@@ -39,7 +39,9 @@ pub(crate) struct ConfigManager {
     // 配置文件的路径
     pub(crate) path: PathBuf,
     // 当前的配置
-    config: Mutex<ConfigRoot>,
+    config: Arc<Mutex<ConfigRoot>>,
+    update_time: Arc<Mutex<Instant>>,
+    write_finished: Arc<Mutex<bool>>,
 }
 
 impl ConfigManager {
@@ -49,7 +51,9 @@ impl ConfigManager {
     pub(crate) fn new(path: PathBuf) -> Self {
         Self {
             path,
-            config: Mutex::new(ConfigRoot::default()),
+            config: Arc::new(Mutex::new(ConfigRoot::default())),
+            update_time: Arc::new(Mutex::new(Instant::now())),
+            write_finished: Arc::new(Mutex::new(true)),
         }
     }
 
@@ -66,19 +70,15 @@ impl ConfigManager {
     /// 修改当前的配置，修改完写入配置文件
     pub(crate) fn set_config(&self, config: ConfigRoot) {
         *self.config.lock().unwrap().deref_mut() = config.clone();
-
-        *update_time().lock().unwrap().deref_mut() = Instant::now();
-        *current_config().lock().unwrap().deref_mut() = config.clone();
-
-        let path = self.path.clone();
-        spawn(move || write_config(path));
+        *self.update_time.lock().unwrap().deref_mut() = Instant::now();
+        self.write();
     }
 
     /*
      * 读取配置数据。如果不存在配置文件，写入默认配置
      * */
     pub(crate) fn read(&self) -> ConfigRoot {
-        let config = match read_to_string(&self.path.clone()) {
+        let config = match read_to_string(self.path.clone()) {
             Ok(mut content) => match toml::from_str::<ConfigRoot>(content.as_mut_str()) {
                 Ok(c) => Some(c),
                 Err(_) => {
@@ -95,62 +95,47 @@ impl ConfigManager {
         if let Some(cfg) = config {
             cfg
         } else {
-            let cfg: ConfigRoot = Default::default();
-            *self.config.lock().unwrap().deref_mut() = cfg.clone();
-
-            let path = self.path.clone();
-            spawn(move || write_config(path));
-
-            cfg
+            *self.config.lock().unwrap().deref_mut() = Default::default();
+            self.write();
+            Default::default()
         }
     }
-}
 
-// 当前的配置值
-fn current_config() -> &'static Mutex<ConfigRoot> {
-    static INSTANCE: OnceLock<Mutex<ConfigRoot>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(Default::default()))
-}
+    // 写出配置数据。
+    fn write(&self) {
+        let path = self.path.clone();
+        let config = self.config.clone();
+        let update_time = self.update_time.clone();
+        let write_finished = self.write_finished.clone();
 
-// 是否完成写入，防止重复调用写入
-fn write_finished() -> &'static Mutex<bool> {
-    static INSTANCE: OnceLock<Mutex<bool>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(true))
-}
-
-// 更新时间
-fn update_time() -> &'static Mutex<Instant> {
-    static INSTANCE: OnceLock<Mutex<Instant>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(Instant::now()))
-}
-
-// 写出配置数据。
-fn write_config(path: PathBuf) {
-    if !*write_finished().lock().unwrap() {
-        return;
-    }
-    {
-        *write_finished().lock().unwrap().deref_mut() = false;
-    }
-
-    loop {
-        if Instant::now() >= *update_time().lock().unwrap() + Duration::from_secs(10) {
-            break;
-        }
-        sleep(Duration::from_secs(10));
-    }
-
-    match toml::to_string(current_config().lock().unwrap().deref()) {
-        Ok(content) => {
-            if let Ok(mut file) = File::create(&path) {
-                file.write(&content.into_bytes())
-                    .expect("write config file failed");
-            } else {
-                error!("create config file failed");
+        spawn(move || {
+            if !*write_finished.lock().unwrap() {
+                return;
             }
-        }
-        Err(e) => error!("{}", e),
-    }
+            {
+                *write_finished.lock().unwrap().deref_mut() = false;
+            }
 
-    *write_finished().lock().unwrap().deref_mut() = true;
+            loop {
+                if Instant::now() >= *update_time.lock().unwrap() + Duration::from_secs(10) {
+                    break;
+                }
+                sleep(Duration::from_secs(10));
+            }
+
+            match toml::to_string(config.lock().unwrap().deref()) {
+                Ok(content) => {
+                    if let Ok(mut file) = File::create(&path) {
+                        file.write_all(&content.into_bytes())
+                            .expect("write config file failed");
+                    } else {
+                        error!("create config file failed");
+                    }
+                }
+                Err(e) => error!("{}", e),
+            }
+
+            *write_finished.lock().unwrap().deref_mut() = true;
+        });
+    }
 }
