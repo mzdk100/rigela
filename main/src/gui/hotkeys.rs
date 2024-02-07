@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_manager::ConfigRoot;
 use crate::{
     bring_window_front,
     commander::{keys::Keys, CommandType::Key},
@@ -18,7 +19,7 @@ use crate::{
     talent::Talented,
 };
 use nwd::NwgUi;
-use nwg::{modal_info_message, modal_message, InsertListViewItem, MessageParams, NativeUi};
+use nwg::{modal_message, InsertListViewItem, MessageParams, NativeUi};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -48,7 +49,8 @@ pub struct HotKeysForm {
     #[nwg_control(size: (580, 400), list_style: nwg::ListViewStyle::Detailed, focus: true,
     ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 6)]
-    #[nwg_events(OnKeyRelease: [HotKeysForm::on_dv_key_press(SELF, EVT_DATA)])]
+    #[nwg_events(OnKeyRelease: [HotKeysForm::on_dv_key_press(SELF, EVT_DATA)],
+    OnListViewItemChanged: [HotKeysForm::on_dv_selection_changed])]
     data_view: nwg::ListView,
 
     #[nwg_control(text: "自定义: ")]
@@ -92,6 +94,7 @@ impl HotKeysForm {
     fn init_list_cols(&self) {
         const COL_DATA: [(i32, &str); 3] =
             [(100, "技能名称"), (240, "初始热键"), (240, "自定义热键")];
+        
         for (i, (n, s)) in COL_DATA.into_iter().enumerate() {
             self.data_view.insert_column(nwg::InsertListViewColumn {
                 index: Some(i as i32),
@@ -100,6 +103,7 @@ impl HotKeysForm {
                 text: Some(s.into()),
             });
         }
+        
         self.data_view.set_headers_enabled(true);
     }
 
@@ -120,23 +124,31 @@ impl HotKeysForm {
         for (i, talent) in talents.iter().enumerate() {
             dv.insert_item(talent.get_doc());
 
-            for cmd_type in talent.get_supported_cmd_list() {
-                if let Key(keys) = cmd_type {
-                    let key_str = keys
-                        .iter()
-                        .map(|k| -> &str { (*k).into() })
-                        .collect::<Vec<&str>>()
-                        .join(" + ");
-
-                    dv.insert_item(InsertListViewItem {
-                        index: Some(i as i32),
-                        column_index: 1,
-                        text: Some(key_str),
-                        image: None,
-                    });
-                    break;
+            let talent_keys = self.talent_keys.borrow().clone();
+            let keys = talent_keys.get(&talent.get_id());
+            
+            // 获取默认的热键组合字符串
+            let get_str = |t: &Talent| {
+                for cmd_type in t.get_supported_cmd_list() {
+                    if let Key(keys) = cmd_type {
+                        return Self::keys_to_string(&keys);
+                    }
                 }
-            }
+                "".to_string()
+            };
+            
+            // 如果存在自定义热键，就仅显示自定义热键，否则显示默认热键
+            let (keys_str, col) = match keys {
+                Some(keys) => (Self::keys_to_string(keys), 2),
+                None => (get_str(talent), 1),
+            };
+
+            dv.insert_item(InsertListViewItem {
+                index: Some(i as i32),
+                column_index: col,
+                text: Some(keys_str),
+                image: None,
+            });
         }
     }
 
@@ -145,11 +157,26 @@ impl HotKeysForm {
         nwg::stop_thread_dispatch();
     }
 
-    // 列表框键盘事件
+    // 列表框键盘事件，当列表框有选中项按下回车，启动自定义热键配置
     fn on_dv_key_press(&self, data: &nwg::EventData) {
         let index = self.get_list_sel_index();
         if data.on_key() == nwg::keys::RETURN && index != -1 {
             self.start_custom_hotkey();
+        }
+    }
+
+    // 列表框选择变动， 根据选中项是否存在自定义热键，来启用清除按钮
+    fn on_dv_selection_changed(&self) {
+        self.clear_btn.set_enabled(false);
+
+        let index = self.get_list_sel_index();
+        if index == -1 {
+            return;
+        }
+
+        let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
+        if self.talent_keys.borrow().get(&id_).is_some() {
+            self.clear_btn.set_enabled(true);
         }
     }
 
@@ -178,7 +205,42 @@ impl HotKeysForm {
 
     // 清除热键按钮事件
     fn on_clear_hotkey(&self) {
-        modal_info_message(&self.window, "Hotkey", "Clear hotkey");
+        let index = self.get_list_sel_index();
+        if index == -1 {
+            return;
+        }
+
+        {
+            let talents = self.talents.borrow();
+            let talent = talents.get(index as usize).unwrap();
+            let doc = talent.get_doc();
+            let id_ = talent.get_id();
+            let info = format!("您确定要删除 {} 的自定义热键?", doc);
+
+            let msg_params = MessageParams {
+                title: "确认",
+                content: &info,
+                buttons: nwg::MessageButtons::OkCancel,
+                icons: nwg::MessageIcons::Question,
+            };
+            if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+                return;
+            }
+
+            let context = self.context.borrow().clone().unwrap();
+            let mng = context.config_manager.clone();
+            let cfg = mng.get_config();
+            let mut hk_cfg = cfg.hotkeys_config.clone();
+            hk_cfg.talent_keys.remove(&id_);
+            let cfg = ConfigRoot {
+                hotkeys_config: hk_cfg,
+                ..cfg
+            };
+            mng.set_config(cfg);
+        }
+
+        self.init_data();
+        self.update_list();
     }
 
     // 产生新的热键
@@ -186,23 +248,41 @@ impl HotKeysForm {
         self.hook.take().unwrap().unhook();
 
         let hotkeys: Vec<Keys> = self.hotkeys.lock().unwrap().clone();
-        let key_str = Self::keys_to_string(hotkeys);
+        let key_str = Self::keys_to_string(&hotkeys);
         self.text_box.set_text(&key_str);
 
-        let talents = self.talents.borrow();
-        let talents = talents.get(self.get_list_sel_index() as usize).unwrap();
-        let doc = talents.get_doc();
-        let info = format!("您确定要将\n{}\n应用到 {} 吗?", key_str, doc);
+        // 这里需要包裹，不然调用init_data会闪退
+        {
+            let talents = self.talents.borrow();
+            let talents = talents.get(self.get_list_sel_index() as usize).unwrap();
+            let doc = talents.get_doc();
+            let id_ = talents.get_id();
+            let info = format!("您确定要将\n{}\n应用到 {} 吗?", key_str, doc);
 
-        let msg_params = MessageParams {
-            title: "确认",
-            content: &info,
-            buttons: nwg::MessageButtons::OkCancel,
-            icons: nwg::MessageIcons::Question,
-        };
-        if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
-            return;
+            let msg_params = MessageParams {
+                title: "确认",
+                content: &info,
+                buttons: nwg::MessageButtons::OkCancel,
+                icons: nwg::MessageIcons::Question,
+            };
+            if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+                return;
+            }
+
+            let context = self.context.borrow().clone().unwrap();
+            let mng = context.config_manager.clone();
+            let cfg = mng.get_config();
+            let mut hk_cfg = cfg.hotkeys_config.clone();
+            hk_cfg.talent_keys.insert(id_, hotkeys);
+            let cfg = ConfigRoot {
+                hotkeys_config: hk_cfg,
+                ..cfg
+            };
+            mng.set_config(cfg);
         }
+
+        self.init_data();
+        self.update_list();
     }
 
     // 取消热键自定义
@@ -277,7 +357,7 @@ impl HotKeysForm {
     }
 
     // 键码集合转字符串
-    fn keys_to_string(keys: Vec<Keys>) -> String {
+    fn keys_to_string(keys: &[Keys]) -> String {
         keys.iter()
             .map(|x| -> &str { (*x).into() })
             .collect::<Vec<&str>>()
