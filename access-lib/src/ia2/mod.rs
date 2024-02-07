@@ -587,12 +587,11 @@ impl Ia2 {
 
 #[cfg(test)]
 mod test_ia2 {
-    use crate::ia2::object::Accessible2Object;
-    use crate::ia2::text::AccessibleText;
-    use crate::ia2::{Ia2, WinEventSourceExt};
-    use crate::IAccessible2Lib::IA2CommonTypes::IA2CoordinateType;
-    use win_wrap::com::co_initialize_multi_thread;
-    use win_wrap::common::beep;
+    use crate::{
+        ia2::{object::Accessible2Object, Ia2, WinEventSourceExt},
+        IAccessible2Lib::IA2CommonTypes::IA2CoordinateType,
+    };
+    use win_wrap::{com::co_initialize_multi_thread, common::beep};
 
     #[test]
     fn main() {

@@ -11,6 +11,9 @@ windows-interface = "0.52.0"
 [dependencies.win-wrap]
 path = "../win-wrap"
 
+[dependencies.rigela-utils]
+path = "../utils"
+
 [dependencies.windows]
 version = "0.52.0"
 features = [
