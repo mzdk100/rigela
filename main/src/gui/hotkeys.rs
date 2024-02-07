@@ -11,9 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::talent::Talented;
-use crate::{bring_window_front, commander::CommandType::Key, context::Context};
+use crate::{
+    bring_window_front,
+    commander::{keys::Keys, CommandType::Key},
+    context::Context,
+    talent::Talented,
+};
 use nwd::NwgUi;
 use nwg::{modal_info_message, modal_message, InsertListViewItem, MessageParams, NativeUi};
 use std::cell::RefCell;
@@ -36,7 +39,7 @@ pub struct HotKeysForm {
     hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_control(size: (600, 480), position: (300, 300), title: "热键自定义", flags: "WINDOW|VISIBLE")]
-    #[nwg_events(OnWindowClose: [HotKeysForm::exit], OnInit: [HotKeysForm::load_data])]
+    #[nwg_events(OnWindowClose: [HotKeysForm::on_exit], OnInit: [HotKeysForm::load_data])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 10)]
@@ -45,7 +48,7 @@ pub struct HotKeysForm {
     #[nwg_control(size: (580, 400), list_style: nwg::ListViewStyle::Detailed, focus: true,
     ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 6)]
-    #[nwg_events(OnKeyRelease: [HotKeysForm::dv_key_press(SELF, EVT_DATA)])]
+    #[nwg_events(OnKeyRelease: [HotKeysForm::on_dv_key_press(SELF, EVT_DATA)])]
     data_view: nwg::ListView,
 
     #[nwg_control(text: "自定义: ")]
@@ -58,13 +61,13 @@ pub struct HotKeysForm {
 
     #[nwg_control(text: "设置 (&S)")]
     #[nwg_layout_item(layout: layout, col: 4, row: 6)]
-    #[nwg_events(OnButtonClick: [HotKeysForm::set_hotkey],
+    #[nwg_events(OnButtonClick: [HotKeysForm::on_set_hotkey],
     OnKeyRelease: [HotKeysForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)])]
     set_btn: nwg::Button,
 
     #[nwg_control(text: "清除 (&C)")]
     #[nwg_layout_item(layout: layout, col: 5, row: 6)]
-    #[nwg_events(OnButtonClick: [HotKeysForm::clear_hotkey],
+    #[nwg_events(OnButtonClick: [HotKeysForm::on_clear_hotkey],
     OnKeyRelease: [HotKeysForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)])]
     clear_btn: nwg::Button,
 
@@ -137,8 +140,29 @@ impl HotKeysForm {
         }
     }
 
+    // 退出程序事件
+    fn on_exit(&self) {
+        nwg::stop_thread_dispatch();
+    }
+
+    // 列表框键盘事件
+    fn on_dv_key_press(&self, data: &nwg::EventData) {
+        let index = self.get_list_sel_index();
+        if data.on_key() == nwg::keys::RETURN && index != -1 {
+            self.start_custom_hotkey();
+        }
+    }
+
+    // 编辑框键盘事件
+    #[allow(unused)]
+    fn on_tb_key_press(&self, data: &nwg::EventData) {
+        if data.on_key() != nwg::keys::TAB {
+            self.start_custom_hotkey();
+        }
+    }
+
     // 设置热键按钮事件
-    fn set_hotkey(&self) {
+    fn on_set_hotkey(&self) {
         if self.get_list_sel_index() != -1 {
             self.start_custom_hotkey();
         }
@@ -153,55 +177,8 @@ impl HotKeysForm {
     }
 
     // 清除热键按钮事件
-    fn clear_hotkey(&self) {
+    fn on_clear_hotkey(&self) {
         modal_info_message(&self.window, "Hotkey", "Clear hotkey");
-    }
-
-    // 退出程序事件
-    fn exit(&self) {
-        nwg::stop_thread_dispatch();
-    }
-
-    // 设置钩子
-    fn set_hook(&self) -> WindowsHook {
-        let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
-        let hotkeys = Arc::clone(&self.hotkeys);
-        let finish_custom_sender = self.finish_custom.sender();
-        let cancel_custom_sender = self.cancel_custom.sender();
-
-        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
-            let info: &KbdLlHookStruct = l_param.to();
-            let is_extended = info.flags.contains(LLKHF_EXTENDED);
-            let cur_key = (info.vkCode, is_extended).into();
-            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
-
-            let mut map = key_track.lock().unwrap();
-            map.insert(cur_key, pressed);
-
-            // 当前已经按下的键位
-            let keys = map
-                .iter()
-                .filter(|(k, p)| **k == cur_key || **p)
-                .map(|(x, _)| *x)
-                .collect::<Vec<Keys>>();
-            let len = keys.len();
-
-            // 读取已经按下键位到存储缓冲
-            let mut hotkeys = hotkeys.lock().unwrap();
-            hotkeys.clear();
-            hotkeys.extend(keys);
-
-            // 有一个键位松开，完成读取
-            if !pressed {
-                match len {
-                    1 if cur_key == Keys::VkEscape => cancel_custom_sender.notice(),
-                    _ => finish_custom_sender.notice(),
-                }
-            }
-
-            drop(map); // 必须先释放锁再next()，否则可能会死锁
-            next()
-        })
     }
 
     // 产生新的热键
@@ -217,36 +194,20 @@ impl HotKeysForm {
         let doc = talents.get_doc();
         let info = format!("您确定要将\n{}\n应用到 {} 吗?", key_str, doc);
 
-        let _ = modal_message(
-            &self.window,
-            &MessageParams {
-                title: "确认",
-                content: &info,
-                buttons: nwg::MessageButtons::OkCancel,
-                icons: nwg::MessageIcons::Question,
-            },
-        );
+        let msg_params = MessageParams {
+            title: "确认",
+            content: &info,
+            buttons: nwg::MessageButtons::OkCancel,
+            icons: nwg::MessageIcons::Question,
+        };
+        if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+            return;
+        }
     }
 
     // 取消热键自定义
     fn on_cancel_custom(&self) {
         self.hook.take().unwrap().unhook();
-    }
-
-    // 编辑框键盘事件
-    #[allow(unused)]
-    fn tb_key_press(&self, data: &nwg::EventData) {
-        if data.on_key() != nwg::keys::TAB {
-            self.start_custom_hotkey();
-        }
-    }
-
-    // 列表框键盘事件
-    fn dv_key_press(&self, data: &nwg::EventData) {
-        let index = self.get_list_sel_index();
-        if data.on_key() == nwg::keys::RETURN && index != -1 {
-            self.start_custom_hotkey();
-        }
     }
 
     // 开始自定义热键
@@ -260,6 +221,50 @@ impl HotKeysForm {
         });
 
         *self.hook.borrow_mut() = Some(self.set_hook());
+    }
+
+    // 设置钩子
+    fn set_hook(&self) -> WindowsHook {
+        let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
+        let hotkeys = Arc::clone(&self.hotkeys);
+        let finish_custom_sender = self.finish_custom.sender();
+        let cancel_custom_sender = self.cancel_custom.sender();
+
+        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+            let info: &KbdLlHookStruct = l_param.to();
+            let is_extended = info.flags.contains(LLKHF_EXTENDED);
+            let cur_key = (info.vkCode, is_extended).into();
+            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+            {
+                key_track.lock().unwrap().insert(cur_key, pressed);
+            }
+
+            // 当前已经按下的键位
+            let keys: Vec<_> = key_track
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|(k, p)| **k == cur_key || **p)
+                .map(|(x, _)| *x)
+                .collect();
+
+            // 有一个键位松开，完成读取
+            if !pressed {
+                match keys.len() {
+                    1 if cur_key == Keys::VkEscape => cancel_custom_sender.notice(),
+                    _ => {
+                        // 读取已经按下键位到存储缓冲
+                        let mut hotkeys = hotkeys.lock().unwrap();
+                        hotkeys.clear();
+                        hotkeys.extend(keys);
+
+                        finish_custom_sender.notice();
+                    }
+                }
+            }
+
+            next()
+        })
     }
 
     // 获取当前列表项选中索引
