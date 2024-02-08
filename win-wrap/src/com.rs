@@ -11,7 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::{core::*, Win32::System::Com::*};
+use crate::{common::Result, ext::VecExt};
+use std::ffi::c_void;
+use windows::Win32::System::{
+    Com::{CoInitializeEx, COINIT_MULTITHREADED, SAFEARRAY},
+    Ole::{SafeArrayDestroy, SafeArrayGetElement, SafeArrayGetLBound, SafeArrayGetUBound},
+};
 
 /**
  * 使用多线程模型套间（Multi Thread Apartment, MTA）初始化COM调用。
@@ -22,4 +27,21 @@ pub fn co_initialize_multi_thread() -> Result<()> {
         CoInitializeEx(None, COINIT_MULTITHREADED)?;
     }
     Ok(())
+}
+
+impl<T> VecExt<T> for *const SAFEARRAY {
+    fn to_vec(self) -> Vec<T> {
+        unsafe {
+            let mut v = vec![];
+            let a = SafeArrayGetLBound(self, 1).unwrap();
+            let b = SafeArrayGetUBound(self, 1).unwrap();
+            for i in a..=b {
+                let mut e: T = std::mem::zeroed();
+                SafeArrayGetElement(self, &i, &mut e as *mut T as *mut c_void).unwrap_or(());
+                v.push(e);
+            }
+            SafeArrayDestroy(self).unwrap_or(());
+            v
+        }
+    }
 }

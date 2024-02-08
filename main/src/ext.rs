@@ -11,27 +11,26 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::performer::Speakable;
-use std::borrow::Cow;
+use win_wrap::msaa::object::{AccessibleObject, ROLE_SYSTEM_DIALOG};
 
-mod msaa;
-mod peeper;
-mod uia;
-
-impl Speakable for u16 {
-    fn get_sentence(&self) -> String {
-        String::from_utf16_lossy(&[*self])
-    }
+pub(crate) trait AccessibleObjectExt {
+    /**
+     * 获取对话框内容。
+     * */
+    fn get_dialog_content(&self) -> String;
 }
 
-impl Speakable for String {
-    fn get_sentence(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl Speakable for Cow<'_, str> {
-    fn get_sentence(&self) -> String {
-        self.to_string()
+impl AccessibleObjectExt for AccessibleObject {
+    fn get_dialog_content(&self) -> String {
+        let mut content = String::new();
+        for i in self.children(0, self.child_count()).unwrap() {
+            if i.get_role(0) == ROLE_SYSTEM_DIALOG {
+                for j in i.children(0, i.child_count()).unwrap() {
+                    content += j.get_name(0).as_str();
+                }
+                break;
+            }
+        }
+        content
     }
 }

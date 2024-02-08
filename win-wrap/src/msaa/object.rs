@@ -13,6 +13,8 @@
 
 use crate::common::{Result, HWND};
 use std::fmt::{Debug, Display, Formatter};
+use windows::Win32::System::Variant::VARIANT;
+use windows::Win32::UI::Accessibility::AccessibleChildren;
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
     ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_BUTTONMENU,
@@ -50,9 +52,12 @@ use windows::{
     },
 };
 
-pub struct AccessibleObject(IAccessible);
+pub struct AccessibleObject(IAccessible, i32);
 
 impl AccessibleObject {
+    pub(crate) fn from_raw(acc: IAccessible, child: i32) -> Self {
+        Self(acc, child)
+    }
     pub fn get_raw(&self) -> &IAccessible {
         &self.0
     }
@@ -78,7 +83,7 @@ impl AccessibleObject {
                 Ok(r) => r,
             }
         };
-        Ok(Self(acc))
+        Ok(Self(acc, 0))
     }
 
     /**
@@ -101,7 +106,7 @@ impl AccessibleObject {
                 Ok(r) => r,
             }
         };
-        Ok(Self(acc))
+        Ok(Self(acc, 0))
     }
 
     /**
@@ -109,31 +114,33 @@ impl AccessibleObject {
      * `x` 横坐标。
      * `y` 纵坐标。
      * */
-    pub fn from_point(x: i32, y: i32) -> Result<(Self, u32)> {
+    pub fn from_point(x: i32, y: i32) -> Result<(Self, i32)> {
         // https://learn.microsoft.com/zh-cn/previous-versions/ms696163(v=vs.85)
         let acc = unsafe {
             let mut p_acc: Option<IAccessible> = None;
             let point = POINT { x, y };
             let mut var = VariantInit();
             if let Err(e) = AccessibleObjectFromPoint(point, &mut p_acc, &mut var) {
+                VariantClear(&mut var).unwrap_or(());
                 return Err(e);
             }
             let val = match p_acc {
                 None => {
+                    VariantClear(&mut var).unwrap_or(());
                     return Err(Error::new(
                         S_FALSE,
                         HSTRING::from(format!(
                             "Can't obtain the accessible object at ({}, {}).",
                             x, y
                         )),
-                    ))
+                    ));
                 }
-                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.uintVal),
+                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.intVal),
             };
             VariantClear(&mut var).unwrap_or(());
             val
         };
-        Ok((Self(acc.0), acc.1))
+        Ok((Self(acc.0, acc.1), acc.1))
     }
 
     //noinspection SpellCheckingInspection
@@ -143,12 +150,14 @@ impl AccessibleObject {
      * `id` 指定生成事件的 对象的对象 ID。 此值必须是发送到事件挂钩函数的对象 ID。
      * `child_id` 指定事件是由对象还是由其子元素之一触发。如果对象触发了事件，则 child_id = CHILDID_SELF。如果子元素触发了事件， 则 child_id 是元素的子 ID。此值必须是发送到事件挂钩函数的子 ID。
      * */
-    pub fn from_event(h_wnd: HWND, id: u32, child_id: u32) -> Result<(Self, u32)> {
+    pub fn from_event(h_wnd: HWND, id: i32, child_id: i32) -> Result<(Self, i32)> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessibleobjectfromevent
         let acc = unsafe {
             let mut p_acc = std::mem::zeroed();
             let mut var = std::mem::zeroed();
-            if let Err(e) = AccessibleObjectFromEvent(h_wnd, id, child_id, &mut p_acc, &mut var) {
+            if let Err(e) =
+                AccessibleObjectFromEvent(h_wnd, id as u32, child_id as u32, &mut p_acc, &mut var)
+            {
                 return Err(e);
             }
             let val = match p_acc {
@@ -161,11 +170,11 @@ impl AccessibleObject {
                         )),
                     ));
                 }
-                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.uintVal),
+                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.intVal),
             };
             val
         };
-        Ok((Self(acc.0), acc.1))
+        Ok((Self(acc.0, acc.1), acc.1))
     }
 
     /**
@@ -507,10 +516,10 @@ impl AccessibleObject {
     /**
      * 获取子对象数量。
      * */
-    pub fn child_count(&self) -> i32 {
+    pub fn child_count(&self) -> u32 {
         unsafe {
             if let Ok(r) = self.0.accChildCount() {
-                return r;
+                return r as u32;
             }
         }
         0
@@ -520,18 +529,59 @@ impl AccessibleObject {
      * 获取子对象。
      * `child` 子对象ID，0是对象本身。
      * */
-    pub fn get_child(&self, child: i32) -> AccessibleResultType {
+    pub fn get_child(&self, child: i32) -> Result<AccessibleObject> {
         unsafe {
             let mut var = VariantInit();
             (*var.Anonymous.Anonymous).vt = VT_I4;
             (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = if let Ok(r) = self.0.get_accChild(var.clone()) {
-                AccessibleResultType::Object(r)
-            } else {
-                AccessibleResultType::None
-            };
-            VariantClear(&mut var).unwrap_or(());
-            val
+            match self.0.get_accChild(var) {
+                Err(e) => Err(e),
+                Ok(o) => Ok(AccessibleObject::from_raw(o.cast().unwrap(), 0)),
+            }
+        }
+    }
+
+    /**
+     * 获取所有子对象。
+     * */
+    pub fn children(&self, start: u32, count: u32) -> Result<Vec<AccessibleObject>> {
+        // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessiblechildren
+        unsafe {
+            let mut arr = vec![];
+            for _ in 0..count {
+                arr.push(VARIANT::default());
+            }
+            let mut cnt = std::mem::zeroed();
+            match AccessibleChildren(&self.0, start as i32, &mut arr, &mut cnt) {
+                Err(e) => Err(e),
+                Ok(_) => {
+                    let mut v = vec![];
+                    for i in 0..cnt {
+                        let child = match arr[i as usize].Anonymous.Anonymous.vt {
+                            VT_I4 => AccessibleObject::from_raw(
+                                self.0.clone(),
+                                arr[i as usize].Anonymous.Anonymous.Anonymous.intVal,
+                            ),
+                            VT_DISPATCH => AccessibleObject::from_raw(
+                                arr[i as usize]
+                                    .Anonymous
+                                    .Anonymous
+                                    .Anonymous
+                                    .pdispVal
+                                    .as_ref()
+                                    .unwrap()
+                                    .cast()
+                                    .unwrap(),
+                                0,
+                            ),
+                            _ => continue,
+                        };
+                        v.push(child);
+                        VariantClear(&mut arr[i as usize]).unwrap_or(());
+                    }
+                    Ok(v)
+                }
+            }
         }
     }
 
@@ -609,9 +659,13 @@ impl Display for AccessibleObject {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "AccessibleObject({}, {})",
-            self.get_name(0),
-            self.get_role_text(0)
+            "AccessibleObject(name:{}, description:{}, role:{})",
+            self.get_name(self.1),
+            self.get_description(self.1),
+            self.get_role_text(self.1)
         )
     }
 }
+
+unsafe impl Sync for AccessibleObject {}
+unsafe impl Send for AccessibleObject {}

@@ -11,13 +11,33 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
+use crate::{common::Result, ext::VecExt};
+use std::fmt::Debug;
+use std::{
+    fmt::{Display, Formatter},
+    sync::Arc,
+};
 use windows::{
     core::BSTR,
     Win32::{
-        Foundation::RECT,
-        UI::Accessibility::{IUIAutomation6, IUIAutomationElement, TreeScope_Children},
+        Foundation::{HWND, RECT},
+        UI::Accessibility::{
+            IUIAutomation6, IUIAutomationElement, IUIAutomationElementArray, TreeScope_Children,
+            UIA_AppBarControlTypeId, UIA_ButtonControlTypeId, UIA_CalendarControlTypeId,
+            UIA_CheckBoxControlTypeId, UIA_ComboBoxControlTypeId, UIA_CustomControlTypeId,
+            UIA_DataGridControlTypeId, UIA_DataItemControlTypeId, UIA_DocumentControlTypeId,
+            UIA_EditControlTypeId, UIA_GroupControlTypeId, UIA_HeaderControlTypeId,
+            UIA_HeaderItemControlTypeId, UIA_HyperlinkControlTypeId, UIA_ImageControlTypeId,
+            UIA_ListControlTypeId, UIA_ListItemControlTypeId, UIA_MenuBarControlTypeId,
+            UIA_MenuControlTypeId, UIA_MenuItemControlTypeId, UIA_PaneControlTypeId,
+            UIA_ProgressBarControlTypeId, UIA_RadioButtonControlTypeId, UIA_ScrollBarControlTypeId,
+            UIA_SemanticZoomControlTypeId, UIA_SeparatorControlTypeId, UIA_SliderControlTypeId,
+            UIA_SpinnerControlTypeId, UIA_SplitButtonControlTypeId, UIA_StatusBarControlTypeId,
+            UIA_TabControlTypeId, UIA_TabItemControlTypeId, UIA_TableControlTypeId,
+            UIA_TextControlTypeId, UIA_ThumbControlTypeId, UIA_TitleBarControlTypeId,
+            UIA_ToolBarControlTypeId, UIA_ToolTipControlTypeId, UIA_TreeControlTypeId,
+            UIA_TreeItemControlTypeId, UIA_WindowControlTypeId, UIA_CONTROLTYPE_ID,
+        },
     },
 };
 
@@ -34,6 +54,9 @@ impl UiAutomationElement {
      * */
     pub(crate) fn get_raw(&self) -> &IUIAutomationElement {
         &self._current
+    }
+    pub(crate) fn get_aut(&self) -> Arc<IUIAutomation6> {
+        self._automation.clone()
     }
 
     pub(crate) fn obtain(automation: Arc<IUIAutomation6>, element: IUIAutomationElement) -> Self {
@@ -58,6 +81,62 @@ impl UiAutomationElement {
      * */
     pub fn get_localized_control_type(&self) -> String {
         unsafe { self._current.CurrentLocalizedControlType() }
+            .unwrap_or(BSTR::new())
+            .to_string()
+    }
+
+    /**
+     * 获取窗口句柄。
+     * */
+    pub fn native_window_handle(&self) -> HWND {
+        unsafe { self._current.CurrentNativeWindowHandle() }.unwrap_or(HWND::default())
+    }
+
+    /**
+     * 获取父对象。
+     * */
+    pub fn get_parent(&self) -> Result<UiAutomationElement> {
+        match unsafe { self._current.GetCachedParent() } {
+            Ok(p) => Ok(UiAutomationElement::obtain(self._automation.clone(), p)),
+            Err(e) => Err(e),
+        }
+    }
+
+    /**
+     * 获取控件类型。
+     * */
+    pub fn get_control_type(&self) -> ControlType {
+        unsafe {
+            match self._current.CurrentControlType() {
+                Ok(x) => ControlType::from(x),
+                Err(_) => ControlType::Custom,
+            }
+        }
+    }
+
+    /**
+     * 获取元素支持的模式列表(ids,names)。
+     * */
+    pub fn get_supported_patterns(&self) -> Result<(Vec<i32>, Vec<String>)> {
+        unsafe {
+            let (mut ids, mut names) = std::mem::zeroed();
+            if let Err(e) = self._automation.PollForPotentialSupportedPatterns(
+                &self._current,
+                &mut ids,
+                &mut names,
+            ) {
+                return Err(e);
+            }
+            let names: Vec<BSTR> = names.to_vec();
+            Ok((ids.to_vec(), names.iter().map(|i| i.to_string()).collect()))
+        }
+    }
+
+    /**
+     * 获取提供程序描述。
+     * */
+    pub fn get_provider_description(&self) -> String {
+        unsafe { self._current.CurrentProviderDescription() }
             .unwrap_or(BSTR::new())
             .to_string()
     }
@@ -105,7 +184,7 @@ impl UiAutomationElement {
      * 获取元素的当前类名。
      * */
     #[allow(dead_code)]
-    pub(crate) fn get_class_name(&self) -> String {
+    pub fn get_class_name(&self) -> String {
         unsafe { self._current.CurrentClassName() }
             .expect("Can't get the class name of element.")
             .to_string()
@@ -116,8 +195,120 @@ unsafe impl Send for UiAutomationElement {}
 
 unsafe impl Sync for UiAutomationElement {}
 
+impl Debug for UiAutomationElement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self, f)
+    }
+}
+
 impl Display for UiAutomationElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "UiAutomationElement: {}", self.get_name())
+        write!(f, "UiAutomationElement(name:{})", self.get_name())
+    }
+}
+
+impl VecExt<IUIAutomationElement> for &IUIAutomationElementArray {
+    fn to_vec(self) -> Vec<IUIAutomationElement> {
+        unsafe {
+            let mut v = vec![];
+            for i in 0..self.Length().unwrap() {
+                v.push(self.GetElement(i).unwrap());
+            }
+            v
+        }
+    }
+}
+
+pub enum ControlType {
+    AppBar,
+    Button,
+    Calendar,
+    CheckBox,
+    ComboBox,
+    Custom,
+    DataGrid,
+    DataItem,
+    Document,
+    Edit,
+    Group,
+    Header,
+    HeaderItem,
+    Hyperlink,
+    Image,
+    List,
+    ListItem,
+    MenuBar,
+    Menu,
+    MenuItem,
+    Pane,
+    ProgressBar,
+    RadioButton,
+    ScrollBar,
+    SemanticZoom,
+    Separator,
+    Slider,
+    Spinner,
+    SplitButton,
+    StatusBar,
+    Tab,
+    TabItem,
+    Table,
+    Text,
+    Thumb,
+    TitleBar,
+    ToolBar,
+    ToolTip,
+    Tree,
+    TreeItem,
+    Window,
+}
+
+impl From<UIA_CONTROLTYPE_ID> for ControlType {
+    #[allow(non_upper_case_globals)]
+    fn from(value: UIA_CONTROLTYPE_ID) -> Self {
+        match value {
+            UIA_AppBarControlTypeId => Self::AppBar,
+            UIA_ButtonControlTypeId => Self::Button,
+            UIA_CalendarControlTypeId => Self::Calendar,
+            UIA_CheckBoxControlTypeId => Self::CheckBox,
+            UIA_ComboBoxControlTypeId => Self::ComboBox,
+            UIA_CustomControlTypeId => Self::Custom,
+            UIA_DataGridControlTypeId => Self::DataGrid,
+            UIA_DataItemControlTypeId => Self::DataItem,
+            UIA_DocumentControlTypeId => Self::Document,
+            UIA_EditControlTypeId => Self::Edit,
+            UIA_GroupControlTypeId => Self::Group,
+            UIA_HeaderControlTypeId => Self::Header,
+            UIA_HeaderItemControlTypeId => Self::HeaderItem,
+            UIA_HyperlinkControlTypeId => Self::Hyperlink,
+            UIA_ImageControlTypeId => Self::Image,
+            UIA_ListControlTypeId => Self::List,
+            UIA_ListItemControlTypeId => Self::ListItem,
+            UIA_MenuBarControlTypeId => Self::MenuBar,
+            UIA_MenuControlTypeId => Self::Menu,
+            UIA_MenuItemControlTypeId => Self::MenuItem,
+            UIA_PaneControlTypeId => Self::Pane,
+            UIA_ProgressBarControlTypeId => Self::ProgressBar,
+            UIA_RadioButtonControlTypeId => Self::RadioButton,
+            UIA_ScrollBarControlTypeId => Self::ScrollBar,
+            UIA_SemanticZoomControlTypeId => Self::SemanticZoom,
+            UIA_SeparatorControlTypeId => Self::Separator,
+            UIA_SliderControlTypeId => Self::Slider,
+            UIA_SpinnerControlTypeId => Self::Spinner,
+            UIA_SplitButtonControlTypeId => Self::SplitButton,
+            UIA_StatusBarControlTypeId => Self::StatusBar,
+            UIA_TabControlTypeId => Self::Tab,
+            UIA_TabItemControlTypeId => Self::TabItem,
+            UIA_TableControlTypeId => Self::Table,
+            UIA_TextControlTypeId => Self::Text,
+            UIA_ThumbControlTypeId => Self::Thumb,
+            UIA_TitleBarControlTypeId => Self::TitleBar,
+            UIA_ToolBarControlTypeId => Self::ToolBar,
+            UIA_ToolTipControlTypeId => Self::ToolTip,
+            UIA_TreeControlTypeId => Self::Tree,
+            UIA_TreeItemControlTypeId => Self::TreeItem,
+            UIA_WindowControlTypeId => Self::Window,
+            _ => Self::Custom,
+        }
     }
 }

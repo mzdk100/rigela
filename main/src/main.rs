@@ -18,26 +18,29 @@ extern crate rust_i18n;
 // 初始化I18N国际化多语言支持
 i18n!("locale");
 
-mod browser;
-mod commander;
-mod configs;
-mod context;
-mod event_core;
-mod gui;
 /**
  * 入口程序。
  * 本读屏程序的框架的设计类似于舞台表演模式，大体结构如下：
  * 1. launcher 发射台，负责启动整个框架；
  * 2. commander 指挥官，负责从用户那里收集命令请求，例如键盘命令；
  * 3. configs 配置模块，可以读写toml格式的配置文件，并实现所有的配置文件的数据结构；
- * 4. gui GUI图形界面模块，实现所有的UI交互逻辑；
- * 5. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
- * 6. proxy32 用于兼容32位应用进程的模块，他是一个独立进程，某些API只能运行在此环境中；
- * 7. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
- * 8. talent 才能访问器，一些功能的实现；
- * 9. terminator 终结者，用于控制和等待程序结束；
- * 10. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
+ * 4. ext 一些扩展操作的函数；
+ * 5. event_core用于订阅和处理各种辅助功能事件；
+ * 6. gui GUI图形界面模块，实现所有的UI交互逻辑；
+ * 7. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
+ * 8. proxy32 用于兼容32位应用进程的模块，他是一个独立进程，某些API只能运行在此环境中；
+ * 9. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
+ * 10. talent 才能访问器，一些功能的实现；
+ * 11. terminator 终结者，用于控制和等待程序结束；
+ * 12. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
+mod browser;
+mod commander;
+mod configs;
+mod context;
+mod event_core;
+mod ext;
+mod gui;
 mod impls;
 mod launcher;
 mod performer;

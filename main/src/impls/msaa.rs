@@ -12,26 +12,15 @@
  */
 
 use crate::performer::Speakable;
-use std::borrow::Cow;
+use win_wrap::msaa::object::AccessibleObject;
 
-mod msaa;
-mod peeper;
-mod uia;
-
-impl Speakable for u16 {
+impl Speakable for (AccessibleObject, i32) {
     fn get_sentence(&self) -> String {
-        String::from_utf16_lossy(&[*self])
-    }
-}
-
-impl Speakable for String {
-    fn get_sentence(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl Speakable for Cow<'_, str> {
-    fn get_sentence(&self) -> String {
-        self.to_string()
+        format!(
+            "{}: {}, {}",
+            self.0.get_name(self.1),
+            self.0.get_description(self.1),
+            self.0.get_role_text(self.1)
+        )
     }
 }
