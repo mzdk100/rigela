@@ -65,7 +65,7 @@ impl Launcher {
         });
 
         // 显示欢迎页面。
-        thread::spawn(|| welcome::show());
+        thread::spawn(welcome::show);
 
         // 显示托盘图标
         let ctx_tray = self.context.clone();

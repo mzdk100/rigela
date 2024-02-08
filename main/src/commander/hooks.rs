@@ -17,7 +17,6 @@ use crate::{
     commander::{CommandType, Talent},
     context::Context,
 };
-use log::debug;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
@@ -74,7 +73,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 }
 
 // 匹配技能项的热键列表是否与当前Hook到的按键相同
-fn match_keys(keys: &Vec<Keys>, map: &HashMap<Keys, bool>) -> bool {
+fn match_keys(keys: &[Keys], map: &HashMap<Keys, bool>) -> bool {
     for key in keys {
         match map.get(key) {
             // 能匹配到按键，并且按键状态为按下，进入下一轮循环
@@ -85,6 +84,7 @@ fn match_keys(keys: &Vec<Keys>, map: &HashMap<Keys, bool>) -> bool {
     // 所有按键都匹配成功
     true
 }
+
 fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
     talent.get_supported_cmd_list().iter().any(|x| match x {
         CommandType::Key(y) => match_keys(y, map),
@@ -111,7 +111,9 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
     let context = context.clone();
 
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {
-        if w_param.0 != WM_MOUSEMOVE as usize {
+        if (!context.config_manager.get_config().mouse_config.is_read)
+            || w_param.0 != WM_MOUSEMOVE as usize
+        {
             return next();
         }
 
@@ -120,28 +122,23 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
 
         // 如果坐标差值小于10个像素，不处理直接返回
         let (old_x, old_y) = *get_old_point().lock().unwrap();
-        if (x - old_x) * (x - old_x) + (y - old_y) * (y - old_y) < 100 {
+        if (x - old_x).pow(2) + (y - old_y).pow(2) < 100 {
             return next();
         }
         {
             *get_old_point().lock().unwrap() = (x, y);
         }
 
-        let ctx = context.clone();
-        context.main_handler.spawn(async move {
-            if ctx.config_manager.get_config().mouse_config.is_read {
-                debug!("x: {}, y: {}", x, y);
-                mouse_read(ctx.clone(), x, y).await;
-            }
-        });
-
+        mouse_read(context.clone(), x, y);
         next()
     })
 }
 
 // 朗读鼠标元素
-async fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
+fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
     let uia = context.ui_automation.clone();
     let ele = uia.element_from_point(x, y).unwrap();
-    context.performer.speak_with_sapi5(ele).await
+    let pf = context.performer.clone();
+    let h = context.main_handler.clone();
+    h.spawn(async move { pf.speak_with_sapi5(ele).await });
 }
