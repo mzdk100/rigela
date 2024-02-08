@@ -25,7 +25,8 @@ pub(crate) trait Ttsable {
     fn set_volume(&self, volume: i32);
 }
 
-pub(crate) struct Tts<T: Ttsable> {
+#[derive(Debug, Clone)]
+pub(crate) struct Tts<T = Sapi5> {
     all_tts: Vec<T>,
     all_voices: Vec<(usize, String)>,
 }
@@ -51,4 +52,53 @@ impl<T: Ttsable> Tts<T> {
     pub(crate) fn speak(&self, _text: &str) {}
 
     pub(crate) fn stop(&self) {}
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct Sapi5();
+
+impl Ttsable for Sapi5 {
+    fn speak(&self, text: &str) {
+        todo!()
+    }
+
+    fn stop(&self) {
+        todo!()
+    }
+
+    fn get_all_voices(&self) -> Vec<String> {
+        todo!()
+    }
+
+    fn get_voice(&self) -> String {
+        todo!()
+    }
+
+    fn set_voice(&self, voice: &str) {
+        todo!()
+    }
+
+    fn get_speed(&self) -> i32 {
+        todo!()
+    }
+
+    fn set_speed(&self, speed: i32) {
+        todo!()
+    }
+
+    fn get_pitch(&self) -> i32 {
+        todo!()
+    }
+
+    fn set_pitch(&self, pitch: i32) {
+        todo!()
+    }
+
+    fn get_volume(&self) -> i32 {
+        todo!()
+    }
+
+    fn set_volume(&self, volume: i32) {
+        todo!()
+    }
 }

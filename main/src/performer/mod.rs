@@ -13,6 +13,7 @@
 
 pub(crate) mod tts;
 
+use crate::performer::tts::{Tts, Ttsable};
 use crate::{configs::config_operations::apply_tts_config, context::Context};
 use rigela_utils::{bass::BassChannelOutputStream, resample::resample_audio};
 use std::{
@@ -49,6 +50,7 @@ pub(crate) struct Performer {
     sapi5_synth: Sapi5TtsSynthesizer,
     sound_table: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     output_stream: Arc<BassChannelOutputStream>,
+    tts: Tts,
 }
 
 impl Performer {
@@ -63,6 +65,7 @@ impl Performer {
             sapi5_synth: tts,
             sound_table: Arc::new(HashMap::new().into()),
             output_stream: output_stream.into(),
+            tts: Tts::new(),
         }
     }
 
