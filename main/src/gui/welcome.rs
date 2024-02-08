@@ -49,7 +49,7 @@ impl WelcomeForm {
     fn on_btn_click(&self) {
         // Todo: 捐献按钮点击事件，带实现
 
-        nwg::modal_info_message(&self.window, "Rigela", &format!("感谢支持!"));
+        nwg::modal_info_message(&self.window, "Rigela", "感谢支持!");
     }
 }
 

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub(crate) mod tts;
+
 use crate::{configs::config_operations::apply_tts_config, context::Context};
 use rigela_utils::{bass::BassChannelOutputStream, resample::resample_audio};
 use std::{
