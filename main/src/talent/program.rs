@@ -11,22 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-/* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
-#[allow(unused_imports)]
-use crate::commander::keys::Keys::*;
-use crate::context::Context;
+use crate::{
+    commander::keys::Keys::*,
+    context::Context,
+    gui::{hotkeys, popup_menu},
+    performer::Speakable,
+};
 use rigela_macros::talent;
-#[allow(unused_imports)]
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
-/* 使用talent macro可选导入的条目 */
+use std::{thread, time::Duration};
 /* 业务逻辑使用的条目 */
-use crate::gui::{hotkeys, popup_menu};
-use crate::performer::Speakable;
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
 use tokio::time::sleep;
+use win_wrap::{common::get_foreground_window, msaa::object::AccessibleObject};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
@@ -59,4 +56,11 @@ async fn popup_menu(context: Arc<Context>) {
 async fn hotkeys(context: Arc<Context>) {
     let context = context.clone();
     thread::spawn(|| hotkeys::show(context));
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
+async fn view_window_title(context: Arc<Context>) {
+    let obj = AccessibleObject::from_window(get_foreground_window()).unwrap();
+    context.performer.speak_with_sapi5((obj, 0)).await;
 }
