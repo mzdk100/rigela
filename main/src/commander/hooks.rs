@@ -50,22 +50,24 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         for i in talents.iter() {
-            if let Some(keys) = get_hotkeys(context.clone()).get(&i.get_id()) {
+            match get_hotkeys(context.clone()).get(&i.get_id()) {
                 // 如果用户自定义过热键优先使用他定义的。
-                if match_keys(keys, &map) {
+                Some(keys) if match_keys(keys, &map) => {
                     execute(context.clone(), Arc::clone(i));
                     return LRESULT(1);
                 }
-            }
-            if match_cmd_list(i.clone(), &map) {
                 // 如果用户没定义过这个能力的热键就使用默认的。
-                execute(context.clone(), Arc::clone(i));
-                return LRESULT(1);
-            }
+                None if match_cmd_list(i.clone(), &map) => {
+                    execute(context.clone(), Arc::clone(i));
+                    return LRESULT(1);
+                }
+                _ => continue,
+            };
         }
 
         let key: Keys = (info.vkCode, is_extended).into();
         context.commander.set_last_pressed_key(key);
+
         drop(map); // 必须先释放锁再next()，否则可能会死锁
         next()
     })
