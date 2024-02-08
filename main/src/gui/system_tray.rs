@@ -46,6 +46,10 @@ pub struct SystemTray {
     #[nwg_control(parent: tray_menu, text: "退出 (&X)")]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_exit])]
     exit_item: nwg::MenuItem,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [SystemTray::on_exit])]
+    exit_notice: nwg::Notice,
 }
 
 impl SystemTray {
@@ -79,7 +83,7 @@ impl SystemTray {
     }
 
     fn set_context(&self, context: Arc<Context>) {
-        *self.context.lock().unwrap().deref_mut() = Some(context);
+        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
     }
 }
 
@@ -87,5 +91,15 @@ pub(crate) fn show(context: Arc<Context>) {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = SystemTray::build_ui(Default::default()).expect("Failed to build UI");
     ui.set_context(context.clone());
+
+    let exit_sender = ui.exit_notice.sender();
+    let t = context.terminator.clone();
+    context.main_handler.spawn(async move {
+        t.add_exiting_listener(move || {
+            exit_sender.notice();
+        })
+        .await;
+    });
+
     nwg::dispatch_thread_events();
 }

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use windows::Win32::UI::WindowsAndMessaging::HELP_COMMAND;
+
 pub(crate) mod IAccessible2Lib;
 
 pub mod ia2;

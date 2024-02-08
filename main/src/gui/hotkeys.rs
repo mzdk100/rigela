@@ -23,6 +23,7 @@ use nwg::{modal_message, InsertListViewItem, MessageParams, NativeUi};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use win_wrap::common::LRESULT;
 use win_wrap::{
     ext::LParamExt,
     hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
@@ -297,7 +298,7 @@ impl HotKeysForm {
         let finish_custom_sender = self.finish_custom.sender();
         let cancel_custom_sender = self.cancel_custom.sender();
 
-        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
             let info: &KbdLlHookStruct = l_param.to();
             let is_extended = info.flags.contains(LLKHF_EXTENDED);
             let cur_key = (info.vkCode, is_extended).into();
@@ -318,7 +319,9 @@ impl HotKeysForm {
             // 有一个键位松开，完成读取
             if !pressed {
                 match keys.len() {
-                    1 if cur_key == Keys::VkEscape => cancel_custom_sender.notice(),
+                    1 if cur_key == Keys::VkEscape || cur_key == Keys::VkReturn => {
+                        cancel_custom_sender.notice()
+                    }
                     _ => {
                         // 读取已经按下键位到存储缓冲
                         let mut hotkeys = hotkeys.lock().unwrap();
@@ -330,7 +333,7 @@ impl HotKeysForm {
                 }
             }
 
-            next()
+            LRESULT(1)
         })
     }
 
