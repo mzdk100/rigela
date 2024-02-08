@@ -16,24 +16,26 @@ mod mouse;
 mod program;
 mod tts;
 
-use crate::talent::mouse::{ClickTalent, ReadMouseTalent, RightClickTalent};
-use crate::talent::program::{HotkeysTalent, PopupMenuTalent};
-use crate::talent::tts::{NextPropTalent, PrevPropTalent};
 use crate::{
     commander::CommandType,
     context::Context,
-    talent::form_browser::{
-        CurrChildElementTalent, NextChildElementTalent, PrevChildElementTalent,
-    },
     talent::{
-        form_browser::{CurrElementTalent, ModeNextTalent, NextElementTalent, PrevElementTalent},
-        program::{CurrentTimeTalent, ExitTalent},
-        tts::{IncreaseTalent, ReduceTalent},
+        form_browser::{
+            CurrChildElementTalent, CurrElementTalent, ModeNextTalent, NextChildElementTalent,
+            NextElementTalent, PrevChildElementTalent, PrevElementTalent,
+        },
+        mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
+        program::{
+            CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent, ViewWindowTitleTalent,
+        },
+        tts::{IncreaseTalent, NextPropTalent, PrevPropTalent, ReduceTalent},
     },
 };
 use async_trait::async_trait;
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+};
 
 /**
  * 一个能力的抽象接口。
@@ -79,6 +81,7 @@ impl TalentAccessor {
             Arc::new(CurrentTimeTalent),
             Arc::new(PopupMenuTalent),
             Arc::new(HotkeysTalent),
+            Arc::new(ViewWindowTitleTalent),
             // 窗口浏览技能
             Arc::new(ModeNextTalent),
             Arc::new(PrevElementTalent),

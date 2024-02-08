@@ -70,3 +70,8 @@ impl StringExt for *const u8 {
         String::from_utf16_lossy(&s)
     }
 }
+
+/// Vec的扩展操作。
+pub trait VecExt<T> {
+    fn to_vec(self) -> Vec<T>;
+}

@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::msaa::object::AccessibleObject;
 use crate::uia::element::UiAutomationElement;
+use std::fmt::{Debug, Formatter};
 use windows::{
-    core::{ComInterface, BSTR},
+    core::{ComInterface, Result, BSTR},
     Win32::UI::Accessibility::{
         IUIAutomationLegacyIAccessiblePattern, UIA_LegacyIAccessiblePatternId,
     },
@@ -41,21 +43,62 @@ impl UiAutomationIAccessiblePattern {
     }
 
     /**
+     * 获取元素帮助。
+     * */
+    pub fn get_help(&self) -> String {
+        unsafe { self.0.CurrentHelp() }
+            .unwrap_or(BSTR::default())
+            .to_string()
+    }
+
+    /**
+     * 获取元素的角色。
+     * */
+    pub fn get_role(&self) -> u32 {
+        unsafe { self.0.CurrentRole() }.unwrap_or(0)
+    }
+
+    /**
+     * 获取对应的MSAA对象。
+     * */
+    pub fn get_object(&self) -> Result<AccessibleObject> {
+        match unsafe { self.0.GetIAccessible() } {
+            Ok(o) => Ok(AccessibleObject::from_raw(
+                o,
+                unsafe { self.0.CurrentChildId() }.unwrap_or(0),
+            )),
+            Err(e) => Err(e),
+        }
+    }
+
+    /**
      * 从UI元素获取此模式。
      * */
-    pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
+    pub fn obtain(value: &UiAutomationElement) -> Result<Self> {
         let pattern = unsafe {
             value
                 .get_raw()
                 .GetCurrentPattern(UIA_LegacyIAccessiblePatternId)
         };
         if let Err(e) = pattern {
-            return Err(format!("Can't get the LegacyIAccessiblePattern. ({})", e));
+            return Err(e);
         }
         let pattern = pattern
             .unwrap()
             .cast::<IUIAutomationLegacyIAccessiblePattern>()
             .unwrap();
         Ok(Self(pattern))
+    }
+}
+
+impl Debug for UiAutomationIAccessiblePattern {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "UiAutomationIAccessiblePattern(name:{}, description:{}, role:{})",
+            self.get_name(),
+            self.get_description(),
+            self.get_role()
+        )
     }
 }

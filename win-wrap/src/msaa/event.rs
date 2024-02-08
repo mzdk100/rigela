@@ -22,9 +22,7 @@ use std::{
     thread,
     time::SystemTime,
 };
-use windows::Win32::UI::WindowsAndMessaging::{
-    EVENT_MAX, EVENT_MIN, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
-};
+use windows::Win32::UI::WindowsAndMessaging::{EVENT_MAX, EVENT_MIN, WINEVENT_OUTOFCONTEXT};
 
 static H_WIN_EVENT: RwLock<HWINEVENTHOOK> = RwLock::new(HWINEVENTHOOK(0));
 static EVENTS: RwLock<Vec<WinEventHook>> = RwLock::new(vec![]);
@@ -33,8 +31,8 @@ static EVENTS: RwLock<Vec<WinEventHook>> = RwLock::new(vec![]);
 #[allow(dead_code)]
 pub struct WinEventSource {
     pub h_wnd: HWND,
-    pub id_object: u32,
-    pub id_child: u32,
+    pub id_object: i32,
+    pub id_child: i32,
     pub id_thread: u32,
     pub ms_time: u32,
 }
@@ -43,7 +41,7 @@ impl WinEventSource {
     /**
      * 获取事件对应的可访问性对象。
      * */
-    pub fn get_object(&self) -> Result<(AccessibleObject, u32)> {
+    pub fn get_object(&self) -> Result<(AccessibleObject, i32)> {
         AccessibleObject::from_event(self.h_wnd, self.id_object, self.id_child)
     }
 }
@@ -59,8 +57,8 @@ unsafe extern "system" fn hook_proc(
 ) {
     let source = WinEventSource {
         h_wnd,
-        id_object: id_object as u32,
-        id_child: id_child as u32,
+        id_object,
+        id_child,
         id_thread: id_event_thread,
         ms_time: ms_event_time,
     };
@@ -96,7 +94,7 @@ impl WinEventHook {
                     Some(hook_proc),
                     0,
                     0,
-                    WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
+                    WINEVENT_OUTOFCONTEXT,
                 );
                 *lock = handle;
                 drop(lock);

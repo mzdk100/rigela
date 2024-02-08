@@ -13,11 +13,19 @@
 
 mod editor;
 
-use crate::context::Context;
-use crate::event_core::editor::subscribe_events;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::common::get_foreground_window;
+use crate::{context::Context, event_core::editor::subscribe_events, ext::AccessibleObjectExt};
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
+use tokio::time::sleep;
+use win_wrap::{
+    msaa::object::{
+        AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST,
+        ROLE_SYSTEM_LISTITEM,
+    },
+    uia::element::ControlType,
+};
 
 /// 事件处理中心
 #[derive(Clone, Debug)]
@@ -39,7 +47,7 @@ impl EventCore {
         speak_focus_item(context.clone()).await;
 
         // 监听前台窗口变动
-        watch_foreground_window(context.clone()).await;
+        subscribe_foreground_window_events(context.clone()).await;
 
         // 订阅输入事件
         speak_input(context.clone()).await;
@@ -62,46 +70,90 @@ impl EventCore {
     pub(crate) fn shutdown(&self) {}
 }
 
+//noinspection SpellCheckingInspection
 /// 朗读焦点元素
 async fn speak_focus_item(context: Arc<Context>) {
-    let uia = context.ui_automation.clone();
-    let ctx = context.clone();
-
     // 给UI Automation的焦点改变绑定处理事件
-    uia.add_focus_changed_listener(move |x| {
+    let ctx = context.clone();
+    context.ui_automation.add_focus_changed_listener(move |x| {
         let performer = ctx.performer.clone();
 
         // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
+            if let ControlType::ListItem = x.get_control_type() {
+                // 列表项目的事件让MSAA处理，因为很多列表只有MSAA支持的完善
+                //return;
+            }
             performer.speak_with_sapi5(x).await;
+        });
+    });
+
+    // 给MSAA的焦点改变绑定处理事件
+    let ctx = context.clone();
+    context.msaa.add_on_object_focus_listener(move |src| {
+        let performer = ctx.performer.clone();
+        let (obj, child) = match src.get_object() {
+            Err(_) => return,
+            Ok(o) => o,
+        };
+        ctx.main_handler.spawn(async move {
+            match obj.get_role(child) {
+                ROLE_SYSTEM_LISTITEM | ROLE_SYSTEM_LIST => (),
+                ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
+                    // 如果有对话框弹出，我们要延迟播报，因为很有可能被焦点元素打断
+                    sleep(Duration::from_millis(500)).await;
+                    performer.speak_with_sapi5(obj.get_dialog_content()).await;
+                    return;
+                }
+                _ => return,
+            };
+            performer.speak_with_sapi5((obj, child)).await;
+        });
+    });
+
+    // 监听容器控件中选择项改变（例如组合框）
+    let ctx = context.clone();
+    context.msaa.add_on_object_selection_listener(move |src| {
+        let performer = ctx.performer.clone();
+        ctx.main_handler.spawn(async move {
+            performer.speak_with_sapi5(src.get_object().unwrap()).await;
         });
     });
 }
 
 /// 监测前台窗口变动，发送控件元素到form_browser
-async fn watch_foreground_window(context: Arc<Context>) {
+async fn subscribe_foreground_window_events(context: Arc<Context>) {
+    // 给MSAA前台窗口改变绑定处理事件
     let ctx = context.clone();
-    let old_hwnd = Arc::new(Mutex::new(get_foreground_window()));
-
-    // 给UI Automation的焦点改变绑定处理事件
-    context.ui_automation.add_focus_changed_listener(move |_| {
-        // 如果前台窗口没有变动直接返回
-        let handle = get_foreground_window();
-        if handle == *old_hwnd.lock().unwrap() {
-            return;
-        }
-
-        // 保存新的前台窗口句柄
-        {
-            *old_hwnd.lock().unwrap().deref_mut() = handle;
-        }
+    context.msaa.add_on_system_foreground_listener(move |src| {
+        let form_browser = ctx.form_browser.clone();
+        let ui_automation = ctx.ui_automation.clone();
 
         // form_browser需要异步操作
-        let main_handler = ctx.main_handler.clone();
-        if let Some(root) = ctx.ui_automation.element_from_handle(handle) {
-            let form_browser = ctx.form_browser.clone();
-            main_handler.spawn(async move { form_browser.render(Arc::new(root)).await });
-        }
+        ctx.main_handler.spawn(async move {
+            if let Some(root) = ui_automation.element_from_handle(src.h_wnd) {
+                form_browser.render(Arc::new(root)).await
+            }
+        });
+    });
+
+    // 订阅对话框事件
+    let ctx = context.clone();
+    context.msaa.add_on_system_alert_listener(move |src| {
+        let performer = ctx.performer.clone();
+        ctx.main_handler.spawn(async move {
+            // 延迟朗读，防止被焦点元素打断。
+            sleep(Duration::from_millis(500)).await;
+
+            let obj = match src.get_object() {
+                Err(_) => match AccessibleObject::from_window(src.h_wnd) {
+                    Ok(o) => o,
+                    Err(_) => return,
+                },
+                Ok(o) => o.0,
+            };
+            performer.speak_with_sapi5(obj.get_dialog_content()).await;
+        });
     });
 }
 

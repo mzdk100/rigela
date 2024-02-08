@@ -71,7 +71,7 @@ impl Performer {
      * `speakable` 实现了Speakable特征的对象。
      * */
     pub(crate) async fn speak_with_sapi5(&self, speakable: impl Speakable) {
-        let string = speakable.get_sentence();
+        let string = speakable.get_sentence().trim_end().to_string();
         if string.is_empty() {
             return;
         }
@@ -89,7 +89,7 @@ impl Performer {
      * */
     #[allow(unused)]
     pub(crate) async fn speak_with_vvtts(&self, speakable: impl Speakable) {
-        let string = speakable.get_sentence();
+        let string = speakable.get_sentence().trim_end().to_string();
         if string.is_empty() {
             return;
         }

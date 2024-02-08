@@ -11,5 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod container;
 pub mod legacy;
+pub mod table;
 pub mod text;
