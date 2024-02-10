@@ -1,12 +1,18 @@
 # RigelA（名称取自猎户座餐宿七的英文）
 <!-- TOC -->
 * [RigelA（名称取自猎户座餐宿七的英文）](#rigela名称取自猎户座餐宿七的英文)
+  * [选择语言](#选择语言)
   * [简介](#简介)
   * [构建和运行](#构建和运行)
   * [开发文档](#开发文档)
   * [开发贡献](#开发贡献)
   * [许可协议](#许可协议)
 <!-- TOC -->
+
+
+## 选择语言
+[简体中文 (zh-CN)](README.md)
+[English (en)](README-EN.md)
 
 
 ## 简介
@@ -17,7 +23,14 @@
 
 
 ## 构建和运行
-1. 克隆仓库
+1. 前期准备
+    首先您需要下载必要的msvc（如果您电脑中已经有Visual Studio，则跳过此步骤），可以访问[此处](https://visualstudio.microsoft.com/zh-hans/downloads/)获取VS安装程序；
+    接着我们需要拥有rust的环境，rust的环境搭建可以参考[Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)中的介绍；
+    假设您已经具备上述条件，在构建程序之前我们还需要下载rust 的x86架构的工具链，运行下面命令进行安装
+    ```shell
+    rust target add i686-pc-windows-msvc
+    ```
+2克隆仓库
     ```shell
     git clone https://gitcode.net/mzdk100/rigela.git
     ```
@@ -25,7 +38,7 @@
     ```shell
     git clone https://github.com/mzdk100/rigela.git
     ```
-2. 构建项目
+3构建项目
     ```shell
     cd rigela
     cargo mkenv
