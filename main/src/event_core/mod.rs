@@ -119,6 +119,22 @@ async fn speak_focus_item(context: Arc<Context>) {
             performer.speak_with_sapi5(src.get_object().unwrap()).await;
         });
     });
+
+    // 监听工具提示信息
+    let ctx = context.clone();
+    context.msaa.add_on_object_show_listener(move |src| {
+        if !src.get_class_name().to_lowercase().contains("tooltip") {
+            return;
+        }
+        let Ok(obj) = src.get_object() else {
+            return;
+        };
+        let performer = ctx.performer.clone();
+        ctx.main_handler.spawn(async move {
+            performer.play_sound("tip.wav").await;
+            performer.speak_with_sapi5(obj).await;
+        });
+    })
 }
 
 /// 监测前台窗口变动，发送控件元素到form_browser

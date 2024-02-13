@@ -79,10 +79,14 @@ impl Performer {
             return;
         }
         let data = self.sapi5_synth.synth(string.as_str()).await;
+        if data.is_empty() {
+            return;
+        }
         self.output_stream.stop();
         self.output_stream.start();
 
-        self.output_stream.put_data(&data);
+        self.output_stream.put_data(&data[160..]);
+        self.output_stream.wait_until_stalled().await;
     }
 
     //noinspection SpellCheckingInspection
@@ -120,15 +124,8 @@ impl Performer {
 
         self.output_stream.stop();
         self.output_stream.start();
-
-        let len = data.len();
-        for i in (0..len).step_by(CHUNK_SIZE) {
-            if i + CHUNK_SIZE >= len {
-                self.output_stream.put_data(&data[i..len]);
-                break;
-            }
-            self.output_stream.put_data(&data[i..i + CHUNK_SIZE]);
-        }
+        self.output_stream.put_data(&data);
+        self.output_stream.wait_until_stalled().await;
     }
 
     /**
@@ -141,7 +138,7 @@ impl Performer {
         apply_tts_config(context.clone(), 0).await;
 
         // 初始化音效播放器
-        let list = vec!["boundary.wav"];
+        let list = vec!["boundary.wav", "tip.wav"];
 
         for i in &list {
             let mut data = Vec::<u8>::new();

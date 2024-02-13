@@ -12,7 +12,9 @@
  */
 
 use crate::{
-    common::{set_win_event_hook, unhook_win_event, Result, HMODULE, HWINEVENTHOOK, HWND},
+    common::{
+        get_class_name, set_win_event_hook, unhook_win_event, Result, HMODULE, HWINEVENTHOOK, HWND,
+    },
     message::message_loop,
     msaa::object::AccessibleObject,
 };
@@ -27,7 +29,7 @@ use windows::Win32::UI::WindowsAndMessaging::{EVENT_MAX, EVENT_MIN, WINEVENT_OUT
 static H_WIN_EVENT: RwLock<HWINEVENTHOOK> = RwLock::new(HWINEVENTHOOK(0));
 static EVENTS: RwLock<Vec<WinEventHook>> = RwLock::new(vec![]);
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[allow(dead_code)]
 pub struct WinEventSource {
     pub h_wnd: HWND,
@@ -43,6 +45,27 @@ impl WinEventSource {
      * */
     pub fn get_object(&self) -> Result<(AccessibleObject, i32)> {
         AccessibleObject::from_event(self.h_wnd, self.id_object, self.id_child)
+    }
+
+    /**
+     * 获取事件对应窗口的类名。
+     * */
+    pub fn get_class_name(&self) -> String {
+        get_class_name(self.h_wnd)
+    }
+}
+
+impl Debug for WinEventSource {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "WinEventSource(window:[{}, {}], object:[{}, {}], time:{})",
+            self.h_wnd.0,
+            self.get_class_name(),
+            self.id_object,
+            self.id_child,
+            self.ms_time
+        )
     }
 }
 
