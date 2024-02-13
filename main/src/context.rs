@@ -123,11 +123,6 @@ impl Context {
     pub(crate) fn apply(&self) {
         self.commander.apply(self.clone().into());
         self.config_manager.init();
-
-        let ctx = Arc::new(self.clone());
-        self.main_handler.spawn(async move {
-            ctx.performer.apply(ctx.clone()).await;
-        });
     }
 
     /**

@@ -64,18 +64,21 @@ impl Launcher {
             peeper_server.run().await;
         });
 
+        // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
+        let proxy32 = self.context.proxy32.clone();
+        self.context.work_runtime.spawn(async move {
+            proxy32.spawn().await;
+        });
+
+        // 加载TTS音库，需要在proxy32之后，其他调用speak之前
+        self.context.performer.apply(self.context.clone()).await;
+
         // 显示欢迎页面。
         thread::spawn(welcome::show);
 
         // 显示托盘图标
         let ctx_tray = self.context.clone();
         thread::spawn(|| system_tray::show(ctx_tray));
-
-        // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-        let proxy32 = self.context.proxy32.clone();
-        self.context.work_runtime.spawn(async move {
-            proxy32.spawn().await;
-        });
 
         // 朗读当前桌面
         speak_desktop(self.context.clone()).await;
@@ -98,7 +101,7 @@ impl Launcher {
 /// 朗读桌面
 async fn speak_desktop(context: Arc<Context>) {
     let root = context.ui_automation.get_root_element();
-    context.performer.speak_with_sapi5(root).await;
+    context.performer.speak(root);
 
     sleep(Duration::from_millis(1000)).await;
 }

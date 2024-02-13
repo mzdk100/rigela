@@ -18,11 +18,11 @@ use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
 /* 使用talent macro可选导入的条目 */
+use crate::performer::tts::ttsable::TtsProperty;
 use crate::{
     configs::config_operations::{
         apply_tts_config, get_cur_tts_prop, next_tts_prop, prev_tts_prop,
     },
-    configs::tts::TtsProperty,
     context::Context,
 };
 use async_trait::async_trait;
@@ -61,6 +61,7 @@ async fn speak_tts_prop(context: Arc<Context>) {
         TtsProperty::Speed => format!("语速: {}", cfg.speed),
         TtsProperty::Volume => format!("音量: {}", cfg.volume),
         TtsProperty::Pitch => format!("语调: {}", cfg.pitch),
+        _ => todo!(),
     };
-    context.performer.speak_with_sapi5(info).await;
+    context.performer.speak(info);
 }

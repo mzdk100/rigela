@@ -14,44 +14,21 @@
 use serde::{Deserialize, Serialize};
 
 /// 语音TTS的配置项
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct TtsConfig {
     pub(crate) speed: i32,
-    pub(crate) volume: i32,
+    pub(crate) voice_index: i32,
     pub(crate) pitch: i32,
+    pub(crate) volume: i32,
 }
 
 impl Default for TtsConfig {
     fn default() -> Self {
         Self {
             speed: 50,
-            volume: 100,
+            voice_index: 0,
             pitch: 50,
-        }
-    }
-}
-
-/// TTS的属性枚举， 用来存储当前操作的TTS属性项
-#[derive(Clone, Debug)]
-pub(crate) enum TtsProperty {
-    Speed,
-    Volume,
-    Pitch,
-}
-
-impl TtsProperty {
-    pub(crate) fn next(&self) -> Self {
-        match self {
-            TtsProperty::Speed => TtsProperty::Volume,
-            TtsProperty::Volume => TtsProperty::Pitch,
-            TtsProperty::Pitch => TtsProperty::Speed,
-        }
-    }
-    pub(crate) fn prev(&self) -> Self {
-        match self {
-            TtsProperty::Speed => TtsProperty::Pitch,
-            TtsProperty::Volume => TtsProperty::Speed,
-            TtsProperty::Pitch => TtsProperty::Volume,
+            volume: 100,
         }
     }
 }
