@@ -84,7 +84,7 @@ async fn speak_focus_item(context: Arc<Context>) {
                 // 列表项目的事件让MSAA处理，因为很多列表只有MSAA支持的完善
                 //return;
             }
-            performer.speak_with_sapi5(x).await;
+            performer.speak(x);
         });
     });
 
@@ -102,7 +102,7 @@ async fn speak_focus_item(context: Arc<Context>) {
                 ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
                     // 如果有对话框弹出，我们要延迟播报，因为很有可能被焦点元素打断
                     sleep(Duration::from_millis(500)).await;
-                    performer.speak_with_sapi5(obj.get_dialog_content()).await;
+                    performer.speak(obj.get_dialog_content());
                     return;
                 }
                 _ => return,
@@ -116,7 +116,7 @@ async fn speak_focus_item(context: Arc<Context>) {
     context.msaa.add_on_object_selection_listener(move |src| {
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
-            performer.speak_with_sapi5(src.get_object().unwrap()).await;
+            performer.speak(src.get_object().unwrap());
         });
     });
 }
@@ -152,7 +152,7 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
                 },
                 Ok(o) => o.0,
             };
-            performer.speak_with_sapi5(obj.get_dialog_content()).await;
+            performer.speak(obj.get_dialog_content());
         });
     });
 }
@@ -167,7 +167,7 @@ async fn speak_input(context: Arc<Context>) {
             let performer = ctx.performer.clone();
 
             ctx.main_handler.spawn(async move {
-                performer.speak_with_sapi5(c).await;
+                performer.speak(c);
             });
         })
         .await;
@@ -183,7 +183,7 @@ async fn speak_candidate(context: Arc<Context>) {
             let performer = ctx.performer.clone();
 
             ctx.main_handler.spawn(async move {
-                performer.speak_with_sapi5(candidate_list).await;
+                performer.speak(candidate_list);
             });
         })
         .await;
