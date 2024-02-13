@@ -28,7 +28,7 @@ const WAVE: &str = "boundary.wav";
 #[talent(doc = "上一个控件", key = (VkNumPad7))]
 async fn prev_element(context: Arc<Context>) {
     match context.form_browser.prev().await.current().await {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }
@@ -37,7 +37,7 @@ async fn prev_element(context: Arc<Context>) {
 #[talent(doc = "下一个控件", key = (VkNumPad9))]
 async fn next_element(context: Arc<Context>) {
     match context.form_browser.next().await.current().await {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }
@@ -46,7 +46,7 @@ async fn next_element(context: Arc<Context>) {
 #[talent(doc = "当前控件", key = (VkNumPad8))]
 async fn curr_element(context: Arc<Context>) {
     match context.form_browser.current().await {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }
@@ -61,7 +61,7 @@ async fn prev_child_element(context: Arc<Context>) {
         .current_child()
         .await
     {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }
@@ -76,7 +76,7 @@ async fn next_child_element(context: Arc<Context>) {
         .current_child()
         .await
     {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }
@@ -85,7 +85,7 @@ async fn next_child_element(context: Arc<Context>) {
 #[talent(doc = "当前子控件", key = (VkNumPad5))]
 async fn curr_child_element(context: Arc<Context>) {
     match context.form_browser.current_child().await {
-        Some(element) => context.performer.speak_with_sapi5(element).await,
+        Some(element) => context.performer.speak(element),
         None => context.performer.play_sound(WAVE).await,
     };
 }

@@ -285,7 +285,7 @@ impl HotKeysForm {
         let context = self.context.borrow().clone().unwrap();
         let pf = context.performer.clone();
         context.main_handler.spawn(async move {
-            pf.speak_with_sapi5(INFO.to_string()).await;
+            pf.speak(INFO.to_string());
         });
 
         *self.hook.borrow_mut() = Some(self.set_hook());
