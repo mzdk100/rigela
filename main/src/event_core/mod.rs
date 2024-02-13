@@ -19,13 +19,10 @@ use std::{
     time::Duration,
 };
 use tokio::time::sleep;
-use win_wrap::{
-    msaa::object::{
-        AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST,
-        ROLE_SYSTEM_LISTITEM,
-    },
-    uia::element::ControlType,
+use win_wrap::msaa::object::{
+    AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM,
 };
+use win_wrap::uia::element::ControlType;
 
 /// 事件处理中心
 #[derive(Clone, Debug)]
@@ -107,7 +104,7 @@ async fn speak_focus_item(context: Arc<Context>) {
                 }
                 _ => return,
             };
-            performer.speak_with_sapi5((obj, child)).await;
+            performer.speak((obj, child));
         });
     });
 

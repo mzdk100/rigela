@@ -12,7 +12,9 @@
  */
 
 use crate::commander::keys::Keys;
+use crate::configs::config_manager::ConfigRoot;
 use crate::performer::tts::ttsable::TtsProperty;
+use crate::performer::tts::ttsable::TtsProperty::Speed;
 use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig, context::Context};
 use std::collections::HashMap;
 use std::ops::DerefMut;
@@ -20,76 +22,29 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 // ------ TTS 配置操作 ------
 
-/// 设置TTS的参数。 `diff` 属性值的差值， 传0初始化tts属性值
-pub(crate) async fn apply_tts_config(context: Arc<Context>, diff: i32) {
-    let _performer = &context.performer.clone();
-    let mut config = context.config_manager.get_config();
-    let mut tts_config = config.tts_config.clone();
-
-    // 如果差值等于0，直接设置TTS属性值参数，返回
-    if diff == 0 {
-        // performer.set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch)
-        //     .await;
-        // performer
-        //     .set_tts_properties_with_vvtts(tts_config.speed, tts_config.volume, tts_config.pitch)
-        //     .await;
-        return;
-    }
-
-    let restrict = |x| match x {
-        i if i > 100 => 100,
-        i if i < 0 => 0,
-        i => i,
-    };
-
-    tts_config = match get_cur_tts_prop() {
+/// 更新 TTS 配置
+pub(crate) async fn update_tts_config(ctx: Arc<Context>, prop: TtsProperty, value: i32) {
+    let mut root = ctx.config_manager.get_config();
+    let mut config = root.tts_config.clone();
+    root.tts_config = match prop {
         TtsProperty::Speed => TtsConfig {
-            speed: restrict(tts_config.speed + diff),
-            ..tts_config
+            speed: value,
+            ..config
         },
-        TtsProperty::Volume => TtsConfig {
-            volume: restrict(tts_config.volume + diff),
-            ..tts_config
+        TtsProperty::Voice => TtsConfig {
+            voice_index: value,
+            ..config
         },
         TtsProperty::Pitch => TtsConfig {
-            pitch: restrict(tts_config.pitch + diff),
-            ..tts_config
+            pitch: value,
+            ..config
         },
-        _ => todo!(),
+        TtsProperty::Volume => TtsConfig {
+            volume: value,
+            ..config
+        },
     };
-
-    // performer
-    //     .set_tts_properties_with_sapi5(tts_config.speed, tts_config.volume, tts_config.pitch)
-    //     .await;
-    // performer
-    //     .set_tts_properties_with_vvtts(tts_config.speed, tts_config.volume, tts_config.pitch)
-    //     .await;
-
-    config.tts_config = tts_config;
-    context.config_manager.set_config(config);
-}
-
-// 当前调节的TTS属性, 内部静态值，有对外公开方法
-fn cur_tts_prop() -> &'static Mutex<TtsProperty> {
-    static INSTANCE: OnceLock<Mutex<TtsProperty>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(TtsProperty::Speed))
-}
-
-/// 获取当前调节的TTS属性
-pub(crate) fn get_cur_tts_prop() -> TtsProperty {
-    cur_tts_prop().lock().unwrap().clone()
-}
-
-/// 后移当前需调节的TTS属性
-pub(crate) fn next_tts_prop() {
-    let prop = cur_tts_prop().lock().unwrap().next();
-    *cur_tts_prop().lock().unwrap().deref_mut() = prop;
-}
-
-/// 前移当前需调节的TTS属性
-pub(crate) fn prev_tts_prop() {
-    let prop = cur_tts_prop().lock().unwrap().prev();
-    *cur_tts_prop().lock().unwrap().deref_mut() = prop;
+    ctx.config_manager.set_config(root);
 }
 
 // ------  鼠标配置  ------
