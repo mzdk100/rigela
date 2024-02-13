@@ -125,10 +125,6 @@ impl Ttsable for Vvtts {
         vec![]
     }
 
-    async fn get_value_by_prop(&self, prop: TtsProperty) -> i32 {
-        todo!()
-    }
-
     async fn set_value_by_prop(&self, prop: TtsProperty, value: i32) {
         todo!()
     }

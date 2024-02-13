@@ -14,69 +14,34 @@
 use crate::context::Context;
 use crate::performer::tts::ttsable::{TtsProperty, Ttsable};
 use std::sync::{Arc, OnceLock};
-use tokio::sync::Mutex;
 use win_wrap::tts::Sapi5TtsSynthesizer;
 
 #[derive(Debug)]
 pub(crate) struct Sapi5 {
+    synth: Sapi5TtsSynthesizer,
     context: OnceLock<Arc<Context>>,
     name: String,
-    synth: Sapi5TtsSynthesizer,
-    voices: Mutex<Vec<String>>,
-    voice_index: Mutex<i32>,
-    speed: Mutex<i32>,
-    pitch: Mutex<i32>,
-    volume: Mutex<i32>,
 }
 
 impl Default for Sapi5 {
     fn default() -> Self {
         Self {
+            synth: Sapi5TtsSynthesizer::new(),
             context: OnceLock::new(),
             name: "Sapi_5".to_string().into(),
-            synth: Sapi5TtsSynthesizer::new(),
-            voices: vec![].into(),
-            voice_index: 0.into(),
-            speed: 50.into(),
-            pitch: 50.into(),
-            volume: 100.into(),
         }
     }
 }
 
 impl Sapi5 {
+    #[allow(unused)]
     pub(crate) fn new() -> Self {
         Self::default()
     }
 
-    async fn _speak(&self, text: &str) {
-        let context = self.context.get().unwrap();
-        let stream = context.performer.output_stream.clone();
-        stream.stop();
-        stream.start();
-
-        let text = text.to_string();
-        stream.put_data(&self.synth.synth(text.as_str()).await);
-    }
-
-    #[allow(unused)]
-    pub(crate) async fn set_tts_properties_with_sapi5(&self, speed: i32, volume: i32, pitch: i32) {
-        // self.sapi5_synth.set_properties(
-        //     3.0 + (speed as f64 - 50.0) * 0.06,
-        //     0.5 + (volume as f64 - 50.0) * 0.01,
-        //     1.0 + (pitch as f64 - 50.0) * 0.01,
-        // );
-    }
-
-    #[allow(unused)]
-    pub fn get_tts_voices_with_sapi5(&self) -> Vec<(String, String)> {
-        // self.sapi5_synth.get_voice_list()
-        Default::default()
-    }
-
     #[allow(unused)]
     pub(crate) async fn set_tts_voice_with_sapi5(&self, voice_id: String) {
-        // self.sapi5_synth.set_voice(voice_id)
+        self.synth.set_voice(voice_id)
     }
 }
 
@@ -88,7 +53,13 @@ impl Ttsable for Sapi5 {
     }
 
     async fn speak(&self, text: &str) {
-        self._speak(text).await;
+        let context = self.context.get().unwrap();
+        let stream = context.performer.output_stream.clone();
+        stream.stop();
+        stream.start();
+
+        let text = text.to_string();
+        stream.put_data(&self.synth.synth(text.as_str()).await);
     }
 
     fn stop(&self) {
@@ -100,15 +71,17 @@ impl Ttsable for Sapi5 {
     }
 
     async fn get_all_voices(&self) -> Vec<String> {
-        vec![]
-    }
-
-    async fn get_value_by_prop(&self, prop: TtsProperty) -> i32 {
-        todo!()
+        let list = self.synth.get_voice_list();
+        list.iter().map(|x| x.1.clone()).collect()
     }
 
     async fn set_value_by_prop(&self, prop: TtsProperty, value: i32) {
-        todo!()
+        match prop {
+            TtsProperty::Speed => self.synth.set_speed(3.0 + (value as f64 - 50.0) * 0.06),
+            TtsProperty::Pitch => self.synth.set_pitch(1.0 + (value as f64 - 50.0) * 0.01),
+            TtsProperty::Volume => self.synth.set_volume(0.5 + (value as f64 - 50.0) * 0.01),
+            TtsProperty::Voice => todo!(),
+        }
     }
 }
 

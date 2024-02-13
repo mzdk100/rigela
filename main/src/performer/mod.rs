@@ -31,9 +31,9 @@ pub(crate) trait Speakable {
 /// 表演者对象结构。 可以进行语音输出或音效提示。
 #[derive(Debug)]
 pub(crate) struct Performer {
+    pub(crate) tts: OnceLock<Arc<Tts>>,
     pub(crate) output_stream: Arc<BassChannelOutputStream>,
     context: OnceLock<Arc<Context>>,
-    tts: OnceLock<Arc<Tts>>,
     sound: Arc<Sound>,
 }
 
@@ -41,9 +41,9 @@ impl Performer {
     /// 创建表演者对象。
     pub(crate) fn new() -> Self {
         Self {
+            tts: OnceLock::new(),
             output_stream: BassChannelOutputStream::new(SAMPLE_RATE, NUM_CHANNELS).into(),
             context: OnceLock::new(),
-            tts: OnceLock::new(),
             sound: Sound::new().into(),
         }
     }

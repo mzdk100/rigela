@@ -22,7 +22,6 @@ pub(crate) trait Ttsable {
     fn stop(&self);
     fn get_name(&self) -> String;
     async fn get_all_voices(&self) -> Vec<String>;
-    async fn get_value_by_prop(&self, prop: TtsProperty) -> i32;
     async fn set_value_by_prop(&self, prop: TtsProperty, value: i32);
 }
 
@@ -52,4 +51,18 @@ impl TtsProperty {
             TtsProperty::Volume => TtsProperty::Pitch,
         }
     }
+}
+
+/// 移动TTS属性的方向
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Direction {
+    Next,
+    Prev,
+}
+
+/// 增减TTS属性的值
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ValueChange {
+    Increment,
+    Decrement,
 }
