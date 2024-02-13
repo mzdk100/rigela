@@ -14,54 +14,57 @@
 /* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
 #[allow(unused_imports)]
 use crate::commander::keys::Keys::*;
+#[allow(unused_imports)]
+use crate::context::Context;
+#[allow(unused_imports)]
+use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
 /* 使用talent macro可选导入的条目 */
-use crate::performer::tts::ttsable::TtsProperty;
-use crate::{
-    configs::config_operations::{
-        apply_tts_config, get_cur_tts_prop, next_tts_prop, prev_tts_prop,
-    },
-    context::Context,
-};
-use async_trait::async_trait;
+use crate::performer::tts::ttsable::{Direction, TtsProperty, ValueChange};
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音加速", key = (VkRigelA, VkCtrl, VkUp))]
+#[talent(doc = "语音属性值增加", key = (VkRigelA, VkCtrl, VkUp))]
 async fn increase(context: Arc<Context>) {
-    apply_tts_config(context.clone(), 1).await;
+    let tts = context.performer.tts.get().unwrap();
+    tts.set_tts_prop_value(ValueChange::Increment).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "语音减速", key = (VkRigelA, VkCtrl, VkDown))]
+#[talent(doc = "语音属性值降低", key = (VkRigelA, VkCtrl, VkDown))]
 async fn reduce(context: Arc<Context>) {
-    apply_tts_config(context.clone(), -1).await;
+    let tts = context.performer.tts.get().unwrap();
+    tts.set_tts_prop_value(ValueChange::Decrement).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音下一属性", key = (VkRigelA, VkCtrl, VkRight))]
 async fn next_prop(context: Arc<Context>) {
-    next_tts_prop();
+    let tts = context.performer.tts.get().unwrap();
+    tts.move_tts_prop(Direction::Next).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音上一属性", key = (VkRigelA, VkCtrl, VkLeft))]
 async fn prev_prop(context: Arc<Context>) {
-    prev_tts_prop();
+    let tts = context.performer.tts.get().unwrap();
+    tts.move_tts_prop(Direction::Prev).await;
     speak_tts_prop(context).await;
 }
 
 async fn speak_tts_prop(context: Arc<Context>) {
+    let tts = context.performer.tts.get().unwrap().clone();
     let cfg = context.config_manager.get_config().tts_config.clone();
-    let info = match get_cur_tts_prop() {
+
+    let info = match tts.get_cur_prop().await {
         TtsProperty::Speed => format!("语速: {}", cfg.speed),
         TtsProperty::Volume => format!("音量: {}", cfg.volume),
         TtsProperty::Pitch => format!("语调: {}", cfg.pitch),
-        _ => todo!(),
+        TtsProperty::Voice => format!("角色: {}", cfg.voice_index),
     };
     context.performer.speak(info);
 }

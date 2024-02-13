@@ -39,22 +39,32 @@ impl Sapi5TtsSynthesizer {
     }
 
     /**
-     * 设置语速。音量，语调
+     * 设置语速。
      * 某些语音的最低语速快于 0.5，最大语速低于 6.0。
      * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
+     * https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
      * */
-    pub fn set_properties(&self, speed: f64, volume: f64, pitch: f64) {
-        // https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
+    pub fn set_speed(&self, speed: f64) {
         let options = self.synth.Options().unwrap();
         options
             .SetSpeakingRate(speed)
             .expect("Can't set the speed value.");
-        options
-            .SetAudioVolume(volume)
-            .expect("Can't set the volume value.");
+    }
+
+    /// 设置语调
+    pub fn set_pitch(&self, pitch: f64) {
+        let options = self.synth.Options().unwrap();
         options
             .SetAudioPitch(pitch)
             .expect("Can't set the pitch value.");
+    }
+
+    /// 设置音量
+    pub fn set_volume(&self, volume: f64) {
+        let options = self.synth.Options().unwrap();
+        options
+            .SetAudioVolume(volume)
+            .expect("Can't set the volume value.");
     }
 
     /**
