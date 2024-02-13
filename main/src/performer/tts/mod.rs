@@ -21,6 +21,7 @@ use crate::configs::tts::TtsConfig;
 use crate::context::Context;
 use crate::performer::tts::sapi5::Sapi5;
 use crate::performer::tts::vvtts::Vvtts;
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::ops::DerefMut;
 use std::sync::{Arc, OnceLock};
@@ -29,9 +30,10 @@ use tokio::sync::Mutex;
 type TtsAble = Arc<dyn Ttsable + Send + Sync + 'static>;
 
 ///  语音TTS的抽象实现
+#[allow(unused)]
 pub(crate) struct Tts {
     all_tts: Mutex<Vec<TtsAble>>,
-    all_voices: Mutex<Vec<(usize, String)>>,
+    all_voices: Mutex<HashMap<usize, (usize, usize, String)>>,
     tts_index: Mutex<i32>,
     voice_index: Mutex<usize>,
     tts: Mutex<TtsAble>,
@@ -50,20 +52,21 @@ impl Tts {
 
         let _self = Self {
             all_tts: vec![ttsable].into(),
-            all_voices: vec![].into(),
+            all_voices: HashMap::new().into(),
             tts_index: 0.into(),
             voice_index: 0.into(),
             tts,
             context: OnceLock::new(),
             cur_prop: TtsProperty::Speed.into(),
         };
-        _self.context.set(context.clone());
+        _self.context.set(context.clone()).unwrap();
 
         //  在这里添加所有可用的语音库
         _self.add_ttsable(Arc::new(Vvtts::default())).await;
 
         _self.init_voices().await;
-        _self.apply_config(&context.config_manager.get_config().tts_config);
+        let cfg = context.config_manager.get_config().tts_config.clone();
+        _self.apply_config(&cfg).await;
 
         _self
     }
@@ -74,20 +77,6 @@ impl Tts {
         self.tts.lock().await.speak(text.as_str()).await;
     }
 
-    /// 应用配置到TTS
-    pub(crate) async fn apply_config(&self, config: &TtsConfig) {
-        for tts in self.all_tts.lock().await.iter() {
-            tts.set_value_by_prop(TtsProperty::Speed, config.speed)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Pitch, config.pitch)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Volume, config.volume)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Voice, 0).await;
-        }
-        *self.tts_index.lock().await.deref_mut() = config.voice_index;
-    }
-
     /// 移动当前操作的TTS属性
     pub(crate) async fn move_tts_prop(&self, direction: Direction) {
         *self.cur_prop.lock().await.deref_mut() = match direction {
@@ -96,7 +85,7 @@ impl Tts {
         };
     }
 
-    /// 获取当前TTS属性
+    /// 获取当前TTS操作属性
     pub(crate) async fn get_cur_prop(&self) -> TtsProperty {
         self.cur_prop.lock().await.clone()
     }
@@ -137,12 +126,53 @@ impl Tts {
 
     // 初始化所有语音角色
     async fn init_voices(&self) {
+        let mut index = 0;
         self.all_voices.lock().await.clear();
 
         for (i, tts) in self.all_tts.lock().await.iter().enumerate() {
-            for v in tts.get_all_voices().await {
-                self.all_voices.lock().await.push((i, v));
+            for (j, v) in tts.get_all_voices().await.iter().enumerate() {
+                self.all_voices
+                    .lock()
+                    .await
+                    .insert(index, (i, j, v.to_string()));
+                index += 1;
             }
+        }
+    }
+
+    // 应用配置到TTS
+    async fn apply_config(&self, config: &TtsConfig) {
+        for tts in self.all_tts.lock().await.iter() {
+            tts.set_value_by_prop(TtsProperty::Speed, config.speed)
+                .await;
+            tts.set_value_by_prop(TtsProperty::Pitch, config.pitch)
+                .await;
+            tts.set_value_by_prop(TtsProperty::Volume, config.volume)
+                .await;
+            tts.set_value_by_prop(TtsProperty::Voice, 0).await;
+        }
+        // *self.tts_index.lock().await.deref_mut() = config.voice_index;
+    }
+
+    async fn set_voice(&self) {}
+
+    async fn next_voice(&self) -> usize {
+        let index = self.voice_index.lock().await.clone();
+        let max_index = self.all_voices.lock().await.len().clone() - 1;
+        if index + 1 > max_index {
+            0
+        } else {
+            index + 1
+        }
+    }
+
+    async fn prev_voice(&self) -> usize {
+        let index = self.voice_index.lock().await.clone();
+        let max_index = self.all_voices.lock().await.len().clone() - 1;
+        if index as i32 - 1 < 0 {
+            max_index
+        } else {
+            index - 1
         }
     }
 }

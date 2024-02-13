@@ -80,7 +80,7 @@ impl Ttsable for Sapi5 {
             TtsProperty::Speed => self.synth.set_speed(3.0 + (value as f64 - 50.0) * 0.06),
             TtsProperty::Pitch => self.synth.set_pitch(1.0 + (value as f64 - 50.0) * 0.01),
             TtsProperty::Volume => self.synth.set_volume(0.5 + (value as f64 - 50.0) * 0.01),
-            TtsProperty::Voice => todo!(),
+            TtsProperty::Voice => return,
         }
     }
 }
