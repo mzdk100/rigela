@@ -30,12 +30,11 @@ use tokio::sync::Mutex;
 type TtsAble = Arc<dyn Ttsable + Send + Sync + 'static>;
 
 ///  语音TTS的抽象实现
-#[allow(unused)]
 pub(crate) struct Tts {
     all_tts: Mutex<Vec<TtsAble>>,
     all_voices: Mutex<HashMap<usize, (usize, usize, String)>>,
-    tts_index: Mutex<i32>,
     voice_index: Mutex<usize>,
+    tts_index: Mutex<usize>,
     tts: Mutex<TtsAble>,
     context: OnceLock<Arc<Context>>,
     cur_prop: Mutex<TtsProperty>,
@@ -53,8 +52,8 @@ impl Tts {
         let _self = Self {
             all_tts: vec![ttsable].into(),
             all_voices: HashMap::new().into(),
-            tts_index: 0.into(),
             voice_index: 0.into(),
+            tts_index: 0.into(),
             tts,
             context: OnceLock::new(),
             cur_prop: TtsProperty::Speed.into(),
@@ -154,7 +153,28 @@ impl Tts {
         // *self.tts_index.lock().await.deref_mut() = config.voice_index;
     }
 
-    async fn set_voice(&self) {}
+    async fn set_voice(&self) {
+        let v_out_index = self.voice_index.lock().await.clone();
+        let (tts_index, v_in_index, _name) = self
+            .all_voices
+            .lock()
+            .await
+            .get(&v_out_index)
+            .unwrap()
+            .clone();
+
+        if tts_index != self.tts_index.lock().await.clone() {
+            *self.tts_index.lock().await.deref_mut() = tts_index;
+            *self.tts.lock().await.deref_mut() =
+                self.all_tts.lock().await.get(tts_index).unwrap().clone();
+        }
+
+        self.tts
+            .lock()
+            .await
+            .set_value_by_prop(TtsProperty::Voice, v_in_index as i32)
+            .await;
+    }
 
     async fn next_voice(&self) -> usize {
         let index = self.voice_index.lock().await.clone();
