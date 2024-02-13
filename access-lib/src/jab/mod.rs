@@ -31,6 +31,7 @@ macro_rules! jab {
     };
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct JabLib {
     h_module: HMODULE,
@@ -38,6 +39,7 @@ pub struct JabLib {
 
 impl JabLib {
     //noinspection SpellCheckingInspection
+    #[allow(unused)]
     pub(crate) fn new(path: Option<&PathBuf>) -> Result<Self> {
         #[cfg(target_arch = "x86_64")]
         const DLL_NAME: &str = "windowsaccessbridge-64.dll";
@@ -69,6 +71,7 @@ impl JabLib {
         Ok(Self { h_module })
     }
 
+    #[allow(unused)]
     pub(crate) fn free(&self) {
         if self.h_module.is_invalid() {
             return;
