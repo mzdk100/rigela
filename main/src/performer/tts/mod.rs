@@ -92,8 +92,20 @@ impl Tts {
     /// 设置当前TTS属性的值
     pub(crate) async fn set_tts_prop_value(&self, value_change: ValueChange) {
         let set_val = |x| match value_change {
-            ValueChange::Increment => x + 1,
-            ValueChange::Decrement => x - 1,
+            ValueChange::Increment => {
+                if x < 99 {
+                    x + 1
+                } else {
+                    100
+                }
+            }
+            ValueChange::Decrement => {
+                if x > 2 {
+                    x - 1
+                } else {
+                    1
+                }
+            }
         };
 
         let ctx = self.context.get().unwrap();
@@ -106,7 +118,16 @@ impl Tts {
             TtsProperty::Voice => config.voice_index,
         };
 
-        update_tts_config(ctx.clone(), self.get_cur_prop().await, set_val(cur_val)).await;
+        let prop = self.get_cur_prop().await;
+        let val = match prop {
+            TtsProperty::Voice => match value_change {
+                ValueChange::Increment => self.next_voice().await as i32,
+                ValueChange::Decrement => self.prev_voice().await as i32,
+            },
+            _ => set_val(cur_val),
+        };
+
+        update_tts_config(ctx.clone(), prop, val).await;
         self.apply_config(&ctx.config_manager.get_config().tts_config.clone())
             .await;
     }
@@ -150,7 +171,8 @@ impl Tts {
                 .await;
             tts.set_value_by_prop(TtsProperty::Voice, 0).await;
         }
-        // *self.tts_index.lock().await.deref_mut() = config.voice_index;
+        *self.voice_index.lock().await.deref_mut() = config.voice_index as usize;
+        self.set_voice().await;
     }
 
     async fn set_voice(&self) {
@@ -204,4 +226,5 @@ impl Debug for Tts {
 }
 
 unsafe impl Send for Tts {}
+
 unsafe impl Sync for Tts {}

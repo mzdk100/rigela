@@ -76,11 +76,16 @@ impl Ttsable for Sapi5 {
     }
 
     async fn set_value_by_prop(&self, prop: TtsProperty, value: i32) {
+        let list = self.synth.get_voice_list();
+
         match prop {
             TtsProperty::Speed => self.synth.set_speed(3.0 + (value as f64 - 50.0) * 0.06),
             TtsProperty::Pitch => self.synth.set_pitch(1.0 + (value as f64 - 50.0) * 0.01),
             TtsProperty::Volume => self.synth.set_volume(0.5 + (value as f64 - 50.0) * 0.01),
-            TtsProperty::Voice => return,
+            TtsProperty::Voice => {
+                let (_id, _) = list.get(value as usize).unwrap();
+                self.synth.set_voice(_id.clone());
+            }
         }
     }
 }
