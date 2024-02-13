@@ -12,20 +12,17 @@
  */
 
 use crate::commander::keys::Keys;
-use crate::configs::config_manager::ConfigRoot;
 use crate::performer::tts::ttsable::TtsProperty;
-use crate::performer::tts::ttsable::TtsProperty::Speed;
 use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig, context::Context};
 use std::collections::HashMap;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::Arc;
 
 // ------ TTS 配置操作 ------
 
 /// 更新 TTS 配置
 pub(crate) async fn update_tts_config(ctx: Arc<Context>, prop: TtsProperty, value: i32) {
     let mut root = ctx.config_manager.get_config();
-    let mut config = root.tts_config.clone();
+    let config = root.tts_config.clone();
     root.tts_config = match prop {
         TtsProperty::Speed => TtsConfig {
             speed: value,
