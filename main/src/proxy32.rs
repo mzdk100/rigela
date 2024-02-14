@@ -13,18 +13,24 @@
 
 use log::{error, info};
 use rigela_proxy32::client::Proxy32Client;
-use rigela_proxy32::model::IbmeciVoiceParams;
-use tokio::process::Child;
-use tokio::sync::RwLock;
+use std::{
+    future::Future,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+};
+use tokio::{
+    process::Child,
+    sync::{OnceCell, RwLock},
+};
 
 #[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
 
 #[derive(Debug)]
 pub(crate) struct Proxy32 {
-    #[allow(dead_code)]
     process: RwLock<Option<Child>>,
-    client: RwLock<Option<Proxy32Client>>,
+    client: OnceCell<Arc<Proxy32Client>>,
 }
 
 impl Proxy32 {
@@ -34,7 +40,7 @@ impl Proxy32 {
     pub(crate) fn new() -> Self {
         Self {
             process: None.into(),
-            client: None.into(),
+            client: OnceCell::new(),
         }
     }
 
@@ -75,9 +81,13 @@ impl Proxy32 {
             let mut process = self.process.write().await;
             *process = Some(cmd).into();
         }
-        let proxy32_client = Proxy32Client::new(PIPE_NAME).await;
-        let mut client = self.client.write().await;
-        *client = Some(proxy32_client);
+        if self
+            .client
+            .set(Proxy32Client::new(PIPE_NAME).await.into())
+            .is_err()
+        {
+            error!("Can't set client field of the proxy32.");
+        }
         self
     }
 
@@ -95,9 +105,8 @@ impl Proxy32 {
      * 杀死进程。
      * */
     pub(crate) async fn kill(&self) -> &Self {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.quit().await;
+        if let Some(x) = self.client.get() {
+            x.quit().await;
         }
         let mut process = self.process.write().await;
         if let Some(p) = process.as_mut() {
@@ -127,71 +136,16 @@ impl Proxy32 {
     }
 }
 
-/**
- * 业务逻辑实现。
- * */
-impl Proxy32 {
-    //noinspection SpellCheckingInspection
-    /**
-     * 使用vvtts合成语音。
-     * `text` 文字内容。
-     * */
-    pub async fn eci_synth(&self, text: &str) -> Vec<u8> {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.eci_synth(text).await
-        } else {
-            vec![]
-        }
-    }
+impl Future for &Proxy32 {
+    type Output = Arc<Proxy32Client>;
 
-    //noinspection SpellCheckingInspection
-    /**
-     * 设置vvtts语音的参数。
-     * `params` 参数数据。
-     * */
-    pub async fn eci_set_voice_params(&self, params: &IbmeciVoiceParams) {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.eci_set_voice_params(params).await;
-        }
-    }
-
-    //noinspection SpellCheckingInspection
-    /**
-     * 获取vvtts语音的参数。
-     * */
-    pub async fn eci_get_voice_params(&self) -> IbmeciVoiceParams {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.eci_get_voice_params().await
-        } else {
-            IbmeciVoiceParams::default()
-        }
-    }
-
-    //noinspection SpellCheckingInspection
-    /**
-     * 获取vvtts发音人列表。
-     * */
-    pub async fn eci_get_voices(&self) -> Vec<(u32, String)> {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.eci_get_voices().await
-        } else {
-            vec![]
-        }
-    }
-
-    //noinspection SpellCheckingInspection
-    /**
-     * 设置vvtts发音人。
-     * `voice_id` 发音人id。
-     * */
-    pub async fn eci_set_voice(&self, voice_id: u32) {
-        let mut client = self.client.write().await;
-        if let Some(c) = client.as_mut() {
-            c.eci_set_voice(voice_id).await;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.client.get() {
+            None => {
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            }
+            Some(c) => Poll::Ready(c.clone()),
         }
     }
 }

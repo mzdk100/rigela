@@ -70,9 +70,6 @@ impl Launcher {
             proxy32.spawn().await;
         });
 
-        // 加载TTS音库，需要在proxy32之后，其他调用speak之前
-        self.context.performer.apply(self.context.clone()).await;
-
         // 显示欢迎页面。
         thread::spawn(welcome::show);
 
