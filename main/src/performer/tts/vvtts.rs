@@ -43,7 +43,12 @@ impl Ttsable for Vvtts {
         stream.start();
 
         let text = text.to_string();
-        let data = context.proxy32.eci_synth(text.as_str()).await;
+        let data = context
+            .proxy32
+            .as_ref()
+            .await
+            .eci_synth(text.as_str())
+            .await;
         let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
         stream.put_data(&data);
     }
@@ -59,7 +64,7 @@ impl Ttsable for Vvtts {
     async fn get_all_voices(&self) -> Vec<String> {
         let ctx = self.context.get().unwrap();
 
-        let voices = ctx.proxy32.eci_get_voices().await;
+        let voices = ctx.proxy32.as_ref().await.eci_get_voices().await;
         voices.iter().map(|i| i.1.clone()).collect()
     }
 
@@ -67,7 +72,7 @@ impl Ttsable for Vvtts {
         let ctx = self.context.get().unwrap();
         // let list = ctx.proxy32.eci_get_voices().await;
 
-        let mut params = ctx.proxy32.eci_get_voice_params().await;
+        let mut params = ctx.proxy32.as_ref().await.eci_get_voice_params().await;
         match prop {
             TtsProperty::Speed => params.speed = value,
             TtsProperty::Volume => params.volume = value,
@@ -79,7 +84,11 @@ impl Ttsable for Vvtts {
             }
         };
 
-        ctx.proxy32.eci_set_voice_params(&params).await;
+        ctx.proxy32
+            .as_ref()
+            .await
+            .eci_set_voice_params(&params)
+            .await;
     }
 }
 

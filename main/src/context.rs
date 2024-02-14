@@ -121,8 +121,13 @@ impl Context {
      * 把上下文对象应用于每一个组件。
      * */
     pub(crate) fn apply(&self) {
-        self.commander.apply(self.clone().into());
+        let ctx = Arc::new(self.clone());
+        self.commander.apply(ctx.clone());
         self.config_manager.init();
+        let performer = self.performer.clone();
+        self.work_runtime.spawn(async move {
+            performer.apply(ctx).await;
+        });
     }
 
     /**

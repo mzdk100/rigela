@@ -16,12 +16,12 @@ use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
 use tokio::net::windows::named_pipe::NamedPipeClient;
+use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct Proxy32Client {
-    cached: HashMap<u32, Proxy32Data>,
-    id: u32,
-    stream: PipeStream<Proxy32Packet, NamedPipeClient>,
+    cached: Mutex<(HashMap<u32, Proxy32Data>, u32)>,
+    stream: Mutex<PipeStream<Proxy32Packet, NamedPipeClient>>,
 }
 
 impl Proxy32Client {
@@ -31,38 +31,47 @@ impl Proxy32Client {
     pub async fn new(pipe_name: &str) -> Self {
         let stream = client_connect(pipe_name).await;
         Self {
-            cached: HashMap::new(),
-            id: 0,
-            stream,
+            cached: (HashMap::new(), 0).into(),
+            stream: stream.into(),
         }
     }
 
-    async fn exec(&mut self, data: &Proxy32Data) -> Option<Proxy32Data> {
-        self.id += 1;
+    async fn exec(&self, data: &Proxy32Data) -> Option<Proxy32Data> {
+        let id = {
+            let mut lock = self.cached.lock().await;
+            lock.1 += 1;
+            lock.1
+        };
         let packet = Proxy32Packet {
-            id: self.id,
+            id: id,
             data: data.clone(),
         };
-        if let Err(e) = self.stream.send(&packet).await {
-            error!("{}", e);
-        }
-        let res = match self.cached.get(&packet.id) {
-            None => None,
-            Some(x) => Some(x.clone()),
-        };
-        if let Some(data) = res {
-            self.cached.remove(&packet.id);
-            return Some(data);
-        }
-        loop {
-            let res = self.stream.recv().await;
+        {
+            let mut lock = self.stream.lock().await;
+            if let Err(e) = lock.send(&packet).await {
+                error!("{}", e);
+            }
+            let res = lock.recv().await;
             match res {
                 Err(PipeStreamError::ReadEof) => return None,
-                Ok(p) if p.id == packet.id => break Some(p.data),
+                Ok(p) if p.id == id => return Some(p.data),
                 Ok(p) => {
-                    self.cached.insert(p.id, p.data);
+                    self.cached.lock().await.0.insert(p.id, p.data);
                 }
                 _ => {}
+            }
+        }
+        {
+            let mut lock = self.cached.lock().await;
+            let res = match lock.0.get(&id) {
+                None => None,
+                Some(x) => Some(x.clone()),
+            };
+            if let Some(data) = res {
+                lock.0.remove(&packet.id);
+                Some(data)
+            } else {
+                None
             }
         }
     }
@@ -70,7 +79,7 @@ impl Proxy32Client {
     /**
      * 通知服务器端退出程序。
      * */
-    pub async fn quit(&mut self) {
+    pub async fn quit(&self) {
         self.exec(&Proxy32Data::Quit).await;
     }
 
@@ -79,7 +88,7 @@ impl Proxy32Client {
      * 使用vvtts合成语音。
      * `text` 文字内容。
      * */
-    pub async fn eci_synth(&mut self, text: &str) -> Vec<u8> {
+    pub async fn eci_synth(&self, text: &str) -> Vec<u8> {
         if let Some(Proxy32Data::EciSynthResponse(r)) = self
             .exec(&Proxy32Data::EciSynthRequest(text.to_string()))
             .await
@@ -95,7 +104,7 @@ impl Proxy32Client {
      * 设置vvtts语音参数。
      * `params` 参数数据。
      * */
-    pub async fn eci_set_voice_params(&mut self, params: &IbmeciVoiceParams) {
+    pub async fn eci_set_voice_params(&self, params: &IbmeciVoiceParams) {
         self.exec(&Proxy32Data::EciSetParamsRequest(params.clone()))
             .await;
     }
@@ -104,7 +113,7 @@ impl Proxy32Client {
     /**
      * 获取vvtts语音参数。
      * */
-    pub async fn eci_get_voice_params(&mut self) -> IbmeciVoiceParams {
+    pub async fn eci_get_voice_params(&self) -> IbmeciVoiceParams {
         if let Some(Proxy32Data::EciGetParamsResponse(r)) =
             self.exec(&Proxy32Data::EciGetParamsRequest).await
         {
@@ -117,7 +126,7 @@ impl Proxy32Client {
     /**
      * 获取vvtts发音人列表。
      * */
-    pub async fn eci_get_voices(&mut self) -> Vec<(u32, String)> {
+    pub async fn eci_get_voices(&self) -> Vec<(u32, String)> {
         if let Some(Proxy32Data::EciGetVoicesResponse(r)) =
             self.exec(&Proxy32Data::EciGetVoicesRequest).await
         {
@@ -131,7 +140,7 @@ impl Proxy32Client {
      * 设置vvtts发音人。
      * `voice_id` 发音人id。
      * */
-    pub async fn eci_set_voice(&mut self, voice_id: u32) {
+    pub async fn eci_set_voice(&self, voice_id: u32) {
         self.exec(&Proxy32Data::EciSetVoiceRequest(voice_id)).await;
     }
 }

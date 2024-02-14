@@ -17,7 +17,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use win_wrap::common::{
-    free_library, get_proc_address, load_library, Result, BOOL, FARPROC, HMODULE,
+    free_library, get_proc_address, load_library, Result, BOOL, FARPROC, HMODULE, HWND,
 };
 use windows::{
     core::{Error, HSTRING},
@@ -27,7 +27,10 @@ use windows::{
 #[macro_export]
 macro_rules! jab {
     ($module:expr,windows_run) => {
-        call_proc!($module, Windows_run, extern "system" fn() -> BOOL,)
+        call_proc!($module, Windows_run, extern "C" fn(),)
+    };
+    ($module:expr,is_java_window,$h_wnd:expr) => {
+        call_proc!($module, isJavaWindow, extern "C" fn(HWND) -> BOOL, $h_wnd)
     };
 }
 
@@ -40,7 +43,7 @@ pub struct JabLib {
 impl JabLib {
     //noinspection SpellCheckingInspection
     #[allow(unused)]
-    pub(crate) fn new(path: Option<&PathBuf>) -> Result<Self> {
+    pub(crate) fn new(path: Option<PathBuf>) -> Result<Self> {
         #[cfg(target_arch = "x86_64")]
         const DLL_NAME: &str = "windowsaccessbridge-64.dll";
         #[cfg(target_arch = "x86")]
@@ -62,7 +65,7 @@ impl JabLib {
             Err(e) => return Err(e),
         };
         let res = jab!(h_module, windows_run);
-        if res.is_none() || (!res.unwrap()).into() {
+        if res.is_none() {
             return Err(Error::new(
                 S_FALSE,
                 HSTRING::from("Can't load the jab library."),
@@ -72,7 +75,19 @@ impl JabLib {
     }
 
     #[allow(unused)]
-    pub(crate) fn free(&self) {
+    /**
+     * 判断窗口是否是java的窗口。
+     * */
+    pub fn is_java_window(&self, h_wnd: HWND) -> bool {
+        dbg!(jab!(self.h_module, is_java_window, h_wnd));
+        jab!(self.h_module, is_java_window, h_wnd)
+            .unwrap_or(BOOL::from(false))
+            .as_bool()
+    }
+}
+
+impl Drop for JabLib {
+    fn drop(&mut self) {
         if self.h_module.is_invalid() {
             return;
         }
@@ -83,11 +98,18 @@ impl JabLib {
 #[cfg(test)]
 mod test_jab {
     use crate::jab::JabLib;
+    use std::path::Path;
+    use win_wrap::common::{find_window, get_desktop_window};
 
     #[test]
     fn main() {
-        let jab = JabLib::new(None).unwrap();
-        jab.free();
+        let jab = JabLib::new(Some(
+            Path::new(r"D:\NVDA\lib\alpha-31004,49d5e581\windowsaccessbridge-32.dll").to_path_buf(),
+        ))
+        .unwrap();
+        assert!(!jab.is_java_window(get_desktop_window()));
+        let h_wnd = find_window(Some("SunAwtFrame"), None);
+        assert!(jab.is_java_window(h_wnd));
         dbg!(jab);
     }
 }
