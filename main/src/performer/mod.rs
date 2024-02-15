@@ -65,8 +65,13 @@ impl Performer {
     }
 
     pub(crate) async fn speak(&self, speakable: impl Speakable) {
+        let text = speakable.get_sentence().trim_end().to_string();
+        if text.is_empty() {
+            return;
+        }
+
         if let Some(tts) = self.tts.get() {
-            let text = speakable.get_sentence();
+            tts.stop().await;
             tts.speak(text).await;
         }
     }

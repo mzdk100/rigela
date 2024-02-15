@@ -13,15 +13,17 @@
 
 use crate::context::Context;
 use rigela_utils::bass::BassChannelOutputStream;
-use std::collections::HashMap;
-use std::io::SeekFrom;
-use std::sync::{Arc, OnceLock};
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
-use tokio::sync::Mutex;
+use std::{
+    collections::HashMap,
+    io::SeekFrom,
+    sync::{Arc, OnceLock},
+};
+use tokio::{
+    io::{AsyncReadExt, AsyncSeekExt},
+    sync::Mutex,
+};
 
-const SOUND_LIST: [&str; 1] = ["boundary.wav"];
-
-const CHUNK_SIZE: usize = 3200;
+const SOUND_LIST: [&str; 2] = ["boundary.wav", "tip.wav"];
 
 /// 音效播放器
 #[derive(Debug)]
@@ -56,12 +58,8 @@ impl Sound {
         let data = lock.get(res_name).unwrap().clone();
         drop(lock);
 
-        let len = data.len();
-        for i in (0..len).step_by(CHUNK_SIZE) {
-            let end = i + CHUNK_SIZE;
-            let end = if end >= len { len } else { end };
-            self.output_stream.put_data(&data[i..end]);
-        }
+        self.output_stream.put_data(&data);
+        self.output_stream.wait_until_stalled().await;
     }
 
     async fn load_data(&self) {

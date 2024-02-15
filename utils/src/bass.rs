@@ -13,11 +13,12 @@
 
 use crate::{call_proc, get_program_directory};
 use log::{error, info};
-use std::future::Future;
-use std::path::PathBuf;
-use std::pin::Pin;
-use std::sync::RwLock;
-use std::task::{Context, Poll};
+use std::{
+    future::Future,
+    path::PathBuf,
+    pin::Pin,
+    task::{Context, Poll},
+};
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
 
 macro_rules! bass {
@@ -133,6 +134,7 @@ const STREAMPROC_PUSH: usize = usize::MAX;
 /// The channel is not active, or a handle is not a valid channel.
 const BASS_ACTIVE_STOPPED: i32 = 0;
 /// The channel is playing (or recording).
+#[allow(unused)]
 const BASS_ACTIVE_PLAYING: i32 = 1;
 /// Playback of the stream has been stalled due to a lack of sample data.
 /// Playback will automatically resume once there is sufficient data to do so.
@@ -140,6 +142,7 @@ const BASS_ACTIVE_STALLED: i32 = 2;
 /// The channel is paused.
 const BASS_ACTIVE_PAUSED: i32 = 3;
 /// The channel's device is paused.
+#[allow(unused)]
 const BASS_ACTIVE_PAUSED_DEVICE: i32 = 4;
 
 #[derive(Debug)]

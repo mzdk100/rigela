@@ -46,6 +46,7 @@ pub(crate) enum TtsProperty {
 #[async_trait::async_trait]
 pub(crate) trait TtsEngine {
     async fn speak(&self, text: &str);
+    async fn wait(&self);
     fn stop(&self);
     fn get_name(&self) -> String;
     async fn get_all_voices(&self) -> Vec<(String, String)>;
@@ -93,7 +94,7 @@ impl Tts {
      * 朗读文字，如果当前有朗读的任务，则进行排队。
      * `text` 需要朗读的文本。
      * */
-    pub(crate) async fn speak_with_queue(&self, text: String) {
+    pub(crate) async fn speak(&self, text: String) {
         let engine = self
             .context
             .config_manager
@@ -112,16 +113,6 @@ impl Tts {
                 x.speak(text.as_str()).await;
             };
         }
-    }
-
-    //noinspection StructuralWrap
-    /**
-     * 朗读文字，这会打断当前所有的朗读任务。
-     * `text` 文字内容。
-     * */
-    pub(crate) async fn speak(&self, text: String) {
-        self.stop().await;
-        self.speak_with_queue(text).await;
     }
 
     /**

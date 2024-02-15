@@ -79,6 +79,10 @@ impl TtsEngine for VvttsEngine {
         self.output_stream.put_data(&data);
     }
 
+    async fn wait(&self) {
+        self.output_stream.wait_until_stalled().await;
+    }
+
     fn stop(&self) {
         self.output_stream.stop()
     }

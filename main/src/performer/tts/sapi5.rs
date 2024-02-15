@@ -36,8 +36,12 @@ impl TtsEngine for Sapi5Engine {
         self.output_stream.start();
 
         let text = text.to_string();
-        self.output_stream
-            .put_data(&self.synth.synth(text.as_str()).await);
+        let data = self.synth.synth(text.as_str()).await;
+        self.output_stream.put_data(&data[320..]);
+    }
+
+    async fn wait(&self) {
+        self.output_stream.wait_until_stalled().await;
     }
 
     fn stop(&self) {

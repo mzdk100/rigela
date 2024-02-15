@@ -129,7 +129,7 @@ async fn speak_focus_item(context: Arc<Context>) {
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
             performer.play_sound("tip.wav").await;
-            performer.speak_with_sapi5(obj).await;
+            performer.speak(obj).await;
         });
     })
 }
