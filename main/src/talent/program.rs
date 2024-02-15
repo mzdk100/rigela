@@ -28,7 +28,7 @@ use win_wrap::{common::get_foreground_window, msaa::object::AccessibleObject};
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
 async fn exit(context: Arc<Context>) {
-    context.performer.speak(t!("program.exit"));
+    context.performer.speak(t!("program.exit")).await;
     sleep(Duration::from_millis(1000)).await;
     context.terminator.exit().await;
 }
@@ -42,7 +42,7 @@ impl Speakable for DateTime<Local> {
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
 async fn current_time(context: Arc<Context>) {
-    context.performer.speak(Local::now());
+    context.performer.speak(Local::now()).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -62,5 +62,5 @@ async fn hotkeys(context: Arc<Context>) {
 #[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
 async fn view_window_title(context: Arc<Context>) {
     let obj = AccessibleObject::from_window(get_foreground_window()).unwrap();
-    context.performer.speak((obj, 0));
+    context.performer.speak((obj, 0)).await;
 }

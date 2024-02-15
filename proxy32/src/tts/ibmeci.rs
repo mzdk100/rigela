@@ -217,11 +217,13 @@ impl Ibmeci {
         }
         drop(file);
         let h_module = loop {
-            // 文件刚释放可能被安全软件锁定，推迟加载他
-            sleep(Duration::from_millis(1000)).await;
             match load_library(eci_path.to_str().unwrap()) {
                 Ok(h) => break h,
-                Err(e) => error!("Can't open the library ({}). {}", eci_path.display(), e),
+                Err(e) => {
+                    error!("Can't open the library ({}). {}", eci_path.display(), e);
+                    // 文件刚释放可能被安全软件锁定，推迟加载他
+                    sleep(Duration::from_millis(1000)).await;
+                }
             }
         };
         info!("{} loaded.", eci_path.display());
@@ -263,6 +265,9 @@ impl Ibmeci {
         }
     }
 
+    /**
+     * 合成语音。
+     * */
     pub(crate) async fn synth(&self, text: &str) -> Vec<u8> {
         if let Some(eci) = unsafe { IBMECI.get_mut() } {
             eci.data.clear();

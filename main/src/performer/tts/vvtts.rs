@@ -11,80 +11,51 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::performer::tts::ttsable::{TtsProperty, Ttsable};
-use crate::performer::SAMPLE_RATE;
-use rigela_utils::resample::resample_audio;
-use std::sync::{Arc, OnceLock};
+use crate::{
+    context::Context,
+    performer::tts::{TtsEngine, TtsProperty},
+};
+use rigela_utils::bass::BassChannelOutputStream;
+use std::{str::FromStr, sync::Arc};
 
+//noinspection SpellCheckingInspection
 /// VVTTS语音库封装
-pub(crate) struct Vvtts {
-    context: OnceLock<Arc<Context>>,
+pub(crate) struct VvttsEngine {
+    context: Arc<Context>,
+    output_stream: BassChannelOutputStream,
 }
 
-impl Default for Vvtts {
-    fn default() -> Self {
+impl VvttsEngine {
+    pub(crate) fn new(context: Arc<Context>) -> Self {
         Self {
-            context: OnceLock::new(),
+            context,
+            output_stream: BassChannelOutputStream::new(11025, 1),
         }
     }
-}
 
-#[async_trait::async_trait]
-impl Ttsable for Vvtts {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    async fn speak(&self, text: &str) {
-        let context = self.context.get().unwrap().clone();
-        let stream = context.performer.output_stream.clone();
-        stream.stop();
-        stream.start();
-
-        let text = text.to_string();
-        let data = context
+    async fn set_value_by_prop(&self, prop: TtsProperty) {
+        let mut params = self
+            .context
             .proxy32
             .as_ref()
             .await
-            .eci_synth(text.as_str())
+            .eci_get_voice_params()
             .await;
-        let data = resample_audio(data, 11025, SAMPLE_RATE as usize).await;
-        stream.put_data(&data);
-    }
-
-    fn stop(&self) {
-        todo!()
-    }
-
-    fn get_name(&self) -> String {
-        "vvtts".to_string()
-    }
-
-    async fn get_all_voices(&self) -> Vec<String> {
-        let ctx = self.context.get().unwrap();
-
-        let voices = ctx.proxy32.as_ref().await.eci_get_voices().await;
-        voices.iter().map(|i| i.1.clone()).collect()
-    }
-
-    async fn set_value_by_prop(&self, prop: TtsProperty, value: i32) {
-        let ctx = self.context.get().unwrap();
-        // let list = ctx.proxy32.eci_get_voices().await;
-
-        let mut params = ctx.proxy32.as_ref().await.eci_get_voice_params().await;
         match prop {
-            TtsProperty::Speed => params.speed = value,
-            TtsProperty::Volume => params.volume = value,
-            TtsProperty::Pitch => params.pitch_baseline = value,
-            TtsProperty::Voice => {
-                // let (_id, _) = list.get(value as usize).unwrap();
-                // ctx.proxy32.eci_set_voice(_id.clone()).await;
-                // return;
+            TtsProperty::Speed(v) => params.speed = (v as f32 * 2.5) as i32,
+            TtsProperty::Volume(v) => params.volume = v,
+            TtsProperty::Pitch(v) => {
+                params.pitch_baseline = if v > 50 {
+                    (69f32 + (v as f32 - 50f32) / 50f32 * 31f32) as i32
+                } else {
+                    ((v as f32) / 50f32 * 69f32) as i32
+                }
             }
+            _ => return,
         };
 
-        ctx.proxy32
+        self.context
+            .proxy32
             .as_ref()
             .await
             .eci_set_voice_params(&params)
@@ -92,5 +63,64 @@ impl Ttsable for Vvtts {
     }
 }
 
-unsafe impl Send for Vvtts {}
-unsafe impl Sync for Vvtts {}
+#[async_trait::async_trait]
+impl TtsEngine for VvttsEngine {
+    async fn speak(&self, text: &str) {
+        self.output_stream.start();
+
+        let text = text.to_string();
+        let data = self
+            .context
+            .proxy32
+            .as_ref()
+            .await
+            .eci_synth(text.as_str())
+            .await;
+        self.output_stream.put_data(&data);
+    }
+
+    fn stop(&self) {
+        self.output_stream.stop()
+    }
+
+    //noinspection SpellCheckingInspection
+    fn get_name(&self) -> String {
+        "Vvtts".to_string()
+    }
+
+    async fn get_all_voices(&self) -> Vec<(String, String)> {
+        self.context
+            .proxy32
+            .as_ref()
+            .await
+            .eci_get_voices()
+            .await
+            .iter()
+            .map(|i| (i.0.to_string(), i.1.clone()))
+            .collect()
+    }
+
+    async fn set_speed(&self, value: i32) {
+        self.set_value_by_prop(TtsProperty::Speed(value)).await
+    }
+
+    async fn set_volume(&self, value: i32) {
+        self.set_value_by_prop(TtsProperty::Volume(value)).await
+    }
+
+    async fn set_pitch(&self, value: i32) {
+        self.set_value_by_prop(TtsProperty::Pitch(value)).await
+    }
+
+    async fn set_voice(&self, id: String) {
+        self.context
+            .proxy32
+            .as_ref()
+            .await
+            .eci_set_voice(u32::from_str(id.as_str()).unwrap_or(0))
+            .await
+    }
+}
+
+unsafe impl Send for VvttsEngine {}
+unsafe impl Sync for VvttsEngine {}

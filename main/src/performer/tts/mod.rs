@@ -12,81 +12,149 @@
  */
 
 pub(crate) mod sapi5;
-pub(crate) mod ttsable;
+//noinspection SpellCheckingInspection
 pub(crate) mod vvtts;
 
-use super::tts::ttsable::{Direction, TtsProperty, Ttsable, ValueChange};
-use crate::configs::config_operations::update_tts_config;
-use crate::configs::tts::TtsConfig;
-use crate::context::Context;
-use crate::performer::tts::sapi5::Sapi5;
-use crate::performer::tts::vvtts::Vvtts;
-use std::collections::HashMap;
-use std::fmt::{Debug, Formatter};
-use std::ops::DerefMut;
-use std::sync::{Arc, OnceLock};
+use crate::{
+    configs::tts::{TtsConfig, TtsPropertyItem},
+    context::Context,
+};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Formatter},
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 
-type TtsAble = Arc<dyn Ttsable + Send + Sync + 'static>;
+#[derive(Clone, Debug)]
+pub(crate) struct VoiceInfo {
+    pub(crate) engine: String,
+    pub(crate) id: String,
+    pub(crate) name: String,
+}
+
+/// TTS的属性枚举
+#[derive(Debug, Clone)]
+pub(crate) enum TtsProperty {
+    Speed(i32),
+    Voice(VoiceInfo),
+    Pitch(i32),
+    Volume(i32),
+}
+
+/// 语音TTS的抽象接口
+#[async_trait::async_trait]
+pub(crate) trait TtsEngine {
+    async fn speak(&self, text: &str);
+    fn stop(&self);
+    fn get_name(&self) -> String;
+    async fn get_all_voices(&self) -> Vec<(String, String)>;
+    async fn set_speed(&self, value: i32);
+    async fn set_volume(&self, value: i32);
+    async fn set_pitch(&self, value: i32);
+    async fn set_voice(&self, id: String);
+}
+
+/// 移动TTS属性的方向
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum Direction {
+    Next,
+    Prev,
+}
+
+/// 增减TTS属性的值
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ValueChange {
+    Increment,
+    Decrement,
+}
 
 ///  语音TTS的抽象实现
 pub(crate) struct Tts {
-    all_tts: Mutex<Vec<TtsAble>>,
-    all_voices: Mutex<HashMap<usize, (usize, usize, String)>>,
-    voice_index: Mutex<usize>,
-    tts_index: Mutex<usize>,
-    tts: Mutex<TtsAble>,
-    context: OnceLock<Arc<Context>>,
-    cur_prop: Mutex<TtsProperty>,
+    default_engine: Mutex<Option<String>>,
+    all_engines: Mutex<HashMap<String, Arc<dyn TtsEngine + Sync + Send>>>,
+    all_voices: Mutex<Vec<VoiceInfo>>,
+    context: Arc<Context>,
 }
 
 impl Tts {
     /// 构建一个Tts实例
-    pub(crate) async fn build(context: Arc<Context>) -> Self {
-        // 必须有一个默认的语音库
-        let sapi5 = Sapi5::default();
-        sapi5.set_context(context.clone());
-        let ttsable: TtsAble = Arc::new(sapi5);
-        let tts = ttsable.clone().into();
+    pub(crate) fn new(context: Arc<Context>) -> Self {
+        Self {
+            default_engine: None.into(),
+            all_engines: HashMap::new().into(),
+            all_voices: vec![].into(),
+            context,
+        }
+    }
 
-        let _self = Self {
-            all_tts: vec![ttsable].into(),
-            all_voices: HashMap::new().into(),
-            voice_index: 0.into(),
-            tts_index: 0.into(),
-            tts,
-            context: OnceLock::new(),
-            cur_prop: TtsProperty::Speed.into(),
+    //noinspection StructuralWrap
+    /**
+     * 朗读文字，如果当前有朗读的任务，则进行排队。
+     * `text` 需要朗读的文本。
+     * */
+    pub(crate) async fn speak_with_queue(&self, text: String) {
+        let engine = self
+            .context
+            .config_manager
+            .get_config()
+            .tts_config
+            .voice
+            .0
+            .clone();
+        let lock = self.all_engines.lock().await;
+        if let Some(x) = lock.get(&engine) {
+            x.speak(text.as_str()).await;
+            return;
         };
-        _self.context.set(context.clone()).unwrap();
-
-        //  在这里添加所有可用的语音库
-        _self.add_ttsable(Arc::new(Vvtts::default())).await;
-
-        _self.init_voices().await;
-        let cfg = context.config_manager.get_config().tts_config.clone();
-        _self.apply_config(&cfg).await;
-
-        _self
+        if let Some(default_engine) = self.default_engine.lock().await.as_ref() {
+            if let Some(x) = lock.get(default_engine) {
+                x.speak(text.as_str()).await;
+            };
+        }
     }
 
-    /// 朗读
-    pub(crate) async fn speak<S: Into<String>>(&self, text: S) {
-        let text = text.into();
-        self.tts.lock().await.speak(text.as_str()).await;
+    //noinspection StructuralWrap
+    /**
+     * 朗读文字，这会打断当前所有的朗读任务。
+     * `text` 文字内容。
+     * */
+    pub(crate) async fn speak(&self, text: String) {
+        self.stop().await;
+        self.speak_with_queue(text).await;
     }
 
-    /// 移动当前操作的TTS属性
-    pub(crate) async fn move_tts_prop(&self, direction: Direction) {
-        *self.cur_prop.lock().await.deref_mut() = match direction {
-            Direction::Next => self.cur_prop.lock().await.next(),
-            Direction::Prev => self.cur_prop.lock().await.prev(),
+    /**
+     * * 停止当前的朗读任务。
+     * */
+    pub(crate) async fn stop(&self) {
+        let engine = self
+            .context
+            .config_manager
+            .get_config()
+            .tts_config
+            .voice
+            .0
+            .clone();
+        let lock = self.all_engines.lock().await;
+        if let Some(x) = lock.get(&engine) {
+            x.stop();
+            return;
         };
+        if let Some(default_engine) = self.default_engine.lock().await.as_ref() {
+            if let Some(x) = lock.get(default_engine) {
+                x.stop();
+            };
+        }
     }
 
-    /// 获取当前TTS操作属性
-    pub(crate) async fn get_cur_prop(&self) -> TtsProperty {
-        self.cur_prop.lock().await.clone()
+    /**
+     * 停止所有语音引擎的朗读。
+     * */
+    pub(crate) async fn stop_all(&self) {
+        for x in self.all_engines.lock().await.iter() {
+            x.1.stop();
+        }
     }
 
     /// 设置当前TTS属性的值
@@ -108,114 +176,136 @@ impl Tts {
             }
         };
 
-        let ctx = self.context.get().unwrap();
-        let config = ctx.config_manager.get_config().tts_config.clone();
-
-        let cur_val = match self.get_cur_prop().await {
-            TtsProperty::Speed => config.speed,
-            TtsProperty::Pitch => config.pitch,
-            TtsProperty::Volume => config.volume,
-            TtsProperty::Voice => config.voice_index,
+        let mut root = self.context.config_manager.get_config();
+        match root.tts_config.item {
+            TtsPropertyItem::Speed => root.tts_config.speed = set_val(root.tts_config.speed),
+            TtsPropertyItem::Pitch => root.tts_config.pitch = set_val(root.tts_config.pitch),
+            TtsPropertyItem::Volume => root.tts_config.volume = set_val(root.tts_config.volume),
+            TtsPropertyItem::Voice => {
+                self.stop_all().await;
+                let voice = self
+                    .switch_voice(
+                        root.tts_config.voice.0,
+                        root.tts_config.voice.1,
+                        value_change,
+                    )
+                    .await;
+                root.tts_config.voice = (voice.engine, voice.id)
+            }
         };
 
-        let prop = self.get_cur_prop().await;
-        let val = match prop {
-            TtsProperty::Voice => match value_change {
-                ValueChange::Increment => self.next_voice().await as i32,
-                ValueChange::Decrement => self.prev_voice().await as i32,
-            },
-            _ => set_val(cur_val),
-        };
-
-        update_tts_config(ctx.clone(), prop, val).await;
-        self.apply_config(&ctx.config_manager.get_config().tts_config.clone())
-            .await;
+        self.apply_config(&root.tts_config).await;
+        self.context.config_manager.set_config(root);
     }
 
-    /// 获取当前TTS属性值, 暂不使用，直接从配置获取
-    #[allow(unused)]
-    pub(crate) fn get_tts_prop_value(&self) -> i32 {
-        todo!()
-    }
-
-    // 添加语音库
-    async fn add_ttsable(&self, tts: TtsAble) {
-        tts.set_context(self.context.get().unwrap().clone());
-        self.all_tts.lock().await.push(tts);
-    }
-
-    // 初始化所有语音角色
-    async fn init_voices(&self) {
-        let mut index = 0;
-        self.all_voices.lock().await.clear();
-
-        for (i, tts) in self.all_tts.lock().await.iter().enumerate() {
-            for (j, v) in tts.get_all_voices().await.iter().enumerate() {
-                self.all_voices
-                    .lock()
-                    .await
-                    .insert(index, (i, j, v.to_string()));
-                index += 1;
+    /// 获取当前TTS属性值
+    pub(crate) async fn get_tts_prop_value(&self) -> TtsProperty {
+        let config = self.context.config_manager.get_config().tts_config.clone();
+        match config.item {
+            TtsPropertyItem::Speed => TtsProperty::Speed(config.speed),
+            TtsPropertyItem::Pitch => TtsProperty::Pitch(config.pitch),
+            TtsPropertyItem::Volume => TtsProperty::Volume(config.volume),
+            TtsPropertyItem::Voice => {
+                let lock = self.all_voices.lock().await;
+                if let Some(v) = lock
+                    .iter()
+                    .find(|i| i.engine == config.voice.0 && i.id == config.voice.1)
+                {
+                    TtsProperty::Voice(v.clone())
+                } else {
+                    TtsProperty::Voice(lock.first().unwrap().clone())
+                }
             }
         }
     }
 
+    /**
+     * 设置默认引擎。
+     * `engine` 实现了TtsEngine特征的语音引擎对象。
+     * */
+    pub(crate) async fn put_default_engine<T>(&self, engine: T) -> &Self
+    where
+        T: TtsEngine + Sync + Send + 'static,
+    {
+        self.default_engine.lock().await.replace(engine.get_name());
+        self.add_engine(engine).await
+    }
+
+    /**
+     * 增加一个引擎。
+     * `engine` 实现了TtsEngine特征的语音引擎对象。
+     * */
+    pub(crate) async fn add_engine<T>(&self, engine: T) -> &Self
+    where
+        T: TtsEngine + Sync + Send + 'static,
+    {
+        for (id, name) in engine.get_all_voices().await.iter() {
+            self.all_voices.lock().await.push(VoiceInfo {
+                engine: engine.get_name(),
+                id: id.clone(),
+                name: name.clone(),
+            });
+        }
+        self.all_engines
+            .lock()
+            .await
+            .insert(engine.get_name(), Arc::new(engine));
+        self.apply_config(&self.context.config_manager.get_config().tts_config)
+            .await;
+        self
+    }
+
     // 应用配置到TTS
     async fn apply_config(&self, config: &TtsConfig) {
-        for tts in self.all_tts.lock().await.iter() {
-            tts.set_value_by_prop(TtsProperty::Speed, config.speed)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Pitch, config.pitch)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Volume, config.volume)
-                .await;
-            tts.set_value_by_prop(TtsProperty::Voice, 0).await;
-        }
-        *self.voice_index.lock().await.deref_mut() = config.voice_index as usize;
-        self.set_voice().await;
-    }
-
-    async fn set_voice(&self) {
-        let v_out_index = self.voice_index.lock().await.clone();
-        let (tts_index, v_in_index, _name) = self
-            .all_voices
-            .lock()
-            .await
-            .get(&v_out_index)
-            .unwrap()
-            .clone();
-
-        if tts_index != self.tts_index.lock().await.clone() {
-            *self.tts_index.lock().await.deref_mut() = tts_index;
-            *self.tts.lock().await.deref_mut() =
-                self.all_tts.lock().await.get(tts_index).unwrap().clone();
-        }
-
-        self.tts
-            .lock()
-            .await
-            .set_value_by_prop(TtsProperty::Voice, v_in_index as i32)
-            .await;
-    }
-
-    async fn next_voice(&self) -> usize {
-        let index = self.voice_index.lock().await.clone();
-        let max_index = self.all_voices.lock().await.len().clone() - 1;
-        if index + 1 > max_index {
-            0
-        } else {
-            index + 1
+        for (_, tts) in self.all_engines.lock().await.iter() {
+            if config.voice.0 == tts.get_name() {
+                tts.set_voice(config.voice.1.clone()).await;
+            }
+            tts.set_speed(config.speed).await;
+            tts.set_volume(config.volume).await;
+            tts.set_pitch(config.pitch).await;
         }
     }
 
-    async fn prev_voice(&self) -> usize {
-        let index = self.voice_index.lock().await.clone();
-        let max_index = self.all_voices.lock().await.len().clone() - 1;
-        if index as i32 - 1 < 0 {
-            max_index
-        } else {
-            index - 1
+    pub(crate) async fn move_tts_prop(&self, direction: Direction) {
+        let mut root = self.context.config_manager.get_config();
+        root.tts_config.item = match direction {
+            Direction::Next => match root.tts_config.item {
+                TtsPropertyItem::Speed => TtsPropertyItem::Pitch,
+                TtsPropertyItem::Pitch => TtsPropertyItem::Volume,
+                TtsPropertyItem::Volume => TtsPropertyItem::Voice,
+                TtsPropertyItem::Voice => TtsPropertyItem::Speed,
+            },
+            Direction::Prev => match root.tts_config.item {
+                TtsPropertyItem::Speed => TtsPropertyItem::Voice,
+                TtsPropertyItem::Pitch => TtsPropertyItem::Speed,
+                TtsPropertyItem::Volume => TtsPropertyItem::Pitch,
+                TtsPropertyItem::Voice => TtsPropertyItem::Volume,
+            },
+        };
+        self.apply_config(&root.tts_config).await;
+        self.context.config_manager.set_config(root);
+    }
+
+    async fn switch_voice(
+        &self,
+        engine: String,
+        id: String,
+        value_change: ValueChange,
+    ) -> VoiceInfo {
+        let mut voices = { self.all_voices.lock().await.clone() };
+        if let ValueChange::Decrement = &value_change {
+            voices.reverse();
         }
+        let mut iter = voices.iter();
+        while let Some(i) = iter.next() {
+            if i.engine == engine && i.id == id {
+                if let Some(v) = iter.next() {
+                    return v.clone();
+                }
+            }
+        }
+        voices.first().unwrap().clone()
     }
 }
 

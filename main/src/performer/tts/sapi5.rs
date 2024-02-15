@@ -11,85 +11,64 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::performer::tts::ttsable::{TtsProperty, Ttsable};
-use std::sync::{Arc, OnceLock};
+use crate::performer::tts::TtsEngine;
+use rigela_utils::bass::BassChannelOutputStream;
 use win_wrap::tts::Sapi5TtsSynthesizer;
 
 #[derive(Debug)]
-pub(crate) struct Sapi5 {
+pub(crate) struct Sapi5Engine {
+    output_stream: BassChannelOutputStream,
     synth: Sapi5TtsSynthesizer,
-    context: OnceLock<Arc<Context>>,
-    name: String,
 }
 
-impl Default for Sapi5 {
-    fn default() -> Self {
-        Self {
-            synth: Sapi5TtsSynthesizer::new(),
-            context: OnceLock::new(),
-            name: "Sapi_5".to_string().into(),
-        }
-    }
-}
-
-impl Sapi5 {
-    #[allow(unused)]
+impl Sapi5Engine {
     pub(crate) fn new() -> Self {
-        Self::default()
-    }
-
-    #[allow(unused)]
-    pub(crate) async fn set_tts_voice_with_sapi5(&self, voice_id: String) {
-        self.synth.set_voice(voice_id)
+        Self {
+            output_stream: BassChannelOutputStream::new(16000, 1),
+            synth: Sapi5TtsSynthesizer::new(),
+        }
     }
 }
 
 #[async_trait::async_trait]
-
-impl Ttsable for Sapi5 {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
+impl TtsEngine for Sapi5Engine {
     async fn speak(&self, text: &str) {
-        let context = self.context.get().unwrap();
-        let stream = context.performer.output_stream.clone();
-        stream.stop();
-        stream.start();
+        self.output_stream.start();
 
         let text = text.to_string();
-        stream.put_data(&self.synth.synth(text.as_str()).await);
+        self.output_stream
+            .put_data(&self.synth.synth(text.as_str()).await);
     }
 
     fn stop(&self) {
-        todo!()
+        self.output_stream.stop();
     }
 
     fn get_name(&self) -> String {
-        self.name.clone()
+        String::from("Sapi5")
     }
 
-    async fn get_all_voices(&self) -> Vec<String> {
-        let list = self.synth.get_voice_list();
-        list.iter().map(|x| x.1.clone()).collect()
+    async fn get_all_voices(&self) -> Vec<(String, String)> {
+        self.synth.get_voice_list()
     }
 
-    async fn set_value_by_prop(&self, prop: TtsProperty, value: i32) {
-        let list = self.synth.get_voice_list();
+    async fn set_speed(&self, value: i32) {
+        self.synth.set_speed(3.0 + (value as f64 - 50.0) * 0.06)
+    }
 
-        match prop {
-            TtsProperty::Speed => self.synth.set_speed(3.0 + (value as f64 - 50.0) * 0.06),
-            TtsProperty::Pitch => self.synth.set_pitch(1.0 + (value as f64 - 50.0) * 0.01),
-            TtsProperty::Volume => self.synth.set_volume(0.5 + (value as f64 - 50.0) * 0.01),
-            TtsProperty::Voice => {
-                let (_id, _) = list.get(value as usize).unwrap();
-                self.synth.set_voice(_id.clone());
-            }
-        }
+    async fn set_volume(&self, value: i32) {
+        self.synth.set_volume(0.5 + (value as f64 - 50.0) * 0.01)
+    }
+
+    async fn set_pitch(&self, value: i32) {
+        self.synth.set_pitch(1.0 + (value as f64 - 50.0) * 0.01)
+    }
+
+    async fn set_voice(&self, id: String) {
+        self.synth.set_voice(id)
     }
 }
 
-unsafe impl Send for Sapi5 {}
+unsafe impl Send for Sapi5Engine {}
 
-unsafe impl Sync for Sapi5 {}
+unsafe impl Sync for Sapi5Engine {}

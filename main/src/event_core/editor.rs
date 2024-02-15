@@ -54,7 +54,7 @@ async fn subscribe_uia_events(context: Arc<Context>) {
         }
         let performer = performer.clone();
         main_handler.spawn(async move {
-            performer.speak(caret);
+            performer.speak(caret).await;
         });
     });
 
@@ -92,7 +92,7 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         };
         let performer = performer.clone();
         main_handler.spawn(async move {
-            performer.speak(text);
+            performer.speak(text).await;
         });
     })
 }

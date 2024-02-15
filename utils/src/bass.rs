@@ -13,6 +13,11 @@
 
 use crate::{call_proc, get_program_directory};
 use log::{error, info};
+use std::future::Future;
+use std::path::PathBuf;
+use std::pin::Pin;
+use std::sync::RwLock;
+use std::task::{Context, Poll};
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
 
 macro_rules! bass {
@@ -100,12 +105,42 @@ macro_rules! bass {
             $data.len() as i32
         )
     };
+    ($module:expr,stream_put_file_data,$handle:expr,$data:expr) => {
+        call_proc!(
+            $module,
+            BASS_StreamPutFileData,
+            extern "system" fn(i32, *const u8, i32) -> i32,
+            $handle,
+            $data.as_ptr(),
+            $data.len() as i32
+        )
+    };
+    ($module:expr,channel_is_active,$handle:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelIsActive,
+            extern "system" fn(i32) -> i32,
+            $handle
+        )
+    };
 }
 
 const LIB_NAME: &str = "bass.dll";
 
 //noinspection SpellCheckingInspection
 const STREAMPROC_PUSH: usize = usize::MAX;
+
+/// The channel is not active, or a handle is not a valid channel.
+const BASS_ACTIVE_STOPPED: i32 = 0;
+/// The channel is playing (or recording).
+const BASS_ACTIVE_PLAYING: i32 = 1;
+/// Playback of the stream has been stalled due to a lack of sample data.
+/// Playback will automatically resume once there is sufficient data to do so.
+const BASS_ACTIVE_STALLED: i32 = 2;
+/// The channel is paused.
+const BASS_ACTIVE_PAUSED: i32 = 3;
+/// The channel's device is paused.
+const BASS_ACTIVE_PAUSED_DEVICE: i32 = 4;
 
 #[derive(Debug)]
 pub struct BassChannelOutputStream {
@@ -114,13 +149,7 @@ pub struct BassChannelOutputStream {
 }
 
 impl BassChannelOutputStream {
-    //noinspection RsUnresolvedReference
-    /**
-     * 创建一个通道输出流。
-     * `sample_rate` 采样率。
-     * `num_channels` 声道数量。
-     * */
-    pub fn new(sample_rate: u32, num_channels: u32) -> Self {
+    fn copy_lib() -> PathBuf {
         #[cfg(target_arch = "x86_64")]
         use std::{fs::OpenOptions, io::Write};
 
@@ -136,6 +165,17 @@ impl BassChannelOutputStream {
                 .write_all(lib_bin)
                 .unwrap();
         }
+        bass_path
+    }
+
+    //noinspection RsUnresolvedReference
+    /**
+     * 创建一个通道输出流。
+     * `sample_rate` 采样率。
+     * `num_channels` 声道数量。
+     * */
+    pub fn new(sample_rate: u32, num_channels: u32) -> Self {
+        let bass_path = Self::copy_lib();
         let h_module = match load_library(bass_path.to_str().unwrap()) {
             Ok(h) => h,
             Err(e) => {
@@ -206,8 +246,38 @@ impl BassChannelOutputStream {
      * 写入数据。
      * `data` 音频数据。
      * */
-    pub fn put_data(&self, data: &[u8]) {
-        bass!(self.h_module, stream_put_data, self.h_bass, data);
+    pub fn put_data(&self, data: &[u8]) -> i32 {
+        bass!(self.h_module, stream_put_data, self.h_bass, data).unwrap_or(0)
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 写入文件数据。
+     * `data` 音频文件数据。
+     * */
+    pub fn put_file_data(&self, data: &[u8]) -> i32 {
+        bass!(self.h_module, stream_put_file_data, self.h_bass, data).unwrap_or(0)
+    }
+
+    /**
+     * 等待直到停止。
+     * */
+    pub fn wait_until_stopped(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_STOPPED)
+    }
+
+    /**
+     * 等待直到暂停。
+     * */
+    pub fn wait_until_paused(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_PAUSED)
+    }
+
+    /**
+     * 等待直到没有数据可以播放。
+     * */
+    pub fn wait_until_stalled(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_STALLED)
     }
 }
 
@@ -216,5 +286,22 @@ impl Drop for BassChannelOutputStream {
         if !self.h_module.is_invalid() {
             free_library(self.h_module);
         }
+    }
+}
+
+pub struct BassChannelActive(HMODULE, i32, i32);
+
+impl Future for BassChannelActive {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let Some(active) = bass!(self.0, channel_is_active, self.1) else {
+            return Poll::Ready(());
+        };
+        if active == self.2 {
+            return Poll::Ready(());
+        }
+        cx.waker().wake_by_ref();
+        Poll::Pending
     }
 }

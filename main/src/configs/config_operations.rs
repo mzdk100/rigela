@@ -11,38 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::performer::tts::ttsable::TtsProperty;
-use crate::{configs::mouse::MouseConfig, configs::tts::TtsConfig, context::Context};
-use std::collections::HashMap;
-use std::sync::Arc;
-
-// ------ TTS 配置操作 ------
-
-/// 更新 TTS 配置
-pub(crate) async fn update_tts_config(ctx: Arc<Context>, prop: TtsProperty, value: i32) {
-    let mut root = ctx.config_manager.get_config();
-    let config = root.tts_config.clone();
-    root.tts_config = match prop {
-        TtsProperty::Speed => TtsConfig {
-            speed: value,
-            ..config
-        },
-        TtsProperty::Voice => TtsConfig {
-            voice_index: value,
-            ..config
-        },
-        TtsProperty::Pitch => TtsConfig {
-            pitch: value,
-            ..config
-        },
-        TtsProperty::Volume => TtsConfig {
-            volume: value,
-            ..config
-        },
-    };
-    ctx.config_manager.set_config(root);
-}
+use crate::{commander::keys::Keys, configs::mouse::MouseConfig, context::Context};
+use std::{collections::HashMap, sync::Arc};
 
 // ------  鼠标配置  ------
 
