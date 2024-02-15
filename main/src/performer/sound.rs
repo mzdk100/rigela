@@ -12,6 +12,7 @@
  */
 
 use crate::context::Context;
+use rigela_utils::bass::BassChannelOutputStream;
 use std::collections::HashMap;
 use std::io::SeekFrom;
 use std::sync::{Arc, OnceLock};
@@ -25,6 +26,7 @@ const CHUNK_SIZE: usize = 3200;
 /// 音效播放器
 #[derive(Debug)]
 pub(crate) struct Sound {
+    output_stream: BassChannelOutputStream,
     context: OnceLock<Arc<Context>>,
     sound_table: Mutex<HashMap<String, Vec<u8>>>,
 }
@@ -32,6 +34,7 @@ pub(crate) struct Sound {
 impl Sound {
     pub(crate) fn new() -> Self {
         Self {
+            output_stream: BassChannelOutputStream::new(16000, 1),
             context: OnceLock::new(),
             sound_table: HashMap::new().into(),
         }
@@ -46,10 +49,8 @@ impl Sound {
 
     /// 播放一个音效。 目前仅支持16位深16K采样率单通道的音频。
     pub(crate) async fn play(&self, res_name: &str) {
-        let context = self.context.get().unwrap();
-        let stream = context.performer.output_stream.clone();
-        stream.stop();
-        stream.start();
+        self.output_stream.stop();
+        self.output_stream.start();
 
         let lock = self.sound_table.lock().await;
         let data = lock.get(res_name).unwrap().clone();
@@ -59,7 +60,7 @@ impl Sound {
         for i in (0..len).step_by(CHUNK_SIZE) {
             let end = i + CHUNK_SIZE;
             let end = if end >= len { len } else { end };
-            stream.put_data(&data[i..end]);
+            self.output_stream.put_data(&data[i..end]);
         }
     }
 

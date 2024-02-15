@@ -81,7 +81,7 @@ async fn speak_focus_item(context: Arc<Context>) {
                 // 列表项目的事件让MSAA处理，因为很多列表只有MSAA支持的完善
                 //return;
             }
-            performer.speak(x);
+            performer.speak(x).await;
         });
     });
 
@@ -99,12 +99,12 @@ async fn speak_focus_item(context: Arc<Context>) {
                 ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
                     // 如果有对话框弹出，我们要延迟播报，因为很有可能被焦点元素打断
                     sleep(Duration::from_millis(500)).await;
-                    performer.speak(obj.get_dialog_content());
+                    performer.speak(obj.get_dialog_content()).await;
                     return;
                 }
                 _ => return,
             };
-            performer.speak((obj, child));
+            performer.speak((obj, child)).await;
         });
     });
 
@@ -113,7 +113,7 @@ async fn speak_focus_item(context: Arc<Context>) {
     context.msaa.add_on_object_selection_listener(move |src| {
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
-            performer.speak(src.get_object().unwrap());
+            performer.speak(src.get_object().unwrap()).await;
         });
     });
 
@@ -165,7 +165,7 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
                 },
                 Ok(o) => o.0,
             };
-            performer.speak(obj.get_dialog_content());
+            performer.speak(obj.get_dialog_content()).await;
         });
     });
 }
@@ -180,7 +180,7 @@ async fn speak_input(context: Arc<Context>) {
             let performer = ctx.performer.clone();
 
             ctx.main_handler.spawn(async move {
-                performer.speak(c);
+                performer.speak(c).await;
             });
         })
         .await;
@@ -196,7 +196,7 @@ async fn speak_candidate(context: Arc<Context>) {
             let performer = ctx.performer.clone();
 
             ctx.main_handler.spawn(async move {
-                performer.speak(candidate_list);
+                performer.speak(candidate_list).await;
             });
         })
         .await;

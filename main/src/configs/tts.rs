@@ -13,22 +13,34 @@
 
 use serde::{Deserialize, Serialize};
 
+/// 属性条目
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub(crate) enum TtsPropertyItem {
+    Speed,
+    Pitch,
+    Volume,
+    Voice,
+}
+
 /// 语音TTS的配置项
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct TtsConfig {
     pub(crate) speed: i32,
-    pub(crate) voice_index: i32,
-    pub(crate) pitch: i32,
     pub(crate) volume: i32,
+    pub(crate) pitch: i32,
+    pub(crate) voice: (String, String),
+    pub(crate) item: TtsPropertyItem,
 }
 
 impl Default for TtsConfig {
+    //noinspection SpellCheckingInspection
     fn default() -> Self {
         Self {
             speed: 50,
-            voice_index: 0,
-            pitch: 50,
             volume: 100,
+            pitch: 50,
+            voice: ("Sapi5".to_string(), "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech_OneCore\\Voices\\Tokens\\MSTTS_V110_zhCN_HuihuiM".to_string()),
+            item: TtsPropertyItem::Speed,
         }
     }
 }

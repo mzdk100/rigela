@@ -68,12 +68,11 @@ impl Proxy32 {
 
         // 启动32位的代理模块。
         let cmd = loop {
-            // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。）
-            sleep(Duration::from_millis(1000)).await;
-            // 1秒之后再尝试启动
             if let Ok(x) = Command::new(&proxy32_path).args([PIPE_NAME]).spawn() {
                 break x;
             }
+            // 因为proxy32.exe刚刚释放到磁盘，很可能被微软杀毒锁定，这时候启动会失败（另一个程序正在使用此文件，进程无法访问。），1秒之后再尝试启动
+            sleep(Duration::from_millis(1000)).await;
         };
         info!("The process is ready.");
 

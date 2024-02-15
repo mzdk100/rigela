@@ -140,5 +140,5 @@ fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
     let ele = uia.element_from_point(x, y).unwrap();
     let pf = context.performer.clone();
     let h = context.main_handler.clone();
-    h.spawn(async move { pf.speak(ele) });
+    h.spawn(async move { pf.speak(ele).await });
 }
