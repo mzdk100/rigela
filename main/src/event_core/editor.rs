@@ -21,7 +21,7 @@ use log::error;
 use std::sync::Arc;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
 
-pub(crate) async fn subscribe_events(context: Arc<Context>) {
+pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_uia_events(context.clone()).await;
     subscribe_ia2_events(context).await;
 }
@@ -85,7 +85,6 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
             }
         };
         let caret = text.caret_offset().unwrap_or(0);
-        dbg!(caret);
         let (_, _, text) = match commander.get_last_pressed_key() {
             VkDown | VkUp => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
             _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),

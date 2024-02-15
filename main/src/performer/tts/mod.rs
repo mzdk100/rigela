@@ -73,6 +73,7 @@ pub(crate) enum ValueChange {
 ///  语音TTS的抽象实现
 pub(crate) struct Tts {
     default_engine: Mutex<Option<String>>,
+    is_cancelled: Mutex<bool>,
     all_engines: Mutex<HashMap<String, Arc<dyn TtsEngine + Sync + Send>>>,
     all_voices: Mutex<Vec<VoiceInfo>>,
     context: Arc<Context>,
@@ -83,6 +84,7 @@ impl Tts {
     pub(crate) fn new(context: Arc<Context>) -> Self {
         Self {
             default_engine: None.into(),
+            is_cancelled: false.into(),
             all_engines: HashMap::new().into(),
             all_voices: vec![].into(),
             context,
@@ -92,9 +94,10 @@ impl Tts {
     //noinspection StructuralWrap
     /**
      * 朗读文字，如果当前有朗读的任务，则进行排队。
+     * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
      * `text` 需要朗读的文本。
      * */
-    pub(crate) async fn speak(&self, text: String) {
+    pub(crate) async fn speak(&self, text: String) -> bool {
         let engine = self
             .context
             .config_manager
@@ -105,20 +108,37 @@ impl Tts {
             .clone();
         let lock = self.all_engines.lock().await;
         if let Some(x) = lock.get(&engine) {
-            x.speak(text.as_str()).await;
-            return;
+            let engine = x.clone();
+            drop(lock);
+            engine.speak(text.as_str()).await;
+            {
+                *self.is_cancelled.lock().await = false;
+            }
+            engine.wait().await;
+            return !*self.is_cancelled.lock().await;
         };
-        if let Some(default_engine) = self.default_engine.lock().await.as_ref() {
-            if let Some(x) = lock.get(default_engine) {
-                x.speak(text.as_str()).await;
+        if let Some(default_engine) = { self.default_engine.lock().await.clone() } {
+            if let Some(x) = lock.get(&default_engine) {
+                let engine = x.clone();
+                drop(lock);
+                engine.speak(text.as_str()).await;
+                {
+                    *self.is_cancelled.lock().await = false;
+                }
+                engine.wait().await;
+                return !*self.is_cancelled.lock().await;
             };
         }
+        return false;
     }
 
     /**
      * * 停止当前的朗读任务。
      * */
     pub(crate) async fn stop(&self) {
+        {
+            *self.is_cancelled.lock().await = true;
+        }
         let engine = self
             .context
             .config_manager
@@ -143,6 +163,9 @@ impl Tts {
      * 停止所有语音引擎的朗读。
      * */
     pub(crate) async fn stop_all(&self) {
+        {
+            *self.is_cancelled.lock().await = true;
+        }
         for x in self.all_engines.lock().await.iter() {
             x.1.stop();
         }

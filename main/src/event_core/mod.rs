@@ -12,29 +12,79 @@
  */
 
 mod editor;
+mod ime;
 
-use crate::{context::Context, event_core::editor::subscribe_events, ext::AccessibleObjectExt};
+use crate::{
+    context::Context,
+    event_core::{
+        editor::subscribe_editor_events,
+        ime::{subscribe_ime_events, MS_IME_CLASS_NAME},
+    },
+    ext::AccessibleObjectExt,
+};
 use std::{
-    sync::{Arc, OnceLock},
-    time::Duration,
+    sync::Arc,
+    time::{Duration, SystemTime},
 };
-use tokio::time::sleep;
-use win_wrap::msaa::object::{
-    AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM,
+use tokio::{
+    sync::{Mutex, OnceCell},
+    time::sleep,
 };
-use win_wrap::uia::element::ControlType;
+use win_wrap::{
+    msaa::object::{
+        AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST,
+        ROLE_SYSTEM_LISTITEM,
+    },
+    uia::element::ControlType,
+};
+
+/// 事件过滤器
+#[derive(Debug)]
+pub(crate) struct EventItem {
+    same: String,
+    time: SystemTime,
+}
 
 /// 事件处理中心
 #[derive(Clone, Debug)]
 pub(crate) struct EventCore {
-    context: OnceLock<Arc<Context>>,
+    context: OnceCell<Arc<Context>>,
+    filter: Arc<Mutex<Vec<EventItem>>>,
 }
 
 impl EventCore {
     pub(crate) fn new() -> Self {
         Self {
-            context: OnceLock::new(),
+            context: OnceCell::new(),
+            filter: Arc::new(vec![].into()),
         }
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 给定一个事件的特征，判断是否应该忽略此事件。
+     * `same` 事件的特征文字。
+     * `interval` 一个时间内如果此事件出现过，则表示他应该被忽略。
+     * */
+    pub(crate) async fn should_ignore(&self, same: String, interval: Duration) -> bool {
+        let item = EventItem {
+            same: same.clone(),
+            time: SystemTime::now(),
+        };
+        let mut lock = self.filter.lock().await;
+        for i in lock.iter() {
+            if i.same == same && i.time.elapsed().unwrap() < interval {
+                return true;
+            }
+        }
+        for (i, j) in lock.iter().enumerate() {
+            if j.same == same {
+                lock.remove(i);
+                break;
+            }
+        }
+        lock.push(item);
+        return false;
     }
 
     /// 启动事件监听
@@ -50,13 +100,13 @@ impl EventCore {
         speak_input(context.clone()).await;
 
         // 订阅输入法候选事件
-        speak_candidate(context.clone()).await;
+        subscribe_ime_events(context.clone()).await;
 
         // 处理编辑框朗读
         let ctx = context.clone();
         context
             .main_handler
-            .spawn(subscribe_events(ctx))
+            .spawn(subscribe_editor_events(ctx))
             .await
             .unwrap();
     }
@@ -111,6 +161,10 @@ async fn speak_focus_item(context: Arc<Context>) {
     // 监听容器控件中选择项改变（例如组合框）
     let ctx = context.clone();
     context.msaa.add_on_object_selection_listener(move |src| {
+        if src.get_class_name() == MS_IME_CLASS_NAME {
+            // 此类事件属于微软输入法候选项，处理逻辑在ime中已经实现
+            return;
+        }
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
             performer.speak(src.get_object().unwrap()).await;
@@ -181,22 +235,6 @@ async fn speak_input(context: Arc<Context>) {
 
             ctx.main_handler.spawn(async move {
                 performer.speak(c).await;
-            });
-        })
-        .await;
-}
-
-// 朗读输入法切换
-async fn speak_candidate(context: Arc<Context>) {
-    let ctx = context.clone();
-
-    context
-        .peeper_server
-        .add_on_ime_candidate_list_listener(move |candidate_list| {
-            let performer = ctx.performer.clone();
-
-            ctx.main_handler.spawn(async move {
-                performer.speak(candidate_list).await;
             });
         })
         .await;

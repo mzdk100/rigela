@@ -64,16 +64,22 @@ impl Performer {
         self.tts.get().unwrap().clone()
     }
 
-    pub(crate) async fn speak(&self, speakable: impl Speakable) {
+    /**
+     * 朗读文字，如果当前有朗读的任务，则进行排队。
+     * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
+     * `text` 需要朗读的文本。
+     * */
+    pub(crate) async fn speak(&self, speakable: impl Speakable) -> bool {
         let text = speakable.get_sentence().trim_end().to_string();
         if text.is_empty() {
-            return;
+            return false;
         }
 
         if let Some(tts) = self.tts.get() {
             tts.stop().await;
-            tts.speak(text).await;
+            return tts.speak(text).await;
         }
+        return false;
     }
 
     /// 播放音效
