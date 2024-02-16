@@ -4,6 +4,10 @@ program.exit:
   en: Exit screen reader
   zh-CN: 退出读屏
 
+program.current_cpu_usage:
+  en: The usage ratio of the current cpu is %{value}%
+  zh-CN: CPU使用率为%{value}%
+
 tts.speed:
   en: Voice speed %{value}
   zh-CN: 语速%{value}

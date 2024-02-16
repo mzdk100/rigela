@@ -109,7 +109,7 @@ mod test_jab {
         .unwrap();
         assert!(!jab.is_java_window(get_desktop_window()));
         let h_wnd = find_window(Some("SunAwtFrame"), None);
-        assert!(jab.is_java_window(h_wnd));
+        assert!(jatb.is_java_window(h_wnd));
         dbg!(jab);
     }
 }

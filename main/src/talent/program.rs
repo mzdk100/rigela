@@ -17,13 +17,16 @@ use crate::{
     gui::{hotkeys, popup_menu},
     performer::Speakable,
 };
-use rigela_macros::talent;
-use std::{thread, time::Duration};
-/* 业务逻辑使用的条目 */
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
+use rigela_macros::talent;
+use std::{sync::OnceLock, thread, time::Duration};
 use tokio::time::sleep;
-use win_wrap::{common::get_foreground_window, msaa::object::AccessibleObject};
+use win_wrap::{
+    common::get_foreground_window,
+    msaa::object::AccessibleObject,
+    pdh::{PdhCounter, PdhCounterExt, PdhQuery},
+};
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
@@ -43,6 +46,33 @@ impl Speakable for DateTime<Local> {
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
 async fn current_time(context: Arc<Context>) {
     context.performer.speak(Local::now()).await;
+}
+
+impl Speakable for &PdhCounter {
+    fn get_sentence(&self) -> String {
+        t!(
+            "program.current_cpu_usage",
+            value = (self.get_value().1).round()
+        )
+        .to_string()
+    }
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "查看CPU使用率", key = (VkRigelA, VkQ))]
+async fn current_cpu_usage(context: Arc<Context>) {
+    static CPU_QUERY: OnceLock<(PdhCounter, PdhQuery)> = OnceLock::new();
+    let (counter, query) = CPU_QUERY.get_or_init(|| {
+        let query = PdhQuery::new();
+        let counter = query.add_counter(format!(
+            r"\Processor Information({})\% Processor Time",
+            "_Total"
+        ));
+        query.collect_data();
+        (counter, query)
+    });
+    query.collect_data();
+    context.performer.speak(counter).await;
 }
 
 //noinspection RsUnresolvedReference

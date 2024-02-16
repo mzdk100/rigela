@@ -27,6 +27,7 @@ features = [
     "Win32_Globalization",
     "Win32_System_SystemServices",
     "Win32_System_Variant",
+    "Win32_System_Performance_HardwareCounterProfiling",
     # 动态库加载
     "Win32_System_LibraryLoader",
     # 鼠标、键盘和输入法API

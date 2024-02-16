@@ -19,6 +19,7 @@ pub mod hook;
 pub mod input;
 pub mod message;
 pub mod msaa;
+pub mod pdh;
 pub mod threading;
 pub mod tts;
 pub mod uia;
