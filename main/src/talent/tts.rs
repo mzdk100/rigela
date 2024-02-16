@@ -14,6 +14,7 @@
 use crate::{
     commander::keys::Keys::*,
     context::Context,
+    performer::cache::Direction as CacheDirection,
     performer::tts::{Direction, TtsProperty, ValueChange},
 };
 #[allow(unused_imports)]
@@ -52,6 +53,54 @@ async fn prev_prop(context: Arc<Context>) {
     let tts = context.performer.get_tts();
     tts.move_tts_prop(Direction::Prev).await;
     speak_tts_prop(context).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "缓冲区上一字符", key = (VkRigelA, VkLeft))]
+async fn prev_cache_char(context: Arc<Context>) {
+    let cache = context.performer.get_cache();
+    let text = cache.get(CacheDirection::Backward).await;
+    let tts = context.performer.get_tts();
+    tts.speak(text).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "缓冲区下一字符", key = (VkRigelA, VkRight))]
+async fn next_cache_char(context: Arc<Context>) {
+    let cache = context.performer.get_cache();
+    let text = cache.get(CacheDirection::Forward).await;
+    let tts = context.performer.get_tts();
+    tts.speak(text).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "解释缓冲区当前字符", key = (VkRigelA, VkUp))]
+async fn trans_cache_char(context: Arc<Context>) {
+    let cache = context.performer.get_cache();
+    let text = cache.get(CacheDirection::Current).await;
+    // Todo: 查字典
+
+    let tts = context.performer.get_tts();
+    tts.speak(text).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "缓冲区当前字符组词", key = (VkRigelA, VkDown))]
+async fn make_word_cache_char(context: Arc<Context>) {
+    let cache = context.performer.get_cache();
+    let text = cache.get(CacheDirection::Current).await;
+    // Todo: 生成词组
+
+    let tts = context.performer.get_tts();
+    tts.speak(text).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "拷贝缓冲区", key = (VkRigelA, VkC))]
+async fn cache_to_clipboard(context: Arc<Context>) {
+    let cache = context.performer.get_cache();
+    let _text = cache.get_data().await;
+    // Todo: 拷贝到剪贴板
 }
 
 async fn speak_tts_prop(context: Arc<Context>) {

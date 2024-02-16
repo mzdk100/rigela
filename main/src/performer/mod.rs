@@ -13,6 +13,7 @@
 
 pub(crate) mod sound;
 pub(crate) mod tts;
+pub(crate) mod cache;
 
 use crate::{
     context::Context,
@@ -34,6 +35,7 @@ pub(crate) trait Speakable {
 pub(crate) struct Performer {
     tts: OnceCell<Arc<Tts>>,
     sound: Arc<Sound>,
+    cache: Arc<cache::Cache>,
 }
 
 impl Performer {
@@ -42,6 +44,7 @@ impl Performer {
         Self {
             tts: OnceCell::new().into(),
             sound: Sound::new().into(),
+            cache: Arc::new(cache::Cache::new()).into(),
         }
     }
 
@@ -59,9 +62,15 @@ impl Performer {
             .await;
         self.sound.apply(context.clone()).await;
     }
-
+    
+    /// 获取表演者的TTS对象
     pub(crate) fn get_tts(&self) -> Arc<Tts> {
         self.tts.get().unwrap().clone()
+    }
+    
+    /// 获取表演者的缓冲区
+    pub(crate) fn get_cache(&self) -> Arc<cache::Cache> {
+        self.cache.clone()
     }
 
     /**
@@ -75,6 +84,9 @@ impl Performer {
             return false;
         }
 
+        // 更新缓存
+        self.cache.update(text.clone()).await;
+        
         if let Some(tts) = self.tts.get() {
             tts.stop().await;
             return tts.speak(text).await;
