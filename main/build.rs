@@ -14,7 +14,12 @@
 extern crate cargo_rigela;
 use embed_manifest::{embed_manifest, new_manifest};
 
+//noinspection SpellCheckingInspection
 fn main() {
+    println!("cargo:rerun-if-changed=locale");
+    println!("cargo:rerun-if-changed=src");
+    println!("cargo:rerun-if-changed=build.rs");
+
     cargo_rigela::make_version();
 
     let _ = embed_manifest(new_manifest("Contoso.Sample"));

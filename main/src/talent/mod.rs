@@ -26,7 +26,8 @@ use crate::{
         },
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
-            CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent, ViewWindowTitleTalent,
+            CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
+            ViewWindowTitleTalent,
         },
         tts::{IncreaseTalent, NextPropTalent, PrevPropTalent, ReduceTalent},
     },
@@ -79,6 +80,7 @@ impl TalentAccessor {
             // 程序技能
             Arc::new(ExitTalent),
             Arc::new(CurrentTimeTalent),
+            Arc::new(CurrentCpuUsageTalent),
             Arc::new(PopupMenuTalent),
             Arc::new(HotkeysTalent),
             Arc::new(ViewWindowTitleTalent),
