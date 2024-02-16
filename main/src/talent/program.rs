@@ -52,7 +52,7 @@ impl Speakable for &PdhCounter {
     fn get_sentence(&self) -> String {
         t!(
             "program.current_cpu_usage",
-            value = (self.get_value().1).round()
+            value = self.get_value().1.round()
         )
         .to_string()
     }
@@ -78,7 +78,7 @@ async fn current_cpu_usage(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
 async fn popup_menu(context: Arc<Context>) {
-    thread::spawn(|| popup_menu::show());
+    thread::spawn(move || popup_menu::show(context.clone()));
 }
 
 //noinspection RsUnresolvedReference
