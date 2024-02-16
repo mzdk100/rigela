@@ -27,7 +27,10 @@ impl ResourceAccessor {
      * 创建一个资源读取器。
      * */
     pub(crate) fn new() -> Self {
-        let root_dir = get_program_directory();
+        let root_dir = get_program_directory().join("resources");
+        if !root_dir.exists() {
+            std::fs::create_dir_all(&root_dir).unwrap();
+        }
         Self { root_dir }
     }
 

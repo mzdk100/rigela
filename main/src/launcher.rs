@@ -113,7 +113,7 @@ async fn put_peeper() {
     let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
     let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
-    let peeper_path = get_program_directory().join("peeper.dll");
+    let peeper_path = get_program_directory().join("libs/peeper.dll");
     if let Err(e) = write_file(&peeper_path, peeper_dll).await {
         error!("{}", e);
     };

@@ -61,7 +61,7 @@ impl Proxy32 {
         #[cfg(debug_assertions)]
         let proxy32_bin =
             include_bytes!("../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe");
-        let proxy32_path = get_program_directory().join("proxy32.exe");
+        let proxy32_path = get_program_directory().join("libs/proxy32.exe");
         if let Err(e) = write_file(&proxy32_path, proxy32_bin).await {
             error!("{}", e);
         }

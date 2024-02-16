@@ -20,6 +20,7 @@ use crate::{
 #[allow(unused_imports)]
 use async_trait::async_trait;
 use rigela_macros::talent;
+use rigela_utils::set_clipboard_text;
 #[allow(unused_imports)]
 use std::sync::Arc;
 
@@ -99,8 +100,9 @@ async fn make_word_cache_char(context: Arc<Context>) {
 #[talent(doc = "拷贝缓冲区", key = (VkRigelA, VkC))]
 async fn cache_to_clipboard(context: Arc<Context>) {
     let cache = context.performer.get_cache();
-    let _text = cache.get_data().await;
-    // Todo: 拷贝到剪贴板
+    let text = cache.get_data().await;
+    set_clipboard_text(text);
+    // context.performer.play_sound("boundary.wav").await;
 }
 
 async fn speak_tts_prop(context: Arc<Context>) {

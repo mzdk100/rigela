@@ -14,6 +14,7 @@
 use crate::{call_proc, get_program_directory};
 use log::{error, info};
 use std::{
+    fs,
     future::Future,
     path::PathBuf,
     pin::Pin,
@@ -156,7 +157,12 @@ impl BassChannelOutputStream {
         #[cfg(target_arch = "x86_64")]
         use std::{fs::OpenOptions, io::Write};
 
-        let bass_path = get_program_directory().join(LIB_NAME);
+        let bass_path = get_program_directory().join("libs");
+        if !bass_path.exists() {
+            fs::create_dir(&bass_path).unwrap();
+        }
+
+        let bass_path = bass_path.join(LIB_NAME);
         #[cfg(target_arch = "x86_64")]
         if !bass_path.exists() {
             let lib_bin = include_bytes!("../lib/bass.dll");

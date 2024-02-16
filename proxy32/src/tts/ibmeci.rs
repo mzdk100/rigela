@@ -209,7 +209,7 @@ impl Ibmeci {
         const LIB_NAME: &str = "ibmeci.dll";
         let url = format!("{}/{}", SERVER_HOME_URI, LIB_NAME);
 
-        let eci_path = get_program_directory().join(LIB_NAME);
+        let eci_path = get_program_directory().join("libs").join(LIB_NAME);
         let file = clone_resource(url, eci_path.clone()).await;
         if let Err(e) = file {
             error!("{}", e);

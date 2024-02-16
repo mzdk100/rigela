@@ -158,9 +158,9 @@ pub fn mount() {
     debug!("mounted.");
     thread::spawn(move || {
         #[cfg(target_arch = "x86_64")]
-        let dll_path = get_program_directory().join(format!("{}.dll", module_path!()));
+        let dll_path = get_program_directory().join(format!("libs/{}.dll", module_path!()));
         #[cfg(target_arch = "x86")]
-        let dll_path = get_program_directory().join(format!("{}32.dll", module_path!()));
+        let dll_path = get_program_directory().join(format!("libs/{}32.dll", module_path!()));
 
         debug!("Module path: {}", dll_path.display());
         let handle = match load_library(dll_path.to_str().unwrap()) {
