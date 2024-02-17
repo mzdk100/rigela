@@ -62,6 +62,7 @@ async fn prev_cache_char(context: Arc<Context>) {
     let cache = context.performer.get_cache();
     let text = cache.get(CacheDirection::Backward).await;
     let tts = context.performer.get_tts();
+    tts.stop().await;
     tts.speak(text).await;
 }
 
@@ -71,6 +72,7 @@ async fn next_cache_char(context: Arc<Context>) {
     let cache = context.performer.get_cache();
     let text = cache.get(CacheDirection::Forward).await;
     let tts = context.performer.get_tts();
+    tts.stop().await;
     tts.speak(text).await;
 }
 
@@ -82,6 +84,7 @@ async fn trans_cache_char(context: Arc<Context>) {
     // Todo: 查字典
 
     let tts = context.performer.get_tts();
+    tts.stop().await;
     tts.speak(text).await;
 }
 
@@ -93,6 +96,7 @@ async fn make_word_cache_char(context: Arc<Context>) {
     // Todo: 生成词组
 
     let tts = context.performer.get_tts();
+    tts.stop().await;
     tts.speak(text).await;
 }
 
