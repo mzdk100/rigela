@@ -17,7 +17,6 @@ use nwg::{EventData, NativeUi};
 
 const TITLE: &str = "Rigela";
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
-const BUTTON_LABEL: &str = "我要捐献";
 
 #[derive(Default, NwgUi)]
 pub struct WelcomeForm {
@@ -29,27 +28,56 @@ pub struct WelcomeForm {
     layout: nwg::GridLayout,
 
     #[nwg_control(text: INFO, readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
-    #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4)]
+    #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [WelcomeForm::on_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextBox,
 
-    #[nwg_control(text: BUTTON_LABEL, size: (100, 30), flags: "TAB_STOP|VISIBLE")]
-    #[nwg_layout_item(layout: layout, row: 4, col: 0)]
-    #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_click])]
-    btn: nwg::Button,
+    #[nwg_control(text: "我要捐献 (&D)", size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_layout_item(layout: layout, row: 4, col: 1, col_span: 4)]
+    #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_donate])]
+    btn_donate: nwg::Button,
+
+    #[nwg_control(text: "设置 (&S)", size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_layout_item(layout: layout, row: 5, col: 3)]
+    #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_setting])]
+    btn_setting: nwg::Button,
+
+    #[nwg_control(text: "帮助 (&H)", size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_layout_item(layout: layout, row: 5, col: 4)]
+    #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_help])]
+    btn_help: nwg::Button,
+
+    #[nwg_control(text: "关闭 (&C)", size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_layout_item(layout: layout, row: 5, col: 5)]
+    #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_close])]
+    btn_close: nwg::Button,
 }
 
 impl WelcomeForm {
     fn on_key_press(&self, data: &EventData) {
         if data.on_key() == nwg::keys::TAB {
-            self.btn.set_focus();
+            self.btn_donate.set_focus();
         }
     }
 
-    fn on_btn_click(&self) {
+    fn on_btn_donate(&self) {
         // Todo: 捐献按钮点击事件，带实现
 
         nwg::modal_info_message(&self.window, "Rigela", "感谢支持!");
+    }
+
+    fn on_btn_setting(&self) {
+        // Todo: 设置按钮点击事件，带实现
+        nwg::modal_info_message(&self.window, "Rigela", "设置");
+    }
+
+    fn on_btn_help(&self) {
+        // Todo: 帮助按钮点击事件，带实现
+        nwg::modal_info_message(&self.window, "Rigela", "帮助");
+    }
+
+    fn on_btn_close(&self) {
+        nwg::stop_thread_dispatch();
     }
 }
 

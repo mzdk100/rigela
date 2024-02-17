@@ -138,4 +138,25 @@ impl ConfigManager {
             *write_finished.lock().unwrap().deref_mut() = true;
         });
     }
+
+    /// 直接保存配置，不延时
+    pub(crate) fn save_config(&self) {
+        let path = self.path.clone();
+        let config = self.config.clone();
+
+        let _ = spawn(
+            move || match toml::to_string(config.lock().unwrap().deref()) {
+                Ok(content) => {
+                    if let Ok(mut file) = File::create(&path) {
+                        file.write_all(&content.into_bytes())
+                            .expect("write config file failed");
+                    } else {
+                        error!("create config file failed");
+                    }
+                }
+                Err(e) => error!("{}", e),
+            },
+        )
+        .join();
+    }
 }

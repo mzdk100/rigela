@@ -48,7 +48,7 @@ pub struct SystemTray {
     exit_item: nwg::MenuItem,
 
     #[nwg_control()]
-    #[nwg_events(OnNotice: [SystemTray::on_exit])]
+    #[nwg_events(OnNotice: [SystemTray::on_exit_notice])]
     exit_notice: nwg::Notice,
 }
 
@@ -68,6 +68,10 @@ impl SystemTray {
         nwg::simple_message("RigelA", "Start Help");
     }
 
+    fn on_exit_notice(&self) {
+        nwg::stop_thread_dispatch();
+    }
+
     fn on_exit(&self) {
         let context = self.context.lock().unwrap().clone();
         if let Some(context) = context {
@@ -79,7 +83,6 @@ impl SystemTray {
                     .await;
             });
         }
-        nwg::stop_thread_dispatch();
     }
 
     fn set_context(&self, context: Arc<Context>) {

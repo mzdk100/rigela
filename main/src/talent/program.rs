@@ -79,7 +79,7 @@ async fn current_cpu_usage(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
 async fn popup_menu(context: Arc<Context>) {
-    thread::spawn(|| popup_menu::show());
+    thread::spawn(move || popup_menu::show(context.clone()));
 }
 
 //noinspection RsUnresolvedReference

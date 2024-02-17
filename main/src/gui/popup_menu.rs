@@ -12,11 +12,17 @@
  */
 
 use crate::bring_window_front;
+use crate::context::Context;
+use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NativeUi;
+use std::ops::DerefMut;
+use std::sync::{Arc, Mutex};
 
 #[derive(Default, NwgUi)]
 pub struct PopupMenu {
+    context: Mutex<Option<Arc<Context>>>,
+
     #[nwg_control]
     #[nwg_events(OnInit: [PopupMenu::on_init])]
     window: nwg::MessageWindow,
@@ -58,13 +64,28 @@ impl PopupMenu {
     }
 
     fn on_exit(&self) {
+        let context = self.context.lock().unwrap().clone();
+        if let Some(context) = context {
+            let ctx = context.clone();
+            context.main_handler.spawn(async move {
+                ctx.talent_accessor
+                    .get_exit_talent()
+                    .perform(ctx.clone())
+                    .await;
+            });
+        }
         nwg::stop_thread_dispatch();
+    }
+
+    fn set_context(&self, context: Arc<Context>) {
+        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
     }
 }
 
-pub(crate) fn show() {
+pub(crate) fn show(context: Arc<Context>) {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = PopupMenu::build_ui(Default::default()).expect("Failed to build UI");
+    ui.set_context(context.clone());
     bring_window_front!(&ui.window);
     nwg::dispatch_thread_events();
 }

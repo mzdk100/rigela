@@ -13,8 +13,12 @@
 
 use crate::{call_proc, get_program_directory};
 use log::{error, info};
-use std::{path::PathBuf, time::Duration};
-use tokio::time::sleep;
+use std::{
+    future::Future,
+    path::PathBuf,
+    pin::Pin,
+    task::{Context, Poll},
+};
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
 
 macro_rules! bass {
@@ -120,27 +124,6 @@ macro_rules! bass {
             $handle
         )
     };
-    ($module:expr,channel_set_sync,$handle:expr,$type:expr,$param:expr,$proc:expr,$user:expr) => {
-        call_proc!(
-            $module,
-            BASS_ChannelSetSync,
-            extern "system" fn(i32, u32, i64, fn(i32, i32, i32, i32), i32) -> i32,
-            $handle,
-            $type,
-            $param,
-            $proc,
-            $user
-        )
-    };
-    ($module:expr,channel_remove_sync,$handle:expr,$h_sync:expr) => {
-        call_proc!(
-            $module,
-            BASS_ChannelRemoveSync,
-            extern "system" fn(i32, i32) -> bool,
-            $handle,
-            $h_sync
-        )
-    };
 }
 
 const LIB_NAME: &str = "bass.dll";
@@ -161,49 +144,6 @@ const BASS_ACTIVE_PAUSED: i32 = 3;
 /// The channel's device is paused.
 #[allow(unused)]
 const BASS_ACTIVE_PAUSED_DEVICE: i32 = 4;
-
-// BASS_ChannelSetSync types
-#[allow(unused)]
-const BASS_SYNC_POS: u32 = 0;
-#[allow(unused)]
-const BASS_SYNC_END: u32 = 2;
-#[allow(unused)]
-const BASS_SYNC_META: u32 = 4;
-#[allow(unused)]
-const BASS_SYNC_SLIDE: u32 = 5;
-#[allow(unused)]
-const BASS_SYNC_STALL: u32 = 6;
-#[allow(unused)]
-const BASS_SYNC_DOWNLOAD: u32 = 7;
-#[allow(unused)]
-const BASS_SYNC_FREE: u32 = 8;
-//noinspection SpellCheckingInspection
-#[allow(unused)]
-const BASS_SYNC_SETPOS: u32 = 11;
-//noinspection SpellCheckingInspection
-#[allow(unused)]
-const BASS_SYNC_MUSICPOS: u32 = 10;
-//noinspection SpellCheckingInspection
-#[allow(unused)]
-const BASS_SYNC_MUSICINST: u32 = 1;
-//noinspection SpellCheckingInspection
-#[allow(unused)]
-const BASS_SYNC_MUSICFX: u32 = 3;
-#[allow(unused)]
-const BASS_SYNC_OGG_CHANGE: u32 = 12;
-#[allow(unused)]
-const BASS_SYNC_DEV_FAIL: u32 = 14;
-#[allow(unused)]
-const BASS_SYNC_DEV_FORMAT: u32 = 15;
-/// flag: call sync in another thread
-#[allow(unused)]
-const BASS_SYNC_THREAD: u32 = 0x20000000;
-//noinspection SpellCheckingInspection
-/// flag: sync at mixtime, else at playtime
-#[allow(unused)]
-const BASS_SYNC_MIXTIME: u32 = 0x40000000;
-#[allow(unused)]
-const BASS_SYNC_ONETIME: u32 = 0x80000000; // flag: sync only once, else continuously
 
 #[derive(Debug)]
 pub struct BassChannelOutputStream {
@@ -323,43 +263,24 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 检查样本、流或MOD音乐是否处于活动状态（正在播放）或暂停状态。还可以检查是否正在录制。
-     * */
-    pub fn is_active(&self) -> i32 {
-        bass!(self.h_module, channel_is_active, self.h_bass).unwrap_or(BASS_ACTIVE_STOPPED)
-    }
-
-    /**
      * 等待直到停止。
      * */
-    pub async fn wait_until_stopped(&self) {
-        self.wait(BASS_ACTIVE_STOPPED).await;
+    pub fn wait_until_stopped(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_STOPPED)
     }
 
     /**
      * 等待直到暂停。
      * */
-    pub async fn wait_until_paused(&self) {
-        self.wait(BASS_ACTIVE_PAUSED).await;
+    pub fn wait_until_paused(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_PAUSED)
     }
 
     /**
      * 等待直到没有数据可以播放。
      * */
-    pub async fn wait_until_stalled(&self) {
-        self.wait(BASS_ACTIVE_STALLED).await;
-    }
-
-    async fn wait(&self, flags: i32) {
-        loop {
-            let Some(active) = bass!(self.h_module, channel_is_active, self.h_bass) else {
-                break;
-            };
-            if active == flags {
-                break;
-            }
-            sleep(Duration::from_millis(50)).await;
-        }
+    pub fn wait_until_stalled(&self) -> BassChannelActive {
+        BassChannelActive(self.h_module, self.h_bass, BASS_ACTIVE_STALLED)
     }
 }
 
@@ -371,19 +292,19 @@ impl Drop for BassChannelOutputStream {
     }
 }
 
-#[cfg(test)]
-mod test_bass {
-    use crate::bass::BassChannelOutputStream;
+pub struct BassChannelActive(HMODULE, i32, i32);
 
-    #[tokio::test]
-    async fn main() {
-        let out = BassChannelOutputStream::new(16000, 1);
-        let mut data = vec![];
-        for i in 0..8000 {
-            data.push(((i as f64).sin() * 127f64 + 128f64) as u8)
+impl Future for BassChannelActive {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let Some(active) = bass!(self.0, channel_is_active, self.1) else {
+            return Poll::Ready(());
+        };
+        if active == self.2 {
+            return Poll::Ready(());
         }
-        out.start();
-        out.put_data(&data);
-        out.wait_until_stalled().await;
+        cx.waker().wake_by_ref();
+        Poll::Pending
     }
 }

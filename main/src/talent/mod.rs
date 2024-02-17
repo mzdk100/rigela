@@ -16,6 +16,10 @@ mod mouse;
 mod program;
 mod tts;
 
+use crate::talent::tts::{
+    CacheToClipboardTalent, MakeWordCacheCharTalent, NextCacheCharTalent, PrevCacheCharTalent,
+    TransCacheCharTalent,
+};
 use crate::{
     commander::CommandType,
     context::Context,
@@ -97,6 +101,11 @@ impl TalentAccessor {
             Arc::new(ReduceTalent),
             Arc::new(NextPropTalent),
             Arc::new(PrevPropTalent),
+            Arc::new(PrevCacheCharTalent),
+            Arc::new(NextCacheCharTalent),
+            Arc::new(TransCacheCharTalent),
+            Arc::new(MakeWordCacheCharTalent),
+            Arc::new(CacheToClipboardTalent),
             // 鼠标技能
             Arc::new(ClickTalent),
             Arc::new(RightClickTalent),
