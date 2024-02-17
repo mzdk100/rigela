@@ -40,40 +40,60 @@ impl Cache {
 
     /// 获取字符,参数可以是上一个，下一个，或者当前
     pub(crate) async fn get(&self, direction: Direction) -> String {
-        if self.index.lock().await.is_none() {
+        // return "好".to_string();
+        // 取消上面这行注释，缓冲区朗读的锁定仍然存在， 问题可能在tts的speak那边
+
+        let lock = self.index.lock().await;
+        let index = lock.clone();
+        drop(lock);
+
+        if index.is_none() {
             return self.get_first_char().await.into();
         }
 
-        let len = self.char_list.lock().await.len();
-        let index = self.index.lock().await.clone().unwrap();
+        let lock = self.char_list.lock().await;
+        let len = lock.len();
+        drop(lock);
+        let index = index.unwrap();
 
-        *self.index.lock().await = match direction {
+        let mut lock = self.index.lock().await;
+        *lock = match direction {
             Direction::Forward if index == len - 1 => index.into(),
             Direction::Forward => (index + 1).into(),
             Direction::Backward if index == 0 => index.into(),
             Direction::Backward => (index - 1).into(),
             _ => index.into(),
         };
+        drop(lock);
 
-        let index = self.index.lock().await.clone().unwrap();
-        self.char_list.lock().await.get(index).unwrap().clone().into()
+        let lock = self.index.lock().await;
+        let index = lock.clone().unwrap();
+        drop(lock);
+
+        let lock = self.char_list.lock().await;
+        let ch = lock.get(index).unwrap().clone();
+        drop(lock);
+
+        ch.into()
     }
-    
-    /// 获取缓冲区数据 
+
+    /// 获取缓冲区数据
     pub(crate) async fn get_data(&self) -> String {
         self.data.lock().await.clone()
     }
-    
+
     /// 延时计算
     async fn get_first_char(&self) -> char {
         self.index.lock().await.replace(0);
 
-        let mut list = self.char_list.lock().await;
-        for (_, c) in self.data.lock().await.char_indices() {
-            list.push(c);
+        {
+            let mut list = self.char_list.lock().await;
+            for (_, c) in self.data.lock().await.char_indices() {
+                list.push(c);
+            }
         }
 
-        list.first().unwrap().clone()
+        self.char_list.lock().await.first().unwrap().clone()
     }
 }
 
