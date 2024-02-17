@@ -15,7 +15,7 @@ use crate::model::IbmeciVoiceParams;
 use encoding_rs::GBK;
 use log::{error, info};
 use rigela_resources::clone_resource;
-use rigela_utils::{call_proc, get_program_directory, SERVER_HOME_URI};
+use rigela_utils::{call_proc, get_file_modified_duration, get_program_directory, SERVER_HOME_URI};
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
     ffi::{c_char, CString},
@@ -210,12 +210,15 @@ impl Ibmeci {
         let url = format!("{}/{}", SERVER_HOME_URI, LIB_NAME);
 
         let eci_path = get_program_directory().join("libs").join(LIB_NAME);
-        let file = clone_resource(url, eci_path.clone()).await;
-        if let Err(e) = file {
-            error!("{}", e);
-            return None;
+        if get_file_modified_duration(&eci_path).await > 3600 * 6 {
+            // 资源修改时间超过6小时才重新从服务器上克隆，加快启动速度
+            let file = clone_resource(url, eci_path.clone()).await;
+            if let Err(e) = file {
+                error!("{}", e);
+                return None;
+            }
+            drop(file);
         }
-        drop(file);
         let h_module = loop {
             match load_library(eci_path.to_str().unwrap()) {
                 Ok(h) => break h,

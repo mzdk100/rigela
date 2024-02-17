@@ -18,9 +18,9 @@ pub mod resample;
 
 use clipboard::{ClipboardContext, ClipboardProvider};
 use home::home_dir;
-use std::{fs::create_dir, path::PathBuf};
+use std::{fs::create_dir, io::Error, path::PathBuf};
 use tokio::{
-    fs::OpenOptions,
+    fs::{metadata, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
@@ -58,29 +58,40 @@ pub fn get_program_directory() -> PathBuf {
 }
 
 /**
+ * 获取文件已修改的时长（单位是秒），如果文件不存在或遇到其他错误则返回u64::MAX。
+ * `path` 文件路径。
+ * */
+pub async fn get_file_modified_duration(path: &PathBuf) -> u64 {
+    let Ok(attr) = metadata(&path).await else {
+        return u64::MAX;
+    };
+    let Ok(modified) = attr.modified() else {
+        return u64::MAX;
+    };
+    match modified.elapsed() {
+        Ok(d) => d.as_secs(),
+        Err(_) => u64::MAX,
+    }
+}
+
+/**
  * 把数据完整写入到文件，这会冲洗现有文件，覆盖写入。
  * `path` 文件路径。
  * `data` 需要写入的数据。
  * */
-pub async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), String> {
-    let file = OpenOptions::new()
+pub async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), Error> {
+    OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
         .open(&path)
-        .await;
-    if file.is_err() {
-        return Err(format!("Can't open the file ({}).", path.display()));
-    }
-    let res = file.unwrap().write_all(data).await;
-    if res.is_err() {
-        return Err("Can't write the data to file.".to_string());
-    }
-    Ok(())
+        .await?
+        .write_all(data)
+        .await
 }
 
 /// 异步读取文件
-pub async fn read_file(path: &PathBuf) -> Result<String, std::io::Error> {
+pub async fn read_file(path: &PathBuf) -> Result<String, Error> {
     let mut result = String::new();
     OpenOptions::new()
         .read(true)

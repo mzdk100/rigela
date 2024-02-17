@@ -15,7 +15,11 @@ use bitar::{archive_reader::HttpReader, Archive, ChunkIndex, CloneOutput, HashSu
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
 use log::{debug, info};
-use std::{io::SeekFrom, path::PathBuf, time::Duration};
+use std::{
+    io::{Error, ErrorKind, SeekFrom},
+    path::PathBuf,
+    time::Duration,
+};
 use tokio::{
     fs::{File, OpenOptions},
     io::{AsyncReadExt, AsyncSeekExt},
@@ -28,14 +32,17 @@ use url::Url;
  * `resource_url` 资源文件的url，提供文件的http server必须有断点续传能力。
  * `save_path` 保存资源文件的本地路径。
  * */
-pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<File, String> {
+pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<File, Error> {
     let url = format!("{}.cba", resource_url);
     let reader = HttpReader::from_url(Url::parse(url.as_str()).unwrap())
         .retries(5)
         .retry_delay(Duration::from_millis(5000));
     let archive = Archive::try_init(reader).await;
     if let Err(x) = archive {
-        return Err(format!("Failed to read archive at {}.\n{}", url, x));
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!("Failed to read archive at {}.\n{}", url, x).as_str(),
+        ));
     }
     let mut archive = archive.unwrap();
     let clone_index = archive.build_source_index();
@@ -136,12 +143,16 @@ pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<
     };
     let expected_checksum = archive.source_checksum();
     if sum != *expected_checksum {
-        return Err(format!(
-            "Checksum mismatch ({}: {}, {}: {})",
-            save_path.display(),
-            sum,
-            url,
-            expected_checksum
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!(
+                "Checksum mismatch ({}: {}, {}: {})",
+                save_path.display(),
+                sum,
+                url,
+                expected_checksum
+            )
+            .as_str(),
         ));
     }
     info!(

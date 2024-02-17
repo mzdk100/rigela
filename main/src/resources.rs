@@ -12,8 +12,8 @@
  */
 
 use rigela_resources::clone_resource;
-use rigela_utils::{get_program_directory, SERVER_HOME_URI};
-use std::path::PathBuf;
+use rigela_utils::{get_file_modified_duration, get_program_directory, SERVER_HOME_URI};
+use std::{io::Error, path::PathBuf};
 use tokio::fs::File;
 
 /// 资源访问器
@@ -38,8 +38,13 @@ impl ResourceAccessor {
      * 打开一个资源文件。
      * `resource_name` 资源名称。
      * */
-    pub(crate) async fn open(&self, resource_name: &str) -> Result<File, String> {
-        let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
-        clone_resource(url, self.root_dir.join(resource_name)).await
+    pub(crate) async fn open(&self, resource_name: &str) -> Result<File, Error> {
+        let path = self.root_dir.join(resource_name);
+        if get_file_modified_duration(&path).await > 3600 * 6 {
+            // 如果文件修改时间超出6个小时才重新克隆文件，加快启动速度
+            let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
+            return clone_resource(url, path).await;
+        }
+        File::open(&path).await
     }
 }

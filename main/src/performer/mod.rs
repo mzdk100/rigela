@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub(crate) mod cache;
 pub(crate) mod sound;
 pub(crate) mod tts;
-pub(crate) mod cache;
 
 use crate::{
     context::Context,
@@ -23,7 +23,9 @@ use crate::{
     },
 };
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::OnceCell;
+use tokio::time::sleep;
 
 /// 表演者语音信息收集接口。 实现此接口的对象可以调用表演者的speak方法进行输出。
 pub(crate) trait Speakable {
@@ -62,12 +64,12 @@ impl Performer {
             .await;
         self.sound.apply(context.clone()).await;
     }
-    
+
     /// 获取表演者的TTS对象
     pub(crate) fn get_tts(&self) -> Arc<Tts> {
         self.tts.get().unwrap().clone()
     }
-    
+
     /// 获取表演者的缓冲区
     pub(crate) fn get_cache(&self) -> Arc<cache::Cache> {
         self.cache.clone()
@@ -86,12 +88,15 @@ impl Performer {
 
         // 更新缓存
         self.cache.update(text.clone()).await;
-        
-        if let Some(tts) = self.tts.get() {
-            tts.stop().await;
-            return tts.speak(text).await;
+
+        loop {
+            if let Some(tts) = self.tts.get() {
+                tts.stop().await;
+                return tts.speak(text).await;
+            }
+            // 如果tts没有加载好，就继续等待
+            sleep(Duration::from_millis(100)).await;
         }
-        return false;
     }
 
     /// 播放音效
