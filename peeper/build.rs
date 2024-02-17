@@ -29,7 +29,9 @@ fn copy_deps(target: &str) {
         .join(target)
         .join("lib");
     let lib_dir = read_dir(&lib_path).unwrap();
-    let target_dir = Path::new(&env::var("USERPROFILE").unwrap()).join(".rigela");
+    let target_dir = Path::new(&env::var("USERPROFILE").unwrap())
+        .join(".rigela")
+        .join("libs");
     for i in lib_dir {
         let i = i.unwrap();
         let f = i.file_name().into_string().unwrap().to_lowercase();
