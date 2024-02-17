@@ -48,9 +48,10 @@ pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<
         .open(&save_path)
         .await
         .expect(format!("Failed to open {}", save_path.display()).as_str());
+    info!("Cloning into `{}` from `{}`...", save_path.display(), &url);
+
     // 建立输出文件块的索引
     let output_index = {
-        info!("Building chunk index of {}...", save_path.display());
         let mut chunk_stream = archive
             .chunker_config()
             .new_chunker(&mut output_file)
@@ -76,7 +77,6 @@ pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<
         total_read_from_seed += used_from_self;
     }
     // 从存档中读取剩余内容
-    info!("Fetching {} chunks from {}...", output_clone.len(), url);
     let total_read_from_remote = {
         let mut total_fetched = 0u64;
         let output_bytes = {

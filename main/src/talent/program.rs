@@ -52,7 +52,7 @@ impl Speakable for &PdhCounter {
     fn get_sentence(&self) -> String {
         t!(
             "program.current_cpu_usage",
-            value = (self.get_value().1).round()
+            value = self.get_value().1.round()
         )
         .to_string()
     }
@@ -69,6 +69,7 @@ async fn current_cpu_usage(context: Arc<Context>) {
             "_Total"
         ));
         query.collect_data();
+        thread::sleep(Duration::from_millis(500));
         (counter, query)
     });
     query.collect_data();
