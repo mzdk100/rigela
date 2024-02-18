@@ -12,13 +12,13 @@
  */
 
 mod editor;
+mod focus;
 mod ime;
 
 use crate::{
     context::Context,
     event_core::{
-        editor::subscribe_editor_events,
-        ime::{subscribe_ime_events, MS_IME_CLASS_NAME},
+        editor::subscribe_editor_events, focus::subscribe_focus_events, ime::subscribe_ime_events,
     },
     ext::AccessibleObjectExt,
 };
@@ -30,13 +30,7 @@ use tokio::{
     sync::{Mutex, OnceCell},
     time::sleep,
 };
-use win_wrap::{
-    msaa::object::{
-        AccessibleObject, ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST,
-        ROLE_SYSTEM_LISTITEM,
-    },
-    uia::element::ControlType,
-};
+use win_wrap::msaa::object::AccessibleObject;
 
 /// 事件过滤器
 #[derive(Debug)]
@@ -90,8 +84,9 @@ impl EventCore {
     /// 启动事件监听
     pub(crate) async fn run(&self, context: Arc<Context>) {
         self.context.set(context.clone()).unwrap_or(());
+
         // 订阅UIA的焦点元素改变事件
-        speak_focus_item(context.clone()).await;
+        subscribe_focus_events(context.clone()).await;
 
         // 监听前台窗口变动
         subscribe_foreground_window_events(context.clone()).await;
@@ -103,89 +98,13 @@ impl EventCore {
         subscribe_ime_events(context.clone()).await;
 
         // 处理编辑框朗读
-        let ctx = context.clone();
-        context
-            .main_handler
-            .spawn(subscribe_editor_events(ctx))
-            .await
-            .unwrap();
+        subscribe_editor_events(context).await;
     }
 
     /**
      * 停止所有事件处理。
      * */
     pub(crate) fn shutdown(&self) {}
-}
-
-//noinspection SpellCheckingInspection
-/// 朗读焦点元素
-async fn speak_focus_item(context: Arc<Context>) {
-    // 给UI Automation的焦点改变绑定处理事件
-    let ctx = context.clone();
-    context.ui_automation.add_focus_changed_listener(move |x| {
-        let performer = ctx.performer.clone();
-
-        // 异步执行元素朗读
-        ctx.main_handler.spawn(async move {
-            if let ControlType::ListItem = x.get_control_type() {
-                // 列表项目的事件让MSAA处理，因为很多列表只有MSAA支持的完善
-                //return;
-            }
-            performer.speak(x).await;
-        });
-    });
-
-    // 给MSAA的焦点改变绑定处理事件
-    let ctx = context.clone();
-    context.msaa.add_on_object_focus_listener(move |src| {
-        let performer = ctx.performer.clone();
-        let (obj, child) = match src.get_object() {
-            Err(_) => return,
-            Ok(o) => o,
-        };
-        ctx.main_handler.spawn(async move {
-            match obj.get_role(child) {
-                ROLE_SYSTEM_LISTITEM | ROLE_SYSTEM_LIST => (),
-                ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
-                    // 如果有对话框弹出，我们要延迟播报，因为很有可能被焦点元素打断
-                    sleep(Duration::from_millis(500)).await;
-                    performer.speak(obj.get_dialog_content()).await;
-                    return;
-                }
-                _ => return,
-            };
-            performer.speak((obj, child)).await;
-        });
-    });
-
-    // 监听容器控件中选择项改变（例如组合框）
-    let ctx = context.clone();
-    context.msaa.add_on_object_selection_listener(move |src| {
-        if src.get_class_name() == MS_IME_CLASS_NAME {
-            // 此类事件属于微软输入法候选项，处理逻辑在ime中已经实现
-            return;
-        }
-        let performer = ctx.performer.clone();
-        ctx.main_handler.spawn(async move {
-            performer.speak(src.get_object().unwrap()).await;
-        });
-    });
-
-    // 监听工具提示信息
-    let ctx = context.clone();
-    context.msaa.add_on_object_show_listener(move |src| {
-        if !src.get_class_name().to_lowercase().contains("tooltip") {
-            return;
-        }
-        let Ok(obj) = src.get_object() else {
-            return;
-        };
-        let performer = ctx.performer.clone();
-        ctx.main_handler.spawn(async move {
-            performer.play_sound("tip.wav").await;
-            performer.speak(obj).await;
-        });
-    })
 }
 
 /// 监测前台窗口变动，发送控件元素到form_browser
