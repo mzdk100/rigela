@@ -13,7 +13,12 @@
 
 use crate::{call_proc, get_program_directory};
 use log::{error, info};
-use std::{fs::create_dir, path::PathBuf, time::Duration};
+use std::{
+    ffi::{c_void, CString},
+    fs::create_dir,
+    sync::OnceLock,
+    time::Duration,
+};
 use tokio::time::sleep;
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
 
@@ -141,6 +146,18 @@ macro_rules! bass {
             $h_sync
         )
     };
+    ($module:expr,stream_create_file,$mem:expr,$data:expr,$offset:expr,$length:expr,$flags:expr) => {
+        call_proc!(
+            $module,
+            BASS_StreamCreateFile,
+            extern "system" fn(bool, *const c_void, u64, u64, i32) -> i32,
+            $mem,
+            $data as *const c_void,
+            $offset,
+            $length,
+            $flags
+        )
+    };
 }
 
 const LIB_NAME: &str = "bass.dll";
@@ -212,7 +229,7 @@ pub struct BassChannelOutputStream {
 }
 
 impl BassChannelOutputStream {
-    fn copy_lib() -> PathBuf {
+    fn create(slot: impl FnOnce(HMODULE) -> Option<i32>) -> Self {
         #[cfg(target_arch = "x86_64")]
         use std::{fs::OpenOptions, io::Write};
 
@@ -233,7 +250,24 @@ impl BassChannelOutputStream {
                 .write_all(lib_bin)
                 .unwrap();
         }
-        bass_path
+        let h_module = match load_library(bass_path.to_str().unwrap()) {
+            Ok(h) => h,
+            Err(e) => {
+                error!("Can't open the library ({}). {}", bass_path.display(), e);
+                return Self::null();
+            }
+        };
+        static _LOADED: OnceLock<()> = OnceLock::new();
+        _LOADED.get_or_init(|| {
+            info!(
+                "{} loaded, library handle is {}.",
+                bass_path.display(),
+                h_module.0
+            )
+        });
+        bass!(h_module, init, -1, 44100, 0, 0, 0);
+        let h_bass = slot(h_module).unwrap();
+        Self { h_bass, h_module }
     }
 
     //noinspection RsUnresolvedReference
@@ -243,27 +277,34 @@ impl BassChannelOutputStream {
      * `num_channels` 声道数量。
      * */
     pub fn new(sample_rate: u32, num_channels: u32) -> Self {
-        let bass_path = Self::copy_lib();
-        let h_module = match load_library(bass_path.to_str().unwrap()) {
-            Ok(h) => h,
-            Err(e) => {
-                error!("Can't open the library ({}). {}", bass_path.display(), e);
-                return Self::null();
-            }
-        };
-        info!("{} loaded.", bass_path.display());
-        bass!(h_module, init, -1, 44100, 0, 0, 0);
-        let h_bass = bass!(
-            h_module,
-            stream_create,
-            sample_rate as i32,
-            num_channels as i32,
-            0,
-            STREAMPROC_PUSH,
-            0
-        )
-        .unwrap();
-        Self { h_bass, h_module }
+        Self::create(|h_module| {
+            bass!(
+                h_module,
+                stream_create,
+                sample_rate as i32,
+                num_channels as i32,
+                0,
+                STREAMPROC_PUSH,
+                0
+            )
+        })
+    }
+
+    /**
+     * 从内存文件创建实例。
+     * `data` 文件数据。
+     * */
+    pub fn from_memory_file(data: &[u8]) -> Self {
+        Self::create(|h_module| bass!(h_module, stream_create_file, true, data.as_ptr(), 0, 0, 0))
+    }
+
+    /**
+     * 从磁盘文件创建实例。
+     * `path` 文件路径。
+     * */
+    pub fn from_disk_file(path: &str) -> Self {
+        let path = CString::new(path).unwrap();
+        Self::create(|h_module| bass!(h_module, stream_create_file, false, path.as_ptr(), 0, 0, 0))
     }
 
     fn null() -> Self {
@@ -390,5 +431,12 @@ mod test_bass {
         out.start();
         out.put_data(&data);
         out.wait_until_stalled().await;
+        let out = BassChannelOutputStream::from_disk_file(
+            r"C:\Users\Administrator\.rigela\resources\tip.wav",
+        );
+        for _ in 0..5 {
+            out.start();
+            out.wait_until_stopped().await;
+        }
     }
 }
