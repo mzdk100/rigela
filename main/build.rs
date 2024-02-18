@@ -22,6 +22,7 @@ fn main() {
 
     cargo_rigela::make_version();
 
+    // 如果帮助文件或者更新日志有变动，更新哈希值
     println!("cargo:rerun-if-changed=../docs/help.txt");
     println!("cargo:rerun-if-changed=../docs/update_log.txt");
     rigela_utils::docs_check_update::update_docs_md5();
