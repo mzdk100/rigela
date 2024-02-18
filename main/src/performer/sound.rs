@@ -51,20 +51,31 @@ impl Sound {
             }
             sleep(Duration::from_millis(100)).await;
         };
-        let mut lock = self.sound_streams.lock().await;
+        let lock = self.sound_streams.lock().await;
         let stream = match lock.get(res_name) {
             None => {
+                drop(lock);
                 context.resource_accessor.open(res_name).await.unwrap();
-                let s = BassChannelOutputStream::from_disk_file(
-                    context.resource_accessor.get_path(res_name).as_str(),
-                );
-                lock.insert(res_name.to_string(), s.into());
-                lock.get(res_name).unwrap()
+                loop {
+                    let s = BassChannelOutputStream::from_disk_file(
+                        context.resource_accessor.get_path(res_name).as_str(),
+                    );
+                    if s.is_valid() {
+                        let mut lock = self.sound_streams.lock().await;
+                        lock.insert(res_name.to_string(), s.into());
+                        break;
+                    }
+                    sleep(Duration::from_millis(100)).await;
+                }
+                let lock = self.sound_streams.lock().await;
+                lock.get(res_name).unwrap().clone()
             }
-            Some(s) => s,
-        }
-        .clone();
-        drop(lock);
+            Some(s) => {
+                let s = s.clone();
+                drop(lock);
+                s
+            }
+        };
         stream.play(true);
         stream.wait_until_stopped().await;
     }

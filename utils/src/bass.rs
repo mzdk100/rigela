@@ -307,6 +307,9 @@ impl BassChannelOutputStream {
         Self::create(|h_module| bass!(h_module, stream_create_file, false, path.as_ptr(), 0, 0, 0))
     }
 
+    /**
+     * 创建一个空实例。
+     * */
     fn null() -> Self {
         Self {
             h_bass: 0,
@@ -314,6 +317,12 @@ impl BassChannelOutputStream {
         }
     }
 
+    /**
+     * 判断输出流是否可用。
+     * */
+    pub fn is_valid(&self) -> bool {
+        (!self.h_module.is_invalid()) && self.h_bass != 0
+    }
     /**
      * 清理释放。
      * */

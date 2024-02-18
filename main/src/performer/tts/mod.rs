@@ -23,8 +23,9 @@ use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
     sync::Arc,
+    time::Duration,
 };
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, time::sleep};
 
 #[derive(Clone, Debug)]
 pub(crate) struct VoiceInfo {
@@ -117,19 +118,24 @@ impl Tts {
             engine.wait().await;
             return !*self.is_cancelled.lock().await;
         };
-        if let Some(default_engine) = { self.default_engine.lock().await.clone() } {
-            if let Some(x) = lock.get(&default_engine) {
-                let engine = x.clone();
-                drop(lock);
-                engine.speak(text.as_str()).await;
-                {
-                    *self.is_cancelled.lock().await = false;
-                }
-                engine.wait().await;
-                return !*self.is_cancelled.lock().await;
-            };
+        drop(lock);
+        loop {
+            let lock = self.all_engines.lock().await;
+            if let Some(default_engine) = { self.default_engine.lock().await.clone() } {
+                if let Some(x) = lock.get(&default_engine) {
+                    let engine = x.clone();
+                    drop(lock);
+                    engine.speak(text.as_str()).await;
+                    {
+                        *self.is_cancelled.lock().await = false;
+                    }
+                    engine.wait().await;
+                    return !*self.is_cancelled.lock().await;
+                };
+            }
+            drop(lock);
+            sleep(Duration::from_millis(100)).await;
         }
-        return false;
     }
 
     /**

@@ -19,9 +19,9 @@ use crate::{
 };
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
+use log::error;
 use rigela_macros::talent;
 use std::{sync::OnceLock, thread, time::Duration};
-use tokio::time::sleep;
 use win_wrap::{
     common::get_foreground_window,
     msaa::object::AccessibleObject,
@@ -32,7 +32,6 @@ use win_wrap::{
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
 async fn exit(context: Arc<Context>) {
     context.performer.speak(t!("program.exit")).await;
-    sleep(Duration::from_millis(1000)).await;
     context.terminator.exit().await;
 }
 
@@ -92,6 +91,16 @@ async fn hotkeys(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
 async fn view_window_title(context: Arc<Context>) {
-    let obj = AccessibleObject::from_window(get_foreground_window()).unwrap();
-    context.performer.speak((obj, 0)).await;
+    match AccessibleObject::from_window(get_foreground_window()) {
+        Ok(o) => {
+            context.performer.speak((o, 0)).await;
+        }
+        Err(e) => {
+            error!(
+                "Can't get the object of the foreground window, because {}.",
+                e
+            );
+            context.performer.play_sound("error.wav").await
+        }
+    }
 }

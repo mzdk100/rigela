@@ -11,15 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::{system_tray, welcome};
 use crate::{
     context::Context,
+    gui::{system_tray, welcome},
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
-use std::{sync::Arc, thread, time::Duration};
-use tokio::time::sleep;
+use std::{sync::Arc, thread};
 use win_wrap::com::co_initialize_multi_thread;
 
 /// 启动器对象
@@ -56,6 +55,12 @@ impl Launcher {
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) async fn launch(&mut self) {
+        // 播放启动时的音效
+        let performer = self.context.performer.clone();
+        self.context.work_runtime.spawn(async move {
+            performer.play_sound("launch.wav").await;
+        });
+
         // peeper 可以监控远进程中的信息
         put_peeper().await;
         peeper::mount();
@@ -92,6 +97,9 @@ impl Launcher {
 
         // 解除远进程监控
         peeper::unmount();
+
+        // 播放退出音效
+        self.context.performer.play_sound("exit.wav").await;
     }
 }
 
@@ -99,8 +107,6 @@ impl Launcher {
 async fn speak_desktop(context: Arc<Context>) {
     let root = context.ui_automation.get_root_element();
     context.performer.speak(root).await;
-
-    sleep(Duration::from_millis(1000)).await;
 }
 
 /**

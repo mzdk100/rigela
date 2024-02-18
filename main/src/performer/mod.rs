@@ -22,10 +22,8 @@ use crate::{
         tts::{sapi5::Sapi5Engine, vvtts::VvttsEngine, Tts},
     },
 };
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::OnceCell;
-use tokio::time::sleep;
+use std::{sync::Arc, time::Duration};
+use tokio::{sync::OnceCell, time::sleep};
 
 /// 表演者语音信息收集接口。 实现此接口的对象可以调用表演者的speak方法进行输出。
 pub(crate) trait Speakable {
@@ -56,13 +54,14 @@ impl Performer {
      * `context` 读屏框架的上下文环境。
      * */
     pub(crate) async fn apply(&self, context: Arc<Context>) {
+        self.sound.apply(context.clone());
+
         let tts = Arc::new(Tts::new(context.clone()));
         self.tts.set(tts.clone()).unwrap_or(());
         tts.put_default_engine(Sapi5Engine::new())
             .await
             .add_engine(VvttsEngine::new(context.clone()))
             .await;
-        self.sound.apply(context.clone());
     }
 
     /// 获取表演者的TTS对象
@@ -86,12 +85,11 @@ impl Performer {
             return false;
         }
 
-        // 更新缓存
-        self.cache.update(text.clone()).await;
-
         loop {
             if let Some(tts) = self.tts.get() {
                 tts.stop().await;
+                // 更新缓存
+                self.cache.update(text.clone()).await;
                 return tts.speak(text).await;
             }
             // 如果tts没有加载好，就继续等待
