@@ -26,9 +26,10 @@
     接着我们需要拥有rust的环境，rust的环境搭建可以参考[Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)中的介绍；
     假设您已经具备上述条件，在构建程序之前我们还需要下载rust 的x86架构的工具链，运行下面命令进行安装
     ```shell
-    rust target add i686-pc-windows-msvc
+    rustup target add i686-pc-windows-msvc
+    rustup update
     ```
-2克隆仓库
+2. 克隆仓库
     ```shell
     git clone https://gitcode.net/mzdk100/rigela.git
     ```
@@ -36,7 +37,7 @@
     ```shell
     git clone https://github.com/mzdk100/rigela.git
     ```
-3构建项目
+3. 构建项目
     ```shell
     cd rigela
     cargo mkenv
