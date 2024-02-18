@@ -1,0 +1,21 @@
+_version: 2
+
+welcome.title:
+  en: Welcome to RigelA!
+  zh-CN: 欢迎您使用雷革读屏！
+
+welcome.btn_donate:
+  en: I want to donate (&D)
+  zh-CN: 我要捐献 (&D)
+
+welcome.btn_setting:
+  en: Setting (&S)
+  zh-CN: 设置 (&S)
+
+welcome.btn_help:
+  en: Help (&H)
+  zh-CN: 帮助 (&H)
+
+welcome.btn_close:
+  en: Close (&C)
+  zh-CN: 关闭 (&C)

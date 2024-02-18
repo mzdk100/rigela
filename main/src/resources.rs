@@ -47,4 +47,15 @@ impl ResourceAccessor {
         }
         File::open(&path).await
     }
+
+    /**
+     * 获取资源对应的文件路径。
+     * */
+    pub(crate) fn get_path(&self, resource_name: &str) -> String {
+        self.root_dir
+            .join(resource_name)
+            .into_os_string()
+            .into_string()
+            .unwrap()
+    }
 }
