@@ -15,8 +15,10 @@ use crate::{
     commander::keys::Keys::{VkDown, VkUp},
     context::Context,
 };
-use access_lib::ia2::text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE};
-use access_lib::ia2::WinEventSourceExt;
+use a11y::ia2::{
+    text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
+    WinEventSourceExt,
+};
 use log::error;
 use std::sync::Arc;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};

@@ -16,13 +16,12 @@ use crate::{
     configs::config_manager::ConfigManager, event_core, performer::Performer, proxy32::Proxy32,
     resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
 };
-use access_lib::ia2::Ia2;
+use a11y::ia2::Ia2;
 use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
-use win_wrap::msaa::Msaa;
-use win_wrap::uia::automation::UiAutomation;
+use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
 

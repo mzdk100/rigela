@@ -14,8 +14,8 @@
       <sourceFolder url="file://$MODULE_DIR$/proxy32/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build_helper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/utils/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/access-lib/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/access-lib/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/a11y/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/a11y/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

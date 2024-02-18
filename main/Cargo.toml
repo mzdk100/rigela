@@ -1,17 +1,13 @@
 [package]
-name = "main"
-description = "RigelA screen reader (rsr)."
-version = "0.1.0"
-edition = "2021"
-authors = [
-    "mzdk100 <mzdk100@foxmail.com>",
-    "lwboy <liwenboy2008@126.com>"
-]
-keywords = ["读屏软件", "无障碍"]
-license = "Apache-2.0"
-readme = "../README.md"
-repository = "https://gitcode.net/mzdk100/rigela.git"
-default-run = "main"
+name = "rigela-main"
+description.workspace = true
+keywords.workspace = true
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
+default-run = "rigela-main"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,9 +21,9 @@ load-path = "locale"
 path = "src/updater/main.rs"
 name = "updater"
 
-[dependencies.access-lib]
+[dependencies.a11y]
 # 一个辅助功能API库，封装了非微软官方提供的无障碍技术
-path = "../access-lib"
+path = "../a11y"
 
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
@@ -74,11 +70,11 @@ version = "1.0.196"
 features = ["derive"]
 
 [dependencies.toml]
-version = "0.8.9"
+version = "0.8.10"
 
 [dependencies]
 # 查看日期和时间
-chrono = "0.4.33"
+chrono = "0.4.34"
 
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.1"

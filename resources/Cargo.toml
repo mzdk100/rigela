@@ -1,13 +1,17 @@
 [package]
 name = "rigela-resources"
-version = "0.1.0"
-edition = "2021"
+keywords.workspace = true
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bitar = "0.11.0"
-blake2 = "0.10.6"
+blake2 = "0.11.0-pre.3"
 url = "2.5.0"
 log = "0.4.20"
 
@@ -17,18 +21,18 @@ default-features = false
 features = ["std"]
 
 [dependencies.tokio]
-version = "1.35.1"
+version = "1.36.0"
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies]
-blake2 = "0.10.6"
+blake2 = "0.11.0-pre.3"
 
 [build-dependencies.bitar]
 version = "0.11.0"
 features = ["compress"]
 
 [build-dependencies.tokio]
-version = "1.35.1"
+version = "1.36.0"
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies.futures-util]

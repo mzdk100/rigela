@@ -1,7 +1,8 @@
 # RigelA (the name is taken from the Rigel-A of Orion)
+English (en) | [简体中文 (zh-CN)](README.md)
+
 <!-- TOC -->
 * [RigelA (the name is taken from the Rigel-A of Orion)](#rigela-the-name-is-taken-from-the-rigel-a-of-orion)
-  * [选择语言](#选择语言)
   * [Introduction](#introduction)
   * [Build and run](#build-and-run)
   * [Development documentation](#development-documentation)
@@ -9,10 +10,6 @@
   * [agreement](#agreement)
 <!-- TOC -->
 
-
-## 选择语言
-[简体中文 (zh-CN)](README.md)
-[English (en)](README-EN.md)
 
 
 ## Introduction
@@ -57,6 +54,7 @@ Regarding creating the rust environment: you can refer to relevant documents. If
 ## Development documentation
 We call on developers who are interested in the open source screen reader project to actively participate. The development documentation is constantly being improved. If you want to contribute to this project, please refer to the next section.
 1. Development documents provided by this project:
+    - [Implementation Reference Document for Non Microsoft Official Accessibility Technology](a11y/A11Y.md)
     - [Reference document for implementing internationalization support](I18N.md)
     - [Proxy module reference document for 32-bit applications](proxy32/README.md)
     - [RigelA resource incremental update reference document](resources/README.md)

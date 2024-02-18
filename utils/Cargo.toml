@@ -1,7 +1,11 @@
 [package]
 name = "rigela-utils"
-version = "0.1.0"
-edition = "2021"
+keywords.workspace = true
+license.workspace = true
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,7 +17,7 @@ home = "0.5.9"
 # 输出日志
 log = "0.4.20"
 # 记录日志
-log4rs = "1.2.0"
+log4rs = "1.3.0"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
