@@ -22,5 +22,9 @@ fn main() {
 
     cargo_rigela::make_version();
 
+    println!("cargo:rerun-if-changed=../docs/help.txt");
+    println!("cargo:rerun-if-changed=../docs/update_log.txt");
+    rigela_utils::docs_check_update::update_docs_md5();
+
     let _ = embed_manifest(new_manifest("Contoso.Sample"));
 }
