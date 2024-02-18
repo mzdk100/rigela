@@ -12,7 +12,6 @@
  */
 
 pub mod bass;
-pub mod docs_check_update;
 pub mod logger;
 pub mod pipe;
 pub mod resample;

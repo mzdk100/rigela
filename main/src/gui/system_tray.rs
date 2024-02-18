@@ -12,10 +12,13 @@
  */
 
 use crate::context::Context;
+use crate::gui::utils::update_docs;
 use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NativeUi;
+use rigela_utils::get_program_directory;
 use std::ops::DerefMut;
+use std::os::windows::fs::OpenOptionsExt;
 use std::sync::{Arc, Mutex};
 
 #[derive(Default, NwgUi)]
@@ -64,8 +67,15 @@ impl SystemTray {
     }
 
     fn on_help(&self) {
+        let ctx = self.context.lock().unwrap().clone().unwrap();
+        ctx.work_runtime.spawn(async move {
+            let _ = update_docs().await;
+            let help_path = get_program_directory().join("resources/help.txt");
+            let _ = std::fs::OpenOptions::new().open(&help_path);
+        });
+
         // Todo:
-        nwg::simple_message("RigelA", "Start Help");
+        // nwg::simple_message("RigelA", "Start Help");
     }
 
     fn on_exit_notice(&self) {
