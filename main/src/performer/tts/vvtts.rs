@@ -80,7 +80,7 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn wait(&self) {
-        self.output_stream.wait_until_stalled().await;
+        self.output_stream.wait_until_stopped_or_stalled().await;
     }
 
     fn stop(&self) {

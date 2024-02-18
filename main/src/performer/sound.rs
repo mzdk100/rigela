@@ -77,7 +77,7 @@ impl Sound {
             }
         };
         stream.play(true);
-        stream.wait_until_stopped().await;
+        stream.wait_until_stopped_or_stalled().await;
     }
 
     /**

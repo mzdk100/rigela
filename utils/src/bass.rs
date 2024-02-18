@@ -385,32 +385,26 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 等待直到停止。
+     * 等待直到停止状态或没有数据可以播放。
      * */
-    pub async fn wait_until_stopped(&self) {
-        self.wait(BASS_ACTIVE_STOPPED).await;
+    pub async fn wait_until_stopped_or_stalled(&self) {
+        self.wait(|active| active == BASS_ACTIVE_STOPPED || active == BASS_ACTIVE_STALLED)
+            .await;
     }
 
     /**
      * 等待直到暂停。
      * */
     pub async fn wait_until_paused(&self) {
-        self.wait(BASS_ACTIVE_PAUSED).await;
+        self.wait(|active| active == BASS_ACTIVE_PAUSED).await;
     }
 
-    /**
-     * 等待直到没有数据可以播放。
-     * */
-    pub async fn wait_until_stalled(&self) {
-        self.wait(BASS_ACTIVE_STALLED).await;
-    }
-
-    async fn wait(&self, flags: i32) {
+    async fn wait(&self, condition: impl Fn(i32) -> bool) {
         loop {
             let Some(active) = bass!(self.h_module, channel_is_active, self.h_bass) else {
                 break;
             };
-            if active == flags {
+            if condition(active) {
                 break;
             }
             sleep(Duration::from_millis(100)).await;

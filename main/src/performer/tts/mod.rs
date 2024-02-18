@@ -120,8 +120,8 @@ impl Tts {
         };
         drop(lock);
         loop {
-            let lock = self.all_engines.lock().await;
             if let Some(default_engine) = { self.default_engine.lock().await.clone() } {
+                let lock = self.all_engines.lock().await;
                 if let Some(x) = lock.get(&default_engine) {
                     let engine = x.clone();
                     drop(lock);
@@ -132,8 +132,8 @@ impl Tts {
                     engine.wait().await;
                     return !*self.is_cancelled.lock().await;
                 };
+                drop(lock);
             }
-            drop(lock);
             sleep(Duration::from_millis(100)).await;
         }
     }

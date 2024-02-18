@@ -83,7 +83,10 @@ impl Launcher {
         thread::spawn(|| system_tray::show(ctx_tray));
 
         // 朗读当前桌面
-        speak_desktop(self.context.clone()).await;
+        self.context
+            .performer
+            .speak(self.context.ui_automation.get_root_element())
+            .await;
 
         // 启动事件监听
         self.context.event_core.run(self.context.clone()).await;
@@ -101,12 +104,6 @@ impl Launcher {
         // 播放退出音效
         self.context.performer.play_sound("exit.wav").await;
     }
-}
-
-/// 朗读桌面
-async fn speak_desktop(context: Arc<Context>) {
-    let root = context.ui_automation.get_root_element();
-    context.performer.speak(root).await;
 }
 
 /**
