@@ -12,14 +12,12 @@
  */
 
 pub mod bass;
-pub mod docs_check_update;
 pub mod logger;
 pub mod pipe;
 pub mod resample;
 
 use clipboard::{ClipboardContext, ClipboardProvider};
 use home::home_dir;
-use select::{document::Document, predicate::Class};
 use std::{fs::create_dir, io::Error, path::PathBuf};
 use tokio::{
     fs::{metadata, OpenOptions},
@@ -102,28 +100,6 @@ pub async fn read_file(path: &PathBuf) -> Result<String, Error> {
         .read_to_string(&mut result)
         .await?;
     Ok(result)
-}
-
-/// 异步获取网页正文
-pub async fn download_html(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    match reqwest::get(url).await {
-        Ok(response) => {
-            let html = response.text().await?;
-            Ok(html)
-        }
-        Err(err) => Err(Box::new(err)),
-    }
-}
-
-/// 解析网页的指定节点
-pub async fn parse_html_node(url: &str, node: &str) -> String {
-    let html = download_html(url).await.unwrap();
-    let document = Document::from(html.as_str());
-    let mut result = String::new();
-    for i in document.find(Class(node)) {
-        result += (i.text().trim().to_owned() + "\r\n").as_str();
-    }
-    result
 }
 
 /**

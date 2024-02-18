@@ -18,10 +18,6 @@ home = "0.5.9"
 log = "0.4.20"
 # 记录日志
 log4rs = "1.3.0"
-md5 = "0.7.0"
-toml = "0.8.10"
-reqwest = "0.11.24"
-select = "0.6.0"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化

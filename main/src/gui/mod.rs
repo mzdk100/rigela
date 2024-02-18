@@ -14,6 +14,7 @@
 pub(crate) mod hotkeys;
 pub(crate) mod popup_menu;
 pub(crate) mod system_tray;
+pub(crate) mod utils;
 pub(crate) mod welcome;
 
 #[macro_export]

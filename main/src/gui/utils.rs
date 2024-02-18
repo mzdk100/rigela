@@ -11,51 +11,33 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{get_program_directory, parse_html_node, write_file};
+use rigela_utils::{get_program_directory, write_file};
+use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
-use std::fs::{write, File};
-use std::io::Read;
 
 const HELP_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/help.txt";
 const UPDATE_LOG_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt";
 const DOCS_MD5_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct DocsMd5 {
-    pub help_md5: String,
-    pub update_log_md5: String,
+struct DocsMd5 {
+    help_md5: String,
+    update_log_md5: String,
 }
 
-pub fn update_docs_md5() {
-    let root_dir = std::env::current_dir().expect("Can't get the current directory.");
-    let docs_dir = root_dir.join("../docs");
-
-    let mut help_buf = Vec::<u8>::new();
-    let mut update_log_buf = Vec::<u8>::new();
-
-    File::open(docs_dir.join("help.txt"))
-        .expect("Can't open help.txt.")
-        .read_to_end(&mut help_buf)
-        .expect("Can't read help.txt.");
-    File::open(docs_dir.join("update_log.txt"))
-        .expect("Can't open update_log.txt.")
-        .read_to_end(&mut update_log_buf)
-        .expect("Can't read update_log.txt.");
-
-    let docs_md5 = DocsMd5 {
-        help_md5: format!("{:x}", md5::compute(help_buf)),
-        update_log_md5: format!("{:x}", md5::compute(update_log_buf)),
-    };
-
-    write(
-        docs_dir.join("docs_md5.toml"),
-        toml::to_string(&docs_md5).unwrap(),
-    )
-    .expect("Can't write docs_md5.toml.")
+pub(crate) async fn update_docs() -> bool {
+    let md5_path = get_program_directory().join("resources/docs_md5.toml");
+    if !md5_path.exists() {
+        save_docs_md5(&get_docs_md5().await).await;
+        save_docs(true).await;
+        save_docs(false).await;
+        return true;
+    }
+    false
 }
 
 /// 获取最新的docs_md5
-pub async fn get_docs_md5() -> DocsMd5 {
+pub(crate) async fn get_docs_md5() -> DocsMd5 {
     let _docs_md5_text = parse_html_node(DOCS_MD5_URL, "blob-content").await;
     // Todo: 解析docs_md5.toml
 
@@ -68,7 +50,7 @@ pub async fn get_docs_md5() -> DocsMd5 {
 }
 
 /// 保存新的docs_md5
-pub async fn save_docs_md5(md5: &DocsMd5) {
+pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
     let docs_md5_path = get_program_directory().join("resources/docs_md5.toml");
     let data = toml::to_string(md5).expect("Can't write docs_md5.toml.");
     write_file(&docs_md5_path, data.as_bytes())
@@ -77,7 +59,7 @@ pub async fn save_docs_md5(md5: &DocsMd5) {
 }
 
 /// 保存最新的文档。
-pub async fn save_docs(help_or_update_log: bool) {
+pub(crate) async fn save_docs(help_or_update_log: bool) {
     if help_or_update_log {
         let help_path = get_program_directory().join("resources/help.txt");
         let help_text = parse_html_node(HELP_URL, "blob-content").await;
@@ -91,4 +73,26 @@ pub async fn save_docs(help_or_update_log: bool) {
             .await
             .expect("Can't write update_log.txt.");
     }
+}
+
+/// 异步获取网页正文
+pub async fn download_html(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    match reqwest::get(url).await {
+        Ok(response) => {
+            let html = response.text().await?;
+            Ok(html)
+        }
+        Err(err) => Err(Box::new(err)),
+    }
+}
+
+/// 解析网页的指定节点
+pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
+    let html = download_html(url).await.unwrap();
+    let document = Document::from(html.as_str());
+    let mut result = String::new();
+    for i in document.find(Class(node)) {
+        result += (i.text().trim().to_owned() + "\r\n").as_str();
+    }
+    result
 }
