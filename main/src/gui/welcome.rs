@@ -12,8 +12,11 @@
  */
 
 use crate::bring_window_front;
+use crate::gui::utils::HELP_DIR;
 use nwd::NwgUi;
 use nwg::{EventData, NativeUi};
+use rigela_utils::get_program_directory;
+use std::process::Command;
 
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
 
@@ -71,8 +74,11 @@ impl WelcomeForm {
     }
 
     fn on_btn_help(&self) {
-        // Todo: 帮助按钮点击事件，带实现
-        nwg::modal_info_message(&self.window, "Rigela", "帮助");
+        let help_path = get_program_directory().join(HELP_DIR);
+        Command::new("notepad")
+            .arg(help_path)
+            .spawn()
+            .expect("Failed to start notepad");
     }
 
     fn on_btn_close(&self) {

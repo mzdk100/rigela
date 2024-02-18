@@ -12,13 +12,13 @@
  */
 
 use crate::context::Context;
-use crate::gui::utils::update_docs;
+use crate::gui::utils::{update_docs, HELP_DIR};
 use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NativeUi;
 use rigela_utils::get_program_directory;
 use std::ops::DerefMut;
-use std::os::windows::fs::OpenOptionsExt;
+use std::process::Command;
 use std::sync::{Arc, Mutex};
 
 #[derive(Default, NwgUi)]
@@ -26,6 +26,7 @@ pub struct SystemTray {
     context: Mutex<Option<Arc<Context>>>,
 
     #[nwg_control]
+    #[nwg_events (OnInit: [SystemTray::on_init] )]
     window: nwg::MessageWindow,
 
     #[nwg_resource(source_file: Some("./test_rc/cog.ico"))]
@@ -56,6 +57,13 @@ pub struct SystemTray {
 }
 
 impl SystemTray {
+    fn on_init(&self) {
+        let ctx = self.context.lock().unwrap().clone().unwrap();
+        ctx.work_runtime.spawn(async move {
+            update_docs().await;
+        });
+    }
+
     fn show_menu(&self) {
         let (x, y) = nwg::GlobalCursor::position();
         self.tray_menu.popup(x, y);
@@ -67,15 +75,11 @@ impl SystemTray {
     }
 
     fn on_help(&self) {
-        let ctx = self.context.lock().unwrap().clone().unwrap();
-        ctx.work_runtime.spawn(async move {
-            let _ = update_docs().await;
-            let help_path = get_program_directory().join("resources/help.txt");
-            let _ = std::fs::OpenOptions::new().open(&help_path);
-        });
-
-        // Todo:
-        // nwg::simple_message("RigelA", "Start Help");
+        let help_path = get_program_directory().join(HELP_DIR);
+        Command::new("notepad")
+            .arg(help_path)
+            .spawn()
+            .expect("Failed to start notepad");
     }
 
     fn on_exit_notice(&self) {

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use log::debug;
 use rigela_utils::{get_program_directory, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
@@ -18,9 +19,11 @@ use serde::{Deserialize, Serialize};
 const HELP_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/help.txt";
 const UPDATE_LOG_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt";
 const DOCS_MD5_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml";
+pub(crate) const HELP_DIR: &str = "resources/RigelA 帮助文档.txt";
+pub(crate) const UPDATE_LOG_DIR: &str = "resources/RigelA 更新日志.txt";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-struct DocsMd5 {
+pub(crate) struct DocsMd5 {
     help_md5: String,
     update_log_md5: String,
 }
@@ -61,13 +64,13 @@ pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
 /// 保存最新的文档。
 pub(crate) async fn save_docs(help_or_update_log: bool) {
     if help_or_update_log {
-        let help_path = get_program_directory().join("resources/help.txt");
+        let help_path = get_program_directory().join(HELP_DIR);
         let help_text = parse_html_node(HELP_URL, "blob-content").await;
         write_file(&help_path, help_text.as_bytes())
             .await
             .expect("Can't write help.txt.");
     } else {
-        let update_log_path = get_program_directory().join("resources/update_log.txt");
+        let update_log_path = get_program_directory().join(UPDATE_LOG_DIR);
         let update_log_text = parse_html_node(UPDATE_LOG_URL, "blob-content").await;
         write_file(&update_log_path, update_log_text.as_bytes())
             .await
@@ -76,23 +79,30 @@ pub(crate) async fn save_docs(help_or_update_log: bool) {
 }
 
 /// 异步获取网页正文
-pub async fn download_html(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    match reqwest::get(url).await {
-        Ok(response) => {
-            let html = response.text().await?;
-            Ok(html)
-        }
-        Err(err) => Err(Box::new(err)),
-    }
+pub(crate) async fn download_html(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    Ok(reqwest::get(url).await?.text().await?)
 }
 
 /// 解析网页的指定节点
 pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
-    let html = download_html(url).await.unwrap();
+    let html = match download_html(url).await {
+        Ok(html) => {
+            debug!("html >>>:\n {}\n", html);
+            html
+        }
+        Err(_) => {
+            debug!("\n###download_html error:");
+            "".to_string()
+        }
+    };
+
     let document = Document::from(html.as_str());
     let mut result = String::new();
     for i in document.find(Class(node)) {
         result += (i.text().trim().to_owned() + "\r\n").as_str();
     }
+
+    debug!("result>>>:\n {}\n", result);
+
     result
 }
