@@ -323,7 +323,7 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 播放操作。
+     * 播放操作，此方法和start方法的功能一样，但具有从头开始播放的选项。
      * `restart` 重新开始。
      * */
     pub fn play(&self, restart: bool) {

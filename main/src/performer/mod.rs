@@ -62,7 +62,7 @@ impl Performer {
             .await
             .add_engine(VvttsEngine::new(context.clone()))
             .await;
-        self.sound.apply(context.clone()).await;
+        self.sound.apply(context.clone());
     }
 
     /// 获取表演者的TTS对象
@@ -101,6 +101,7 @@ impl Performer {
 
     /// 播放音效
     pub(crate) async fn play_sound(&self, res_name: &str) {
+        self.sound.stop_all().await;
         self.sound.play(res_name).await;
     }
 }
