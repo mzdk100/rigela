@@ -52,6 +52,9 @@ version = "1.4.0"
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
 
+[build-dependencies.rigela-utils]
+path = "../utils"
+
 [dependencies.rigela-proxy32]
 path = "../proxy32"
 

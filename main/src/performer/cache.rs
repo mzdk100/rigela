@@ -40,40 +40,25 @@ impl Cache {
 
     /// 获取字符,参数可以是上一个，下一个，或者当前
     pub(crate) async fn get(&self, direction: Direction) -> String {
-        // return "好".to_string();
-        // 取消上面这行注释，缓冲区朗读的锁定仍然存在， 问题可能在tts的speak那边
-
-        let lock = self.index.lock().await;
-        let index = lock.clone();
-        drop(lock);
+        let index = self.index.lock().await.clone();
 
         if index.is_none() {
             return self.get_first_char().await.into();
         }
 
-        let lock = self.char_list.lock().await;
-        let len = lock.len();
-        drop(lock);
+        let len = self.char_list.lock().await.len();
         let index = index.unwrap();
 
-        let mut lock = self.index.lock().await;
-        *lock = match direction {
+        *self.index.lock().await = match direction {
             Direction::Forward if index == len - 1 => index.into(),
             Direction::Forward => (index + 1).into(),
             Direction::Backward if index == 0 => index.into(),
             Direction::Backward => (index - 1).into(),
             _ => index.into(),
         };
-        drop(lock);
 
-        let lock = self.index.lock().await;
-        let index = lock.clone().unwrap();
-        drop(lock);
-
-        let lock = self.char_list.lock().await;
-        let ch = lock.get(index).unwrap().clone();
-        drop(lock);
-
+        let index = self.index.lock().await.clone().unwrap();
+        let ch = self.char_list.lock().await.get(index).unwrap().clone();
         ch.into()
     }
 
