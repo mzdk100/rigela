@@ -25,7 +25,8 @@ Regarding creating the rust environment: you can refer to relevant documents. If
     Next we need to have a rust environment. To build the rust environment, you can refer to the introduction in [Rust Programming Language] (https://kaisery.github.io/trpl-zh-cn);
     Assuming that you already have the above conditions, before building the program we also need to download the rust x86 architecture tool chain and run the following command to install it.
     ```shell
-    rust target add i686-pc-windows-msvc
+    rustup target add i686-pc-windows-msvc
+    rustup update
     ```
 2. Clone the repository
     ```shell

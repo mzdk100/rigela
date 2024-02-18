@@ -13,6 +13,7 @@
 
 use std::{
     env,
+    fs::create_dir,
     fs::{copy, read_dir},
     path::Path,
 };
@@ -32,6 +33,9 @@ fn copy_deps(target: &str) {
     let target_dir = Path::new(&env::var("USERPROFILE").unwrap())
         .join(".rigela")
         .join("libs");
+    if !target_dir.exists() {
+        create_dir(&target_dir).unwrap_or(());
+    }
     for i in lib_dir {
         let i = i.unwrap();
         let f = i.file_name().into_string().unwrap().to_lowercase();

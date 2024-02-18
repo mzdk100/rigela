@@ -183,9 +183,9 @@ async fn main() {
             .await
             .expect("Can't create the compressed output directory.");
     }
-    let mut dir = read_dir(Path::new(FILES_DIR))
-        .await
-        .expect("Can't read the dev directory.");
+    let Ok(mut dir) = read_dir(Path::new(FILES_DIR)).await else {
+        return;
+    };
     while let Ok(Some(x)) = dir.next_entry().await {
         let filename = x.file_name();
         let name = filename

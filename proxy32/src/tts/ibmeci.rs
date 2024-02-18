@@ -18,6 +18,7 @@ use rigela_resources::clone_resource;
 use rigela_utils::{call_proc, get_file_modified_duration, get_program_directory, SERVER_HOME_URI};
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
+    borrow::Cow,
     ffi::{c_char, CString},
     future::Future,
     pin::Pin,
@@ -275,7 +276,44 @@ impl Ibmeci {
         if let Some(eci) = unsafe { IBMECI.get_mut() } {
             eci.data.clear();
         }
-        let (text, _, _) = GBK.encode(text);
+        let (text, _, unmapped) = GBK.encode(text);
+        let text = if unmapped {
+            // 如果有不能被编码成gbk的字符，我们需要过滤他们
+            let mut v = vec![];
+            let mut u = vec![];
+            let mut has_html_char = false;
+            let mut last_char = 0u8;
+            for i in text.iter() {
+                let i = i.clone();
+                if last_char == 38 {
+                    has_html_char = i == 35u8;
+                    if has_html_char {
+                        u.clear();
+                        u.push(last_char);
+                        u.push(i);
+                    } else {
+                        v.push(last_char);
+                        v.push(i);
+                    }
+                } else {
+                    if has_html_char {
+                        u.push(i);
+                        if i == 59u8 {
+                            has_html_char = false;
+                        } else if !(i >= 48u8 && i <= 57u8) {
+                            v.extend(&u);
+                            has_html_char = false;
+                        }
+                    } else if i != 38 {
+                        v.push(i);
+                    }
+                }
+                last_char = i;
+            }
+            Cow::from(v)
+        } else {
+            text
+        };
         eci!(self.h_module, add_text, self.h_eci, text);
         eci!(self.h_module, synthesize, self.h_eci);
         // eci!(self.h_module, synchronize, self.h_eci);
@@ -475,7 +513,7 @@ mod test_eci {
     async fn main() {
         init_logger(Some("test.log"));
         let eci = Ibmeci::get().await.unwrap();
-        let data = eci.synth("abc").await;
+        let data = eci.synth("abc‎").await;
         assert_eq!(data.len(), 21978);
     }
 }
