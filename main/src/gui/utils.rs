@@ -11,14 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use log::debug;
+use crate::gui::gitcode_file_data::GitcodeFileData;
 use rigela_utils::{get_program_directory, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
 
-const HELP_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/help.txt";
-const UPDATE_LOG_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt";
-const DOCS_MD5_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml";
+const HELP_URL: &str =
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/help.txt?format=json&viewer=simple";
+const UPDATE_LOG_URL: &str =
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt?format=json&viewer=simple";
+const DOCS_MD5_URL: &str =
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml?format=json&viewer=simple";
+
 pub(crate) const HELP_DIR: &str = "resources/RigelA 帮助文档.txt";
 pub(crate) const UPDATE_LOG_DIR: &str = "resources/RigelA 更新日志.txt";
 
@@ -79,30 +83,23 @@ pub(crate) async fn save_docs(help_or_update_log: bool) {
 }
 
 /// 异步获取网页正文
-pub(crate) async fn download_html(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    Ok(reqwest::get(url).await?.text().await?)
+pub(crate) async fn get_gitcode_data(
+    url: &str,
+) -> Result<GitcodeFileData, Box<dyn std::error::Error>> {
+    Ok(reqwest::get(url).await?.json().await?)
 }
 
 /// 解析网页的指定节点
 pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
-    let html = match download_html(url).await {
-        Ok(html) => {
-            debug!("html >>>:\n {}\n", html);
-            html
-        }
-        Err(_) => {
-            debug!("\n###download_html error:");
-            "".to_string()
-        }
+    let html = match get_gitcode_data(url).await {
+        Ok(data) => data.html,
+        Err(_) => "".to_string(),
     };
 
-    let document = Document::from(html.as_str());
     let mut result = String::new();
-    for i in document.find(Class(node)) {
-        result += (i.text().trim().to_owned() + "\r\n").as_str();
+    for i in Document::from(html.as_str()).find(Class(node)) {
+        result += format!("{}\r\n", i.text().trim()).as_str();
     }
-
-    debug!("result>>>:\n {}\n", result);
 
     result
 }

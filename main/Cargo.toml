@@ -96,7 +96,7 @@ log = "0.4.20"
 async-trait = "0.1.77"
 
 # 网络请求
-reqwest = "0.11.24"
+reqwest = { version = "0.11.24", features = ["json"] }
 
 # 解析html
 select = "0.6.0"

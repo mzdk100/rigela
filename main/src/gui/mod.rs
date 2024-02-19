@@ -16,6 +16,7 @@ pub(crate) mod popup_menu;
 pub(crate) mod system_tray;
 pub(crate) mod utils;
 pub(crate) mod welcome;
+mod gitcode_file_data;
 
 #[macro_export]
 macro_rules! bring_window_front {
