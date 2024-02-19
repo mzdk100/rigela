@@ -92,7 +92,7 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             fn get_doc(&self) -> String {
                 #doc_raw.to_string()
             }
-            async  fn perform(&self, context: std::sync::Arc<Context>) {
+            async  fn perform(&self, context: Arc<Context>) {
                 #body
             }
         }

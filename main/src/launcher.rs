@@ -13,13 +13,14 @@
 
 use crate::{
     context::Context,
+    ext::AccessibleObjectExt,
     gui::{system_tray, welcome},
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
 use std::{sync::Arc, thread};
-use win_wrap::com::co_initialize_multi_thread;
+use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
 pub(crate) struct Launcher {
@@ -87,6 +88,11 @@ impl Launcher {
             .performer
             .speak(self.context.ui_automation.get_root_element())
             .await;
+
+        // 朗读当前前景窗口
+        if let Ok(o) = AccessibleObject::from_foreground_window() {
+            self.context.performer.speak((o, 0)).await;
+        }
 
         // 启动事件监听
         self.context.event_core.run(self.context.clone()).await;

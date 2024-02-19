@@ -16,10 +16,6 @@ mod mouse;
 mod program;
 mod tts;
 
-use crate::talent::tts::{
-    CacheToClipboardTalent, MakeWordCacheCharTalent, NextCacheCharTalent, PrevCacheCharTalent,
-    TransCacheCharTalent,
-};
 use crate::{
     commander::CommandType,
     context::Context,
@@ -31,9 +27,13 @@ use crate::{
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
             CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
-            ViewWindowTitleTalent,
+            ViewFocusTalent, ViewWindowTitleTalent,
         },
-        tts::{IncreaseTalent, NextPropTalent, PrevPropTalent, ReduceTalent},
+        tts::{
+            CacheToClipboardTalent, IncreaseTalent, MakeWordCacheCharTalent, NextCacheCharTalent,
+            NextPropTalent, PrevCacheCharTalent, PrevPropTalent, ReduceTalent,
+            TransCacheCharTalent,
+        },
     },
 };
 use async_trait::async_trait;
@@ -87,6 +87,7 @@ impl TalentAccessor {
             Arc::new(CurrentCpuUsageTalent),
             Arc::new(PopupMenuTalent),
             Arc::new(HotkeysTalent),
+            Arc::new(ViewFocusTalent),
             Arc::new(ViewWindowTitleTalent),
             // 窗口浏览技能
             Arc::new(ModeNextTalent),

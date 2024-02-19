@@ -50,6 +50,14 @@ impl UiAutomation {
         UiAutomationElement::obtain(self.0.clone(), el)
     }
 
+    /**
+     * 获取UI焦点元素。
+     * */
+    pub fn get_focused_element(&self) -> UiAutomationElement {
+        let el = unsafe { self.0.GetFocusedElement() }.expect("Can't get the root element.");
+        UiAutomationElement::obtain(self.0.clone(), el)
+    }
+
     /// 根据窗口句柄获取ui元素
     pub fn element_from_handle(&self, hwnd: HWND) -> Option<UiAutomationElement> {
         let el = unsafe { self.0.ElementFromHandle(hwnd) };

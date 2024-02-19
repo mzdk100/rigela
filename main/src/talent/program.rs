@@ -14,6 +14,7 @@
 use crate::{
     commander::keys::Keys::*,
     context::Context,
+    ext::AccessibleObjectExt,
     gui::{hotkeys, popup_menu},
     performer::Speakable,
 };
@@ -21,9 +22,13 @@ use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
 use log::error;
 use rigela_macros::talent;
-use std::{sync::OnceLock, thread, time::Duration};
+
+use std::{
+    sync::{Arc, OnceLock},
+    thread,
+    time::Duration,
+};
 use win_wrap::{
-    common::get_foreground_window,
     msaa::object::AccessibleObject,
     pdh::{PdhCounter, PdhCounterExt, PdhQuery},
 };
@@ -91,7 +96,7 @@ async fn hotkeys(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
 async fn view_window_title(context: Arc<Context>) {
-    match AccessibleObject::from_window(get_foreground_window()) {
+    match AccessibleObject::from_foreground_window() {
         Ok(o) => {
             context.performer.speak((o, 0)).await;
         }
@@ -103,4 +108,11 @@ async fn view_window_title(context: Arc<Context>) {
             context.performer.play_sound("error.wav").await
         }
     }
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "查看当前焦点", key = (VkRigelA, VkTab))]
+async fn view_focus(context: Arc<Context>) {
+    let focused = context.ui_automation.get_focused_element();
+    context.performer.speak(focused).await;
 }
