@@ -13,9 +13,10 @@
 
 use crate::context::Context;
 use crate::gui::utils::{update_docs, HELP_DIR};
+use crate::gui::window_manager::Formable;
 use crate::talent::Talented;
 use nwd::NwgUi;
-use nwg::NativeUi;
+use nwg::{NativeUi, NoticeSender};
 use rigela_utils::get_program_directory;
 use std::ops::DerefMut;
 use std::process::Command;
@@ -52,6 +53,10 @@ pub struct SystemTray {
     exit_item: nwg::MenuItem,
 
     #[nwg_control()]
+    #[nwg_events(OnNotice: [SystemTray::on_show_notice])]
+    show_notice: nwg::Notice,
+
+    #[nwg_control()]
     #[nwg_events(OnNotice: [SystemTray::on_exit_notice])]
     exit_notice: nwg::Notice,
 }
@@ -82,10 +87,6 @@ impl SystemTray {
             .expect("Failed to start notepad");
     }
 
-    fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch();
-    }
-
     fn on_exit(&self) {
         let context = self.context.lock().unwrap().clone();
         if let Some(context) = context {
@@ -101,6 +102,26 @@ impl SystemTray {
 
     fn set_context(&self, context: Arc<Context>) {
         *self.context.lock().unwrap().deref_mut() = Some(context.clone());
+    }
+
+    fn on_show_notice(&self) {}
+
+    fn on_exit_notice(&self) {
+        nwg::stop_thread_dispatch();
+    }
+}
+
+impl Formable for SystemTray {
+    fn set_context(&self, context: Arc<Context>) {
+        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
+    }
+
+    fn get_show_notice_sender(&self) -> NoticeSender {
+        self.show_notice.sender().clone()
+    }
+
+    fn get_exit_notice_sender(&self) -> NoticeSender {
+        self.exit_notice.sender().clone()
     }
 }
 

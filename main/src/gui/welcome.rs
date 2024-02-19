@@ -12,11 +12,14 @@
  */
 
 use crate::bring_window_front;
+use crate::context::Context;
 use crate::gui::utils::HELP_DIR;
+use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
-use nwg::{EventData, NativeUi};
+use nwg::{EventData, NativeUi, NoticeSender};
 use rigela_utils::get_program_directory;
 use std::process::Command;
+use std::sync::Arc;
 
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
 
@@ -53,6 +56,14 @@ pub struct WelcomeForm {
     #[nwg_layout_item(layout: layout, row: 5, col: 5)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_close])]
     btn_close: nwg::Button,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [WelcomeForm::on_show_notice])]
+    show_notice: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [WelcomeForm::on_exit_notice])]
+    exit_notice: nwg::Notice,
 }
 
 impl WelcomeForm {
@@ -83,6 +94,26 @@ impl WelcomeForm {
 
     fn on_btn_close(&self) {
         nwg::stop_thread_dispatch();
+    }
+
+    fn on_show_notice(&self) {
+        self.window.set_visible(true)
+    }
+
+    fn on_exit_notice(&self) {
+        nwg::stop_thread_dispatch()
+    }
+}
+
+impl Formable for WelcomeForm {
+    fn set_context(&self, _context: Arc<Context>) {}
+
+    fn get_show_notice_sender(&self) -> NoticeSender {
+        self.show_notice.sender().clone()
+    }
+
+    fn get_exit_notice_sender(&self) -> NoticeSender {
+        self.exit_notice.sender().clone()
     }
 }
 

@@ -12,6 +12,7 @@
  */
 
 use crate::configs::config_operations::{get_hotkeys, save_hotkeys};
+use crate::gui::window_manager::Formable;
 use crate::{
     bring_window_front,
     commander::{keys::Keys, CommandType::Key},
@@ -19,7 +20,7 @@ use crate::{
     talent::Talented,
 };
 use nwd::NwgUi;
-use nwg::{modal_message, InsertListViewItem, MessageParams, NativeUi};
+use nwg::{modal_message, InsertListViewItem, MessageParams, NativeUi, NoticeSender};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -81,6 +82,14 @@ pub struct HotKeysForm {
     #[nwg_control()]
     #[nwg_events(OnNotice: [HotKeysForm::on_cancel_custom])]
     cancel_custom: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [HotKeysForm::on_show_notice])]
+    show_notice: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [HotKeysForm::on_exit_notice])]
+    exit_notice: nwg::Notice,
 }
 
 impl HotKeysForm {
@@ -357,6 +366,28 @@ impl HotKeysForm {
     // 传入程序上下文对象
     fn set_context(&self, context: Arc<Context>) {
         *self.context.borrow_mut() = Some(context);
+    }
+
+    fn on_show_notice(&self) {
+        self.window.set_visible(true)
+    }
+
+    fn on_exit_notice(&self) {
+        nwg::stop_thread_dispatch()
+    }
+}
+
+impl Formable for HotKeysForm {
+    fn set_context(&self, context: Arc<Context>) {
+        *self.context.borrow_mut() = Some(context);
+    }
+
+    fn get_show_notice_sender(&self) -> NoticeSender {
+        self.exit_notice.sender().clone()
+    }
+
+    fn get_exit_notice_sender(&self) -> NoticeSender {
+        self.exit_notice.sender().clone()
     }
 }
 

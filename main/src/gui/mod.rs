@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod hotkeys;
-pub(crate) mod popup_menu;
-pub(crate) mod system_tray;
-pub(crate) mod utils;
-pub(crate) mod welcome;
+mod hotkeys;
+mod popup_menu;
+mod system_tray;
+mod utils;
+mod welcome;
 mod gitcode_file_data;
+pub(crate) mod window_manager;
 
 #[macro_export]
 macro_rules! bring_window_front {
