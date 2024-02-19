@@ -11,16 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-/* 使用talent macro必须导入的条目，便于IDE进行代码提示 */
-#[allow(unused_imports)]
-use crate::commander::keys::Keys::*;
-#[allow(unused_imports)]
-use crate::context::Context;
+use crate::{commander::keys::Keys::*, context::Context, performer::sound::SoundArgument::Single};
+use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Arc;
-/* 使用talent macro可选导入的条目 */
-use async_trait::async_trait;
 
 const WAVE: &str = "boundary.wav";
 
@@ -32,7 +27,7 @@ async fn prev_element(context: Arc<Context>) {
             context.performer.speak(element).await;
         }
         None => {
-            context.performer.play_sound(WAVE).await;
+            context.performer.play_sound(Single(WAVE)).await;
         }
     };
 }
@@ -44,7 +39,7 @@ async fn next_element(context: Arc<Context>) {
         Some(element) => {
             context.performer.speak(element).await;
         }
-        None => context.performer.play_sound(WAVE).await,
+        None => context.performer.play_sound(Single(WAVE)).await,
     };
 }
 
@@ -56,7 +51,7 @@ async fn curr_element(context: Arc<Context>) {
             context.performer.speak(element).await;
         }
         None => {
-            context.performer.play_sound(WAVE).await;
+            context.performer.play_sound(Single(WAVE)).await;
         }
     };
 }
@@ -75,7 +70,7 @@ async fn prev_child_element(context: Arc<Context>) {
             context.performer.speak(element).await;
         }
         None => {
-            context.performer.play_sound(WAVE).await;
+            context.performer.play_sound(Single(WAVE)).await;
         }
     };
 }
@@ -94,7 +89,7 @@ async fn next_child_element(context: Arc<Context>) {
             context.performer.speak(element).await;
         }
         None => {
-            context.performer.play_sound(WAVE).await;
+            context.performer.play_sound(Single(WAVE)).await;
         }
     };
 }
@@ -107,7 +102,7 @@ async fn curr_child_element(context: Arc<Context>) {
             context.performer.speak(element).await;
         }
         None => {
-            context.performer.play_sound(WAVE).await;
+            context.performer.play_sound(Single(WAVE)).await;
         }
     };
 }
@@ -115,5 +110,11 @@ async fn curr_child_element(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "下一个模式", key = (VkAdd))]
 async fn mode_next(context: Arc<Context>) {
-    context.performer.play_sound(WAVE).await;
+    context.performer.play_sound(Single(WAVE)).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "上一个模式", key = (VkSubtract))]
+async fn mode_prev(context: Arc<Context>) {
+    context.performer.play_sound(Single(WAVE)).await;
 }

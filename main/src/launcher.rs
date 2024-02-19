@@ -15,6 +15,7 @@ use crate::{
     context::Context,
     ext::AccessibleObjectExt,
     gui::{system_tray, welcome},
+    performer::sound::SoundArgument::Single,
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
@@ -59,7 +60,7 @@ impl Launcher {
         // 播放启动时的音效
         let performer = self.context.performer.clone();
         self.context.work_runtime.spawn(async move {
-            performer.play_sound("launch.wav").await;
+            performer.play_sound(Single("launch.wav")).await;
         });
 
         // peeper 可以监控远进程中的信息
@@ -108,7 +109,7 @@ impl Launcher {
         peeper::unmount();
 
         // 播放退出音效
-        self.context.performer.play_sound("exit.wav").await;
+        self.context.performer.play_sound(Single("exit.wav")).await;
     }
 }
 

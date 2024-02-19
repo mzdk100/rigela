@@ -14,11 +14,13 @@
 mod editor;
 mod focus;
 mod ime;
+mod progress;
 
 use crate::{
     context::Context,
     event_core::{
         editor::subscribe_editor_events, focus::subscribe_focus_events, ime::subscribe_ime_events,
+        progress::subscribe_progress_events,
     },
     ext::AccessibleObjectExt,
 };
@@ -98,7 +100,10 @@ impl EventCore {
         subscribe_ime_events(context.clone()).await;
 
         // 处理编辑框朗读
-        subscribe_editor_events(context).await;
+        subscribe_editor_events(context.clone()).await;
+
+        // 订阅进度栏事件
+        subscribe_progress_events(context).await;
     }
 
     /**

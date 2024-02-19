@@ -21,8 +21,8 @@ use crate::{
     context::Context,
     talent::{
         form_browser::{
-            CurrChildElementTalent, CurrElementTalent, ModeNextTalent, NextChildElementTalent,
-            NextElementTalent, PrevChildElementTalent, PrevElementTalent,
+            CurrChildElementTalent, CurrElementTalent, ModeNextTalent, ModePrevTalent,
+            NextChildElementTalent, NextElementTalent, PrevChildElementTalent, PrevElementTalent,
         },
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
@@ -90,6 +90,7 @@ impl TalentAccessor {
             Arc::new(ViewFocusTalent),
             Arc::new(ViewWindowTitleTalent),
             // 窗口浏览技能
+            Arc::new(ModePrevTalent),
             Arc::new(ModeNextTalent),
             Arc::new(PrevElementTalent),
             Arc::new(NextElementTalent),

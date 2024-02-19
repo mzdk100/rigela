@@ -158,6 +158,17 @@ macro_rules! bass {
             $flags
         )
     };
+    ($module:expr,channel_slide_attribute,$handle:expr,$attrib:expr,$value:expr,$time:expr) => {
+        call_proc!(
+            $module,
+            BASS_ChannelSlideAttribute,
+            extern "system" fn(i32, i32, f32, i32) -> bool,
+            $handle,
+            $attrib,
+            $value,
+            $time
+        )
+    };
 }
 
 const LIB_NAME: &str = "bass.dll";
@@ -221,6 +232,73 @@ const BASS_SYNC_THREAD: u32 = 0x20000000;
 const BASS_SYNC_MIXTIME: u32 = 0x40000000;
 #[allow(unused)]
 const BASS_SYNC_ONETIME: u32 = 0x80000000; // flag: sync only once, else continuously
+
+// Channel attributes
+const BASS_ATTRIB_FREQ: i32 = 1;
+#[allow(unused)]
+const BASS_ATTRIB_VOL: i32 = 2;
+#[allow(unused)]
+const BASS_ATTRIB_PAN: i32 = 3;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_EAXMIX: i32 = 4;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_NOBUFFER: i32 = 5;
+#[allow(unused)]
+const BASS_ATTRIB_VBR: i32 = 6;
+#[allow(unused)]
+const BASS_ATTRIB_CPU: i32 = 7;
+#[allow(unused)]
+const BASS_ATTRIB_SRC: i32 = 8;
+#[allow(unused)]
+const BASS_ATTRIB_NET_RESUME: i32 = 9;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_SCANINFO: i32 = 10;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_NORAMP: i32 = 11;
+#[allow(unused)]
+const BASS_ATTRIB_BITRATE: i32 = 12;
+#[allow(unused)]
+const BASS_ATTRIB_BUFFER: i32 = 13;
+#[allow(unused)]
+const BASS_ATTRIB_GRANULE: i32 = 14;
+#[allow(unused)]
+const BASS_ATTRIB_USER: i32 = 15;
+#[allow(unused)]
+const BASS_ATTRIB_TAIL: i32 = 16;
+#[allow(unused)]
+const BASS_ATTRIB_PUSH_LIMIT: i32 = 17;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_DOWNLOADPROC: i32 = 18;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_VOLDSP: i32 = 19;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_VOLDSP_PRIORITY: i32 = 20;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_AMPLIFY: i32 = 0x100;
+//noinspection SpellCheckingInspection
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_PANSEP: i32 = 0x101;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_PSCALER: i32 = 0x102;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_BPM: i32 = 0x103;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_SPEED: i32 = 0x104;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_VOL_GLOBAL: i32 = 0x105;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_ACTIVE: i32 = 0x106;
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_VOL_CHAN: i32 = 0x200; // + channel #
+#[allow(unused)]
+const BASS_ATTRIB_MUSIC_VOL_INST: i32 = 0x300; // + instrument #
 
 #[derive(Debug)]
 pub struct BassChannelOutputStream {
@@ -375,6 +453,22 @@ impl BassChannelOutputStream {
      * */
     pub fn put_file_data(&self, data: &[u8]) -> i32 {
         bass!(self.h_module, stream_put_file_data, self.h_bass, data).unwrap_or(0)
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 设置播放频率。
+     * `value` 要播放的频率。
+     * */
+    pub fn set_freq(&self, value: f32) {
+        bass!(
+            self.h_module,
+            channel_slide_attribute,
+            self.h_bass,
+            BASS_ATTRIB_FREQ,
+            value,
+            100
+        );
     }
 
     /**

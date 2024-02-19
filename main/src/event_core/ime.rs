@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
+use crate::{context::Context, performer::sound::SoundArgument::Single};
 use peeper::model::CandidateList;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::io::AsyncReadExt;
@@ -91,7 +91,7 @@ fn handle_ime_candidate(
             return;
         }
         if let Some(x) = words.get(&candidate) {
-            performer.play_sound("tip.wav").await;
+            performer.play_sound(Single("tip.wav")).await;
             // 朗读候选文字的解释词
             performer.speak(x.clone()).await;
         }

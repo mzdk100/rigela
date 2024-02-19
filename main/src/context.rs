@@ -17,6 +17,7 @@ use crate::{
     resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
 };
 use a11y::ia2::Ia2;
+use log::info;
 use peeper::server::PeeperServer;
 use rigela_utils::get_program_directory;
 use std::sync::Arc;
@@ -126,6 +127,7 @@ impl Context {
         let performer = self.performer.clone();
         self.work_runtime.spawn(async move {
             performer.apply(ctx).await;
+            info!("The performer is ready.");
         });
     }
 

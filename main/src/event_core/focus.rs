@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{context::Context, event_core::ime::MS_IME_CLASS_NAME, ext::AccessibleObjectExt};
+use crate::{
+    context::Context, event_core::ime::MS_IME_CLASS_NAME, ext::AccessibleObjectExt,
+    performer::sound::SoundArgument::Single,
+};
 use std::{sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::{
@@ -118,7 +121,7 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
         };
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
-            performer.play_sound("tip.wav").await;
+            performer.play_sound(Single("tip.wav")).await;
             performer.speak(obj).await;
         });
     })

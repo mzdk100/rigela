@@ -15,6 +15,7 @@ pub(crate) mod cache;
 pub(crate) mod sound;
 pub(crate) mod tts;
 
+use crate::performer::sound::SoundArgument;
 use crate::{
     context::Context,
     performer::{
@@ -77,7 +78,7 @@ impl Performer {
     /**
      * 朗读文字，如果当前有朗读的任务，则进行排队。
      * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
-     * `text` 需要朗读的文本。
+     * `speakable` 实现了Speakable特征的对象。
      * */
     pub(crate) async fn speak(&self, speakable: impl Speakable) -> bool {
         let text = speakable.get_sentence().trim_end().to_string();
@@ -98,8 +99,8 @@ impl Performer {
     }
 
     /// 播放音效
-    pub(crate) async fn play_sound(&self, res_name: &str) {
+    pub(crate) async fn play_sound(&self, arg: SoundArgument) {
         self.sound.stop_all().await;
-        self.sound.play(res_name).await;
+        self.sound.play(arg).await;
     }
 }

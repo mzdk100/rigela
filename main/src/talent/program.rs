@@ -16,7 +16,7 @@ use crate::{
     context::Context,
     ext::AccessibleObjectExt,
     gui::{hotkeys, popup_menu},
-    performer::Speakable,
+    performer::{sound::SoundArgument::Single, Speakable},
 };
 use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
@@ -105,7 +105,7 @@ async fn view_window_title(context: Arc<Context>) {
                 "Can't get the object of the foreground window, because {}.",
                 e
             );
-            context.performer.play_sound("error.wav").await
+            context.performer.play_sound(Single("error.wav")).await
         }
     }
 }
