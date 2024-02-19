@@ -14,12 +14,11 @@
 use crate::{
     context::Context,
     ext::AccessibleObjectExt,
-    gui::{system_tray, welcome},
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
 use rigela_utils::{get_program_directory, write_file};
-use std::{sync::Arc, thread};
+use std::sync::Arc;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -76,12 +75,8 @@ impl Launcher {
             proxy32.spawn().await;
         });
 
-        // 显示欢迎页面。
-        thread::spawn(welcome::show);
-
-        // 显示托盘图标
-        let ctx_tray = self.context.clone();
-        thread::spawn(|| system_tray::show(ctx_tray));
+        // 初始化Gui界面
+        self.context.window_manager.init(self.context.clone());
 
         // 朗读当前桌面
         self.context

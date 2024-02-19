@@ -57,7 +57,7 @@ impl WinManager {
         let (tx, rx) = mpsc::channel::<(NoticeSender, NoticeSender)>();
 
         thread::spawn(move || {
-            nwg::init();
+            nwg::init().expect("could not initialize nwg");
 
             let welcome =
                 WelcomeForm::build_ui(Default::default()).expect("could not build welcome form");
@@ -68,12 +68,12 @@ impl WinManager {
             ))
             .unwrap();
 
-            let systemtray =
+            let system_tray =
                 SystemTray::build_ui(Default::default()).expect("could not build tray form");
-            systemtray.set_context(context.clone());
+            system_tray.set_context(context.clone());
             tx.send((
-                systemtray.get_show_notice_sender(),
-                systemtray.get_exit_notice_sender(),
+                system_tray.get_show_notice_sender(),
+                system_tray.get_exit_notice_sender(),
             ))
             .unwrap();
 
@@ -98,10 +98,18 @@ impl WinManager {
             nwg::dispatch_thread_events()
         });
 
-        self.welcome.set(rx.recv().unwrap()).unwrap();
-        self.tray.set(rx.recv().unwrap()).unwrap();
-        self.popup_menu.set(rx.recv().unwrap()).unwrap();
-        self.hotkeys.set(rx.recv().unwrap()).unwrap();
+        let _ = self.welcome.set(rx.recv().unwrap());
+        let _ = self.tray.set(rx.recv().unwrap());
+        let _ = self.popup_menu.set(rx.recv().unwrap());
+        let _ = self.hotkeys.set(rx.recv().unwrap());
+    }
+
+    pub(crate) fn show_hotkeys_form(&self) {
+        self.hotkeys.get().unwrap().0.notice();
+    }
+
+    pub(crate) fn show_popup_menu(&self) {
+        self.popup_menu.get().unwrap().0.notice();
     }
 }
 

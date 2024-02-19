@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::gui::window_manager::WinManager;
 use crate::{
     browser::form_browser::FormBrowser, commander::Commander,
     configs::config_manager::ConfigManager, event_core, performer::Performer, proxy32::Proxy32,
@@ -43,6 +44,7 @@ pub(crate) struct Context {
     pub(crate) ui_automation: Arc<UiAutomation>,
     pub(crate) event_core: Arc<event_core::EventCore>,
     pub(crate) form_browser: Arc<FormBrowser>,
+    pub(crate) window_manager: Arc<WinManager>,
 }
 
 impl Context {
@@ -96,6 +98,9 @@ impl Context {
 
         // 窗口浏览器
         let form_browser = FormBrowser::new();
+        
+        // Gui 窗口界面管理器
+        let window_manager = WinManager::new();
 
         Self {
             commander: commander.into(),
@@ -113,6 +118,7 @@ impl Context {
             work_runtime: work_runtime.into(),
             event_core: event_core.into(),
             form_browser: Arc::new(form_browser),
+            window_manager: window_manager.into(),
         }
     }
 
@@ -160,6 +166,7 @@ impl Clone for Context {
             work_runtime: self.work_runtime.clone(),
             event_core: self.event_core.clone(),
             form_browser: self.form_browser.clone(),
+            window_manager: self.window_manager.clone(),
         }
     }
 }
