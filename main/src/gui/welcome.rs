@@ -26,7 +26,7 @@ const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建
 #[derive(Default, NwgUi)]
 pub struct WelcomeForm {
     #[nwg_control( title: &t!("welcome.title"), size: (480, 320), position: (300,300), flags:"WINDOW|VISIBLE")]
-    #[nwg_events( OnWindowClose: [nwg::stop_thread_dispatch()] )]
+    #[nwg_events( OnWindowClose: [WelcomeForm::on_exit] )]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
@@ -67,6 +67,10 @@ pub struct WelcomeForm {
 }
 
 impl WelcomeForm {
+    fn on_exit(&self) {
+        self.window.set_visible(false);
+    }
+
     fn on_key_press(&self, data: &EventData) {
         if data.on_key() == nwg::keys::TAB {
             self.btn_donate.set_focus();
@@ -93,7 +97,7 @@ impl WelcomeForm {
     }
 
     fn on_btn_close(&self) {
-        nwg::stop_thread_dispatch();
+        self.window.set_visible(false);
     }
 
     fn on_show_notice(&self) {
@@ -118,7 +122,8 @@ impl Formable for WelcomeForm {
 }
 
 /// 显示欢迎窗口
-pub(crate) fn show() {
+#[allow(unused)]
+fn show() {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = WelcomeForm::build_ui(Default::default()).expect("Failed to build UI");
     bring_window_front!(ui.window);

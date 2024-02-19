@@ -53,23 +53,16 @@ pub struct PopupMenuForm {
 }
 
 impl PopupMenuForm {
-    fn on_init(&self) {
-        let (x, y) = nwg::GlobalCursor::position();
-        self.tray_menu.popup(x, y);
-    }
+    fn on_init(&self) {}
 
     fn on_setting(&self) {
         // Todo:
         nwg::simple_message("RigelA", "Start Setting");
-
-        nwg::stop_thread_dispatch();
     }
 
     fn on_help(&self) {
         // Todo:
         nwg::simple_message("RigelA", "Start Help");
-
-        nwg::stop_thread_dispatch();
     }
 
     fn on_exit(&self) {
@@ -86,12 +79,9 @@ impl PopupMenuForm {
         nwg::stop_thread_dispatch();
     }
 
-    fn set_context(&self, context: Arc<Context>) {
-        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
-    }
-
     fn on_show_notice(&self) {
-        // Todo
+        let (x, y) = nwg::GlobalCursor::position();
+        self.tray_menu.popup(x, y);
     }
 
     fn on_exit_notice(&self) {
@@ -105,7 +95,7 @@ impl Formable for PopupMenuForm {
     }
 
     fn get_show_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
+        self.show_notice.sender().clone()
     }
 
     fn get_exit_notice_sender(&self) -> NoticeSender {
@@ -113,7 +103,8 @@ impl Formable for PopupMenuForm {
     }
 }
 
-pub(crate) fn show(context: Arc<Context>) {
+#[allow(unused)]
+fn show(context: Arc<Context>) {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = PopupMenuForm::build_ui(Default::default()).expect("Failed to build UI");
     ui.set_context(context.clone());

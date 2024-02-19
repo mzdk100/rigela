@@ -100,10 +100,6 @@ impl SystemTray {
         }
     }
 
-    fn set_context(&self, context: Arc<Context>) {
-        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
-    }
-
     fn on_show_notice(&self) {}
 
     fn on_exit_notice(&self) {
@@ -125,7 +121,8 @@ impl Formable for SystemTray {
     }
 }
 
-pub(crate) fn show(context: Arc<Context>) {
+#[allow(unused)]
+fn show(context: Arc<Context>) {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = SystemTray::build_ui(Default::default()).expect("Failed to build UI");
     ui.set_context(context.clone());
