@@ -12,18 +12,21 @@
  */
 
 use crate::bring_window_front;
+use crate::context::Context;
 use crate::gui::utils::HELP_DIR;
+use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
-use nwg::{EventData, NativeUi};
+use nwg::{EventData, NativeUi, NoticeSender};
 use rigela_utils::get_program_directory;
 use std::process::Command;
+use std::sync::Arc;
 
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
 
 #[derive(Default, NwgUi)]
 pub struct WelcomeForm {
     #[nwg_control( title: &t!("welcome.title"), size: (480, 320), position: (300,300), flags:"WINDOW|VISIBLE")]
-    #[nwg_events( OnWindowClose: [nwg::stop_thread_dispatch()] )]
+    #[nwg_events( OnWindowClose: [WelcomeForm::on_exit] )]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
@@ -53,9 +56,21 @@ pub struct WelcomeForm {
     #[nwg_layout_item(layout: layout, row: 5, col: 5)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_close])]
     btn_close: nwg::Button,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [WelcomeForm::on_show_notice])]
+    show_notice: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [WelcomeForm::on_exit_notice])]
+    exit_notice: nwg::Notice,
 }
 
 impl WelcomeForm {
+    fn on_exit(&self) {
+        self.window.set_visible(false);
+    }
+
     fn on_key_press(&self, data: &EventData) {
         if data.on_key() == nwg::keys::TAB {
             self.btn_donate.set_focus();
@@ -82,12 +97,33 @@ impl WelcomeForm {
     }
 
     fn on_btn_close(&self) {
-        nwg::stop_thread_dispatch();
+        self.window.set_visible(false);
+    }
+
+    fn on_show_notice(&self) {
+        self.window.set_visible(true)
+    }
+
+    fn on_exit_notice(&self) {
+        nwg::stop_thread_dispatch()
+    }
+}
+
+impl Formable for WelcomeForm {
+    fn set_context(&self, _context: Arc<Context>) {}
+
+    fn get_show_notice_sender(&self) -> NoticeSender {
+        self.show_notice.sender().clone()
+    }
+
+    fn get_exit_notice_sender(&self) -> NoticeSender {
+        self.exit_notice.sender().clone()
     }
 }
 
 /// 显示欢迎窗口
-pub(crate) fn show() {
+#[allow(unused)]
+fn show() {
     nwg::init().expect("Failed to init Native Windows GUI");
     let ui = WelcomeForm::build_ui(Default::default()).expect("Failed to build UI");
     bring_window_front!(ui.window);
