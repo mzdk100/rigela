@@ -15,7 +15,6 @@ use crate::{
     commander::keys::Keys::*,
     context::Context,
     ext::AccessibleObjectExt,
-    gui::{hotkeys, popup_menu},
     performer::{sound::SoundArgument::Single, Speakable},
 };
 use async_trait::async_trait;
@@ -83,14 +82,13 @@ async fn current_cpu_usage(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
 async fn popup_menu(context: Arc<Context>) {
-    thread::spawn(move || popup_menu::show(context.clone()));
+    context.window_manager.show_popup_menu();
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "自定义热键", key = (VkRigelA, VkK))]
 async fn hotkeys(context: Arc<Context>) {
-    let context = context.clone();
-    thread::spawn(|| hotkeys::show(context));
+    context.window_manager.show_hotkeys_form();
 }
 
 //noinspection RsUnresolvedReference
