@@ -15,6 +15,7 @@ mod command;
 mod gitcode_file_data;
 mod hotkeys;
 mod popup_menu;
+mod settings_form;
 mod system_tray;
 mod utils;
 mod welcome;

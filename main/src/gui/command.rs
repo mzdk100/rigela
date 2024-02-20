@@ -36,7 +36,9 @@ pub(crate) fn help_cmd(_context: Arc<Context>) {
         .expect("Failed to start notepad");
 }
 
-pub(crate) fn settings_cmd(_context: Arc<Context>) {}
+pub(crate) fn settings_cmd(context: Arc<Context>) {
+    context.window_manager.show_settings_form();
+}
 
 #[allow(unused)]
 pub(crate) fn check_update_cmd(_context: Arc<Context>) {}
