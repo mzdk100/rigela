@@ -12,12 +12,14 @@
  */
 
 use crate::context::Context;
-use crate::gui::utils::HELP_DIR;
+use crate::gui::utils::{check_update_docs, HELP_DIR};
 use crate::talent::Talented;
 use rigela_utils::get_program_directory;
 use std::process::Command;
 use std::sync::Arc;
+use win_wrap::common::message_box;
 
+/// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {
     let ctx = context.clone();
     context.main_handler.spawn(async move {
@@ -26,6 +28,7 @@ pub(crate) fn exit_cmd(context: Arc<Context>) {
     });
 }
 
+/// 打开帮助文档。
 pub(crate) fn help_cmd(_context: Arc<Context>) {
     let help_path = get_program_directory().join(HELP_DIR);
     Command::new("notepad")
@@ -34,20 +37,49 @@ pub(crate) fn help_cmd(_context: Arc<Context>) {
         .expect("Failed to start notepad");
 }
 
+/// 打开设置窗口。
 pub(crate) fn settings_cmd(context: Arc<Context>) {
     context.window_manager.show_settings_form();
 }
 
-pub(crate) fn check_update_cmd(_context: Arc<Context>) {}
+/// 检查更新。
+pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
+    let res_acc = context.resource_accessor.clone();
 
+    context.work_runtime.spawn(async move {
+        let res = check_update_docs().await;
+
+        // 如果是自动检查更新，且检查失败，则不做任何操作
+        if auto && !res {
+            return;
+        }
+
+        // 手动检查, 未检测到更新需要弹窗提示
+        if !res {
+            message_box("当前版本已是最新版本！", "提示");
+            return;
+        }
+
+        // 启动更新器
+        res_acc.open("update.exe").await;
+        let path = res_acc.get_path("update.exe");
+        Command::new(path)
+            .spawn()
+            .expect("Failed to start update.exe");
+    });
+}
+
+/// 打开自定义热键窗口。
 pub(crate) fn custom_hotkeys_cmd(context: Arc<Context>) {
     context.window_manager.show_hotkeys_form();
 }
 
+/// 打开欢迎界面。
 pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
     context.window_manager.show_welcome_form();
 }
 
+/// 打开捐赠界面。
 pub(crate) fn donate_cmd(_context: Arc<Context>) {
     // Todo: 捐献按钮点击事件，带实现
 }
