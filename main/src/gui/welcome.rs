@@ -16,7 +16,7 @@ use crate::context::Context;
 use crate::gui::utils::HELP_DIR;
 use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
-use nwg::{EventData, NativeUi, NoticeSender};
+use nwg::{EventData, NoticeSender};
 use rigela_utils::get_program_directory;
 use std::process::Command;
 use std::sync::Arc;
@@ -101,6 +101,7 @@ impl WelcomeForm {
     }
 
     fn on_show_notice(&self) {
+        bring_window_front!(&self.window);
         self.window.set_visible(true)
     }
 
@@ -119,13 +120,4 @@ impl Formable for WelcomeForm {
     fn get_exit_notice_sender(&self) -> NoticeSender {
         self.exit_notice.sender().clone()
     }
-}
-
-/// 显示欢迎窗口
-#[allow(unused)]
-fn show() {
-    nwg::init().expect("Failed to init Native Windows GUI");
-    let ui = WelcomeForm::build_ui(Default::default()).expect("Failed to build UI");
-    bring_window_front!(ui.window);
-    nwg::dispatch_thread_events();
 }

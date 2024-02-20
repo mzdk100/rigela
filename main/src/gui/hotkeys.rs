@@ -20,7 +20,7 @@ use crate::{
     talent::Talented,
 };
 use nwd::NwgUi;
-use nwg::{modal_message, InsertListViewItem, MessageParams, NativeUi, NoticeSender};
+use nwg::{modal_message, InsertListViewItem, MessageParams, NoticeSender};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -366,6 +366,7 @@ impl HotKeysForm {
     }
 
     fn on_show_notice(&self) {
+        bring_window_front!(&self.window);
         self.window.set_visible(true)
     }
 
@@ -386,13 +387,4 @@ impl Formable for HotKeysForm {
     fn get_exit_notice_sender(&self) -> NoticeSender {
         self.exit_notice.sender().clone()
     }
-}
-
-#[allow(unused)]
-fn show(context: Arc<Context>) {
-    nwg::init().expect("Failed to init Native Windows GUI");
-    let ui = HotKeysForm::build_ui(Default::default()).expect("Failed to build UI");
-    ui.set_context(context);
-    bring_window_front!(ui.window);
-    nwg::dispatch_thread_events();
 }

@@ -16,7 +16,7 @@ use crate::context::Context;
 use crate::gui::window_manager::Formable;
 use crate::talent::Talented;
 use nwd::NwgUi;
-use nwg::{NativeUi, NoticeSender};
+use nwg::NoticeSender;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 
@@ -80,6 +80,7 @@ impl PopupMenuForm {
     }
 
     fn on_show_notice(&self) {
+        bring_window_front!(&self.window);
         let (x, y) = nwg::GlobalCursor::position();
         self.tray_menu.popup(x, y);
     }
@@ -101,13 +102,4 @@ impl Formable for PopupMenuForm {
     fn get_exit_notice_sender(&self) -> NoticeSender {
         self.exit_notice.sender().clone()
     }
-}
-
-#[allow(unused)]
-fn show(context: Arc<Context>) {
-    nwg::init().expect("Failed to init Native Windows GUI");
-    let ui = PopupMenuForm::build_ui(Default::default()).expect("Failed to build UI");
-    ui.set_context(context.clone());
-    bring_window_front!(&ui.window);
-    nwg::dispatch_thread_events();
 }

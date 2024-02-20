@@ -11,45 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod gitcode_file_data;
 mod hotkeys;
 mod popup_menu;
 mod system_tray;
 mod utils;
 mod welcome;
-mod gitcode_file_data;
 pub(crate) mod window_manager;
-
-#[macro_export]
-macro_rules! bring_window_front {
-    ($window:expr) => {
-        if let nwg::ControlHandle::Hwnd(h) = $window.handle {
-            let current_thread_id = win_wrap::threading::get_current_thread_id();
-            let h_foreground = win_wrap::common::get_foreground_window();
-            let (remote_thread_id, _) =
-                win_wrap::threading::get_window_thread_process_id(h_foreground);
-
-            win_wrap::common::attach_thread_input(
-                current_thread_id,
-                remote_thread_id,
-                win_wrap::common::TRUE,
-            );
-
-            win_wrap::common::show_window(
-                win_wrap::common::HWND(h as isize),
-                win_wrap::common::SW_HIDE,
-            );
-            win_wrap::common::show_window(
-                win_wrap::common::HWND(h as isize),
-                win_wrap::common::SW_SHOW,
-            );
-            win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
-            win_wrap::common::set_active_window(win_wrap::common::HWND(h as isize));
-
-            win_wrap::common::attach_thread_input(
-                current_thread_id,
-                remote_thread_id,
-                win_wrap::common::FALSE,
-            );
-        }
-    };
-}

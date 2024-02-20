@@ -83,6 +83,15 @@ impl WinManager {
         let _ = self.tray.set(rx.recv().unwrap());
         let _ = self.popup_menu.set(rx.recv().unwrap());
         let _ = self.hotkeys.set(rx.recv().unwrap());
+
+        self.welcome.get().unwrap().0.notice();
+    }
+
+    pub(crate) fn uninit(&self) {
+        self.welcome.get().unwrap().1.notice();
+        self.tray.get().unwrap().1.notice();
+        self.popup_menu.get().unwrap().1.notice();
+        self.hotkeys.get().unwrap().1.notice();
     }
 
     pub(crate) fn show_hotkeys_form(&self) {
@@ -98,4 +107,39 @@ impl Debug for WinManager {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WinManager").finish()
     }
+}
+
+#[macro_export]
+macro_rules! bring_window_front {
+    ($win:expr) => {
+        if let nwg::ControlHandle::Hwnd(h) = $win.handle {
+            let current_thread_id = win_wrap::threading::get_current_thread_id();
+            let h_foreground = win_wrap::common::get_foreground_window();
+            let (remote_thread_id, _) =
+                win_wrap::threading::get_window_thread_process_id(h_foreground);
+
+            win_wrap::common::attach_thread_input(
+                current_thread_id,
+                remote_thread_id,
+                win_wrap::common::TRUE,
+            );
+
+            win_wrap::common::show_window(
+                win_wrap::common::HWND(h as isize),
+                win_wrap::common::SW_HIDE,
+            );
+            win_wrap::common::show_window(
+                win_wrap::common::HWND(h as isize),
+                win_wrap::common::SW_SHOW,
+            );
+            win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
+            win_wrap::common::set_active_window(win_wrap::common::HWND(h as isize));
+
+            win_wrap::common::attach_thread_input(
+                current_thread_id,
+                remote_thread_id,
+                win_wrap::common::FALSE,
+            );
+        };
+    };
 }

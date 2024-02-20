@@ -16,7 +16,7 @@ use crate::gui::utils::{update_docs, HELP_DIR};
 use crate::gui::window_manager::Formable;
 use crate::talent::Talented;
 use nwd::NwgUi;
-use nwg::{NativeUi, NoticeSender};
+use nwg::NoticeSender;
 use rigela_utils::get_program_directory;
 use std::ops::DerefMut;
 use std::process::Command;
@@ -119,22 +119,4 @@ impl Formable for SystemTray {
     fn get_exit_notice_sender(&self) -> NoticeSender {
         self.exit_notice.sender().clone()
     }
-}
-
-#[allow(unused)]
-fn show(context: Arc<Context>) {
-    nwg::init().expect("Failed to init Native Windows GUI");
-    let ui = SystemTray::build_ui(Default::default()).expect("Failed to build UI");
-    ui.set_context(context.clone());
-
-    let exit_sender = ui.exit_notice.sender();
-    let t = context.terminator.clone();
-    context.main_handler.spawn(async move {
-        t.add_exiting_listener(move || {
-            exit_sender.notice();
-        })
-        .await;
-    });
-
-    nwg::dispatch_thread_events();
 }
