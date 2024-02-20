@@ -12,9 +12,11 @@
  */
 
 use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::UI::WindowsAndMessaging::{PeekMessageW, PEEK_MESSAGE_REMOVE_TYPE};
 pub use windows::Win32::UI::WindowsAndMessaging::{
-    HWND_BROADCAST, MSG, SEND_MESSAGE_TIMEOUT_FLAGS, SMTO_ABORTIFHUNG, SMTO_BLOCK,
-    SMTO_ERRORONEXIT, SMTO_NORMAL, SMTO_NOTIMEOUTIFNOTHUNG, WM_QUIT,
+    HWND_BROADCAST, MSG, PM_NOREMOVE, PM_NOYIELD, PM_QS_INPUT, PM_QS_PAINT, PM_QS_SENDMESSAGE,
+    PM_REMOVE, SEND_MESSAGE_TIMEOUT_FLAGS, SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT,
+    SMTO_NORMAL, SMTO_NOTIMEOUTIFNOTHUNG, WM_QUIT,
 };
 use windows::{
     core::HSTRING,
@@ -55,6 +57,33 @@ pub fn dispatch_message(msg: &mut MSG) -> LRESULT {
  * */
 pub fn get_message(msg: &mut MSG, h_wnd: HWND, msg_filter_min: u32, msg_filter_max: u32) -> BOOL {
     unsafe { GetMessageW(msg, h_wnd, msg_filter_min, msg_filter_max) }
+}
+
+//noinspection SpellCheckingInspection
+/**
+ * 调度传入的非排队消息，检查线程消息队列中是否存在已发布的消息，并查询消息（如果存在)。
+ * `msg` 消息结构，该结构从线程的消息队列接收消息信息。
+ * `h_wnd` 要查询其消息的窗口的句柄。窗口必须属于当前线程。如果 h_wnd 为 NULL， peek_message 将检索属于当前线程的任何窗口的消息，以及当前线程的消息队列中 h_wnd 值为 NULL 的任何消息 (看到 MSG 结构)。 因此，如果 h_wnd 为 NULL，则同时处理窗口消息和线程消息。如果 h_wnd 为 -1，则 peek_message 仅查询当前线程的消息队列中 h_wnd 值为 NULL 的消息，即当 h_wnd 参数为 NULL 时，post_message 或 post_thread_message 发布的线程消息。
+ * `msg_filter_min` 要检查的消息范围中第一条消息的值。 使用 WM_KEYFIRST (0x0100) 指定第一条键盘消息， 或使用WM_MOUSEFIRST (0x0200) 指定第一条鼠标消息。如果 msg_filter_min 和 msg_filter_max 均为零， 则 peek_message 将返回所有可用消息 (即， 不执行范围筛选)。
+ * `msg_filter_max` 要检查的消息范围中最后一条消息的值。 使用 WM_KEYLAST 指定最后一条键盘消息， WM_MOUSELAST 指定最后一条鼠标消息。如果 msg_filter_min 和 msg_filter_max 均为零， 则 peek_message 将返回所有可用消息 (即，不执行范围筛选)。
+ * `remove_msg` 指定如何处理消息。 此参数可使用以下一个或多个值。
+ * - PM_NOREMOVE 处理后不会从队列中删除消息。
+ * - PM_REMOVE 处理后，将从队列中删除消息。
+ * - PM_NOYIELD 阻止系统释放正在等待调用方进入空闲状态的任何线程， (请参阅 wait_for_input_idle)。将此值与 PM_NOREMOVE 或 PM_REMOVE组合在一起。
+ * 默认情况下，将处理所有消息类型。 若要指定只应处理某些消息，请指定以下一个或多个值。
+ * - PM_QS_INPUT 处理鼠标和键盘消息。
+ * - PM_QS_PAINT 处理画图消息。
+ * - PM_QS_POSTMESSAGE 处理所有已发布的消息，包括计时器和热键。
+ * - PM_QS_SENDMESSAGE 处理所有已发送的消息。
+ * */
+pub fn peek_message(
+    msg: &mut MSG,
+    h_wnd: HWND,
+    msg_filter_min: u32,
+    msg_filter_max: u32,
+    remove_msg: PEEK_MESSAGE_REMOVE_TYPE,
+) -> BOOL {
+    unsafe { PeekMessageW(msg, h_wnd, msg_filter_min, msg_filter_max, remove_msg) }
 }
 
 /**
@@ -154,6 +183,17 @@ pub fn message_loop(slot: impl Fn(&MSG)) {
             break;
         }
         slot(&msg);
+        dispatch_message(&mut msg);
+        translate_message(&mut msg);
+    }
+}
+
+/**
+ * 处理当前线程的所有等待消息。
+ * */
+pub fn pump_waiting_messages() {
+    let mut msg = MSG::default();
+    while peek_message(&mut msg, HWND::default(), 0, 0, PM_REMOVE).as_bool() {
         dispatch_message(&mut msg);
         translate_message(&mut msg);
     }

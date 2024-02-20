@@ -16,8 +16,9 @@ use std::{
     env::var,
     path::{Path, PathBuf},
 };
-use win_wrap::common::{
-    free_library, get_proc_address, load_library, Result, BOOL, FARPROC, HMODULE, HWND,
+use win_wrap::{
+    common::{free_library, get_proc_address, load_library, Result, BOOL, FARPROC, HMODULE, HWND},
+    message::pump_waiting_messages,
 };
 use windows::{
     core::{Error, HSTRING},
@@ -27,10 +28,15 @@ use windows::{
 #[macro_export]
 macro_rules! jab {
     ($module:expr,windows_run) => {
-        call_proc!($module, Windows_run, extern "C" fn(),)
+        call_proc!($module, Windows_run, extern "cdecl" fn() -> BOOL,)
     };
     ($module:expr,is_java_window,$h_wnd:expr) => {
-        call_proc!($module, isJavaWindow, extern "C" fn(HWND) -> BOOL, $h_wnd)
+        call_proc!(
+            $module,
+            isJavaWindow,
+            extern "cdecl" fn(HWND) -> BOOL,
+            $h_wnd
+        )
     };
 }
 
@@ -71,6 +77,7 @@ impl JabLib {
                 HSTRING::from("Can't load the jab library."),
             ));
         }
+        pump_waiting_messages();
         Ok(Self { h_module })
     }
 
@@ -79,7 +86,6 @@ impl JabLib {
      * 判断窗口是否是java的窗口。
      * */
     pub fn is_java_window(&self, h_wnd: HWND) -> bool {
-        dbg!(jab!(self.h_module, is_java_window, h_wnd));
         jab!(self.h_module, is_java_window, h_wnd)
             .unwrap_or(BOOL::from(false))
             .as_bool()
@@ -95,21 +101,17 @@ impl Drop for JabLib {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
     use crate::jab::JabLib;
-    use std::path::Path;
     use win_wrap::common::{find_window, get_desktop_window};
 
     #[test]
     fn main() {
-        let jab = JabLib::new(Some(
-            Path::new(r"D:\NVDA\lib\alpha-31004,49d5e581\windowsaccessbridge-32.dll").to_path_buf(),
-        ))
-        .unwrap();
+        let jab = JabLib::new(None).unwrap();
         assert!(!jab.is_java_window(get_desktop_window()));
         let h_wnd = find_window(Some("SunAwtFrame"), None);
-        assert!(jatb.is_java_window(h_wnd));
+        assert!(jab.is_java_window(h_wnd));
         dbg!(jab);
     }
 }
