@@ -12,8 +12,7 @@
  */
 
 use crate::context::Context;
-use crate::gui::command::{exit_cmd, help_cmd, settings_cmd};
-use crate::gui::utils::update_docs;
+use crate::gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd};
 use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
 use nwg::NoticeSender;
@@ -60,9 +59,8 @@ pub struct SystemTray {
 
 impl SystemTray {
     fn on_init(&self) {
-        self.context.get().unwrap().work_runtime.spawn(async move {
-            update_docs().await;
-        });
+        // 启动程序自动检查更新
+        check_update_cmd(self.context.get().unwrap().clone(), true);
     }
 
     fn show_menu(&self) {

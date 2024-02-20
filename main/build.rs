@@ -27,19 +27,23 @@ fn main() {
     cargo_rigela::make_version();
 
     // 如果帮助文件或者更新日志有变动，更新哈希值
-    println!("cargo:rerun-if-changed=../docs/help.txt");
-    println!("cargo:rerun-if-changed=../docs/update_log.txt");
-    update_docs_md5();
+    // 暂时依赖gitcode生成的哈希值，暂停使用自定义的md5，
+    // println!("cargo:rerun-if-changed=../docs/help.txt");
+    // println!("cargo:rerun-if-changed=../docs/update_log.txt");
+    // update_docs_md5();
 
     let _ = embed_manifest(new_manifest("Contoso.Sample"));
 }
 
+#[allow(unused)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct DocsMd5 {
     help_md5: String,
     update_log_md5: String,
 }
 
+// 更新文档哈希值
+#[allow(unused)]
 fn update_docs_md5() {
     let root_dir = std::env::current_dir().expect("Can't get the current directory.");
     let docs_dir = root_dir.join("../docs");

@@ -91,7 +91,7 @@ impl PopupMenuForm {
     }
 
     fn on_check_update(&self) {
-        check_update_cmd(self.context.get().unwrap().clone());
+        check_update_cmd(self.context.get().unwrap().clone(), false);
     }
 
     fn on_exit(&self) {
