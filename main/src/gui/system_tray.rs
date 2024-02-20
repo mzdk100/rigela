@@ -12,19 +12,16 @@
  */
 
 use crate::context::Context;
-use crate::gui::utils::{update_docs, HELP_DIR};
+use crate::gui::command::{exit_cmd, help_cmd, settings_cmd};
+use crate::gui::utils::update_docs;
 use crate::gui::window_manager::Formable;
-use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NoticeSender;
-use rigela_utils::get_program_directory;
-use std::ops::DerefMut;
-use std::process::Command;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, OnceLock};
 
 #[derive(Default, NwgUi)]
 pub struct SystemTray {
-    context: Mutex<Option<Arc<Context>>>,
+    context: OnceLock<Arc<Context>>,
 
     #[nwg_control]
     #[nwg_events (OnInit: [SystemTray::on_init] )]
@@ -63,8 +60,7 @@ pub struct SystemTray {
 
 impl SystemTray {
     fn on_init(&self) {
-        let ctx = self.context.lock().unwrap().clone().unwrap();
-        ctx.work_runtime.spawn(async move {
+        self.context.get().unwrap().work_runtime.spawn(async move {
             update_docs().await;
         });
     }
@@ -75,29 +71,15 @@ impl SystemTray {
     }
 
     fn on_setting(&self) {
-        // Todo:
-        nwg::simple_message("RigelA", "Start Setting");
+        settings_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_help(&self) {
-        let help_path = get_program_directory().join(HELP_DIR);
-        Command::new("notepad")
-            .arg(help_path)
-            .spawn()
-            .expect("Failed to start notepad");
+        help_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_exit(&self) {
-        let context = self.context.lock().unwrap().clone();
-        if let Some(context) = context {
-            let ctx = context.clone();
-            context.main_handler.spawn(async move {
-                ctx.talent_accessor
-                    .get_exit_talent()
-                    .perform(ctx.clone())
-                    .await;
-            });
-        }
+        exit_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_show_notice(&self) {}
@@ -109,7 +91,7 @@ impl SystemTray {
 
 impl Formable for SystemTray {
     fn set_context(&self, context: Arc<Context>) {
-        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
+        self.context.set(context.clone()).unwrap();
     }
 
     fn get_show_notice_sender(&self) -> NoticeSender {

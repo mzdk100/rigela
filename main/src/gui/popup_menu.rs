@@ -13,19 +13,17 @@
 
 use crate::bring_window_front;
 use crate::context::Context;
+use crate::gui::command::{exit_cmd, help_cmd, settings_cmd};
 use crate::gui::window_manager::Formable;
-use crate::talent::Talented;
 use nwd::NwgUi;
 use nwg::NoticeSender;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, OnceLock};
 
 #[derive(Default, NwgUi)]
 pub struct PopupMenuForm {
-    context: Mutex<Option<Arc<Context>>>,
+    context: OnceLock<Arc<Context>>,
 
     #[nwg_control]
-    #[nwg_events(OnInit: [PopupMenuForm::on_init])]
     window: nwg::MessageWindow,
 
     #[nwg_control(parent: window, popup: true)]
@@ -53,30 +51,16 @@ pub struct PopupMenuForm {
 }
 
 impl PopupMenuForm {
-    fn on_init(&self) {}
-
     fn on_setting(&self) {
-        // Todo:
-        nwg::simple_message("RigelA", "Start Setting");
+        settings_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_help(&self) {
-        // Todo:
-        nwg::simple_message("RigelA", "Start Help");
+        help_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_exit(&self) {
-        let context = self.context.lock().unwrap().clone();
-        if let Some(context) = context {
-            let ctx = context.clone();
-            context.main_handler.spawn(async move {
-                ctx.talent_accessor
-                    .get_exit_talent()
-                    .perform(ctx.clone())
-                    .await;
-            });
-        }
-        nwg::stop_thread_dispatch();
+        exit_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_show_notice(&self) {
@@ -92,7 +76,7 @@ impl PopupMenuForm {
 
 impl Formable for PopupMenuForm {
     fn set_context(&self, context: Arc<Context>) {
-        *self.context.lock().unwrap().deref_mut() = Some(context.clone());
+        self.context.set(context.clone()).unwrap();
     }
 
     fn get_show_notice_sender(&self) -> NoticeSender {

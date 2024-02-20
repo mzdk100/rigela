@@ -13,18 +13,18 @@
 
 use crate::bring_window_front;
 use crate::context::Context;
-use crate::gui::utils::HELP_DIR;
+use crate::gui::command::{donate_cmd, help_cmd, settings_cmd};
 use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
-use rigela_utils::get_program_directory;
-use std::process::Command;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
 
 #[derive(Default, NwgUi)]
 pub struct WelcomeForm {
+    context: OnceLock<Arc<Context>>,
+
     #[nwg_control( title: &t!("welcome.title"), size: (480, 320), position: (300,300), flags:"WINDOW|VISIBLE")]
     #[nwg_events( OnWindowClose: [WelcomeForm::on_exit] )]
     window: nwg::Window,
@@ -67,10 +67,12 @@ pub struct WelcomeForm {
 }
 
 impl WelcomeForm {
+    // 屏蔽关闭窗口事件退出UI线程
     fn on_exit(&self) {
         self.window.set_visible(false);
     }
 
+    // 修复编辑框Tab切换到按钮
     fn on_key_press(&self, data: &EventData) {
         if data.on_key() == nwg::keys::TAB {
             self.btn_donate.set_focus();
@@ -78,22 +80,15 @@ impl WelcomeForm {
     }
 
     fn on_btn_donate(&self) {
-        // Todo: 捐献按钮点击事件，带实现
-
-        nwg::modal_info_message(&self.window, "Rigela", "感谢支持!");
+        donate_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_btn_setting(&self) {
-        // Todo: 设置按钮点击事件，带实现
-        nwg::modal_info_message(&self.window, "Rigela", "设置");
+        settings_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_btn_help(&self) {
-        let help_path = get_program_directory().join(HELP_DIR);
-        Command::new("notepad")
-            .arg(help_path)
-            .spawn()
-            .expect("Failed to start notepad");
+        help_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_btn_close(&self) {
@@ -111,7 +106,9 @@ impl WelcomeForm {
 }
 
 impl Formable for WelcomeForm {
-    fn set_context(&self, _context: Arc<Context>) {}
+    fn set_context(&self, context: Arc<Context>) {
+        self.context.set(context.clone()).unwrap();
+    }
 
     fn get_show_notice_sender(&self) -> NoticeSender {
         self.show_notice.sender().clone()

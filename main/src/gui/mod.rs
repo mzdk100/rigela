@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod command;
 mod gitcode_file_data;
 mod hotkeys;
 mod popup_menu;

@@ -23,7 +23,7 @@ use nwd::NwgUi;
 use nwg::{modal_message, InsertListViewItem, MessageParams, NoticeSender};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::common::LRESULT;
 use win_wrap::{
     ext::LParamExt,
@@ -35,7 +35,7 @@ type Talent = Arc<dyn Talented + Send + Sync>;
 
 #[derive(Default, NwgUi)]
 pub struct HotKeysForm {
-    context: RefCell<Option<Arc<Context>>>,
+    context: OnceLock<Arc<Context>>,
     talents: RefCell<Arc<Vec<Talent>>>,
     talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
     hotkeys: Arc<Mutex<Vec<Keys>>>,
@@ -121,7 +121,7 @@ impl HotKeysForm {
 
     // 初始化数据
     fn init_data(&self) {
-        let context = self.context.borrow().clone().unwrap();
+        let context = self.context.get().unwrap().clone();
         *self.talents.borrow_mut() = context.talent_accessor.talents.clone();
         *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
     }
@@ -238,7 +238,7 @@ impl HotKeysForm {
                 return;
             }
 
-            let context = self.context.borrow().clone().unwrap();
+            let context = self.context.get().unwrap().clone();
             let mut talent_keys = self.talent_keys.borrow_mut().clone();
             talent_keys.remove(&id_);
             save_hotkeys(context.clone(), talent_keys);
@@ -274,7 +274,7 @@ impl HotKeysForm {
                 return;
             }
 
-            let context = self.context.borrow().clone().unwrap();
+            let context = self.context.get().unwrap().clone();
             let mut talent_keys = self.talent_keys.borrow_mut().clone();
             talent_keys.insert(id_.to_string(), hotkeys);
             save_hotkeys(context.clone(), talent_keys);
@@ -293,7 +293,7 @@ impl HotKeysForm {
     fn start_custom_hotkey(&self) {
         const INFO: &str = "请在键盘上按下您喜欢的热键，ESC取消";
 
-        let context = self.context.borrow().clone().unwrap();
+        let context = self.context.get().unwrap().clone();
         let pf = context.performer.clone();
         context.main_handler.spawn(async move {
             pf.speak(INFO.to_string()).await;
@@ -377,9 +377,8 @@ impl HotKeysForm {
 
 impl Formable for HotKeysForm {
     fn set_context(&self, context: Arc<Context>) {
-        *self.context.borrow_mut() = Some(context);
+        self.context.set(context.clone()).unwrap();
     }
-
     fn get_show_notice_sender(&self) -> NoticeSender {
         self.show_notice.sender().clone()
     }
