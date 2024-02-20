@@ -24,6 +24,19 @@ use windows::{
     },
 };
 
+#[macro_export]
+macro_rules! wm {
+    ($field:ident) => {
+        $field
+            .get_or_init(|| {
+                register_window_message(
+                    format!("{}_{}", module_path!(), stringify!($field)).as_str(),
+                )
+            })
+            .clone()
+    };
+}
+
 /**
  * 将消息调度到窗口过程。它通常用于调度 get_message 函数检索到的消息。
  * `msg` 消息结构。
@@ -128,15 +141,19 @@ pub fn translate_message(msg: &mut MSG) -> BOOL {
 pub fn register_window_message(string: &str) -> u32 {
     unsafe { RegisterWindowMessageW(&HSTRING::from(string)) }
 }
+
+//noinspection StructuralWrap
 /**
  * 在当前线程上创建一个窗口消息循环，直到接收到WM_QUIT消息为止。
+ * `slot` 一个回调函数，如果接收到消息发出通知，可以在此函数中对消息做自定义处理。
  * */
-pub fn message_loop() {
+pub fn message_loop(slot: impl Fn(&MSG)) {
     let mut msg = MSG::default();
     while get_message(&mut msg, HWND::default(), 0, 0) != FALSE {
         if msg.message == WM_QUIT {
             break;
         }
+        slot(&msg);
         dispatch_message(&mut msg);
         translate_message(&mut msg);
     }

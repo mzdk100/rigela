@@ -249,7 +249,7 @@ fn install(hook_type: HookType) {
         map.insert(hook_type.0, notify.clone());
         *lock = Some(map);
         drop(lock);
-        message_loop();
+        message_loop(|_| ());
         unhook_windows_hook_ex(h_hook).unwrap_or(());
         notify.finish();
     });

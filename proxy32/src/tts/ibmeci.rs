@@ -20,15 +20,20 @@ use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
     borrow::Cow,
     ffi::{c_char, CString},
-    future::Future,
-    pin::Pin,
     sync::OnceLock,
-    task::{Context, Poll},
     thread,
     time::Duration,
 };
-use tokio::{sync::oneshot, time::sleep};
-use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
+use tokio::{
+    sync::oneshot::{self, channel, Sender},
+    time::sleep,
+};
+use win_wrap::{
+    common::{free_library, get_proc_address, load_library, FARPROC, HMODULE, LPARAM, WPARAM},
+    message::{message_loop, post_thread_message, register_window_message},
+    threading::get_current_thread_id,
+    wm,
+};
 
 macro_rules! eci {
     ($module:expr,new) => {
@@ -44,6 +49,9 @@ macro_rules! eci {
             extern "system" fn(i32) -> bool,
             $handle
         )
+    };
+    ($module:expr,stop,$handle:expr) => {
+        call_proc!($module, eciStop, extern "system" fn(i32) -> bool, $handle)
     };
     ($module:expr,register_callback,$handle:expr,$cb:expr,$data:expr) => {
         call_proc!(
@@ -159,6 +167,7 @@ const VP_VOLUME: u32 = 7;
 
 //noinspection SpellCheckingInspection
 static mut IBMECI: OnceLock<Ibmeci> = OnceLock::new();
+static SYNTH_TASK: OnceLock<u32> = OnceLock::new();
 
 extern "system" fn _callback_internal(
     #[allow(unused_variables)] h_eci: u32,
@@ -193,6 +202,7 @@ pub(crate) struct Ibmeci {
     data: Vec<u8>,
     h_module: HMODULE,
     h_eci: i32,
+    thread: u32,
 }
 
 impl Ibmeci {
@@ -243,6 +253,7 @@ impl Ibmeci {
                 data: vec![],
                 h_module,
                 h_eci,
+                thread: get_current_thread_id(),
             };
 
             eci!(h_module, register_callback, h_eci, _callback_internal, 0);
@@ -258,7 +269,16 @@ impl Ibmeci {
                 IBMECI.set(self_).unwrap();
                 tx.send(IBMECI.get().unwrap()).unwrap();
             }
-            win_wrap::message::message_loop();
+            message_loop(|m| unsafe {
+                if wm!(SYNTH_TASK) == m.message {
+                    let b = Box::from_raw(m.wParam.0 as *mut Cow<[u8]>);
+                    eci!(h_module, add_text, h_eci, *b);
+                    eci!(h_module, synthesize, h_eci);
+                    eci!(h_module, synchronize, h_eci);
+                    let b = Box::from_raw(m.lParam.0 as *mut Sender<()>);
+                    b.send(()).unwrap_or(());
+                }
+            });
         });
         match rx.await {
             Err(e) => {
@@ -273,9 +293,7 @@ impl Ibmeci {
      * 合成语音。
      * */
     pub(crate) async fn synth(&self, text: &str) -> Vec<u8> {
-        if let Some(eci) = unsafe { IBMECI.get_mut() } {
-            eci.data.clear();
-        }
+        eci!(self.h_module, stop, self.h_eci);
         let (text, _, unmapped) = GBK.encode(text);
         let text = if unmapped {
             // 如果有不能被编码成gbk的字符，我们需要过滤他们
@@ -314,11 +332,17 @@ impl Ibmeci {
         } else {
             text
         };
-        eci!(self.h_module, add_text, self.h_eci, text);
-        eci!(self.h_module, synthesize, self.h_eci);
-        // eci!(self.h_module, synchronize, self.h_eci);
-        IbmeciState::new(self.h_module, self.h_eci).await;
-        if let Some(eci) = unsafe { IBMECI.get() } {
+        if let Some(eci) = unsafe { IBMECI.get_mut() } {
+            eci.data.clear();
+            let (tx, rx) = channel();
+            let tx = Box::new(tx);
+            post_thread_message(
+                eci.thread,
+                wm!(SYNTH_TASK),
+                WPARAM(Box::into_raw(Box::new(text)) as usize),
+                LPARAM(Box::into_raw(tx) as isize),
+            );
+            rx.await.unwrap_or(());
             eci.data.clone()
         } else {
             vec![]
@@ -463,31 +487,6 @@ impl Ibmeci {
     }
 }
 
-//noinspection SpellCheckingInspection
-struct IbmeciState {
-    h_module: HMODULE,
-    h_eci: i32,
-}
-
-impl IbmeciState {
-    fn new(h_module: HMODULE, h_eci: i32) -> Self {
-        Self { h_module, h_eci }
-    }
-}
-
-impl Future for IbmeciState {
-    type Output = ();
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if eci!(self.h_module, speaking, self.h_eci).unwrap_or(false) {
-            cx.waker().wake_by_ref();
-            Poll::Pending
-        } else {
-            Poll::Ready(())
-        }
-    }
-}
-
 impl Drop for Ibmeci {
     fn drop(&mut self) {
         if !self.h_module.is_invalid() {
@@ -513,7 +512,9 @@ mod test_eci {
     async fn main() {
         init_logger(Some("test.log"));
         let eci = Ibmeci::get().await.unwrap();
-        let data = eci.synth("abc‎").await;
-        assert_eq!(data.len(), 21978);
+        for _ in 0..1000 {
+            let data = eci.synth("abc‎").await;
+            assert_eq!(data.len(), 21978);
+        }
     }
 }

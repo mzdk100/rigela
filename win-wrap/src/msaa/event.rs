@@ -121,7 +121,7 @@ impl WinEventHook {
                 );
                 *lock = handle;
                 drop(lock);
-                message_loop();
+                message_loop(|_| ());
                 unhook_win_event(handle);
                 *H_WIN_EVENT.write().unwrap() = HWINEVENTHOOK(0);
             });

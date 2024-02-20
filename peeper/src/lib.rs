@@ -22,7 +22,6 @@ use crate::{
     handler::{on_ime, on_input_char},
 };
 use log::{debug, error};
-use once_cell::sync::Lazy;
 use rigela_utils::get_program_directory;
 use std::{
     ffi::c_void,
@@ -44,13 +43,8 @@ use win_wrap::{
         SMTO_ABORTIFHUNG, SMTO_BLOCK,
     },
     threading::{get_current_thread_id, ThreadNotify},
+    wm,
 };
-
-macro_rules! wm {
-    ($field:ident) => {
-        register_window_message(format!("{}_{}", module_path!(), stringify!($field)).as_str())
-    };
-}
 
 macro_rules! handle_event {
     ($name:ident, $($arg:expr),*) => {{
@@ -64,10 +58,10 @@ macro_rules! handle_event {
 static HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子需要初始化，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
-static WM_HOOK_INIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_INIT));
+static HOOK_INIT: OnceLock<u32> = OnceLock::new();
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子将要被卸载，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
-static WM_HOOK_UNINIT: Lazy<u32> = Lazy::new(|| wm!(HOOK_UNINIT));
+static HOOK_UNINIT: OnceLock<u32> = OnceLock::new();
 
 // peeper的client实例。
 static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
@@ -109,10 +103,10 @@ unsafe extern "system" fn hook_proc_call_wnd_proc(
         return call_next_hook_ex(code, w_param, l_param);
     }
     let msg: &CwpStruct = l_param.to();
-    if WM_HOOK_INIT.clone() == msg.message {
+    if wm!(HOOK_INIT) == msg.message {
         // 主进程发来的初始化命令
         activate_transaction();
-    } else if WM_HOOK_UNINIT.clone() == msg.message {
+    } else if wm!(HOOK_UNINIT) == msg.message {
         // 主进程发来的卸载命令
         deactivate_transaction();
     } else {
@@ -210,7 +204,7 @@ pub fn mount() {
         // 通知所有进程需要初始化
         send_message_timeout(
             HWND_BROADCAST,
-            WM_HOOK_INIT.clone(),
+            wm!(HOOK_INIT),
             WPARAM::default(),
             LPARAM::default(),
             SMTO_BLOCK | SMTO_ABORTIFHUNG,
@@ -221,12 +215,12 @@ pub fn mount() {
         if let Ok(_) = HOOK_THREAD.set(notify.clone()) {
             debug!("The thread of the hook is ready.");
         }
-        message_loop();
+        message_loop(|_| ());
 
         // 在卸载钩子之前，我们必须先通知所有的远进程即将卸载钩子，让他们有机会清理资源，否则将可能引起系统不稳定
         send_message_timeout(
             HWND_BROADCAST,
-            WM_HOOK_UNINIT.clone(),
+            wm!(HOOK_UNINIT),
             WPARAM::default(),
             LPARAM::default(),
             SMTO_BLOCK | SMTO_ABORTIFHUNG,
