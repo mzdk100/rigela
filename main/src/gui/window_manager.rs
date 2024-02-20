@@ -41,6 +41,18 @@ fn already_init() -> &'static Mutex<bool> {
     INSTANCE.get_or_init(|| false.into())
 }
 
+macro_rules! build_form {
+    ($var:ident, $type_:ident, $context:expr, $sd:expr) => {
+        let ctx = $context.clone();
+        let sd = $sd.clone();
+        let $var = $type_::build_ui(Default::default())
+            .expect(format!("could not build {} form", stringify!($type_)).as_str());
+        $var.set_context(ctx);
+        sd.send(($var.get_show_notice_sender(), $var.get_exit_notice_sender()))
+            .unwrap();
+    };
+}
+
 impl WinManager {
     pub(crate) fn new() -> Self {
         Default::default()
@@ -59,41 +71,10 @@ impl WinManager {
         thread::spawn(move || {
             nwg::init().expect("could not initialize nwg");
 
-            let welcome =
-                WelcomeForm::build_ui(Default::default()).expect("could not build welcome form");
-            welcome.set_context(context.clone());
-            tx.send((
-                welcome.get_show_notice_sender(),
-                welcome.get_exit_notice_sender(),
-            ))
-            .unwrap();
-
-            let system_tray =
-                SystemTray::build_ui(Default::default()).expect("could not build tray form");
-            system_tray.set_context(context.clone());
-            tx.send((
-                system_tray.get_show_notice_sender(),
-                system_tray.get_exit_notice_sender(),
-            ))
-            .unwrap();
-
-            let popup_menu = PopupMenuForm::build_ui(Default::default())
-                .expect("could not build popupmenu form");
-            popup_menu.set_context(context.clone());
-            tx.send((
-                popup_menu.get_show_notice_sender(),
-                popup_menu.get_exit_notice_sender(),
-            ))
-            .unwrap();
-
-            let hotkeys =
-                HotKeysForm::build_ui(Default::default()).expect("could not build hotkeys form");
-            hotkeys.set_context(context.clone());
-            tx.send((
-                hotkeys.get_show_notice_sender(),
-                hotkeys.get_exit_notice_sender(),
-            ))
-            .unwrap();
+            build_form!(welcome, WelcomeForm, context, tx);
+            build_form!(tray, SystemTray, context, tx);
+            build_form!(popup_menu, PopupMenuForm, context, tx);
+            build_form!(hotkeys, HotKeysForm, context, tx);
 
             nwg::dispatch_thread_events()
         });
