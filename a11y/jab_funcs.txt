@@ -2,7 +2,6 @@ addAccessibilityEventNotification
 addJavaEventNotification
 removeAccessibilityEventNotification
 removeJavaEventNotification
-Windows_run
 activateAccessibleHyperlink
 addAccessibleSelectionFromContext
 clearAccessibleSelectionFromContext
@@ -10,7 +9,6 @@ doAccessibleActions
 getAccessibleActions
 getAccessibleChildFromContext
 getAccessibleContextAt
-getAccessibleContextFromHWND
 getAccessibleContextInfo
 getAccessibleContextWithFocus
 getAccessibleHyperlink
@@ -48,7 +46,6 @@ getActiveDescendent
 getCaretLocation
 getCurrentAccessibleValueFromContext
 getEventsWaiting
-getHWNDFromAccessibleContext
 getMaximumAccessibleValueFromContext
 getMinimumAccessibleValueFromContext
 getObjectDepth
@@ -63,7 +60,6 @@ getVisibleChildrenCount
 isAccessibleChildSelectedFromContext
 isAccessibleTableColumnSelected
 isAccessibleTableRowSelected
-isJavaWindow
 isSameObject
 releaseJavaObject
 removeAccessibleSelectionFromContext

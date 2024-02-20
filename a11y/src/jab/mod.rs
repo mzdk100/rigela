@@ -11,34 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod calls;
+mod packages;
+
+use crate::{jab, jab::packages::AccessibleContext};
 use rigela_utils::call_proc;
 use std::{
     env::var,
     path::{Path, PathBuf},
 };
 use win_wrap::{
-    common::{free_library, get_proc_address, load_library, Result, BOOL, FARPROC, HMODULE, HWND},
+    common::{
+        free_library, get_proc_address, load_library, Result, BOOL, FALSE, FARPROC, HMODULE, HWND,
+    },
     message::pump_waiting_messages,
 };
 use windows::{
     core::{Error, HSTRING},
     Win32::Foundation::S_FALSE,
 };
-
-#[macro_export]
-macro_rules! jab {
-    ($module:expr,windows_run) => {
-        call_proc!($module, Windows_run, extern "cdecl" fn() -> BOOL,)
-    };
-    ($module:expr,is_java_window,$h_wnd:expr) => {
-        call_proc!(
-            $module,
-            isJavaWindow,
-            extern "cdecl" fn(HWND) -> BOOL,
-            $h_wnd
-        )
-    };
-}
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -77,18 +68,53 @@ impl JabLib {
                 HSTRING::from("Can't load the jab library."),
             ));
         }
-        pump_waiting_messages();
         Ok(Self { h_module })
     }
 
     #[allow(unused)]
     /**
-     * 判断窗口是否是java的窗口。
+     * 检查给定窗口是否实现了 Java 辅助功能 API。
      * */
     pub fn is_java_window(&self, h_wnd: HWND) -> bool {
+        pump_waiting_messages();
         jab!(self.h_module, is_java_window, h_wnd)
             .unwrap_or(BOOL::from(false))
             .as_bool()
+    }
+
+    /**
+     * 获取给定窗口的 AccessibleContext和 vmID值。许多 Java Access Bridge 函数都需要 AccessibleContext和 vmID值。
+     * `target` 目标窗口句柄。
+     * */
+    pub fn get_accessible_context_from_hwnd(
+        &self,
+        target: HWND,
+    ) -> Option<(i32, AccessibleContext)> {
+        pump_waiting_messages();
+        let (mut context, mut vm_id) = unsafe { std::mem::zeroed() };
+        if !jab!(
+            self.h_module,
+            get_accessible_context_from_hwnd,
+            target,
+            &mut vm_id,
+            &mut context
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
+            return None;
+        }
+        Some((vm_id, context))
+    }
+
+    /**
+     * 从顶级窗口的AccessibleContext返回HWND。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问的上下文。
+     * */
+    pub fn get_hwnd_from_accessible_context(&self, vm_id: i32, ac: AccessibleContext) -> HWND {
+        pump_waiting_messages();
+        jab!(self.h_module, get_hwnd__from_accessible_context, vm_id, ac).unwrap_or(HWND::default())
     }
 }
 
@@ -112,6 +138,11 @@ mod test_jab {
         assert!(!jab.is_java_window(get_desktop_window()));
         let h_wnd = find_window(Some("SunAwtFrame"), None);
         assert!(jab.is_java_window(h_wnd));
+        let ac = jab.get_accessible_context_from_hwnd(h_wnd);
+        dbg!(ac);
+        let (vm_id, ac) = ac.unwrap();
+        let h_wnd2 = jab.get_hwnd_from_accessible_context(vm_id, ac);
+        assert_eq!(h_wnd, h_wnd2);
         dbg!(jab);
     }
 }
