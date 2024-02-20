@@ -110,6 +110,10 @@ impl WinManager {
     pub(crate) fn show_popup_menu(&self) {
         self.popup_menu.get().unwrap().0.notice();
     }
+
+    pub(crate) fn show_welcome_form(&self) {
+        self.welcome.get().unwrap().0.notice();
+    }
 }
 
 impl Debug for WinManager {
