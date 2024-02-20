@@ -44,6 +44,8 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 
 /// 检查更新。
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
+    let res_acc = context.resource_accessor.clone();
+
     context.work_runtime.spawn(async move {
         let res = check_update_docs().await;
 
@@ -53,11 +55,17 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
         }
 
         // 手动检查, 未检测到更新需要弹窗提示
-        if res {
-            message_box("检测到新版本！", "提示");
-        } else {
+        if !res {
             message_box("当前版本已是最新版本！", "提示");
+            return;
         }
+
+        // 启动更新器
+        res_acc.open("update.exe").await;
+        let path = res_acc.get_path("update.exe");
+        Command::new(path)
+            .spawn()
+            .expect("Failed to start update.exe");
     });
 }
 
