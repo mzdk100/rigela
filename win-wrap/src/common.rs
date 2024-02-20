@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::ffi::CString;
-use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
+use std::ffi::{CString, OsStr};
+use std::iter::once;
+use std::os::windows::ffi::OsStrExt;
+use windows::core::PCWSTR;
+use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, MessageBoxW, MB_OK};
 pub use windows::{
     core::Result,
     Win32::{
@@ -353,8 +356,11 @@ pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> BOOL {
     unsafe { UnhookWinEvent(h_win_event_hook) }
 }
 
-pub fn message_box(_msg: &str, _title: &str) {
-    // unsafe {
-    // MessageBoxW(None, msg.as_ptr(), title.as_ptr(), MB_OK);
-    // }
+pub fn message_box(msg: &str, title: &str) {
+    let msg: Vec<u16> = OsStr::new(msg).encode_wide().chain(once(0)).collect();
+    let title: Vec<u16> = OsStr::new(title).encode_wide().chain(once(0)).collect();
+
+    unsafe {
+        MessageBoxW(None, PCWSTR(msg.as_ptr()), PCWSTR(title.as_ptr()), MB_OK);
+    }
 }
