@@ -352,3 +352,9 @@ pub fn set_win_event_hook(
 pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> BOOL {
     unsafe { UnhookWinEvent(h_win_event_hook) }
 }
+
+pub fn message_box(_msg: &str, _title: &str) {
+    // unsafe {
+    // MessageBoxW(None, msg.as_ptr(), title.as_ptr(), MB_OK);
+    // }
+}

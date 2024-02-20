@@ -17,6 +17,7 @@ use crate::talent::Talented;
 use rigela_utils::get_program_directory;
 use std::process::Command;
 use std::sync::Arc;
+use win_wrap::common::message_box;
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {
@@ -52,7 +53,11 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
         }
 
         // 手动检查, 未检测到更新需要弹窗提示
-        // Todo: 实现
+        if res {
+            message_box("检测到新版本！", "提示");
+        } else {
+            message_box("当前版本已是最新版本！", "提示");
+        }
     });
 }
 
