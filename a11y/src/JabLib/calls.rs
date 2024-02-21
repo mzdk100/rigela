@@ -112,4 +112,79 @@ macro_rules! jab {
             $ac
         )
     };
+    ($module:expr,is_same_object,$vm_id:expr,$obj1:expr,$obj2:expr) => {
+        call_proc!(
+            $module,
+            isSameObject,
+            extern "cdecl" fn(i32, JObject64, JObject64) -> BOOL,
+            $vm_id,
+            $obj1,
+            $obj2
+        )
+    };
+    ($module:expr,get_parent_with_role,$vm_id:expr,$ac:expr,$role:expr) => {
+        call_proc!(
+            $module,
+            getParentWithRole,
+            extern "cdecl" fn(i32, AccessibleContext, *const u16) -> AccessibleContext,
+            $vm_id,
+            $ac,
+            $role
+        )
+    };
+    ($module:expr,get_parent_with_role_else_root,$vm_id:expr,$ac:expr,$role:expr) => {
+        call_proc!(
+            $module,
+            getParentWithRoleElseRoot,
+            extern "cdecl" fn(i32, AccessibleContext, *const u16) -> AccessibleContext,
+            $vm_id,
+            $ac,
+            $role
+        )
+    };
+    ($module:expr,get_top_level_object,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getTopLevelObject,
+            extern "cdecl" fn(i32, AccessibleContext) -> AccessibleContext,
+            $vm_id,
+            $ac
+        )
+    };
+    ($module:expr,get_object_depth,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getObjectDepth,
+            extern "cdecl" fn(i32, AccessibleContext) -> i32,
+            $vm_id,
+            $ac
+        )
+    };
+    ($module:expr,get_active_descendent,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getActiveDescendent,
+            extern "cdecl" fn(i32, AccessibleContext) -> AccessibleContext,
+            $vm_id,
+            $ac
+        )
+    };
+    ($module:expr,request_focus,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            requestFocus,
+            extern "cdecl" fn(i32, AccessibleContext) -> BOOL,
+            $vm_id,
+            $ac
+        )
+    };
+    ($module:expr,get_visible_children_count,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getVisibleChildrenCount,
+            extern "cdecl" fn(i32, AccessibleContext) -> i32,
+            $vm_id,
+            $ac
+        )
+    };
 }

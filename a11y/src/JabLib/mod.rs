@@ -14,7 +14,7 @@
 mod calls;
 mod packages;
 
-use crate::JabLib::packages::AccessibleContextInfo;
+use crate::JabLib::packages::{AccessibleContextInfo, JObject64};
 use crate::{
     jab,
     JabLib::{
@@ -273,6 +273,125 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module, get_accessible_parent_from_context, vm_id, ac)
     }
+
+    /**
+     * 返回两个对象引用是否引用同一个对象。
+     * `vm_id` 虚拟机ID。
+     * `obj1` 对象1.
+     * `obj2` 对象2.
+     * */
+    pub(crate) fn is_same_object(&self, vm_id: i32, obj1: JObject64, obj2: JObject64) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module, is_same_object, vm_id, obj1, obj2)
+            .unwrap_or(FALSE)
+            .as_bool()
+    }
+
+    /**
+     * 返回具有指定角色的AccessibleContext，该角色是给定对象的祖先。角色是Java访问桥API数据结构中定义的角色字符串之一。如果没有具有指定角色的祖先对象，则返回(AccessibleContext)0。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `role` 角色字符串。
+     * */
+    pub(crate) fn get_parent_with_role(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        role: &str,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(
+            self.h_module,
+            get_parent_with_role,
+            vm_id,
+            ac,
+            HSTRING::from(role).as_ptr()
+        )
+    }
+
+    /**
+     * 返回具有指定角色的AccessibleContext，该角色是给定对象的祖先。角色是Java访问桥API数据结构中定义的角色字符串之一。如果具有指定角色的对象不存在，则返回Java窗口的顶级对象。出现错误时返回(AccessibleContext)0。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `role` 角色字符串。
+     * */
+    pub(crate) fn get_parent_with_role_else_root(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        role: &str,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(
+            self.h_module,
+            get_parent_with_role_else_root,
+            vm_id,
+            ac,
+            HSTRING::from(role).as_ptr()
+        )
+    }
+
+    /**
+     * 返回Java窗口中顶级对象的AccessibleContext。这与从该窗口的get_accessible_context_from_hwnd获得的AccessibleContext相同。出现错误时返回(AccessibleContext)0。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_top_level_object(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(self.h_module, get_top_level_object, vm_id, ac)
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 返回给定对象在对象层次结构中的深度。对象层次结构最顶端的对象的对象深度为0。出现错误时返回-1。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_object_depth(&self, vm_id: i32, ac: AccessibleContext) -> i32 {
+        pump_waiting_messages();
+        jab!(self.h_module, get_object_depth, vm_id, ac).unwrap_or(-1)
+    }
+
+    /**
+     * 返回对象的当前ActiveDescendent的AccessibleContext。此方法假定ActiveDescendent是当前在容器对象中选择的组件。出现错误或没有选择时返回(AccessibleContext)0。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_active_descendent(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(self.h_module, get_active_descendent, vm_id, ac)
+    }
+
+    /**
+     * 请求某个组件的焦点。返回是否成功。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn request_focus(&self, vm_id: i32, ac: AccessibleContext) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module, request_focus, vm_id, ac)
+            .unwrap_or(FALSE)
+            .as_bool()
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 返回组件的可见子级数。出现错误时返回-1。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_visible_children_count(&self, vm_id: i32, ac: AccessibleContext) -> i32 {
+        pump_waiting_messages();
+        jab!(self.h_module, get_visible_children_count, vm_id, ac).unwrap_or(-1)
+    }
 }
 
 impl Drop for JabLib {
@@ -286,7 +405,7 @@ impl Drop for JabLib {
 
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
-    use crate::JabLib::JabLib;
+    use crate::JabLib::{packages::ACCESSIBLE_PANEL, JabLib};
     use win_wrap::common::{find_window, get_desktop_window};
 
     #[test]
@@ -318,6 +437,28 @@ mod test_jab {
             dbg!(parent);
             jab.release_java_object(vm_id, parent);
         }
+        dbg!(jab.is_same_object(vm_id, ac, ac));
+        if let Some(parent) = jab.get_parent_with_role(vm_id, ac, ACCESSIBLE_PANEL) {
+            dbg!(parent);
+            jab.release_java_object(vm_id, parent);
+        }
+        if let Some(parent_or_root) =
+            jab.get_parent_with_role_else_root(vm_id, ac, ACCESSIBLE_PANEL)
+        {
+            dbg!(parent_or_root);
+            jab.release_java_object(vm_id, parent_or_root);
+        }
+        if let Some(top) = jab.get_top_level_object(vm_id, ac) {
+            dbg!(top);
+            jab.release_java_object(vm_id, top);
+        }
+        dbg!(jab.get_object_depth(vm_id, ac));
+        if let Some(descendent) = jab.get_active_descendent(vm_id, ac) {
+            dbg!(descendent);
+            jab.release_java_object(vm_id, descendent);
+        }
+        dbg!(jab.request_focus(vm_id, ac));
+        dbg!(jab.get_visible_children_count(vm_id, ac));
         jab.release_java_object(vm_id, ac);
 
         dbg!(jab);
