@@ -12,6 +12,7 @@
  */
 
 pub mod bass;
+pub mod killer;
 pub mod logger;
 pub mod pipe;
 pub mod resample;

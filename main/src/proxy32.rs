@@ -25,7 +25,7 @@ use tokio::{
 };
 
 #[cfg(target_arch = "x86_64")]
-const PIPE_NAME: &str = r"\\.\PIPE\PROXY32";
+const PIPE_NAME: &str = r"\\.\PIPE\RIGELA_PROXY32";
 
 #[derive(Debug)]
 pub(crate) struct Proxy32 {

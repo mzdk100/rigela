@@ -11,14 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::utils::confirm_update_exists;
 use crate::{
     context::Context,
-    gui::utils::{check_update_docs, HELP_DIR},
+    gui::utils::{check_update_docs, confirm_update_exists, HELP_DIR},
     talent::Talented,
 };
 use rigela_utils::get_program_directory;
-use std::{process::Command, sync::Arc};
+use std::{env::args, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
 
 /// 退出程序。
@@ -64,6 +63,7 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
         match confirm_update_exists().await {
             Ok(_) => {
                 Command::new(get_program_directory().join("libs/update.exe"))
+                    .arg(args().nth(0).unwrap())
                     .spawn()
                     .expect("Failed to start update.exe");
             }

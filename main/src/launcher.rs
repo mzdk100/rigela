@@ -18,6 +18,7 @@ use crate::{
     terminator::{TerminationWaiter, Terminator},
 };
 use log::error;
+use rigela_utils::killer::{kill, listen_to_killing};
 use rigela_utils::{get_program_directory, write_file};
 use std::sync::Arc;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
@@ -56,6 +57,15 @@ impl Launcher {
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) async fn launch(&mut self) {
+        // 通知其他的读屏进程退出，防止多开
+        kill().await;
+
+        // 监听外部进程请求主程序退出，这是一种安全杀死主进程的方案
+        let terminator = self.context.terminator.clone();
+        listen_to_killing(async move {
+            terminator.exit().await;
+        });
+
         // 播放启动时的音效
         let performer = self.context.performer.clone();
         self.context.work_runtime.spawn(async move {

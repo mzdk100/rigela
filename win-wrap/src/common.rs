@@ -43,7 +43,6 @@ pub use windows::{
 };
 use windows::{
     core::{HSTRING, PCSTR},
-    Win32::UI::WindowsAndMessaging::{FindWindowW, MessageBoxW, MESSAGEBOX_STYLE},
     Win32::{
         Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
@@ -60,6 +59,7 @@ use windows::{
                 GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, ShowWindow,
                 UnhookWindowsHookEx,
             },
+            WindowsAndMessaging::{FindWindowW, MessageBoxW, MESSAGEBOX_STYLE},
         },
     },
 };

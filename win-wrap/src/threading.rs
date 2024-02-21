@@ -15,11 +15,23 @@ use crate::{
     common::{close_handle, BOOL, FALSE, HANDLE, HWND, LPARAM, TRUE, WAIT_EVENT, WPARAM},
     message::post_thread_message,
 };
-pub use windows::Win32::Security::SECURITY_ATTRIBUTES;
+pub use windows::Win32::{
+    Security::SECURITY_ATTRIBUTES,
+    System::Threading::{
+        PROCESS_QUERY_INFORMATION, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_READ_CONTROL,
+        PROCESS_SET_INFORMATION, PROCESS_SET_LIMITED_INFORMATION, PROCESS_SET_QUOTA,
+        PROCESS_SET_SESSIONID, PROCESS_STANDARD_RIGHTS_REQUIRED, PROCESS_SUSPEND_RESUME,
+        PROCESS_SYNCHRONIZE, PROCESS_TERMINATE, PROCESS_VM_OPERATION, PROCESS_VM_READ,
+        PROCESS_VM_WRITE, PROCESS_WRITE_DAC, PROCESS_WRITE_OWNER,
+    },
+};
 use windows::{
     core::HSTRING,
     Win32::{
-        System::Threading::{CreateEventW, GetCurrentThreadId, SetEvent, WaitForSingleObject},
+        System::Threading::{
+            CreateEventW, GetCurrentProcessId, GetCurrentThreadId, OpenProcess, SetEvent,
+            WaitForSingleObject, PROCESS_ACCESS_RIGHTS,
+        },
         UI::WindowsAndMessaging::{GetWindowThreadProcessId, WM_QUIT},
     },
 };
@@ -29,6 +41,13 @@ use windows::{
  * */
 pub fn get_current_thread_id() -> u32 {
     unsafe { GetCurrentThreadId() }
+}
+
+/**
+ * 查询调用进程的进程标识符。
+ * */
+pub fn get_current_process_id() -> u32 {
+    unsafe { GetCurrentProcessId() }
 }
 
 //noinspection StructuralWrap
@@ -124,4 +143,18 @@ impl ThreadNotify {
     pub fn finish(&self) {
         set_event(self.1);
     }
+}
+
+/**
+ * 打开现有的本地进程对象。
+ * `desired_access` 对进程对象的访问。 根据进程的安全描述符检查此访问权限。 此参数可以是一个或多个 进程访问权限。如果调用方已启用 SeDebugPrivilege 特权，则无论安全描述符的内容如何，都会授予请求的访问权限。
+ * `inherit_handle` 如果此值为 TRUE，则此进程创建的进程将继承句柄。 否则，进程不会继承此句柄。
+ * `process_id` 要打开的本地进程的标识符。如果指定的进程是系统空闲进程(0x00000000)，则函数将失败，最后一个错误代码为ERROR_INVALID_PARAMETER。如果指定的进程是系统进程或客户端服务器Run-Time子系统(CSRSS)进程之一，则此函数将失败，最后一个错误代码是ERROR_ACCESS_DENIED因为它们的访问限制阻止用户级代码打开它们。如果使用get_current_process_id作为此函数的参数，请考虑使用get_current_process而不是open_process来提高性能。
+ * */
+pub fn open_process(
+    desired_access: PROCESS_ACCESS_RIGHTS,
+    inherit_handle: BOOL,
+    process_id: u32,
+) -> crate::common::Result<HANDLE> {
+    unsafe { OpenProcess(desired_access, inherit_handle, process_id) }
 }

@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::utils;
-use crate::utils::download_and_replace_bin;
+use crate::{utils, utils::download_and_replace_bin};
 use nwd::NwgUi;
 use nwg::EventData;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::{Arc, Mutex, OnceLock},
+};
 
 const TITLE: &str = "Rigela - 更新";
 
@@ -107,7 +108,12 @@ impl App {
                 *process.lock().unwrap().deref_mut() = x;
                 sender.notice();
             };
-            download_and_replace_bin(cb).await.unwrap();
+            match download_and_replace_bin(&cb).await {
+                Ok(_) => {
+                    cb(101);
+                }
+                Err(_) => {}
+            }
         });
     }
 

@@ -12,19 +12,23 @@
  */
 
 use reqwest::header::{CONTENT_LENGTH, RANGE};
+use rigela_utils::{killer::kill, SERVER_HOME_URI};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
-use std::env::temp_dir;
-use std::fs::File;
-use std::io::Write;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{
+    env::args,
+    env::temp_dir,
+    fs::{copy, remove_file},
+    io::{Error, ErrorKind},
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+use tokio::{fs::File, io::AsyncWriteExt, process::Command};
 
 const UPDATE_LOG_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt?format=json&viewer=simple";
 
-//noinspection HttpUrlsUsage
-const BIN_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/rigela-main.exe";
+const BIN_URL: &str = "/rigela_x64/rigela-main.exe";
 const BIN_NAME: &str = "RigelA_main.exe";
 
 /// 下载的二进制临时文件路径
@@ -34,37 +38,75 @@ pub(crate) fn bin_path() -> PathBuf {
 
 /// 获取更新日志
 pub(crate) async fn get_update_log() -> Result<String, Box<dyn std::error::Error>> {
-    Ok(parse_html_node(UPDATE_LOG_URL, "blob-content").await)
+    let text = parse_html_node(UPDATE_LOG_URL, "blob-content").await;
+    Ok(text.replace("\n", "\r\n").trim_start().to_string())
 }
 
 /// 下载, 替换二进制文件
 pub(crate) async fn download_and_replace_bin(
     cb: impl Fn(u32),
 ) -> Result<(), Box<dyn std::error::Error>> {
-    const CHUNK_SIZE: usize = 10240;
+    let path = bin_path();
+    if !path.exists() {
+        const CHUNK_SIZE: usize = 409600;
 
-    // Test
-    cb(5);
+        let client = reqwest::Client::new();
+        let url = format!("{}/{}", SERVER_HOME_URI, BIN_URL);
+        let response = client.head(&url).send().await?;
+        let length = response
+            .headers()
+            .get(CONTENT_LENGTH)
+            .ok_or("response doesn't include the content length")?;
+        let length =
+            u64::from_str(length.to_str()?).map_err(|_| "invalid Content-Length header")?;
 
-    let client = reqwest::Client::new();
-    let response = client.head(BIN_URL).send().await?;
-    let length = response
-        .headers()
-        .get(CONTENT_LENGTH)
-        .ok_or("response doesn't include the content length")?;
-    let length = u64::from_str(length.to_str()?).map_err(|_| "invalid Content-Length header")?;
+        let mut output_file = File::create(&path).await?;
+        dbg!(length);
 
-    let mut output_file = File::create(bin_path())?;
+        for range in (0..length).step_by(CHUNK_SIZE * 2) {
+            // 构造两个下载任务，但先不等待结果
+            let fut1 = client
+                .get(&url)
+                .header(
+                    RANGE,
+                    format!("bytes={}-{}", range, range + CHUNK_SIZE as u64 - 1),
+                )
+                .send();
+            let fut2 = client
+                .get(&url)
+                .header(
+                    RANGE,
+                    format!(
+                        "bytes={}-{}",
+                        range + CHUNK_SIZE as u64,
+                        range + CHUNK_SIZE as u64 + CHUNK_SIZE as u64 - 1
+                    ),
+                )
+                .send();
 
-    for range in (0..length).step_by(CHUNK_SIZE) {
-        let response = client.get(BIN_URL).header(RANGE, range).send().await?;
-        output_file.write(&response.bytes().await?)?;
-        cb(((range + CHUNK_SIZE as u64) / length) as u32);
+            // 等待两个任务的结果，和开两个线程同时下载的效果相同
+            let res1 = fut1.await?;
+            let res2 = fut2.await?;
+
+            // 写出数据
+            output_file.write(&res1.bytes().await?).await?;
+            output_file.write(&res2.bytes().await?).await?;
+
+            cb(((range + (CHUNK_SIZE * 2) as u64) as f64 / length as f64 * 100f64) as u32);
+        }
+    }
+    if !kill().await {
+        return Err(Box::new(Error::new(
+            ErrorKind::Other,
+            "Ca n't kill the process.",
+        )));
     }
 
     // 替换
-
-    cb(101);
+    let target = args().nth(1).unwrap();
+    copy(&path, Path::new(&target))?;
+    remove_file(&path)?;
+    Command::new(target).spawn().unwrap();
 
     Ok(())
 }
