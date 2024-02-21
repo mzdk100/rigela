@@ -11,11 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::ffi::{CString, OsStr};
-use std::iter::once;
-use std::os::windows::ffi::OsStrExt;
-use windows::core::PCWSTR;
-use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, MessageBoxW, MB_OK};
+use std::ffi::CString;
 pub use windows::{
     core::Result,
     Win32::{
@@ -30,16 +26,24 @@ pub use windows::{
         UI::{
             Accessibility::{HWINEVENTHOOK, WINEVENTPROC},
             WindowsAndMessaging::{
-                HHOOK, HOOKPROC, SHOW_WINDOW_CMD, SW_FORCEMINIMIZE, SW_HIDE, SW_MAXIMIZE,
-                SW_MINIMIZE, SW_NORMAL, SW_RESTORE, SW_SHOW, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED,
-                SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_SHOWNOACTIVATE, SW_SHOWNORMAL,
-                WINDOWS_HOOK_ID,
+                HHOOK, HOOKPROC, MB_ABORTRETRYIGNORE, MB_APPLMODAL, MB_CANCELTRYCONTINUE,
+                MB_DEFAULT_DESKTOP_ONLY, MB_DEFBUTTON1, MB_DEFBUTTON2, MB_DEFBUTTON3,
+                MB_DEFBUTTON4, MB_DEFMASK, MB_HELP, MB_ICONASTERISK, MB_ICONERROR,
+                MB_ICONEXCLAMATION, MB_ICONHAND, MB_ICONINFORMATION, MB_ICONMASK, MB_ICONQUESTION,
+                MB_ICONSTOP, MB_ICONWARNING, MB_MISCMASK, MB_MODEMASK, MB_NOFOCUS, MB_OK,
+                MB_OKCANCEL, MB_RETRYCANCEL, MB_RIGHT, MB_RTLREADING, MB_SERVICE_NOTIFICATION,
+                MB_SERVICE_NOTIFICATION_NT3X, MB_SETFOREGROUND, MB_SYSTEMMODAL, MB_TASKMODAL,
+                MB_TOPMOST, MB_TYPEMASK, MB_USERICON, MB_YESNO, MB_YESNOCANCEL, SHOW_WINDOW_CMD,
+                SW_FORCEMINIMIZE, SW_HIDE, SW_MAXIMIZE, SW_MINIMIZE, SW_NORMAL, SW_RESTORE,
+                SW_SHOW, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED, SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE,
+                SW_SHOWNA, SW_SHOWNOACTIVATE, SW_SHOWNORMAL, WINDOWS_HOOK_ID,
             },
         },
     },
 };
 use windows::{
     core::{HSTRING, PCSTR},
+    Win32::UI::WindowsAndMessaging::{FindWindowW, MessageBoxW, MESSAGEBOX_STYLE},
     Win32::{
         Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
@@ -356,11 +360,42 @@ pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> BOOL {
     unsafe { UnhookWinEvent(h_win_event_hook) }
 }
 
-pub fn message_box(msg: &str, title: &str) {
-    let msg: Vec<u16> = OsStr::new(msg).encode_wide().chain(once(0)).collect();
-    let title: Vec<u16> = OsStr::new(title).encode_wide().chain(once(0)).collect();
-
+/**
+ * 显示一个模态对话框，其中包含一个系统图标、 一组按钮和一个简短的特定于应用程序消息，如状态或错误的信息。消息框中返回一个整数值，该值指示用户单击了哪个按钮。
+ * `h_wnd` 此参数代表消息框拥有的窗口。如果为NULL，则消息框没有拥有窗口。
+ * `text` 消息框的内容。
+ * `caption` 消息框的标题。
+ * `type` 指定一个决定对话框的内容和行为的位标志集。此参数可以为下列标志组中标志的组合。指定下列标志中的一个来显示消息框中的按钮以及图标。
+ * 按钮：
+ * - MB_OK 默认值。有一个确认按钮在里面。
+ * - MB_YESNO 有是和否在里面。
+ * - MB_ABORTRETRYIGNORE 有Abort（放弃），Retry（重试）和Ignore（跳过）
+ * - MB_YESNOCANCEL 消息框含有三个按钮：Yes，No和Cancel
+ * - MB_RETRYCANCEL 有Retry（重试）和Cancel（取消）
+ * - MB_OKCANCEL 消息框含有两个按钮：OK和Cancel
+ * 图标：
+ * - MB_ICONEXCLAMATION 一个惊叹号出现在消息框
+ * - MB_ICONWARNING 一个惊叹号出现在消息框
+ * - MB_ICONINFORMATION 一个圆圈中小写字母i组成的图标出现在消息框
+ * - MB_ICONASTERISK 一个圆圈中小写字母i组成的图标出现在消息框
+ * - MB_ICONQUESTION 一个问题标记图标出现在消息框
+ * - MB_ICONSTOP 一个停止消息图标出现在消息框
+ * - MB_ICONERROR 一个停止消息图标出现在消息框
+ * - MB_ICONHAND 一个停止消息图标出现在消息框
+ * 形态：
+ * - MB_APPLMODAL 在hwnd参数标识的窗口中继续工作以前，用户一定响应消息框。但是，用户可以移动到其他线程的窗口且在这些窗口中工作。根据应用程序中窗口的层次机构，用户则以移动到线程内的其他窗口。所有母消息框的子窗口自动地失效，但是弹出窗口不是这样。如果既没有指定MB_SYSTEMMODAL也没有指定MB_TASKMOOAL，则MB_APPLMODAL为缺省的。
+ * - MB_SYSTEMMODAL 除了消息框有WB_EX_TOPMOST类型，MB_APPLMODAL和MB_SYSTEMMODAL一样。用系统模态消息框来改变各种各样的用户，主要的损坏错误需要立即注意（例如，内存溢出）。如果不是那些与hwnd联系的窗口，此标志对用户对窗口的相互联系没有影响。
+ * - MB_TASKMODAL 如果参数hwnd为NULL的话，那么除了所有属于当前线程高层次的窗口失效外，MB_TASKMODALL和MB_APPLMODAL一样。当调用应用程序或库没有一个可以得到的窗口句柄时，使用此标志。但仍需要阻止输入到调用线程的其他窗口，而不是搁置其他线程。
+ * 其他：
+ * - MB_DEFAULT_DESKTOP_ONLY 接收输入的当前桌面一定是一个缺省桌面。否则，函数调用失败。缺省桌面是一个在用户已经纪录且以后应用程序在此上面运行的桌面。
+ * - MB_HELP 把一个Help按钮增加到消息框。选择Help按钮或按F1产生一个Help事件。
+ * - MB_RIGHT 文本为右调整
+ * - MB_RTLREADING 用在Hebrew和Arabic系统中从右到左的顺序显示消息和大写文本。
+ * - MB_SETFOREGROUND 消息框变为前景窗口。在内部系统为消息个调用SetForegroundWindow函数。
+ * - MB_TOPMOST 消息框用WS_EX_TOPMOST窗口类型来创建MB_SERVICE_NOTIFICATION。
+ * */
+pub fn message_box(h_wnd: HWND, text: &str, caption: &str, r#type: MESSAGEBOX_STYLE) {
     unsafe {
-        MessageBoxW(None, PCWSTR(msg.as_ptr()), PCWSTR(title.as_ptr()), MB_OK);
+        MessageBoxW(h_wnd, &HSTRING::from(text), &HSTRING::from(caption), r#type);
     }
 }

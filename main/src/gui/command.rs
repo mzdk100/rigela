@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::gui::utils::{check_update_docs, HELP_DIR};
-use crate::talent::Talented;
+use crate::{
+    context::Context,
+    gui::utils::{check_update_docs, HELP_DIR},
+    talent::Talented,
+};
 use rigela_utils::get_program_directory;
-use std::process::Command;
-use std::sync::Arc;
-use win_wrap::common::message_box;
+use std::{process::Command, sync::Arc};
+use win_wrap::common::{message_box, HWND, MB_OK};
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {
@@ -56,12 +57,12 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
 
         // 手动检查, 未检测到更新需要弹窗提示
         if !res {
-            message_box("当前版本已是最新版本！", "提示");
+            message_box(HWND::default(), "当前版本已是最新版本！", "提示", MB_OK);
             return;
         }
 
         // 启动更新器
-        res_acc.open("update.exe").await;
+        res_acc.open("update.exe").await.unwrap();
         let path = res_acc.get_path("update.exe");
         Command::new(path)
             .spawn()
