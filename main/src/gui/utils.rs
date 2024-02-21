@@ -21,10 +21,13 @@ const HELP_URL: &str =
 const UPDATE_LOG_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt?format=json&viewer=simple";
 // const DOCS_MD5_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml?format=json&viewer=simple";
+//noinspection HttpUrlsUsage
+const UPDATE_BIN_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/updater.exe";
 
 pub(crate) const HELP_DIR: &str = "resources/RigelA 帮助文档.txt";
 pub(crate) const UPDATE_LOG_DIR: &str = "resources/RigelA 更新日志.txt";
 const DOCS_MD5_DIR: &str = "resources/docs_md5.toml";
+pub(crate) const UPDATE_BIN_DIR: &str = "libs/update.exe";
 
 /// 文档哈希结构体
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -129,4 +132,16 @@ pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
         .map(|node| node.text())
         .collect::<Vec<String>>()
         .join("\n")
+}
+
+/// 确认更新器存在
+pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn std::error::Error>> {
+    let path = get_program_directory().join(UPDATE_BIN_DIR);
+    if path.exists() {
+        Ok(())
+    } else {
+        let resp = reqwest::get(UPDATE_BIN_URL).await?;
+        write_file(&path, &resp.bytes().await?).await?;
+        Ok(())
+    }
 }

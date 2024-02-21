@@ -6,7 +6,7 @@ welcome.title:
 
 welcome.btn_donate:
   en: I want to donate (&D)
-  zh-CN: 我要捐献 (&D)
+  zh-CN: 我要捐助 (&D)
 
 welcome.btn_setting:
   en: Setting (&S)

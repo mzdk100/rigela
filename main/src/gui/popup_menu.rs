@@ -36,7 +36,7 @@ pub struct PopupMenuForm {
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_setting])]
     setting_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "我要捐助 (&D)")]
+    #[nwg_control(parent: tray_menu, text: &t!("welcome.btn_donate"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_donate])]
     donate_item: nwg::MenuItem,
 
