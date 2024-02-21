@@ -7,10 +7,6 @@ addAccessibleSelectionFromContext
 clearAccessibleSelectionFromContext
 doAccessibleActions
 getAccessibleActions
-getAccessibleChildFromContext
-getAccessibleContextAt
-getAccessibleContextInfo
-getAccessibleContextWithFocus
 getAccessibleHyperlink
 getAccessibleHyperlinkCount
 getAccessibleHypertext
@@ -18,7 +14,6 @@ getAccessibleHypertextExt
 getAccessibleHypertextLinkIndex
 getAccessibleIcons
 getAccessibleKeyBindings
-getAccessibleParentFromContext
 getAccessibleRelationSet
 getAccessibleSelectionCountFromContext
 getAccessibleSelectionFromContext
@@ -53,7 +48,6 @@ getParentWithRole
 getParentWithRoleElseRoot
 getTextAttributesInRange
 getTopLevelObject
-getVersionInfo
 getVirtualAccessibleName
 getVisibleChildren
 getVisibleChildrenCount
@@ -61,7 +55,6 @@ isAccessibleChildSelectedFromContext
 isAccessibleTableColumnSelected
 isAccessibleTableRowSelected
 isSameObject
-releaseJavaObject
 removeAccessibleSelectionFromContext
 requestFocus
 selectAllAccessibleSelectionFromContext
