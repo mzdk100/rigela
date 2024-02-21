@@ -43,4 +43,44 @@ macro_rules! jab {
             $ac
         )
     };
+    ($module:expr,release_java_object,$vm_id:expr,$object:expr) => {
+        call_proc!(
+            $module,
+            releaseJavaObject,
+            extern "cdecl" fn(i32, JavaObject),
+            $vm_id,
+            $object
+        )
+    };
+    ($module:expr,get_version_info,$vm_id:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getVersionInfo,
+            extern "cdecl" fn(i32, *mut AccessBridgeVersionInfo) -> BOOL,
+            $vm_id,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_context_at,$vm_id:expr,$parent:expr,$x:expr,$y:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleContextAt,
+            extern "cdecl" fn(i32, AccessibleContext, JInt, JInt, *mut AccessibleContext) -> BOOL,
+            $vm_id,
+            $parent,
+            $x,
+            $y,
+            $ac
+        )
+    };
+    ($module:expr,get_accessible_context_with_focus,$window:expr,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleContextWithFocus,
+            extern "cdecl" fn(HWND, *mut i32, *mut AccessibleContext) -> BOOL,
+            $window,
+            $vm_id,
+            $ac
+        )
+    };
 }

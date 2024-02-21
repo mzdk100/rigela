@@ -14,7 +14,11 @@
 mod calls;
 mod packages;
 
-use crate::{jab, jab::packages::AccessibleContext};
+use crate::jab::packages::JInt;
+use crate::{
+    jab,
+    jab::packages::{AccessBridgeVersionInfo, AccessibleContext, JavaObject},
+};
 use rigela_utils::call_proc;
 use std::{
     env::var,
@@ -116,6 +120,90 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module, get_hwnd__from_accessible_context, vm_id, ac).unwrap_or(HWND::default())
     }
+
+    /**
+     * 释放 Java 对象使用的内存，其中 object 是 Java Access Bridge 返回给您的对象。Java Access Bridge 会自动维护对它在 JVM 中返回给您的所有 Java 对象的引用，因此它们不会被垃圾回收。为了防止内存泄漏，请在完成 Java Access Bridge 返回的所有 Java 对象后调用它们。
+     * `object` 一个java对象。
+     * */
+    pub fn release_java_object(&self, vm_id: i32, object: JavaObject) {
+        pump_waiting_messages();
+        jab!(self.h_module, release_java_object, vm_id, object);
+    }
+
+    /**
+     * 获取应用程序正在使用的 Java Access Bridge 实例的版本信息。您可以使用此信息来确定您的 Java Access Bridge 版本的可用功能。
+     * 注意：要确定 JVM 的版本，您需要传入一个有效的 vm_id;否则，返回的只是应用程序连接到WindowsAccessBridge.DLL的文件的版本。
+     * `vm_id` 虚拟机ID。
+     * */
+    pub fn get_version_info(&self, vm_id: i32) -> Option<AccessBridgeVersionInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_version_info, vm_id, &mut info)
+            .unwrap_or(FALSE)
+            .as_bool()
+        {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 查询窗口可访问上下文的对象或鼠标指针下的对象。
+     * `parent` 父对象。
+     * `x` X坐标。
+     * `y` Y坐标。
+     * */
+    pub fn get_accessible_context_at(
+        &self,
+        vm_id: i32,
+        parent: AccessibleContext,
+        x: JInt,
+        y: JInt,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        let mut ac = unsafe { std::mem::zeroed() };
+        if !jab!(
+            self.h_module,
+            get_accessible_context_at,
+            vm_id,
+            parent,
+            x,
+            y,
+            &mut ac
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
+            return None;
+        }
+        Some(ac)
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 查询窗口可访问上下文的对象或具有焦点的对象。
+     * `window` 要查询的窗口句柄。
+     * */
+    pub fn get_accessible_context_with_focus(
+        &self,
+        window: HWND,
+    ) -> Option<(i32, AccessibleContext)> {
+        pump_waiting_messages();
+        let (mut vm_id, mut ac) = unsafe { std::mem::zeroed() };
+        if !jab!(
+            self.h_module,
+            get_accessible_context_with_focus,
+            window,
+            &mut vm_id,
+            &mut ac
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
+            return None;
+        }
+        Some((vm_id, ac))
+    }
 }
 
 impl Drop for JabLib {
@@ -143,6 +231,18 @@ mod test_jab {
         let (vm_id, ac) = ac.unwrap();
         let h_wnd2 = jab.get_hwnd_from_accessible_context(vm_id, ac);
         assert_eq!(h_wnd, h_wnd2);
+        let version_info = jab.get_version_info(vm_id);
+        dbg!(version_info);
+        if let Some(ac2) = jab.get_accessible_context_at(vm_id, ac, 100, 100) {
+            dbg!(ac2);
+            jab.release_java_object(vm_id, ac2);
+        }
+        jab.release_java_object(vm_id, ac);
+        let ac = jab.get_accessible_context_with_focus(h_wnd);
+        dbg!(ac);
+        let (vm_id, ac) = ac.unwrap();
+        jab.release_java_object(vm_id, ac);
+
         dbg!(jab);
     }
 }

@@ -57,3 +57,16 @@ pub(crate) type AccessibleTable = JObject64;
 pub(crate) type AccessibleHyperlink = JObject64;
 #[allow(unused)]
 pub(crate) type AccessibleHypertext = JObject64;
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessBridgeVersionInfo {
+    // output of "java -version"
+    vm_version: [u16; SHORT_STRING_SIZE as usize],
+    // version of the AccessBridge.class
+    bridge_java_class_version: [u16; SHORT_STRING_SIZE as usize],
+    // version of JavaAccessBridge.dll
+    bridge_java_dll_version: [u16; SHORT_STRING_SIZE as usize],
+    // version of WindowsAccessBridge.dll
+    bridge_win_dll_version: [u16; SHORT_STRING_SIZE as usize],
+}
