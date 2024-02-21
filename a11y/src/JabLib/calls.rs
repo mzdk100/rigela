@@ -83,4 +83,33 @@ macro_rules! jab {
             $ac
         )
     };
+    ($module:expr,get_accessible_context_info,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleContextInfo,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleContextInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_child_from_context,$vm_id:expr,$ac:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleChildFromContext,
+            extern "system" fn(i32, AccessibleContext, JInt) -> AccessibleContext,
+            $vm_id,
+            $ac,
+            $index
+        )
+    };
+    ($module:expr,get_accessible_parent_from_context,$vm_id:expr,$ac:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleParentFromContext,
+            extern "cdecl" fn(i32, AccessibleContext) -> AccessibleContext,
+            $vm_id,
+            $ac
+        )
+    };
 }

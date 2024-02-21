@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#![allow(non_snake_case)]
+
 pub(crate) mod IAccessible2Lib;
+pub(crate) mod JabLib;
 
 pub mod ia2;
-pub mod jab;

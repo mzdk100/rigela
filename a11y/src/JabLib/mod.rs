@@ -14,10 +14,13 @@
 mod calls;
 mod packages;
 
-use crate::jab::packages::JInt;
+use crate::JabLib::packages::AccessibleContextInfo;
 use crate::{
     jab,
-    jab::packages::{AccessBridgeVersionInfo, AccessibleContext, JavaObject},
+    JabLib::{
+        packages::JInt,
+        packages::{AccessBridgeVersionInfo, AccessibleContext, JavaObject},
+    },
 };
 use rigela_utils::call_proc;
 use std::{
@@ -41,9 +44,9 @@ pub struct JabLib {
     h_module: HMODULE,
 }
 
+#[allow(dead_code)]
 impl JabLib {
     //noinspection SpellCheckingInspection
-    #[allow(unused)]
     pub(crate) fn new(path: Option<PathBuf>) -> Result<Self> {
         #[cfg(target_arch = "x86_64")]
         const DLL_NAME: &str = "windowsaccessbridge-64.dll";
@@ -75,11 +78,10 @@ impl JabLib {
         Ok(Self { h_module })
     }
 
-    #[allow(unused)]
     /**
      * 检查给定窗口是否实现了 Java 辅助功能 API。
      * */
-    pub fn is_java_window(&self, h_wnd: HWND) -> bool {
+    pub(crate) fn is_java_window(&self, h_wnd: HWND) -> bool {
         pump_waiting_messages();
         jab!(self.h_module, is_java_window, h_wnd)
             .unwrap_or(BOOL::from(false))
@@ -90,7 +92,7 @@ impl JabLib {
      * 获取给定窗口的 AccessibleContext和 vmID值。许多 Java Access Bridge 函数都需要 AccessibleContext和 vmID值。
      * `target` 目标窗口句柄。
      * */
-    pub fn get_accessible_context_from_hwnd(
+    pub(crate) fn get_accessible_context_from_hwnd(
         &self,
         target: HWND,
     ) -> Option<(i32, AccessibleContext)> {
@@ -116,7 +118,11 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问的上下文。
      * */
-    pub fn get_hwnd_from_accessible_context(&self, vm_id: i32, ac: AccessibleContext) -> HWND {
+    pub(crate) fn get_hwnd_from_accessible_context(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> HWND {
         pump_waiting_messages();
         jab!(self.h_module, get_hwnd__from_accessible_context, vm_id, ac).unwrap_or(HWND::default())
     }
@@ -125,7 +131,7 @@ impl JabLib {
      * 释放 Java 对象使用的内存，其中 object 是 Java Access Bridge 返回给您的对象。Java Access Bridge 会自动维护对它在 JVM 中返回给您的所有 Java 对象的引用，因此它们不会被垃圾回收。为了防止内存泄漏，请在完成 Java Access Bridge 返回的所有 Java 对象后调用它们。
      * `object` 一个java对象。
      * */
-    pub fn release_java_object(&self, vm_id: i32, object: JavaObject) {
+    pub(crate) fn release_java_object(&self, vm_id: i32, object: JavaObject) {
         pump_waiting_messages();
         jab!(self.h_module, release_java_object, vm_id, object);
     }
@@ -135,7 +141,7 @@ impl JabLib {
      * 注意：要确定 JVM 的版本，您需要传入一个有效的 vm_id;否则，返回的只是应用程序连接到WindowsAccessBridge.DLL的文件的版本。
      * `vm_id` 虚拟机ID。
      * */
-    pub fn get_version_info(&self, vm_id: i32) -> Option<AccessBridgeVersionInfo> {
+    pub(crate) fn get_version_info(&self, vm_id: i32) -> Option<AccessBridgeVersionInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
         if !jab!(self.h_module, get_version_info, vm_id, &mut info)
@@ -153,7 +159,7 @@ impl JabLib {
      * `x` X坐标。
      * `y` Y坐标。
      * */
-    pub fn get_accessible_context_at(
+    pub(crate) fn get_accessible_context_at(
         &self,
         vm_id: i32,
         parent: AccessibleContext,
@@ -184,7 +190,7 @@ impl JabLib {
      * 查询窗口可访问上下文的对象或具有焦点的对象。
      * `window` 要查询的窗口句柄。
      * */
-    pub fn get_accessible_context_with_focus(
+    pub(crate) fn get_accessible_context_with_focus(
         &self,
         window: HWND,
     ) -> Option<(i32, AccessibleContext)> {
@@ -204,6 +210,69 @@ impl JabLib {
         }
         Some((vm_id, ac))
     }
+
+    /**
+     * 从AccessibleContext对象中查询对象AccessibleContextInfo。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn getAccessibleContextInfo(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleContextInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(
+            self.h_module,
+            get_accessible_context_info,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 返回一个对象，该对象表示该可访问上下文对象的第n个子对象，其中n由值索引指定。
+     * `ac` 可访问上下文。
+     * `vm_id` 虚拟机ID。
+     * `index` 子对象索引。
+     * */
+    pub(crate) fn get_accessible_child_from_context(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        index: JInt,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(
+            self.h_module,
+            get_accessible_child_from_context,
+            vm_id,
+            ac,
+            index
+        )
+    }
+
+    /**
+     * 返回一个表示可访问上下文对象的父级的对象。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_parent_from_context(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(self.h_module, get_accessible_parent_from_context, vm_id, ac)
+    }
 }
 
 impl Drop for JabLib {
@@ -217,7 +286,7 @@ impl Drop for JabLib {
 
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
-    use crate::jab::JabLib;
+    use crate::JabLib::JabLib;
     use win_wrap::common::{find_window, get_desktop_window};
 
     #[test]
@@ -241,6 +310,14 @@ mod test_jab {
         let ac = jab.get_accessible_context_with_focus(h_wnd);
         dbg!(ac);
         let (vm_id, ac) = ac.unwrap();
+        let info = jab.getAccessibleContextInfo(vm_id, ac);
+        dbg!(info);
+        let child = jab.get_accessible_child_from_context(vm_id, ac, 0);
+        dbg!(child);
+        if let Some(parent) = jab.get_accessible_parent_from_context(vm_id, ac) {
+            dbg!(parent);
+            jab.release_java_object(vm_id, parent);
+        }
         jab.release_java_object(vm_id, ac);
 
         dbg!(jab);

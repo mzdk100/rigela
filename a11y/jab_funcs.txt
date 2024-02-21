@@ -7,8 +7,6 @@ addAccessibleSelectionFromContext
 clearAccessibleSelectionFromContext
 doAccessibleActions
 getAccessibleActions
-getAccessibleChildFromContext
-getAccessibleContextInfo
 getAccessibleHyperlink
 getAccessibleHyperlinkCount
 getAccessibleHypertext
@@ -16,7 +14,6 @@ getAccessibleHypertextExt
 getAccessibleHypertextLinkIndex
 getAccessibleIcons
 getAccessibleKeyBindings
-getAccessibleParentFromContext
 getAccessibleRelationSet
 getAccessibleSelectionCountFromContext
 getAccessibleSelectionFromContext
