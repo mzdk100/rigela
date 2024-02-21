@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::gui::utils::confirm_update_exists;
 use crate::{
     context::Context,
     gui::utils::{check_update_docs, HELP_DIR},
@@ -45,8 +46,6 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 
 /// 检查更新。
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
-    let res_acc = context.resource_accessor.clone();
-
     context.work_runtime.spawn(async move {
         let res = check_update_docs().await;
 
@@ -62,11 +61,16 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
         }
 
         // 启动更新器
-        res_acc.open("update.exe").await.unwrap();
-        let path = res_acc.get_path("update.exe");
-        Command::new(path)
-            .spawn()
-            .expect("Failed to start update.exe");
+        match confirm_update_exists().await {
+            Ok(_) => {
+                Command::new(get_program_directory().join("libs/update.exe"))
+                    .spawn()
+                    .expect("Failed to start update.exe");
+            }
+            Err(_) => {
+                message_box(HWND::default(), "更新器不存在！", "提示", MB_OK);
+            }
+        };
     });
 }
 
@@ -82,5 +86,5 @@ pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
 
 /// 打开捐赠界面。
 pub(crate) fn donate_cmd(_context: Arc<Context>) {
-    // Todo: 捐献按钮点击事件，带实现
+    message_box(HWND::default(), "感谢支持！", "RigelA", MB_OK);
 }

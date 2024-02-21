@@ -13,31 +13,17 @@
 
 #![windows_subsystem = "windows"]
 
-use select::{document::Document, predicate::Class};
+mod form;
+mod utils;
 
-pub mod form;
-
-const LOG_URL: &str = "https://gitcode.net/mzdk100/rigela/-/commits/master/";
-//noinspection HttpUrlsUsage
-#[allow(unused)]
-const DOWNLOAD_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/main.exe";
+use nwg::NativeUi;
 
 #[tokio::main]
 async fn main() {
-    form::show(get_log().await.as_mut_str());
-}
+    nwg::init().expect("Failed to init Native Windows GUI");
 
-async fn get_log() -> String {
-    match reqwest::get(LOG_URL).await {
-        Ok(response) => {
-            let html = response.text().await.unwrap();
-            let document = Document::from(html.as_str());
-            let mut text = String::new();
-            for i in document.find(Class("commit-detail")) {
-                text += (i.text().trim().to_owned() + "\r\n").as_str();
-            }
-            text
-        }
-        Err(_) => "网络异常!".to_string(),
-    }
+    let app = form::App::build_ui(Default::default()).expect("Failed to build UI");
+    app.handler.set(tokio::runtime::Handle::current()).unwrap();
+
+    nwg::dispatch_thread_events();
 }
