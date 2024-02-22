@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. The RigelA open source project team and
+ * Copyright (c) 2024. The RigelA open source project team and
  * its contributors reserve all rights.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod command;
-mod forms;
-mod utils;
-pub(crate) mod window_manager;
+pub mod hotkeys;
+pub mod popup_menu;
+pub mod settings_form;
+pub mod system_tray;
+pub mod welcome;

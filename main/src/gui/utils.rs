@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::gitcode_file_data::GitcodeFileData;
 use log::error;
 use rigela_utils::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
@@ -138,13 +137,13 @@ pub(crate) async fn save_docs(help_or_update_log: bool) {
         .expect("Can't write docs file.");
 }
 
-/// 异步获取gitcode文件数据
-pub(crate) async fn get_gitcode_data(url: &str) -> Result<GitcodeFileData, Box<dyn Error>> {
+// 异步获取gitcode文件数据
+async fn get_gitcode_data(url: &str) -> Result<GitcodeFileData, Box<dyn Error>> {
     Ok(reqwest::get(url).await?.json().await?)
 }
 
-/// 解析网页的指定节点
-pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
+// 解析网页的指定节点
+async fn parse_html_node(url: &str, node: &str) -> String {
     let html = match get_gitcode_data(url).await {
         Ok(data) => data.html,
         Err(_) => "".to_string(),
@@ -167,4 +166,57 @@ pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn Error>> {
         write_file(&path, &resp.bytes().await?).await?;
         Ok(())
     }
+}
+
+//noinspection DuplicatedCode
+// YApi QuickType插件生成，具体参考文档:https://plugins.jetbrains.com/plugin/18847-yapi-quicktype/documentation
+#[derive(Serialize, Deserialize)]
+struct GitcodeFileData {
+    #[serde(rename = "tree_path")]
+    tree_path: String,
+
+    #[serde(rename = "extension")]
+    extension: String,
+
+    #[serde(rename = "last_commit_sha")]
+    pub last_commit_sha: String,
+
+    #[serde(rename = "blame_path")]
+    blame_path: String,
+
+    #[serde(rename = "simple_viewer")]
+    simple_viewer: String,
+
+    #[serde(rename = "show_viewer_switcher")]
+    show_viewer_switcher: bool,
+
+    #[serde(rename = "path")]
+    path: String,
+
+    #[serde(rename = "size")]
+    size: i64,
+
+    #[serde(rename = "mime_type")]
+    mime_type: String,
+
+    #[serde(rename = "binary")]
+    binary: bool,
+
+    #[serde(rename = "commits_path")]
+    commits_path: String,
+
+    #[serde(rename = "name")]
+    name: String,
+
+    #[serde(rename = "html")]
+    pub html: String,
+
+    #[serde(rename = "id")]
+    id: String,
+
+    #[serde(rename = "permalink")]
+    permalink: String,
+
+    #[serde(rename = "raw_path")]
+    raw_path: String,
 }

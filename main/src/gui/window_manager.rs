@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::gui::hotkeys::HotKeysForm;
-use crate::gui::popup_menu::PopupMenuForm;
-use crate::gui::settings_form::SettingsForm;
-use crate::gui::system_tray::SystemTray;
-use crate::gui::welcome::WelcomeForm;
+use crate::{
+    context::Context,
+    gui::forms::{
+        hotkeys::HotKeysForm, popup_menu::PopupMenuForm, settings_form::SettingsForm,
+        system_tray::SystemTray, welcome::WelcomeForm,
+    },
+};
 use nwg::{NativeUi, NoticeSender};
 use std::fmt::{Debug, Formatter};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
