@@ -32,7 +32,7 @@ use url::Url;
  * `resource_url` 资源文件的url，提供文件的http server必须有断点续传能力。
  * `save_path` 保存资源文件的本地路径。
  * */
-pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<File, Error> {
+pub async fn clone_resource(resource_url: String, save_path: &PathBuf) -> Result<File, Error> {
     let url = format!("{}.cba", resource_url);
     let reader = HttpReader::from_url(Url::parse(url.as_str()).unwrap())
         .retries(5)
@@ -152,7 +152,7 @@ pub async fn clone_resource(resource_url: String, save_path: PathBuf) -> Result<
                 url,
                 expected_checksum
             )
-            .as_str(),
+                .as_str(),
         ));
     }
     info!(

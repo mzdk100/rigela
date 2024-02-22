@@ -21,7 +21,7 @@ log4rs = "1.3.0"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
-version = "1.0.196"
+version = "1.0.197"
 features = ["derive"]
 
 [dependencies.tokio]

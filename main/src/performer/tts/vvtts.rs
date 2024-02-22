@@ -11,28 +11,33 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::sync::Arc;
+#[allow(unused)]
 use crate::{
     context::Context,
     performer::tts::{TtsEngine, TtsProperty},
 };
 use rigela_utils::bass::BassChannelOutputStream;
-use std::{str::FromStr, sync::Arc};
 
 //noinspection SpellCheckingInspection
 /// VVTTS语音库封装
 pub(crate) struct VvttsEngine {
+    #[cfg(target_arch = "x86_64")]
     context: Arc<Context>,
     output_stream: BassChannelOutputStream,
 }
 
 impl VvttsEngine {
+    #[allow(unused_variables)]
     pub(crate) fn new(context: Arc<Context>) -> Self {
         Self {
+            #[cfg(target_arch = "x86_64")]
             context,
             output_stream: BassChannelOutputStream::new(11025, 1),
         }
     }
 
+    #[cfg(target_arch = "x86_64")]
     async fn set_value_by_prop(&self, prop: TtsProperty) {
         let mut params = self
             .context
@@ -63,6 +68,7 @@ impl VvttsEngine {
     }
 }
 
+#[cfg(target_arch = "x86_64")]
 #[async_trait::async_trait]
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
@@ -117,6 +123,8 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn set_voice(&self, id: String) {
+        use std::str::FromStr;
+        
         self.context
             .proxy32
             .as_ref()
@@ -126,5 +134,48 @@ impl TtsEngine for VvttsEngine {
     }
 }
 
+#[cfg(target_arch = "x86")]
+#[allow(unused)]
+#[async_trait::async_trait]
+impl TtsEngine for VvttsEngine {
+    async fn speak(&self, text: &str) {
+        todo!()
+    }
+
+    async fn wait(&self) {
+        self.output_stream.wait_until_stopped_or_stalled().await;
+    }
+
+    fn stop(&self) {
+        self.output_stream.stop()
+    }
+
+    //noinspection SpellCheckingInspection
+    fn get_name(&self) -> String {
+        "Vvtts".to_string()
+    }
+
+    async fn get_all_voices(&self) -> Vec<(String, String)> {
+        todo!()
+    }
+
+    async fn set_speed(&self, value: i32) {
+        todo!()
+    }
+
+    async fn set_volume(&self, value: i32) {
+        todo!()
+    }
+
+    async fn set_pitch(&self, value: i32) {
+        todo!()
+    }
+
+    async fn set_voice(&self, id: String) {
+        todo!()
+    }
+}
+
 unsafe impl Send for VvttsEngine {}
+
 unsafe impl Sync for VvttsEngine {}

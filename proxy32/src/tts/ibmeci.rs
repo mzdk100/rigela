@@ -223,7 +223,7 @@ impl Ibmeci {
         let eci_path = get_program_directory().join("libs").join(LIB_NAME);
         if get_file_modified_duration(&eci_path).await > 3600 * 6 {
             // 资源修改时间超过6小时才重新从服务器上克隆，加快启动速度
-            let file = clone_resource(url, eci_path.clone()).await;
+            let file = clone_resource(url, &eci_path).await;
             if let Err(e) = file {
                 error!("{}", e);
                 return None;
@@ -435,7 +435,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             pitch_fluctuation: eci!(
                 self.h_module,
                 get_voice_param,
@@ -443,7 +443,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             roughness: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_ROUGHNESS)
                 .unwrap_or(0),
             breathiness: eci!(
@@ -453,7 +453,7 @@ impl Ibmeci {
                 0,
                 VP_BREATHINESS
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             speed: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_SPEED).unwrap_or(0),
             volume: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_VOLUME).unwrap_or(0),
         }
@@ -473,9 +473,9 @@ impl Ibmeci {
             (7, "Elderly Female 1"),
             (8, "Elderly Male 1"),
         ]
-        .iter()
-        .map(|i| (i.0, i.1.to_string()))
-        .collect()
+            .iter()
+            .map(|i| (i.0, i.1.to_string()))
+            .collect()
     }
 
     /**

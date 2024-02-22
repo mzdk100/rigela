@@ -43,7 +43,7 @@ impl ResourceAccessor {
         if get_file_modified_duration(&path).await > 3600 * 6 {
             // 如果文件修改时间超出6个小时才重新克隆文件，加快启动速度
             let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
-            return clone_resource(url, path).await;
+            return clone_resource(url, &path).await;
         }
         File::open(&path).await
     }
