@@ -151,13 +151,24 @@ impl Formable for SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
     layout2: nwg::GridLayout,
 
-    // 添加控件
+    #[nwg_control(text: "开机启动 (&R)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    ck_run_on_startup: nwg::CheckBox,
+
+    #[nwg_control(text: "自动更新 (&A)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 2)]
+    ck_auot_update: nwg::CheckBox,
+
+    #[nwg_control(text: "检查更新 (&C)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 3)]
+    btn_check_update: nwg::Button,
+
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
     save_btn: nwg::Button,
@@ -165,13 +176,16 @@ pub struct GeneralUi {
 
 #[derive(Default, NwgPartial)]
 pub struct VoiceUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(4), max_row: Some(6)) ]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
     layout2: nwg::GridLayout,
 
-    // 添加控件
+    #[nwg_control(text: "朗读角色 (&R)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    lb_role: nwg::Label,
+
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
     save_btn: nwg::Button,
@@ -179,13 +193,16 @@ pub struct VoiceUi {
 
 #[derive(Default, NwgPartial)]
 pub struct MouseUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
     layout2: nwg::GridLayout,
 
-    // 添加控件
+    #[nwg_control(text: "朗读鼠标 (&R)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    ck_mouse_read: nwg::CheckBox,
+
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
     save_btn: nwg::Button,
@@ -193,13 +210,24 @@ pub struct MouseUi {
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
     layout2: nwg::GridLayout,
 
-    // 添加控件
+    #[nwg_control(text: "导入配置... (&I)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    btn_import: nwg::Button,
+
+    #[nwg_control(text: "导出配置... (&E)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 2)]
+    btn_export: nwg::Button,
+
+    #[nwg_control(text: "恢复默认配置 (&R)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 3)]
+    btn_reset: nwg::Button,
+
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
     save_btn: nwg::Button,
