@@ -14,20 +14,56 @@
 use crate::bring_window_front;
 use crate::context::Context;
 use crate::gui::window_manager::Formable;
-use nwd::NwgUi;
+use nwd::{NwgPartial, NwgUi};
 use nwg::NoticeSender;
 use std::sync::{Arc, OnceLock};
+
+const MENUS: [&str; 4] = ["常规设置", "语音设置", "鼠标设置", "高级设置"];
 
 #[derive(Default, NwgUi)]
 pub struct SettingsForm {
     context: OnceLock<Arc<Context>>,
 
-    #[nwg_control( title: "RigelA 设置", size: (640, 480), position: (200,200), flags:"WINDOW|VISIBLE")]
+    #[nwg_control(size: (800, 600), position: (200, 200), title: "RigelA - 设置")]
     #[nwg_events( OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init] )]
     window: nwg::Window,
 
-    #[nwg_layout(parent: window, spacing: 5)]
-    layout: nwg::GridLayout,
+    #[nwg_layout(parent: window)]
+    layout: nwg::FlexboxLayout,
+
+    #[nwg_control(collection: MENUS.to_vec())]
+    #[nwg_layout_item(layout: layout)]
+    #[nwg_events( OnListBoxSelect: [SettingsForm::change_interface] )]
+    menu: nwg::ListBox<&'static str>,
+
+    #[nwg_control]
+    #[nwg_layout_item(layout: layout)]
+    general_frame: nwg::Frame,
+
+    #[nwg_control(flags: "BORDER")]
+    voice_frame: nwg::Frame,
+
+    #[nwg_control(flags: "BORDER")]
+    mouse_frame: nwg::Frame,
+
+    #[nwg_control(flags: "BORDER")]
+    advanced_frame: nwg::Frame,
+
+    #[nwg_partial(parent: general_frame)]
+    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    general_ui: GeneralUi,
+
+    #[nwg_partial(parent: voice_frame)]
+    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    voice_ui: VoiceUi,
+
+    #[nwg_partial(parent: mouse_frame)]
+    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    mouse_ui: MouseUi,
+
+    #[nwg_partial(parent: advanced_frame)]
+    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    advanced_ui: AdvancedUi,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SettingsForm::on_show_notice])]
@@ -39,8 +75,50 @@ pub struct SettingsForm {
 }
 
 impl SettingsForm {
+    fn change_interface(&self) {
+        let frames = [
+            &self.general_frame,
+            &self.voice_frame,
+            &self.mouse_frame,
+            &self.advanced_frame,
+        ];
+
+        frames.map(|frame| {
+            frame.set_visible(false);
+            if self.layout.has_child(frame) {
+                self.layout.remove_child(frame);
+            }
+        });
+
+        use nwg::stretch::{
+            geometry::Size,
+            style::{Dimension as D, Style},
+        };
+        let mut style = Style::default();
+        style.size = Size {
+            width: D::Percent(1.0),
+            height: D::Auto,
+        };
+
+        match self.menu.selection() {
+            Some(n) => {
+                self.layout.add_child(frames[n], style).unwrap();
+                frames[n].set_visible(true);
+            }
+            _ => {
+                self.layout.add_child(frames[0], style).unwrap();
+                frames[0].set_visible(true);
+            }
+        }
+    }
+
+    fn save(&self) {
+        self.window.set_visible(false);
+    }
+
     fn on_init(&self) {
         self.window.set_visible(false);
+        self.menu.set_focus();
     }
 
     fn on_exit(&self) {
@@ -69,4 +147,60 @@ impl Formable for SettingsForm {
     fn get_exit_notice_sender(&self) -> NoticeSender {
         self.exit_notice.sender().clone()
     }
+}
+
+#[derive(Default, NwgPartial)]
+pub struct GeneralUi {
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    layout: nwg::GridLayout,
+
+    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    layout2: nwg::GridLayout,
+
+    // 添加控件
+    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    save_btn: nwg::Button,
+}
+
+#[derive(Default, NwgPartial)]
+pub struct VoiceUi {
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    layout: nwg::GridLayout,
+
+    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    layout2: nwg::GridLayout,
+
+    // 添加控件
+    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    save_btn: nwg::Button,
+}
+
+#[derive(Default, NwgPartial)]
+pub struct MouseUi {
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    layout: nwg::GridLayout,
+
+    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    layout2: nwg::GridLayout,
+
+    // 添加控件
+    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    save_btn: nwg::Button,
+}
+
+#[derive(Default, NwgPartial)]
+pub struct AdvancedUi {
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480])]
+    layout: nwg::GridLayout,
+
+    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    layout2: nwg::GridLayout,
+
+    // 添加控件
+    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    save_btn: nwg::Button,
 }
