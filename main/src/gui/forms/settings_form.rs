@@ -151,10 +151,10 @@ impl Formable for SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
+    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(8)) ]
     layout: nwg::GridLayout,
 
-    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(8))]
     layout2: nwg::GridLayout,
 
     #[nwg_control(text: "开机启动 (&R)")]
@@ -169,8 +169,16 @@ pub struct GeneralUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     btn_check_update: nwg::Button,
 
+    #[nwg_control(text: "语言 (&L)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 5)]
+    lb_lang: nwg::Label,
+
+    #[nwg_control(collection: vec!["中文", "English"])]
+    #[nwg_layout_item(layout: layout, col: 2, row: 5)]
+    cb_lang: nwg::ComboBox<&'static str>,
+
     #[nwg_control(text: "保存 (&S)")]
-    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    #[nwg_layout_item(layout: layout2, col: 1, row: 7)]
     save_btn: nwg::Button,
 }
 
@@ -185,6 +193,34 @@ pub struct VoiceUi {
     #[nwg_control(text: "朗读角色 (&R)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     lb_role: nwg::Label,
+
+    #[nwg_control(collection: vec![])]
+    #[nwg_layout_item(layout: layout, col: 2, row: 1)]
+    cb_role: nwg::ComboBox<&'static str>,
+
+    #[nwg_control(text: "朗读语速 (&E)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 2)]
+    lb_speed: nwg::Label,
+
+    #[nwg_control(collection: vec![])]
+    #[nwg_layout_item(layout: layout, col: 2, row: 2)]
+    cb_speed: nwg::ComboBox<&'static str>,
+
+    #[nwg_control(text: "朗读语调 (&P)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 3)]
+    lb_pitch: nwg::Label,
+
+    #[nwg_control(collection: vec![])]
+    #[nwg_layout_item(layout: layout, col: 2, row: 3)]
+    cb_pitch: nwg::ComboBox<&'static str>,
+
+    #[nwg_control(text: "朗读音量 (&O)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 4)]
+    lb_volume: nwg::Label,
+
+    #[nwg_control(collection: vec![])]
+    #[nwg_layout_item(layout: layout, col: 2, row: 4)]
+    cb_volume: nwg::ComboBox<&'static str>,
 
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
