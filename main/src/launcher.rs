@@ -151,7 +151,6 @@ async fn put_peeper() {
 
 /**
  * 注册类库。
- * `context` 读屏的上下文环境。
  * `dll_name` 库名称。
  * */
 async fn register_service(dll_name: &str) {

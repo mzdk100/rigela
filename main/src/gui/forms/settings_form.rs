@@ -25,7 +25,7 @@ pub struct SettingsForm {
     context: OnceLock<Arc<Context>>,
 
     #[nwg_control(size: (800, 600), position: (200, 200), title: "RigelA - 设置")]
-    #[nwg_events( OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init] )]
+    #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window)]
@@ -33,7 +33,7 @@ pub struct SettingsForm {
 
     #[nwg_control(collection: MENUS.to_vec())]
     #[nwg_layout_item(layout: layout)]
-    #[nwg_events( OnListBoxSelect: [SettingsForm::change_interface] )]
+    #[nwg_events(OnListBoxSelect: [SettingsForm::change_interface])]
     menu: nwg::ListBox<&'static str>,
 
     #[nwg_control]
@@ -50,19 +50,19 @@ pub struct SettingsForm {
     advanced_frame: nwg::Frame,
 
     #[nwg_partial(parent: general_frame)]
-    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
     general_ui: GeneralUi,
 
     #[nwg_partial(parent: voice_frame)]
-    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
     voice_ui: VoiceUi,
 
     #[nwg_partial(parent: mouse_frame)]
-    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
     mouse_ui: MouseUi,
 
     #[nwg_partial(parent: advanced_frame)]
-    #[nwg_events( (save_btn, OnButtonClick): [SettingsForm::save] )]
+    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
     advanced_ui: AdvancedUi,
 
     #[nwg_control()]
@@ -118,7 +118,6 @@ impl SettingsForm {
 
     fn on_init(&self) {
         self.window.set_visible(false);
-        self.menu.set_focus();
     }
 
     fn on_exit(&self) {
@@ -127,7 +126,8 @@ impl SettingsForm {
 
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
-        self.window.set_visible(true)
+        self.window.set_visible(true);
+        self.menu.set_focus();
     }
 
     fn on_exit_notice(&self) {
@@ -151,7 +151,7 @@ impl Formable for SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(8)) ]
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(8))]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(8))]
@@ -173,7 +173,7 @@ pub struct GeneralUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 5)]
     lb_lang: nwg::Label,
 
-    #[nwg_control(collection: vec!["中文", "English"])]
+    #[nwg_control(collection: vec ! ["中文", "English"])]
     #[nwg_layout_item(layout: layout, col: 2, row: 5)]
     cb_lang: nwg::ComboBox<&'static str>,
 
@@ -184,7 +184,7 @@ pub struct GeneralUi {
 
 #[derive(Default, NwgPartial)]
 pub struct VoiceUi {
-    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(4), max_row: Some(6)) ]
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(4), max_row: Some(6))]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
@@ -194,7 +194,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     lb_role: nwg::Label,
 
-    #[nwg_control(collection: vec![])]
+    #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
     cb_role: nwg::ComboBox<&'static str>,
 
@@ -202,7 +202,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     lb_speed: nwg::Label,
 
-    #[nwg_control(collection: vec![])]
+    #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
     cb_speed: nwg::ComboBox<&'static str>,
 
@@ -210,7 +210,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     lb_pitch: nwg::Label,
 
-    #[nwg_control(collection: vec![])]
+    #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
     cb_pitch: nwg::ComboBox<&'static str>,
 
@@ -218,7 +218,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     lb_volume: nwg::Label,
 
-    #[nwg_control(collection: vec![])]
+    #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
     cb_volume: nwg::ComboBox<&'static str>,
 
@@ -229,7 +229,7 @@ pub struct VoiceUi {
 
 #[derive(Default, NwgPartial)]
 pub struct MouseUi {
-    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6))]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
@@ -246,7 +246,7 @@ pub struct MouseUi {
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[ nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6)) ]
+    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6))]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
