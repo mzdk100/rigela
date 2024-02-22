@@ -574,7 +574,7 @@ pub(crate) const ACCESSIBLE_RULER: &str = "ruler";
 /**
  * A role indicating the object acts as a formula for
  * calculating a value.
- * An example is a formula in a spreadsheet cell.
+ * An example is a formula in a spreadsheet cell.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
  * */
 #[allow(unused)]
 pub(crate) const ACCESSIBLE_EDITBAR: &str = "editbar";

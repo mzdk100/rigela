@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use log::info;
 use reqwest::header::{CONTENT_LENGTH, RANGE};
 use rigela_utils::{killer::kill, SERVER_HOME_URI};
 use select::{document::Document, predicate::Class};
@@ -23,10 +24,10 @@ use std::{
     path::{Path, PathBuf},
     str::FromStr,
 };
-use tokio::{fs::File, io::AsyncWriteExt, process::Command};
+use tokio::{fs::File, io::AsyncWriteExt};
 
 const UPDATE_LOG_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt?format=json&viewer=simple";
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/update_log.txt?format=json&viewer=simple";
 
 const BIN_URL: &str = "/rigela_x64/rigela-main.exe";
 const BIN_NAME: &str = "RigelA_main.exe";
@@ -42,59 +43,63 @@ pub(crate) async fn get_update_log() -> Result<String, Box<dyn std::error::Error
     Ok(text.replace("\n", "\r\n").trim_start().to_string())
 }
 
-/// 下载, 替换二进制文件
+/**
+ * 下载,替换二进制文件，返回替换后的路径。
+ * `cb` 下载进度通知函数。
+ * */
 pub(crate) async fn download_and_replace_bin(
     cb: impl Fn(u32),
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let path = bin_path();
-    if !path.exists() {
-        const CHUNK_SIZE: usize = 409600;
-
-        let client = reqwest::Client::new();
-        let url = format!("{}/{}", SERVER_HOME_URI, BIN_URL);
-        let response = client.head(&url).send().await?;
-        let length = response
-            .headers()
-            .get(CONTENT_LENGTH)
-            .ok_or("response doesn't include the content length")?;
-        let length =
-            u64::from_str(length.to_str()?).map_err(|_| "invalid Content-Length header")?;
-
-        let mut output_file = File::create(&path).await?;
-        dbg!(length);
-
-        for range in (0..length).step_by(CHUNK_SIZE * 2) {
-            // 构造两个下载任务，但先不等待结果
-            let fut1 = client
-                .get(&url)
-                .header(
-                    RANGE,
-                    format!("bytes={}-{}", range, range + CHUNK_SIZE as u64 - 1),
-                )
-                .send();
-            let fut2 = client
-                .get(&url)
-                .header(
-                    RANGE,
-                    format!(
-                        "bytes={}-{}",
-                        range + CHUNK_SIZE as u64,
-                        range + CHUNK_SIZE as u64 + CHUNK_SIZE as u64 - 1
-                    ),
-                )
-                .send();
-
-            // 等待两个任务的结果，和开两个线程同时下载的效果相同
-            let res1 = fut1.await?;
-            let res2 = fut2.await?;
-
-            // 写出数据
-            output_file.write(&res1.bytes().await?).await?;
-            output_file.write(&res2.bytes().await?).await?;
-
-            cb(((range + (CHUNK_SIZE * 2) as u64) as f64 / length as f64 * 100f64) as u32);
-        }
+    if path.exists() {
+        remove_file(&path)?;
     }
+    const CHUNK_SIZE: usize = 409600;
+
+    let client = reqwest::Client::new();
+    let url = format!("{}/{}", SERVER_HOME_URI, BIN_URL);
+    let response = client.head(&url).send().await?;
+    let length = response
+        .headers()
+        .get(CONTENT_LENGTH)
+        .ok_or("response doesn't include the content length")?;
+    let length = u64::from_str(length.to_str()?).map_err(|_| "invalid Content-Length header")?;
+
+    let mut output_file = File::create(&path).await?;
+
+    for range in (0..length).step_by(CHUNK_SIZE * 2) {
+        // 构造两个下载任务，但先不等待结果
+        let fut1 = client
+            .get(&url)
+            .header(
+                RANGE,
+                format!("bytes={}-{}", range, range + CHUNK_SIZE as u64 - 1),
+            )
+            .send();
+        let fut2 = client
+            .get(&url)
+            .header(
+                RANGE,
+                format!(
+                    "bytes={}-{}",
+                    range + CHUNK_SIZE as u64,
+                    range + CHUNK_SIZE as u64 + CHUNK_SIZE as u64 - 1
+                ),
+            )
+            .send();
+
+        // 等待两个任务的结果，和开两个线程同时下载的效果相同
+        let res1 = fut1.await?;
+        let res2 = fut2.await?;
+
+        // 写出数据
+        output_file.write(&res1.bytes().await?).await?;
+        output_file.write(&res2.bytes().await?).await?;
+
+        cb(((range + (CHUNK_SIZE * 2) as u64) as f64 / length as f64 * 100f64) as u32);
+    }
+    drop(output_file);
+
     if !kill().await {
         return Err(Box::new(Error::new(
             ErrorKind::Other,
@@ -104,11 +109,12 @@ pub(crate) async fn download_and_replace_bin(
 
     // 替换
     let target = args().nth(1).unwrap();
+    info!("Copying {} to {}.", path.display(), &target);
     copy(&path, Path::new(&target))?;
+    info!("Removing {}.", &path.display());
     remove_file(&path)?;
-    Command::new(target).spawn().unwrap();
 
-    Ok(())
+    Ok(target)
 }
 
 /// 异步获取gitcode文件数据

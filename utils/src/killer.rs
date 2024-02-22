@@ -13,8 +13,8 @@
 
 use crate::pipe::{server_run, PipeStream};
 use serde::{Deserialize, Serialize};
-use std::future::Future;
-use tokio::net::windows::named_pipe::ClientOptions;
+use std::{future::Future, time::Duration};
+use tokio::{net::windows::named_pipe::ClientOptions, time::sleep};
 use win_wrap::{
     common::{close_handle, FALSE},
     threading::{
@@ -61,6 +61,7 @@ pub async fn kill() -> bool {
             wait_for_single_object(handle, 5000);
             close_handle(handle);
         }
+        sleep(Duration::from_millis(1000)).await;
         return true;
     }
     false

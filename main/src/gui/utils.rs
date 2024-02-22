@@ -12,21 +12,23 @@
  */
 
 use crate::gui::gitcode_file_data::GitcodeFileData;
+use log::error;
 use rigela_utils::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
+use std::env::args;
+use std::error::Error;
 
 const HELP_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/help.txt?format=json&viewer=simple";
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/help.txt?format=json&viewer=simple";
 const UPDATE_LOG_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/update_log.txt?format=json&viewer=simple";
-// const DOCS_MD5_URL: &str = "https://gitcode.net/mzdk100/rigela/-/blob/dev/docs/docs_md5.toml?format=json&viewer=simple";
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/update_log.txt?format=json&viewer=simple";
 //noinspection HttpUrlsUsage
 const UPDATE_BIN_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/updater.exe";
 
 pub(crate) const HELP_DIR: &str = "resources/RigelA 帮助文档.txt";
 pub(crate) const UPDATE_LOG_DIR: &str = "resources/RigelA 更新日志.txt";
-const DOCS_MD5_DIR: &str = "resources/docs_md5.toml";
+const DOCS_MD5_FILE: &str = "resources/docs_md5.toml";
 pub(crate) const UPDATE_BIN_DIR: &str = "libs/update.exe";
 
 /// 文档哈希结构体
@@ -36,58 +38,81 @@ pub(crate) struct DocsMd5 {
     update_log_md5: String,
 }
 
-/// 检测是否需要更新文档。
-pub(crate) async fn check_update_docs() -> bool {
+pub(crate) enum UpdateState {
+    None,
+    Updated,
+
+    HasNewest,
+}
+/// 检测是否需要更新
+pub(crate) async fn check_update() -> UpdateState {
     let newest_md5 = get_newest_docs_md5().await;
+    let md5_file = get_program_directory().join(DOCS_MD5_FILE);
 
     // 如果尚未保存哈希值，则直接首次保存，返回未检测到更新，否则再比较哈希值
-    if !get_program_directory().join(DOCS_MD5_DIR).exists() {
+    if !md5_file.exists() {
         save_docs_md5(&newest_md5).await;
         save_docs(true).await;
         save_docs(false).await;
 
-        return false;
+        return UpdateState::None;
     }
 
-    let data = read_file(&get_program_directory().join(DOCS_MD5_DIR))
-        .await
-        .expect("Can't read docs_md5.toml.");
-    let old_md5: DocsMd5 = toml::from_str(&data).expect("Can't parse docs_md5.toml.");
+    let old_md5: DocsMd5 = match read_file(&md5_file).await {
+        Ok(ref d) => toml::from_str(d).expect("Can't parse docs_md5.toml."),
+        Err(e) => {
+            error!("Can't read docs_md5.toml. {}", e);
+            return UpdateState::None;
+        }
+    };
 
-    // 如果更新日志有变动，立即返回可以更新，不做其他操作
+    // 如果更新日志有变动，立即返回可以更新
     if old_md5.update_log_md5 != newest_md5.update_log_md5 {
-        return true;
+        // 检查当前进程是否被更新器调用，如果更新器成功更新了主程序，会使用--updated命令行参数调用
+        if !args().find(|i| i == "--updated").is_none() {
+            save_docs(false).await;
+            save_docs_md5(&newest_md5).await;
+            // 更新流程完毕
+            return UpdateState::Updated;
+        }
+        return UpdateState::HasNewest;
     }
 
     // 如果帮助文档有变动，保存更新后的帮助文档，
-    // 更新日志需要更新程序后在做更新，程序更新之前不会保存变动的更新日志
-    // 这里更新日志和帮助文档的更新混在一起，逻辑稍微有些混乱，后期在优化
     if old_md5.help_md5 != newest_md5.help_md5 {
         save_docs(true).await;
         save_docs_md5(&newest_md5).await;
     }
 
-    false
+    UpdateState::None
 }
 
 /// 获取最新的docs_md5
 pub(crate) async fn get_newest_docs_md5() -> DocsMd5 {
-    let help_data = get_gitcode_data(HELP_URL)
-        .await
-        .expect("Can't get help data.");
-    let update_log_data = get_gitcode_data(UPDATE_LOG_URL)
-        .await
-        .expect("Can't get update_log data.");
+    let help_md5 = match get_gitcode_data(HELP_URL).await {
+        Ok(x) => x.last_commit_sha,
+        Err(e) => {
+            error!("Can't get help data. {}", e);
+            String::new()
+        }
+    };
+    let update_log_md5 = match get_gitcode_data(UPDATE_LOG_URL).await {
+        Ok(x) => x.last_commit_sha,
+        Err(e) => {
+            error!("Can't get update_log data. {}", e);
+            String::new()
+        }
+    };
 
     DocsMd5 {
-        help_md5: help_data.last_commit_sha,
-        update_log_md5: update_log_data.last_commit_sha,
+        help_md5,
+        update_log_md5,
     }
 }
 
 /// 保存新的docs_md5
 pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
-    let docs_md5_path = get_program_directory().join(DOCS_MD5_DIR);
+    let docs_md5_path = get_program_directory().join(DOCS_MD5_FILE);
     let data = toml::to_string(md5).expect("Can't parse to docs_md5.toml.");
 
     write_file(&docs_md5_path, data.as_bytes())
@@ -114,9 +139,7 @@ pub(crate) async fn save_docs(help_or_update_log: bool) {
 }
 
 /// 异步获取gitcode文件数据
-pub(crate) async fn get_gitcode_data(
-    url: &str,
-) -> Result<GitcodeFileData, Box<dyn std::error::Error>> {
+pub(crate) async fn get_gitcode_data(url: &str) -> Result<GitcodeFileData, Box<dyn Error>> {
     Ok(reqwest::get(url).await?.json().await?)
 }
 
@@ -135,7 +158,7 @@ pub(crate) async fn parse_html_node(url: &str, node: &str) -> String {
 }
 
 /// 确认更新器存在
-pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn Error>> {
     let path = get_program_directory().join(UPDATE_BIN_DIR);
     if path.exists() {
         Ok(())

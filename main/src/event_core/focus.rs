@@ -12,11 +12,11 @@
  */
 
 use crate::{
-    context::Context, event_core::ime::MS_IME_CLASS_NAME, ext::AccessibleObjectExt,
+    context::Context,
+    event_core::{dialog::handle_dialog_events, ime::MS_IME_CLASS_NAME},
     performer::sound::SoundArgument::Single,
 };
 use std::{sync::Arc, time::Duration};
-use tokio::time::sleep;
 use win_wrap::{
     msaa::object::{ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM},
     uia::element::ControlType,
@@ -57,21 +57,19 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
             Err(_) => return,
             Ok(o) => o,
         };
+        match obj.get_role(child) {
+            ROLE_SYSTEM_LISTITEM | ROLE_SYSTEM_LIST => (),
+            ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
+                handle_dialog_events(ctx.clone(), src);
+                return;
+            }
+            _ => return,
+        };
 
         let event_core = ctx.event_core.clone();
         let performer = ctx.performer.clone();
 
         ctx.main_handler.spawn(async move {
-            match obj.get_role(child) {
-                ROLE_SYSTEM_LISTITEM | ROLE_SYSTEM_LIST => (),
-                ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
-                    // 如果有对话框弹出，我们要延迟播报，因为很有可能被焦点元素打断
-                    sleep(Duration::from_millis(500)).await;
-                    performer.speak(obj.get_dialog_content()).await;
-                    return;
-                }
-                _ => return,
-            };
             if event_core
                 .should_ignore(obj.get_name(child), Duration::from_millis(100))
                 .await

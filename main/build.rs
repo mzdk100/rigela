@@ -14,9 +14,6 @@
 extern crate cargo_rigela;
 
 use embed_manifest::{embed_manifest, new_manifest};
-use serde::{Deserialize, Serialize};
-use std::fs::{write, File};
-use std::io::Read;
 
 //noinspection SpellCheckingInspection
 fn main() {
@@ -26,48 +23,5 @@ fn main() {
 
     cargo_rigela::make_version();
 
-    // 如果帮助文件或者更新日志有变动，更新哈希值
-    // 暂时依赖gitcode生成的哈希值，暂停使用自定义的md5，
-    // println!("cargo:rerun-if-changed=../docs/help.txt");
-    // println!("cargo:rerun-if-changed=../docs/update_log.txt");
-    // update_docs_md5();
-
     let _ = embed_manifest(new_manifest("Contoso.Sample"));
-}
-
-#[allow(unused)]
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct DocsMd5 {
-    help_md5: String,
-    update_log_md5: String,
-}
-
-// 更新文档哈希值
-#[allow(unused)]
-fn update_docs_md5() {
-    let root_dir = std::env::current_dir().expect("Can't get the current directory.");
-    let docs_dir = root_dir.join("../docs");
-
-    let mut help_buf = Vec::<u8>::new();
-    let mut update_log_buf = Vec::<u8>::new();
-
-    File::open(docs_dir.join("help.txt"))
-        .expect("Can't open help.txt.")
-        .read_to_end(&mut help_buf)
-        .expect("Can't read help.txt.");
-    File::open(docs_dir.join("update_log.txt"))
-        .expect("Can't open update_log.txt.")
-        .read_to_end(&mut update_log_buf)
-        .expect("Can't read update_log.txt.");
-
-    let docs_md5 = DocsMd5 {
-        help_md5: format!("{:x}", md5::compute(help_buf)),
-        update_log_md5: format!("{:x}", md5::compute(update_log_buf)),
-    };
-
-    write(
-        docs_dir.join("docs_md5.toml"),
-        toml::to_string(&docs_md5).expect("Can't write docs_md5.toml."),
-    )
-    .expect("Can't write docs_md5.toml.")
 }

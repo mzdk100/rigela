@@ -17,9 +17,18 @@ mod form;
 mod utils;
 
 use nwg::NativeUi;
+use rigela_utils::logger::init_logger;
+use std::env::args;
 
 #[tokio::main]
 async fn main() {
+    if args().len() < 2 {
+        // 调用更新器需要传递主程序的路径作为参数
+        return;
+    }
+
+    init_logger(Some(format!("{}.log", module_path!()).as_str()));
+
     nwg::init().expect("Failed to init Native Windows GUI");
 
     let app = form::App::build_ui(Default::default()).expect("Failed to build UI");

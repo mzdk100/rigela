@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::gui::utils::UpdateState;
 use crate::{
     context::Context,
-    gui::utils::{check_update_docs, confirm_update_exists, HELP_DIR},
+    gui::utils::{check_update, confirm_update_exists, HELP_DIR},
     talent::Talented,
 };
+use log::error;
 use rigela_utils::get_program_directory;
 use std::{env::args, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
@@ -46,31 +48,36 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 /// 检查更新。
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
     context.work_runtime.spawn(async move {
-        let res = check_update_docs().await;
-
-        // 如果是自动检查更新，且检查失败，则不做任何操作
-        if auto && !res {
-            return;
-        }
-
-        // 手动检查, 未检测到更新需要弹窗提示
-        if !res {
-            message_box(HWND::default(), "当前版本已是最新版本！", "提示", MB_OK);
-            return;
-        }
+        match (auto, check_update().await) {
+            (true, UpdateState::None) => {
+                // 如果是自动检查更新，且检查失败，则不做任何操作
+                return;
+            }
+            (false, UpdateState::None) => {
+                // 手动检查, 未检测到更新需要弹窗提示
+                message_box(HWND::default(), "当前版本已是最新版本！", "提示", MB_OK);
+                return;
+            }
+            (_, UpdateState::Updated) => {
+                message_box(HWND::default(), "您已经更新到最新版！", "提示", MB_OK);
+                return;
+            }
+            _ => {}
+        };
 
         // 启动更新器
-        match confirm_update_exists().await {
-            Ok(_) => {
-                Command::new(get_program_directory().join("libs/update.exe"))
-                    .arg(args().nth(0).unwrap())
-                    .spawn()
-                    .expect("Failed to start update.exe");
-            }
+        let child = match confirm_update_exists().await {
+            Ok(_) => Command::new(get_program_directory().join("libs/update.exe"))
+                .arg(args().nth(0).unwrap())
+                .spawn(),
             Err(_) => {
                 message_box(HWND::default(), "更新器不存在！", "提示", MB_OK);
+                return;
             }
         };
+        if let Err(e) = child {
+            error!("Failed to start update.exe. {}", e);
+        }
     });
 }
 

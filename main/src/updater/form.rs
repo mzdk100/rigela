@@ -12,12 +12,14 @@
  */
 
 use crate::{utils, utils::download_and_replace_bin};
+use log::error;
 use nwd::NwgUi;
 use nwg::EventData;
 use std::{
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex, OnceLock},
 };
+use tokio::process::Command;
 
 const TITLE: &str = "Rigela - 更新";
 
@@ -25,7 +27,7 @@ const TITLE: &str = "Rigela - 更新";
 pub struct App {
     pub(crate) handler: OnceLock<tokio::runtime::Handle>,
     info: Arc<Mutex<String>>,
-    process: Arc<Mutex<u32>>,
+    progress: Arc<Mutex<u32>>,
 
     #[nwg_control( title: TITLE, size: (480, 320), position: (300,300))]
     #[nwg_events( OnWindowClose: [nwg::stop_thread_dispatch()   ], OnInit: [App::on_init] )]
@@ -99,20 +101,22 @@ impl App {
         self.update_btn.set_enabled(false);
         self.progress_label.set_enabled(true);
         self.progress_bar.set_enabled(true);
+        self.progress_bar.focus();
 
-        let process = self.process.clone();
+        let progress = self.progress.clone();
         let sender = self.download_process_notice.sender();
 
         self.handler.get().unwrap().spawn(async move {
             let cb = move |x: u32| {
-                *process.lock().unwrap().deref_mut() = x;
+                *progress.lock().unwrap().deref_mut() = x;
                 sender.notice();
             };
             match download_and_replace_bin(&cb).await {
-                Ok(_) => {
-                    cb(101);
-                }
-                Err(_) => {}
+                Ok(target) => match Command::new(target).arg("--updated").spawn() {
+                    Ok(_) => cb(101),
+                    Err(e) => error!("Can't run rigela. {}", e),
+                },
+                Err(e) => error!("Can't update rigela. {}", e),
             }
         });
     }
@@ -130,10 +134,9 @@ impl App {
 
     // 响应更新进度通知
     fn on_download_process(&self) {
-        let num = self.process.lock().unwrap().deref().clone();
+        let num = self.progress.lock().unwrap().deref().clone();
 
         if num > 100 {
-            nwg::modal_info_message(&self.window, "提示:", "更新完成！");
             nwg::stop_thread_dispatch();
             return;
         }

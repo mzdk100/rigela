@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod dialog;
 mod editor;
 mod focus;
 mod ime;
@@ -19,20 +20,16 @@ mod progress;
 use crate::{
     context::Context,
     event_core::{
-        editor::subscribe_editor_events, focus::subscribe_focus_events, ime::subscribe_ime_events,
+        dialog::subscribe_dialog_events, editor::subscribe_editor_events,
+        focus::subscribe_focus_events, ime::subscribe_ime_events,
         progress::subscribe_progress_events,
     },
-    ext::AccessibleObjectExt,
 };
 use std::{
     sync::Arc,
     time::{Duration, SystemTime},
 };
-use tokio::{
-    sync::{Mutex, OnceCell},
-    time::sleep,
-};
-use win_wrap::msaa::object::AccessibleObject;
+use tokio::sync::{Mutex, OnceCell};
 
 /// 事件过滤器
 #[derive(Debug)]
@@ -93,13 +90,16 @@ impl EventCore {
         // 监听前台窗口变动
         subscribe_foreground_window_events(context.clone()).await;
 
+        // 订阅对话框事件
+        subscribe_dialog_events(context.clone()).await;
+
         // 订阅输入事件
         speak_input(context.clone()).await;
 
         // 订阅输入法候选事件
         subscribe_ime_events(context.clone()).await;
 
-        // 处理编辑框朗读
+        // 订阅编辑框事件
         subscribe_editor_events(context.clone()).await;
 
         // 订阅进度栏事件
@@ -125,25 +125,6 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
             if let Some(root) = ui_automation.element_from_handle(src.h_wnd) {
                 form_browser.render(Arc::new(root)).await
             }
-        });
-    });
-
-    // 订阅对话框事件
-    let ctx = context.clone();
-    context.msaa.add_on_system_alert_listener(move |src| {
-        let performer = ctx.performer.clone();
-        ctx.main_handler.spawn(async move {
-            // 延迟朗读，防止被焦点元素打断。
-            sleep(Duration::from_millis(500)).await;
-
-            let obj = match src.get_object() {
-                Err(_) => match AccessibleObject::from_window(src.h_wnd) {
-                    Ok(o) => o,
-                    Err(_) => return,
-                },
-                Ok(o) => o.0,
-            };
-            performer.speak(obj.get_dialog_content()).await;
         });
     });
 }
