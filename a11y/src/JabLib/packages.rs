@@ -637,3 +637,44 @@ pub(crate) struct AccessibleContextInfo {
     /// new bitfield containing additional interface flags
     pub(crate) accessibleInterfaces: BOOL,
 }
+
+pub(crate) const MAX_VISIBLE_CHILDREN: u32 = 256;
+
+/// visible children information
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct VisibleChildrenInfo {
+    /// number of children returned
+    returnedChildrenCount: i32,
+    /// the visible children
+    children: [AccessibleContext; MAX_VISIBLE_CHILDREN as usize],
+}
+
+
+/**
+ ******************************************************
+ *  AccessibleAction packages
+ ******************************************************
+ * */
+const MAX_ACTION_INFO: u32 = 256;
+#[allow(unused)]
+const MAX_ACTIONS_TO_DO: u32 = 32;
+
+/// an action assocated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleActionInfo {
+    /// action name
+    name: [u16; SHORT_STRING_SIZE as usize],
+}
+
+/// all the actions associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleActions {
+    /// number of actions
+    actionsCount: JInt,
+    // the action information
+    actionInfo: [AccessibleActionInfo; MAX_ACTION_INFO as usize],
+}
+

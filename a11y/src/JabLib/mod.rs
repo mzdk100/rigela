@@ -14,12 +14,17 @@
 mod calls;
 mod packages;
 
-use crate::JabLib::packages::{AccessibleContextInfo, JObject64};
+use crate::JabLib::packages::{AccessibleActions, AccessibleContextInfo, JObject64};
 use crate::{
     jab,
     JabLib::{
-        packages::JInt,
-        packages::{AccessBridgeVersionInfo, AccessibleContext, JavaObject},
+        packages::{
+            JInt,
+            AccessBridgeVersionInfo,
+            AccessibleContext,
+            JavaObject,
+            VisibleChildrenInfo,
+        }
     },
 };
 use rigela_utils::call_proc;
@@ -59,7 +64,7 @@ impl JabLib {
                     return Err(Error::new(
                         S_FALSE,
                         HSTRING::from(format!("Can't find the jab library. ({})", e)),
-                    ))
+                    ));
                 }
             },
             Some(p) => p.to_path_buf(),
@@ -105,8 +110,8 @@ impl JabLib {
             &mut vm_id,
             &mut context
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -177,8 +182,8 @@ impl JabLib {
             y,
             &mut ac
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -203,8 +208,8 @@ impl JabLib {
             &mut vm_id,
             &mut ac
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -230,8 +235,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -392,6 +397,42 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module, get_visible_children_count, vm_id, ac).unwrap_or(-1)
     }
+
+    /**
+     * 获取 AccessibleContext 的可见子级。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_visible_children(&self, vm_id: i32, ac: AccessibleContext, start_index: i32) -> Option<VisibleChildrenInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_visible_children, vm_id, ac,start_index,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取等待触发的事件数。
+     * */
+    pub(crate) fn get_events_waiting(&self) -> i32 {
+        pump_waiting_messages();
+        jab!(self.h_module,get_events_waiting).unwrap_or(0)
+    }
+
+    /**
+     * 返回组件可以执行的操作列表。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_actions(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleActions> {
+        pump_waiting_messages();
+        let mut actions = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_actions, vm_id, ac,&mut actions).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(actions)
+    }
 }
 
 impl Drop for JabLib {
@@ -459,6 +500,10 @@ mod test_jab {
         }
         dbg!(jab.request_focus(vm_id, ac));
         dbg!(jab.get_visible_children_count(vm_id, ac));
+        dbg!(jab.get_visible_children(vm_id, ac, 0));
+        dbg!(jab.get_events_waiting());
+        dbg!(jab.get_accessible_actions(vm_id, ac));
+
         jab.release_java_object(vm_id, ac);
 
         dbg!(jab);

@@ -6,7 +6,6 @@ activateAccessibleHyperlink
 addAccessibleSelectionFromContext
 clearAccessibleSelectionFromContext
 doAccessibleActions
-getAccessibleActions
 getAccessibleHyperlink
 getAccessibleHyperlinkCount
 getAccessibleHypertext
@@ -39,12 +38,10 @@ getAccessibleTextRect
 getAccessibleTextSelectionInfo
 getCaretLocation
 getCurrentAccessibleValueFromContext
-getEventsWaiting
 getMaximumAccessibleValueFromContext
 getMinimumAccessibleValueFromContext
 getTextAttributesInRange
 getVirtualAccessibleName
-getVisibleChildren
 isAccessibleChildSelectedFromContext
 isAccessibleTableColumnSelected
 isAccessibleTableRowSelected

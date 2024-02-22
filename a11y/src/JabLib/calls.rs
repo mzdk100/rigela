@@ -187,4 +187,28 @@ macro_rules! jab {
             $ac
         )
     };
+    ($module:expr,get_visible_children,$vm_id:expr,$ac:expr,$start:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getVisibleChildren,
+            extern "cdecl" fn(i32, AccessibleContext,i32,*mut VisibleChildrenInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $start,
+            $info
+        )
+    };
+    ($module:expr,get_events_waiting) => {
+        call_proc!($module,getEventsWaiting,extern "cdecl" fn() -> i32,)
+    };
+    ($module:expr,get_accessible_actions,$vm_id:expr,$ac:expr,$actions:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleActions,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleActions) -> BOOL,
+            $vm_id,
+            $ac,
+            $actions
+        )
+    };
 }
