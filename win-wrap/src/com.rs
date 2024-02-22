@@ -17,6 +17,7 @@ use windows::Win32::System::{
     Com::{CoInitializeEx, COINIT_MULTITHREADED, SAFEARRAY},
     Ole::{SafeArrayDestroy, SafeArrayGetElement, SafeArrayGetLBound, SafeArrayGetUBound},
 };
+use windows::Win32::System::Com::CoUninitialize;
 
 /**
  * 使用多线程模型套间（Multi Thread Apartment, MTA）初始化COM调用。
@@ -27,6 +28,13 @@ pub fn co_initialize_multi_thread() -> Result<()> {
         CoInitializeEx(None, COINIT_MULTITHREADED)?;
     }
     Ok(())
+}
+
+/**
+ * 关闭当前线程的COM库,卸载线程加载的所有dll,释放任何其他的资源,关闭在线程上维护所有的RPC连接。
+ * */
+pub fn co_uninitialize() {
+    unsafe { CoUninitialize() }
 }
 
 impl<T> VecExt<T> for *const SAFEARRAY {

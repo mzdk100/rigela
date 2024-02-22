@@ -22,6 +22,7 @@ use nwg::{NativeUi, NoticeSender};
 use std::fmt::{Debug, Formatter};
 use std::sync::{mpsc, Arc, Mutex, OnceLock};
 use std::thread;
+use win_wrap::com::co_uninitialize;
 
 pub(crate) trait Formable {
     fn set_context(&self, context: Arc<Context>);
@@ -73,6 +74,9 @@ impl WinManager {
 
         thread::spawn(move || {
             nwg::init().expect("could not initialize nwg");
+            // nwg的init中使用CoInitialize初始化com为单线程模型(STA)，和读屏使用的多线程模型(MTA)有冲突，因此我们恢复STA模型到MTA。
+            // 例如IA2的调用在STA模型下有可能无法成功。
+            co_uninitialize();
 
             build_form!(welcome, WelcomeForm, context, tx);
             build_form!(tray, SystemTray, context, tx);

@@ -52,16 +52,6 @@ version = "1.4.0"
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
 
-[build-dependencies.serde]
-version = "1.0.196"
-features = ["derive"]
-
-[build-dependencies.toml]
-version = "0.8.10"
-
-[build-dependencies]
-md5 = "0.7.0"
-
 [dependencies.rigela-proxy32]
 path = "../proxy32"
 
