@@ -52,7 +52,7 @@ version = "1.4.0"
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
 
-[dependencies.rigela-proxy32]
+[target.'cfg(target_arch = "x86_64")'.dependencies.rigela-proxy32]
 path = "../proxy32"
 
 [dependencies.rigela-macros]
@@ -66,7 +66,7 @@ path = "../utils"
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
-version = "1.0.196"
+version = "1.0.197"
 features = ["derive"]
 
 [dependencies.toml]
@@ -85,11 +85,13 @@ log = "0.4.20"
 # 异步trait
 async-trait = "0.1.77"
 
-# 网络请求
-reqwest = { version = "0.11.24", features = ["json"] }
-
 # 解析html
 select = "0.6.0"
+
+[dependencies.reqwest]
+# 网络请求
+version = "0.11.24"
+features = ["json"]
 
 [dependencies.nwd]
 version = "1.0.5"

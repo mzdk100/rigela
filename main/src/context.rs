@@ -14,9 +14,11 @@
 use crate::gui::window_manager::WinManager;
 use crate::{
     browser::form_browser::FormBrowser, commander::Commander,
-    configs::config_manager::ConfigManager, event_core, performer::Performer, proxy32::Proxy32,
+    configs::config_manager::ConfigManager, event_core, performer::Performer,
     resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
 };
+#[cfg(target_arch = "x86_64")]
+use crate::proxy32::Proxy32;
 use a11y::ia2::Ia2;
 use log::info;
 use peeper::server::PeeperServer;
@@ -39,6 +41,7 @@ pub(crate) struct Context {
     pub(crate) resource_accessor: Arc<ResourceAccessor>,
     pub(crate) peeper_server: Arc<PeeperServer>,
     pub(crate) performer: Arc<Performer>,
+    #[cfg(target_arch = "x86_64")]
     pub(crate) proxy32: Arc<Proxy32>,
     pub(crate) talent_accessor: Arc<TalentAccessor>,
     pub(crate) terminator: Arc<Terminator>,
@@ -83,7 +86,8 @@ impl Context {
         let peeper_server = PeeperServer::new();
 
         // 用于兼容32位进程访问
-        let proxy32 = Proxy32::new();
+        #[cfg(target_arch = "x86_64")]
+            let proxy32 = Proxy32::new();
 
         // 创建资源访问器
         let resources = ResourceAccessor::new();
@@ -99,7 +103,7 @@ impl Context {
 
         // 窗口浏览器
         let form_browser = FormBrowser::new();
-        
+
         // Gui 窗口界面管理器
         let window_manager = WinManager::new();
 
@@ -111,6 +115,7 @@ impl Context {
             ia2: ia2.into(),
             peeper_server: peeper_server.into(),
             performer: performer.into(),
+            #[cfg(target_arch = "x86_64")]
             proxy32: proxy32.into(),
             resource_accessor: resources.into(),
             talent_accessor: talent_accessor.into(),
@@ -160,6 +165,7 @@ impl Clone for Context {
             ia2: self.ia2.clone(),
             peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
+            #[cfg(target_arch = "x86_64")]
             proxy32: self.proxy32.clone(),
             resource_accessor: self.resource_accessor.clone(),
             talent_accessor: self.talent_accessor.clone(),

@@ -11,16 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::{
+    sync::Arc,
+};
 use crate::{
     context::Context,
     ext::AccessibleObjectExt,
     performer::sound::SoundArgument::Single,
     terminator::{TerminationWaiter, Terminator},
 };
-use log::error;
-use rigela_utils::killer::{kill, listen_to_killing};
-use rigela_utils::{get_program_directory, write_file};
-use std::sync::Arc;
+use log::{error, info};
+use rigela_utils::{killer::{kill, listen_to_killing}, get_program_directory, SERVER_HOME_URI, write_file, get_file_modified_duration};
+use tokio::process::Command;
+use rigela_resources::clone_resource;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -72,6 +75,11 @@ impl Launcher {
             performer.play_sound(Single("launch.wav")).await;
         });
 
+        // 注册一些com组件库
+        self.context.work_runtime.spawn(async move {
+            register_service("IAccessible2Proxy.dll").await;
+        });
+
         // peeper 可以监控远进程中的信息
         put_peeper().await;
         peeper::mount();
@@ -80,11 +88,14 @@ impl Launcher {
             peeper_server.run().await;
         });
 
-        // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-        let proxy32 = self.context.proxy32.clone();
-        self.context.work_runtime.spawn(async move {
-            proxy32.spawn().await;
-        });
+        #[cfg(target_arch = "x86_64")]
+        {
+            // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
+            let proxy32 = self.context.proxy32.clone();
+            self.context.work_runtime.spawn(async move {
+                proxy32.spawn().await;
+            });
+        }
 
         // 初始化GUI窗口界面
         self.context.window_manager.init(self.context.clone());
@@ -108,6 +119,7 @@ impl Launcher {
         self.context.dispose();
 
         // 杀死32位代理模块
+        #[cfg(target_arch = "x86_64")]
         self.context.proxy32.kill().await.wait().await;
 
         // 解除远进程监控
@@ -128,11 +140,37 @@ async fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
     let peeper_path = get_program_directory().join("libs/peeper.dll");
     if let Err(e) = write_file(&peeper_path, peeper_dll).await {
         error!("{}", e);
     };
+}
+
+/**
+ * 注册类库。
+ * `context` 读屏的上下文环境。
+ * `dll_name` 库名称。
+ * */
+async fn register_service(dll_name: &str) {
+    let path = get_program_directory().join("libs").join(dll_name);
+    if get_file_modified_duration(&path).await > 3600 * 6 {
+        match clone_resource(format!("{}/{}", SERVER_HOME_URI, dll_name), &path).await {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Can't register {}. {}", dll_name,e);
+                return;
+            }
+        }
+    }
+
+    match Command::new("regsvr32").arg("/s").arg(path).spawn() {
+        Ok(mut p) => match p.wait().await {
+            Ok(_) => info!("Register {} is successfully.", dll_name),
+            Err(e) => error!("Can't register the dll server ({}). {}", dll_name,e)
+        },
+        Err(e) => error!("Can't register the dll server ({}). {}", dll_name,e)
+    }
 }
