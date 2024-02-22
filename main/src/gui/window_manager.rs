@@ -15,7 +15,7 @@ use crate::{
     context::Context,
     gui::forms::{
         hotkeys::HotKeysForm, popup_menu::PopupMenuForm, settings_form::SettingsForm,
-        system_tray::SystemTray, welcome::WelcomeForm,
+        system_tray::SystemTray, welcome::WelcomeForm,about::AboutForm,
     },
 };
 use nwg::{NativeUi, NoticeSender};
@@ -36,6 +36,7 @@ pub(crate) struct WinManager {
     popup_menu: OnceLock<(NoticeSender, NoticeSender)>,
     settings: OnceLock<(NoticeSender, NoticeSender)>,
     hotkeys: OnceLock<(NoticeSender, NoticeSender)>,
+    about: OnceLock<(NoticeSender, NoticeSender)>,
 }
 
 // 防止重复初始化
@@ -79,6 +80,7 @@ impl WinManager {
             build_form!(popup_menu, PopupMenuForm, context, tx);
             build_form!(settings, SettingsForm, context, tx);
             build_form!(hotkeys, HotKeysForm, context, tx);
+            build_form!(about, AboutForm, context, tx);
 
             nwg::dispatch_thread_events()
         });
@@ -88,6 +90,7 @@ impl WinManager {
         let _ = self.popup_menu.set(rx.recv().unwrap());
         let _ = self.settings.set(rx.recv().unwrap());
         let _ = self.hotkeys.set(rx.recv().unwrap());
+        let _ = self.about.set(rx.recv().unwrap());
 
         self.welcome.get().unwrap().0.notice();
     }
@@ -115,6 +118,8 @@ impl WinManager {
     pub(crate) fn show_welcome_form(&self) {
         self.welcome.get().unwrap().0.notice();
     }
+    
+    pub(crate) fn show_about_form(&self) {self.about.get().unwrap().0.notice();}
 }
 
 impl Debug for WinManager {

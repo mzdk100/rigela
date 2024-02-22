@@ -95,3 +95,18 @@ pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
 pub(crate) fn donate_cmd(_context: Arc<Context>) {
     message_box(HWND::default(), "感谢支持！", "RigelA", MB_OK);
 }
+
+/// 打开关于窗口
+pub(crate) fn about_form_cmd(context: Arc<Context>) {
+    context.window_manager.show_about_form();
+}
+
+/// 访问开源官网
+pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
+    const URL: &str = "https://github.com/mzdk100/rigela";
+
+    Command::new("cmd")
+        .args(&["/c", "start", URL])
+        .spawn()
+        .expect("Failed to start cmd");
+}

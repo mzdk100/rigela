@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod hotkeys;
-pub mod popup_menu;
-pub mod settings_form;
-pub mod system_tray;
-pub mod welcome;
+pub(crate) mod about;
+pub(crate) mod hotkeys;
+pub(crate) mod popup_menu;
+pub(crate) mod settings_form;
+pub(crate) mod system_tray;
+pub(crate) mod welcome;

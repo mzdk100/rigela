@@ -14,8 +14,8 @@
 use crate::bring_window_front;
 use crate::context::Context;
 use crate::gui::command::{
-    check_update_cmd, custom_hotkeys_cmd, donate_cmd, exit_cmd, help_cmd, settings_cmd,
-    welcome_form_cmd,
+    about_form_cmd, check_update_cmd, custom_hotkeys_cmd, donate_cmd, exit_cmd, help_cmd,
+    settings_cmd, visit_host_website_cmd, welcome_form_cmd,
 };
 use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
@@ -36,7 +36,7 @@ pub struct PopupMenuForm {
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_setting])]
     setting_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: &t!("welcome.btn_donate"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("welcome.btn_donate"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_donate])]
     donate_item: nwg::MenuItem,
 
@@ -49,12 +49,23 @@ pub struct PopupMenuForm {
     costom_hotkeys_item: nwg::MenuItem,
 
     #[nwg_control(parent: tray_menu, text: "帮助 (&H)")]
+    out_help_item: nwg::Menu,
+
+    #[nwg_control(parent: out_help_item, text: "开源首页 (&O)")]
+    #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_visit_host])]
+    visit_host_item: nwg::MenuItem,
+
+    #[nwg_control(parent: out_help_item, text: "帮助 (&H)")]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_help])]
     help_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "检测升级 (&U)")]
+    #[nwg_control(parent: out_help_item, text: "检测升级 (&U)")]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_check_update])]
     check_update_item: nwg::MenuItem,
+
+    #[nwg_control(parent: out_help_item, text: "关于 (&A)")]
+    #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_about])]
+    about_item: nwg::MenuItem,
 
     #[nwg_control(parent: tray_menu, text: "退出 (&X)")]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_exit])]
@@ -88,6 +99,14 @@ impl PopupMenuForm {
 
     fn on_help(&self) {
         help_cmd(self.context.get().unwrap().clone());
+    }
+
+    fn on_about(&self) {
+        about_form_cmd(self.context.get().unwrap().clone());
+    }
+
+    fn on_visit_host(&self) {
+        visit_host_website_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_check_update(&self) {
