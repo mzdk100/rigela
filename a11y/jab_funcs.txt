@@ -12,8 +12,6 @@ getAccessibleHypertext
 getAccessibleHypertextExt
 getAccessibleHypertextLinkIndex
 getAccessibleIcons
-getAccessibleKeyBindings
-getAccessibleRelationSet
 getAccessibleSelectionCountFromContext
 getAccessibleSelectionFromContext
 getAccessibleTableCellInfo
@@ -36,11 +34,9 @@ getAccessibleTextLineBounds
 getAccessibleTextRange
 getAccessibleTextRect
 getAccessibleTextSelectionInfo
-getCaretLocation
 getCurrentAccessibleValueFromContext
 getMaximumAccessibleValueFromContext
 getMinimumAccessibleValueFromContext
-getTextAttributesInRange
 getVirtualAccessibleName
 isAccessibleChildSelectedFromContext
 isAccessibleTableColumnSelected
@@ -48,7 +44,6 @@ isAccessibleTableRowSelected
 removeAccessibleSelectionFromContext
 selectAllAccessibleSelectionFromContext
 selectTextRange
-setCaretPosition
 setCaretUpdateFP
 setFocusGainedFP
 setFocusLostFP

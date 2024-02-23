@@ -14,18 +14,22 @@
 mod calls;
 mod packages;
 
-use crate::JabLib::packages::{AccessibleActions, AccessibleContextInfo, JObject64};
 use crate::{
-    jab,
     JabLib::{
         packages::{
+            AccessibleActions,
+            AccessibleContextInfo,
+            JObject64,
             JInt,
             AccessBridgeVersionInfo,
             AccessibleContext,
+            AccessibleTextRectInfo,
+            AccessibleTextAttributesInfo,
             JavaObject,
             VisibleChildrenInfo,
         }
     },
+    jab,
 };
 use rigela_utils::call_proc;
 use std::{
@@ -42,6 +46,7 @@ use windows::{
     core::{Error, HSTRING},
     Win32::Foundation::S_FALSE,
 };
+use crate::JabLib::packages::{AccessibleKeyBindings, AccessibleRelationSetInfo};
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -433,6 +438,76 @@ impl JabLib {
         }
         Some(actions)
     }
+
+    /**
+     * 获取文本插入符号的位置。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `index`
+     * */
+    pub(crate) fn get_caret_location(&self, vm_id: i32, ac: AccessibleContext, index: JInt) -> Option<AccessibleTextRectInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_caret_location, vm_id, ac,&mut info,index).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 将插入符号设置为文本位置。返回是否成功。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `position` 文本位置。
+     * */
+    pub(crate) fn set_caret_position(&self, vm_id: i32, ac: AccessibleContext, position: i32) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module, set_caret_position, vm_id, ac,position).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 获取两个索引之间的文本属性。属性列表包括起始索引处的文本和结束索引处的文字。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `start_index` 开始位置。
+     * `end_index` 结束位置。
+     * */
+    pub(crate) fn get_text_attributes_in_range(&self, vm_id: i32, ac: AccessibleContext, start_index: i32, end_index: i32) -> Option<(AccessibleTextAttributesInfo, i16)> {
+        pump_waiting_messages();
+        let (mut info, mut len) = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_text_attributes_in_range, vm_id, ac,start_index,end_index,&mut info,&mut len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some((info, len))
+    }
+
+    /**
+     * 返回有关对象的相关对象的信息。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_relation_set(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleRelationSetInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_relation_set, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 返回与组件关联的键绑定的列表。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_key_bindings(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleKeyBindings> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_key_bindings, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
 }
 
 impl Drop for JabLib {
@@ -448,6 +523,7 @@ impl Drop for JabLib {
 mod test_jab {
     use crate::JabLib::{packages::ACCESSIBLE_PANEL, JabLib};
     use win_wrap::common::{find_window, get_desktop_window};
+    use crate::JabLib::packages::AccessibleContext;
 
     #[test]
     fn main() {
@@ -460,8 +536,6 @@ mod test_jab {
         let (vm_id, ac) = ac.unwrap();
         let h_wnd2 = jab.get_hwnd_from_accessible_context(vm_id, ac);
         assert_eq!(h_wnd, h_wnd2);
-        let version_info = jab.get_version_info(vm_id);
-        dbg!(version_info);
         if let Some(ac2) = jab.get_accessible_context_at(vm_id, ac, 100, 100) {
             dbg!(ac2);
             jab.release_java_object(vm_id, ac2);
@@ -470,10 +544,10 @@ mod test_jab {
         let ac = jab.get_accessible_context_with_focus(h_wnd);
         dbg!(ac);
         let (vm_id, ac) = ac.unwrap();
-        let info = jab.getAccessibleContextInfo(vm_id, ac);
-        dbg!(info);
-        let child = jab.get_accessible_child_from_context(vm_id, ac, 0);
-        dbg!(child);
+        if let Some(child) = jab.get_accessible_child_from_context(vm_id, ac, 0) {
+            dbg!(child);
+            jab.release_java_object(vm_id, child);
+        }
         if let Some(parent) = jab.get_accessible_parent_from_context(vm_id, ac) {
             dbg!(parent);
             jab.release_java_object(vm_id, parent);
@@ -498,14 +572,27 @@ mod test_jab {
             dbg!(descendent);
             jab.release_java_object(vm_id, descendent);
         }
+        test1(&jab, vm_id, ac);
         dbg!(jab.request_focus(vm_id, ac));
         dbg!(jab.get_visible_children_count(vm_id, ac));
         dbg!(jab.get_visible_children(vm_id, ac, 0));
         dbg!(jab.get_events_waiting());
-        dbg!(jab.get_accessible_actions(vm_id, ac));
+        dbg!(jab.get_caret_location(vm_id, ac, 0));
 
         jab.release_java_object(vm_id, ac);
 
         dbg!(jab);
+    }
+
+    fn test1(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
+        dbg!(jab.set_caret_position(vm_id, ac, 2));
+        let version_info = jab.get_version_info(vm_id);
+        dbg!(version_info);
+        let info = jab.getAccessibleContextInfo(vm_id, ac);
+        dbg!(info);
+        dbg!(jab.get_accessible_actions(vm_id, ac));
+        dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
+        dbg!(jab.get_accessible_relation_set(vm_id, ac));
+        dbg!(jab.get_accessible_key_bindings(vm_id, ac));
     }
 }

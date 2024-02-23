@@ -211,4 +211,58 @@ macro_rules! jab {
             $actions
         )
     };
+    ($module:expr,get_caret_location,$vm_id:expr,$ac:expr,$info:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getCaretLocation,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTextRectInfo,JInt) -> BOOL,
+            $vm_id,
+            $ac,
+            $info,
+            $index
+        )
+    };
+    ($module:expr,set_caret_position,$vm_id:expr,$ac:expr,$position:expr) => {
+        call_proc!(
+            $module,
+            setCaretPosition,
+            extern "cdecl" fn(i32, AccessibleContext,i32) -> BOOL,
+            $vm_id,
+            $ac,
+            $position
+        )
+    };
+    ($module:expr,get_text_attributes_in_range,$vm_id:expr,$ac:expr,$start_index:expr,$end_index:expr,$info:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getTextAttributesInRange,
+            extern "cdecl" fn(i32, AccessibleContext,i32,i32,*mut AccessibleTextAttributesInfo,*mut i16) -> BOOL,
+            $vm_id,
+            $ac,
+            $start_index,
+            $end_index,
+            $info,
+            $len
+        )
+    };
+    ($module:expr,get_accessible_relation_set,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleRelationSet,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleRelationSetInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_key_bindings,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleKeyBindings,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleKeyBindings) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
 }
