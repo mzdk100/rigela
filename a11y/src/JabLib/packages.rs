@@ -19,7 +19,11 @@ const MAX_STRING_SIZE: u32 = 1024;
 const SHORT_STRING_SIZE: u32 = 256;
 
 #[allow(unused)]
+pub(crate) type JChar = u16;
+#[allow(unused)]
 pub(crate) type JInt = i32;
+#[allow(unused)]
+pub(crate) type JFloat = f32;
 #[allow(unused)]
 pub(crate) type JLong = i64;
 #[allow(unused)]
@@ -665,7 +669,7 @@ const MAX_ACTIONS_TO_DO: u32 = 32;
 #[repr(C)]
 pub(crate) struct AccessibleActionInfo {
     /// action name
-    name: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) name: [u16; SHORT_STRING_SIZE as usize],
 }
 
 /// all the actions associated with a component
@@ -673,8 +677,207 @@ pub(crate) struct AccessibleActionInfo {
 #[repr(C)]
 pub(crate) struct AccessibleActions {
     /// number of actions
-    actionsCount: JInt,
+    pub(crate) actionsCount: JInt,
     // the action information
-    actionInfo: [AccessibleActionInfo; MAX_ACTION_INFO as usize],
+    pub(crate) actionInfo: [AccessibleActionInfo; MAX_ACTION_INFO as usize],
 }
 
+
+// AccessibleText packages
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTextInfo {
+    /// # of characters in this text object
+    pub(crate) charCount: JInt,
+    /// index of caret
+    pub(crate) caretIndex: JInt,
+    /// index at the passsed in point
+    pub(crate) indexAtPoint: JInt,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTextItemsInfo {
+    pub(crate) letter: u16,
+    pub(crate) word: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) sentence: [u16; MAX_STRING_SIZE as usize],
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTextSelectionInfo {
+    pub(crate) selectionStartIndex: JInt,
+    pub(crate) selectionEndIndex: JInt,
+    pub(crate) selectedText: [u16; MAX_STRING_SIZE as usize],
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTextRectInfo {
+    // bounding rect of char at index
+    pub(crate) x: JInt,
+    pub(crate) y: JInt,
+    pub(crate) width: JInt,
+    pub(crate) height: JInt,
+}
+
+
+/// standard attributes for text; note: tabstops are not supported
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTextAttributesInfo {
+    pub(crate) bold: BOOL,
+    pub(crate) italic: BOOL,
+    pub(crate) underline: BOOL,
+    pub(crate) strikethrough: BOOL,
+    pub(crate) superscript: BOOL,
+    pub(crate) subscript: BOOL,
+
+    pub(crate) backgroundColor: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) foregroundColor: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) fontFamily: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) fontSize: JInt,
+
+    pub(crate) alignment: JInt,
+    pub(crate) bidiLevel: JInt,
+
+    pub(crate) firstLineIndent: JFloat,
+    pub(crate) leftIndent: JFloat,
+    pub(crate) rightIndent: JFloat,
+    pub(crate) lineSpacing: JFloat,
+    pub(crate) spaceAbove: JFloat,
+    pub(crate) spaceBelow: JFloat,
+
+    pub(crate) fullAttributesString: [u16; MAX_STRING_SIZE as usize],
+}
+
+
+/**
+ ******************************************************
+ *  AccessibleRelationSet packages
+ ******************************************************
+ * */
+
+const MAX_RELATION_TARGETS: u32 = 25;
+const MAX_RELATIONS: u32 = 5;
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleRelationInfo {
+    pub(crate) key: [u16; SHORT_STRING_SIZE as usize],
+    pub(crate) targetCount: JInt,
+    /// AccessibleContexts
+    pub(crate) targets: [JObject64; MAX_RELATION_TARGETS as usize],
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleRelationSetInfo {
+    pub(crate) relationCount: JInt,
+    pub(crate) relations: [AccessibleRelationInfo; MAX_RELATIONS as usize],
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleRelationSetPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) rAccessibleRelationSetInfo: AccessibleRelationSetInfo,
+}
+
+
+/**
+ ******************************************************
+ *  Accessible Key Bindings packages
+ ******************************************************
+ */
+#[allow(unused)]
+const MAX_KEY_BINDINGS: u32 = 10;
+
+// keyboard character modifiers
+#[allow(unused)]
+const ACCESSIBLE_SHIFT_KEYSTROKE: u32 = 1;
+#[allow(unused)]
+const ACCESSIBLE_CONTROL_KEYSTROKE: u32 = 2;
+#[allow(unused)]
+const ACCESSIBLE_META_KEYSTROKE: u32 = 4;
+#[allow(unused)]
+const ACCESSIBLE_ALT_KEYSTROKE: u32 = 8;
+#[allow(unused)]
+const ACCESSIBLE_ALT_GRAPH_KEYSTROKE: u32 = 16;
+#[allow(unused)]
+const ACCESSIBLE_BUTTON1_KEYSTROKE: u32 = 32;
+#[allow(unused)]
+const ACCESSIBLE_BUTTON2_KEYSTROKE: u32 = 64;
+#[allow(unused)]
+const ACCESSIBLE_BUTTON3_KEYSTROKE: u32 = 128;
+/// F key pressed, character contains 1-24
+#[allow(unused)]
+const ACCESSIBLE_FKEY_KEYSTROKE: u32 = 256;
+/// Control code key pressed, character contains control code.
+#[allow(unused)]
+const ACCESSIBLE_CONTROLCODE_KEYSTROKE: u32 = 512;
+
+// The supported control code keys are:
+#[allow(unused)]
+const ACCESSIBLE_VK_BACK_SPACE: u32 = 8;
+#[allow(unused)]
+const ACCESSIBLE_VK_DELETE: u32 = 127;
+#[allow(unused)]
+const ACCESSIBLE_VK_DOWN: u32 = 40;
+#[allow(unused)]
+const ACCESSIBLE_VK_END: u32 = 35;
+#[allow(unused)]
+const ACCESSIBLE_VK_HOME: u32 = 36;
+#[allow(unused)]
+const ACCESSIBLE_VK_INSERT: u32 = 155;
+#[allow(unused)]
+const ACCESSIBLE_VK_KP_DOWN: u32 = 225;
+#[allow(unused)]
+const ACCESSIBLE_VK_KP_LEFT: u32 = 226;
+#[allow(unused)]
+const ACCESSIBLE_VK_KP_RIGHT: u32 = 227;
+#[allow(unused)]
+const ACCESSIBLE_VK_KP_UP: u32 = 224;
+#[allow(unused)]
+const ACCESSIBLE_VK_LEFT: u32 = 37;
+#[allow(unused)]
+const ACCESSIBLE_VK_PAGE_DOWN: u32 = 34;
+#[allow(unused)]
+const ACCESSIBLE_VK_PAGE_UP: u32 = 33;
+#[allow(unused)]
+const ACCESSIBLE_VK_RIGHT: u32 = 39;
+#[allow(unused)]
+const ACCESSIBLE_VK_UP: u32 = 38;
+
+// a key binding associates with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleKeyBindingInfo {
+    /// the key character
+    character: JChar,
+    /// the key modifiers
+    modifiers: JInt,
+}
+
+// all the key bindings associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleKeyBindings {
+    /// number of key bindings
+    keyBindingsCount: i32,
+    keyBindingInfo: [AccessibleKeyBindingInfo; MAX_KEY_BINDINGS as usize],
+}
+
+// struct to get the key bindings associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleKeyBindingsPackage {
+    /// the virtual machine id
+    vmID: i32,
+    /// the component
+    accessibleContext: JObject64,
+    /// the key bindings
+    rAccessibleKeyBindings: AccessibleKeyBindings,
+}
