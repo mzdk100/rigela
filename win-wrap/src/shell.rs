@@ -109,7 +109,7 @@ mod test_shell {
 
     #[test]
     fn main() {
-        co_initialize_multi_thread().unwrap_or(());
+        co_initialize_multi_thread().ok().unwrap();
         let link = ShellLink::new();
         dbg!(link.set_description("rigela".to_string()).get_description());
         dbg!(link
