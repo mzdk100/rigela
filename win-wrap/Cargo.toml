@@ -8,6 +8,6 @@ edition.workspace = true
 
 [dependencies.windows]
 # windows的所有API
-version = "0.52.0"
+version = "0.53.0"
 # 使用到的API特性（用于编译时间优化）
 features = ["implement", "Media_SpeechSynthesis", "Media_Core", "Media_Playback", "Win32_Media_Audio_XAudio2", "Foundation", "Foundation_Collections", "Win32_Foundation", "Win32_System_Diagnostics_Debug", "Win32_System_Kernel", "Win32_Globalization", "Win32_System_SystemServices", "Win32_System_Variant", "Win32_System_Performance_HardwareCounterProfiling", "Win32_UI_Shell", "Win32_Storage_FileSystem", "Win32_System_LibraryLoader", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Input_Ime", "Win32_System_Threading", "Win32_Security", "Storage_Streams", "Win32_System_Com", "Win32_System_Ole", "Win32_UI_WindowsAndMessaging", "UI_Accessibility", "Win32_UI_Accessibility", "UI_UIAutomation", "Win32_System_Registry"]

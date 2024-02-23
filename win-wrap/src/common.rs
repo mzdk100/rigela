@@ -17,7 +17,7 @@ use windows::Win32::System::Registry::{
     RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW, KEY_WRITE, REG_SZ,
 };
 pub use windows::{
-    core::Result,
+    core::{HRESULT, Result},
     Win32::{
         Foundation::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
