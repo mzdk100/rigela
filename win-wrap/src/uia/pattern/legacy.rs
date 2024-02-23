@@ -15,7 +15,7 @@ use crate::msaa::object::AccessibleObject;
 use crate::uia::element::UiAutomationElement;
 use std::fmt::{Debug, Formatter};
 use windows::{
-    core::{ComInterface, Result, BSTR},
+    core::{Result, BSTR, Interface},
     Win32::UI::Accessibility::{
         IUIAutomationLegacyIAccessiblePattern, UIA_LegacyIAccessiblePatternId,
     },

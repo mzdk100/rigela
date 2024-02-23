@@ -11,23 +11,30 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{common::Result, ext::VecExt};
+use crate::{common::HRESULT, ext::VecExt};
 use std::ffi::c_void;
-use windows::Win32::System::{
-    Com::{CoInitializeEx, COINIT_MULTITHREADED, SAFEARRAY},
-    Ole::{SafeArrayDestroy, SafeArrayGetElement, SafeArrayGetLBound, SafeArrayGetUBound},
+use windows::{
+    Win32::{
+        System::{
+            Com::{
+                CoInitializeEx,
+                COINIT_MULTITHREADED,
+                SAFEARRAY,
+                CoUninitialize,
+            },
+            Ole::{SafeArrayDestroy, SafeArrayGetElement, SafeArrayGetLBound, SafeArrayGetUBound},
+        }
+    }
 };
-use windows::Win32::System::Com::CoUninitialize;
 
 /**
  * 使用多线程模型套间（Multi Thread Apartment, MTA）初始化COM调用。
  * MTA能充分利用多核CPU，提高程序性能，但要注意线程之间同步的安全问题。
  * */
-pub fn co_initialize_multi_thread() -> Result<()> {
+pub fn co_initialize_multi_thread() -> HRESULT {
     unsafe {
-        CoInitializeEx(None, COINIT_MULTITHREADED)?;
+        CoInitializeEx(None, COINIT_MULTITHREADED)
     }
-    Ok(())
 }
 
 /**

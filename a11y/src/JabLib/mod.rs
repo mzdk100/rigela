@@ -43,7 +43,10 @@ use win_wrap::{
     message::pump_waiting_messages,
 };
 use windows::{
-    core::{Error, HSTRING},
+    core::{
+        Error,
+        HSTRING,
+    },
     Win32::Foundation::S_FALSE,
 };
 use crate::JabLib::packages::{AccessibleKeyBindings, AccessibleRelationSetInfo};
@@ -68,7 +71,7 @@ impl JabLib {
                 Err(e) => {
                     return Err(Error::new(
                         S_FALSE,
-                        HSTRING::from(format!("Can't find the jab library. ({})", e)),
+                        &format!("Can't find the jab library. ({})", e),
                     ));
                 }
             },
@@ -82,7 +85,7 @@ impl JabLib {
         if res.is_none() {
             return Err(Error::new(
                 S_FALSE,
-                HSTRING::from("Can't load the jab library."),
+                "Can't load the jab library.",
             ));
         }
         Ok(Self { h_module })
