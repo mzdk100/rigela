@@ -11,16 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    bring_window_front,
-    context::Context,
+use crate::gui::command::{
+    check_update_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
 };
+use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
-use nwg::NoticeSender;
-use std::sync::{Arc, OnceLock};
+use nwg::stretch::{
+    geometry::Size,
+    style::{Dimension as D, Style},
+};
+use nwg::{CheckBox, CheckBoxState, NoticeSender};
 use rigela_macros::GuiFormImpl;
+use std::sync::{Arc, OnceLock};
 
 const MENUS: [&str; 4] = ["常规设置", "语音设置", "鼠标设置", "高级设置"];
+const FRAME_SIZE: Size<D> = Size {
+    width: D::Percent(1.0),
+    height: D::Auto,
+};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SettingsForm {
@@ -34,12 +42,12 @@ pub struct SettingsForm {
     layout: nwg::FlexboxLayout,
 
     #[nwg_control(collection: MENUS.to_vec())]
-    #[nwg_layout_item(layout: layout)]
+    #[nwg_layout_item(layout: layout, size: Size{width: D::Points(150.0), height: D::Auto})]
     #[nwg_events(OnListBoxSelect: [SettingsForm::change_interface])]
     menu: nwg::ListBox<&'static str>,
 
     #[nwg_control]
-    #[nwg_layout_item(layout: layout)]
+    #[nwg_layout_item(layout: layout, size: FRAME_SIZE)]
     general_frame: nwg::Frame,
 
     #[nwg_control(flags: "BORDER")]
@@ -52,7 +60,13 @@ pub struct SettingsForm {
     advanced_frame: nwg::Frame,
 
     #[nwg_partial(parent: general_frame)]
-    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
+    #[nwg_events(
+    (ck_run_on_startup, OnButtonClick): [SettingsForm::on_run_on_startup(SELF, CTRL)],
+    (ck_auot_update, OnButtonClick): [SettingsForm::on_auto_check_update(SELF, CTRL)],
+    (btn_check_update, OnButtonClick): [SettingsForm::on_check_update],
+    (cb_lang, OnComboxBoxSelection): [SettingsForm::on_lang_changed(SELF, CTRL)],
+    (save_btn, OnButtonClick): [SettingsForm::save],
+    )]
     general_ui: GeneralUi,
 
     #[nwg_partial(parent: voice_frame)]
@@ -92,16 +106,10 @@ impl SettingsForm {
             }
         });
 
-        use nwg::stretch::{
-            geometry::Size,
-            style::{Dimension as D, Style},
+        let style = Style {
+            size: FRAME_SIZE,
+            ..Default::default()
         };
-        let mut style = Style::default();
-        style.size = Size {
-            width: D::Percent(1.0),
-            height: D::Auto,
-        };
-
         match self.menu.selection() {
             Some(n) => {
                 self.layout.add_child(frames[n], style).unwrap();
@@ -126,6 +134,25 @@ impl SettingsForm {
         self.window.set_visible(false);
     }
 
+    fn on_run_on_startup(&self, ctrl: &GeneralUi) {
+        let toggle = ctrl.ck_run_on_startup.check_state() == CheckBoxState::Checked;
+        set_auto_start_cmd(self.context.get().unwrap().clone(), toggle);
+    }
+
+    fn on_auto_check_update(&self, ctrl: &GeneralUi) {
+        let toggle = ctrl.ck_auot_update.check_state() == CheckBoxState::Checked;
+        set_auto_check_update_cmd(self.context.get().unwrap().clone(), toggle);
+    }
+
+    fn on_check_update(&self) {
+        check_update_cmd(self.context.get().unwrap().clone(), false);
+    }
+
+    fn on_lang_changed(&self, ctrl: &GeneralUi) {
+        let lang = ctrl.cb_lang.selection().unwrap();
+        set_lang_cmd(self.context.get().unwrap().clone(), lang);
+    }
+
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
         self.window.set_visible(true);
@@ -139,19 +166,19 @@ impl SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(8))]
+    #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
 
-    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(8))]
+    #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
     #[nwg_control(text: "开机启动 (&R)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
-    ck_run_on_startup: nwg::CheckBox,
+    ck_run_on_startup: CheckBox,
 
     #[nwg_control(text: "自动更新 (&A)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
-    ck_auot_update: nwg::CheckBox,
+    ck_auot_update: CheckBox,
 
     #[nwg_control(text: "检查更新 (&C)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
@@ -166,16 +193,16 @@ pub struct GeneralUi {
     cb_lang: nwg::ComboBox<&'static str>,
 
     #[nwg_control(text: "保存 (&S)")]
-    #[nwg_layout_item(layout: layout2, col: 1, row: 7)]
+    #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     save_btn: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct VoiceUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(4), max_row: Some(6))]
+    #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(4), max_row: Some(10))]
     layout: nwg::GridLayout,
 
-    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
     #[nwg_control(text: "朗读角色 (&R)")]
@@ -211,33 +238,33 @@ pub struct VoiceUi {
     cb_volume: nwg::ComboBox<&'static str>,
 
     #[nwg_control(text: "保存 (&S)")]
-    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     save_btn: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct MouseUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6))]
+    #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
 
-    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
     #[nwg_control(text: "朗读鼠标 (&R)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
-    ck_mouse_read: nwg::CheckBox,
+    ck_mouse_read: CheckBox,
 
     #[nwg_control(text: "保存 (&S)")]
-    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     save_btn: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[nwg_layout(max_size: [1200, 800], min_size: [680, 480], spacing: 20, max_column: Some(3), max_row: Some(6))]
+    #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
 
-    #[nwg_layout(min_size: [600, 480], max_column: Some(2), max_row: Some(6))]
+    #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
     #[nwg_control(text: "导入配置... (&I)")]
@@ -253,6 +280,6 @@ pub struct AdvancedUi {
     btn_reset: nwg::Button,
 
     #[nwg_control(text: "保存 (&S)")]
-    #[nwg_layout_item(layout: layout2, col: 1, row: 5)]
+    #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     save_btn: nwg::Button,
 }
