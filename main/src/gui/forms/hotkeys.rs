@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_operations::{get_hotkeys, save_hotkeys};
-use crate::gui::window_manager::Formable;
 use crate::{
+    configs::config_operations::{get_hotkeys, save_hotkeys},
     bring_window_front,
     commander::{keys::Keys, CommandType::Key},
     context::Context,
@@ -21,11 +20,14 @@ use crate::{
 };
 use nwd::NwgUi;
 use nwg::{modal_message, InsertListViewItem, MessageParams, NoticeSender};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::common::LRESULT;
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    sync::{Arc, Mutex, OnceLock},
+};
+use rigela_macros::GuiFormImpl;
 use win_wrap::{
+    common::LRESULT,
     ext::LParamExt,
     hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
     input::{WM_KEYDOWN, WM_SYSKEYDOWN},
@@ -33,7 +35,7 @@ use win_wrap::{
 
 type Talent = Arc<dyn Talented + Send + Sync>;
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct HotKeysForm {
     context: OnceLock<Arc<Context>>,
     talents: RefCell<Arc<Vec<Talent>>>,
@@ -122,7 +124,7 @@ impl HotKeysForm {
     // 初始化数据
     fn init_data(&self) {
         let context = self.context.get().unwrap().clone();
-        *self.talents.borrow_mut() = context.talent_accessor.talents.clone();
+        *self.talents.borrow_mut() = context.talent_provider.talents.clone();
         *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
@@ -372,18 +374,5 @@ impl HotKeysForm {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
-    }
-}
-
-impl Formable for HotKeysForm {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }

@@ -98,7 +98,7 @@ impl Launcher {
         }
 
         // 初始化GUI窗口界面
-        self.context.window_manager.init(self.context.clone());
+        self.context.gui_provider.init(self.context.clone());
 
         // 朗读当前桌面
         self.context
@@ -126,7 +126,7 @@ impl Launcher {
         peeper::unmount();
 
         // 退出Gui界面
-        self.context.window_manager.uninit();
+        self.context.gui_provider.uninit();
 
         // 播放退出音效
         self.context.performer.play_sound(Single("exit.wav")).await;

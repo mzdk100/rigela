@@ -26,7 +26,7 @@ use win_wrap::common::{message_box, HWND, MB_OK};
 pub(crate) fn exit_cmd(context: Arc<Context>) {
     let ctx = context.clone();
     context.main_handler.spawn(async move {
-        let talent = ctx.talent_accessor.get_exit_talent();
+        let talent = ctx.talent_provider.get_exit_talent();
         talent.perform(ctx.clone()).await;
     });
 }
@@ -42,7 +42,7 @@ pub(crate) fn help_cmd(_context: Arc<Context>) {
 
 /// 打开设置窗口。
 pub(crate) fn settings_cmd(context: Arc<Context>) {
-    context.window_manager.show_settings_form();
+    context.gui_provider.show_settings_form();
 }
 
 /// 检查更新。
@@ -83,12 +83,12 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
 
 /// 打开自定义热键窗口。
 pub(crate) fn custom_hotkeys_cmd(context: Arc<Context>) {
-    context.window_manager.show_hotkeys_form();
+    context.gui_provider.show_hotkeys_form();
 }
 
 /// 打开欢迎界面。
 pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
-    context.window_manager.show_welcome_form();
+    context.gui_provider.show_welcome_form();
 }
 
 /// 打开捐赠界面。
@@ -98,7 +98,7 @@ pub(crate) fn donate_cmd(_context: Arc<Context>) {
 
 /// 打开关于窗口
 pub(crate) fn about_form_cmd(context: Arc<Context>) {
-    context.window_manager.show_about_form();
+    context.gui_provider.show_about_form();
 }
 
 /// 访问开源官网

@@ -11,19 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd};
-use crate::gui::window_manager::Formable;
+use crate::{
+    context::Context,
+    gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd},
+};
 use nwd::NwgUi;
 use nwg::NoticeSender;
 use std::sync::{Arc, OnceLock};
+use rigela_macros::GuiFormImpl;
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SystemTray {
     context: OnceLock<Arc<Context>>,
 
     #[nwg_control]
-    #[nwg_events (OnInit: [SystemTray::on_init] )]
+    #[nwg_events(OnInit: [SystemTray::on_init])]
     window: nwg::MessageWindow,
 
     #[nwg_resource(source_file: Some("./test_rc/cog.ico"))]
@@ -84,19 +86,5 @@ impl SystemTray {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch();
-    }
-}
-
-impl Formable for SystemTray {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }

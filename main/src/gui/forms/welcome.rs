@@ -11,22 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::bring_window_front;
-use crate::context::Context;
-use crate::gui::command::{donate_cmd, help_cmd, settings_cmd};
-use crate::gui::window_manager::Formable;
+use crate::{
+    bring_window_front,
+    context::Context,
+    gui::command::{donate_cmd, help_cmd, settings_cmd},
+};
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
 use std::sync::{Arc, OnceLock};
+use rigela_macros::GuiFormImpl;
 
 const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct WelcomeForm {
     context: OnceLock<Arc<Context>>,
 
-    #[nwg_control( title: &t!("welcome.title"), size: (480, 320), position: (300,300), flags:"WINDOW|VISIBLE")]
-    #[nwg_events( OnWindowClose: [WelcomeForm::on_exit] )]
+    #[nwg_control(title: & t ! ("welcome.title"), size: (480, 320), position: (300, 300), flags: "WINDOW|VISIBLE")]
+    #[nwg_events(OnWindowClose: [WelcomeForm::on_exit])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
@@ -37,22 +39,22 @@ pub struct WelcomeForm {
     #[nwg_events(OnKeyPress: [WelcomeForm::on_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextBox,
 
-    #[nwg_control(text: &t!("welcome.btn_donate"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_control(text: & t ! ("welcome.btn_donate"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 4, col: 1, col_span: 4)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_donate])]
     btn_donate: nwg::Button,
 
-    #[nwg_control(text: &t!("welcome.btn_setting"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_control(text: & t ! ("welcome.btn_setting"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 3)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_setting])]
     btn_setting: nwg::Button,
 
-    #[nwg_control(text: &t!("welcome.btn_help"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_control(text: & t ! ("welcome.btn_help"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 4)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_help])]
     btn_help: nwg::Button,
 
-    #[nwg_control(text: &t!("welcome.btn_close"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_control(text: & t ! ("welcome.btn_close"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 5)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_close])]
     btn_close: nwg::Button,
@@ -102,19 +104,5 @@ impl WelcomeForm {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
-    }
-}
-
-impl Formable for WelcomeForm {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }

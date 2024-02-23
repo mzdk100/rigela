@@ -27,6 +27,7 @@ struct Metadata {
     doc: MetaNameValue,
     cmd_list: TokenStream,
 }
+
 impl Parse for Metadata {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let r = Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
@@ -96,7 +97,7 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
                 #body
             }
         }
-        impl crate::talent::TalentAccessor {
+        impl crate::talent::TalentProvider {
             #[#doc]
             pub fn #id2(&self) -> #id {#id}
         }

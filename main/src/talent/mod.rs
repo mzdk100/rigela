@@ -44,6 +44,7 @@ use std::{
 
 /**
  * 一个能力的抽象接口。
+ * 可以使用rigela-macros中的talent属性宏标记在async fn函数上自动实现。
  * */
 #[async_trait]
 pub(crate) trait Talented {
@@ -69,13 +70,13 @@ pub(crate) trait Talented {
     async fn perform(&self, context: Arc<Context>);
 }
 
-/// 技能访问器对象，包含所有技能对象列表
-pub(crate) struct TalentAccessor {
+/// 能力提供者，包含所有能力对象列表
+pub(crate) struct TalentProvider {
     // 技能对象集合
     pub(crate) talents: Arc<Vec<Arc<dyn Talented + Send + Sync + 'static>>>,
 }
 
-impl TalentAccessor {
+impl TalentProvider {
     /**
      * 创建能力访问器。
      * */
@@ -119,7 +120,7 @@ impl TalentAccessor {
     }
 }
 
-impl Debug for TalentAccessor {
+impl Debug for TalentProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "TalentAccessor({})", self.talents.len())
     }

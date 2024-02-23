@@ -16,13 +16,13 @@ use rigela_utils::{get_file_modified_duration, get_program_directory, SERVER_HOM
 use std::{io::Error, path::PathBuf};
 use tokio::fs::File;
 
-/// 资源访问器
+/// 资源提供者
 #[derive(Debug)]
-pub(crate) struct ResourceAccessor {
+pub(crate) struct ResourceProvider {
     root_dir: PathBuf,
 }
 
-impl ResourceAccessor {
+impl ResourceProvider {
     /**
      * 创建一个资源读取器。
      * */

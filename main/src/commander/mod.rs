@@ -66,7 +66,7 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Arc<Context>) {
-        let talents = context.talent_accessor.talents.clone();
+        let talents = context.talent_provider.talents.clone();
 
         self.keyboard_hook
             .set(set_keyboard_hook(context.clone(), talents))

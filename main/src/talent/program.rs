@@ -57,7 +57,7 @@ impl Speakable for &PdhCounter {
             "program.current_cpu_usage",
             value = self.get_value().1.round()
         )
-        .to_string()
+            .to_string()
     }
 }
 
@@ -82,13 +82,13 @@ async fn current_cpu_usage(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
 async fn popup_menu(context: Arc<Context>) {
-    context.window_manager.show_popup_menu();
+    context.gui_provider.show_popup_menu();
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "自定义热键", key = (VkRigelA, VkK))]
 async fn hotkeys(context: Arc<Context>) {
-    context.window_manager.show_hotkeys_form();
+    context.gui_provider.show_hotkeys_form();
 }
 
 //noinspection RsUnresolvedReference

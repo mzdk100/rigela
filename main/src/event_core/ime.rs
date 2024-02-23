@@ -20,7 +20,7 @@ pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 
 // 订阅输入法的事件
 pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
-    let words = match context.resource_accessor.open("words.txt").await {
+    let words = match context.resource_provider.open("words.txt").await {
         Ok(mut f) => {
             let mut s = String::new();
             f.read_to_string(&mut s).await.unwrap_or(0);

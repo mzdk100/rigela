@@ -11,22 +11,24 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::bring_window_front;
-use crate::context::Context;
-use crate::gui::window_manager::Formable;
+use crate::{
+    bring_window_front,
+    context::Context,
+};
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
 use std::sync::{Arc, OnceLock};
+use rigela_macros::GuiFormImpl;
 
 const INFO: &str =
     "版本号: 0.1.0;\r\n\r\n 作者: SmileSky\r\n开源地址: https://gitcode.net/mzdk100/rigela";
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct AboutForm {
     context: OnceLock<Arc<Context>>,
 
-    #[nwg_control( title: "关于 - RigelA", size: (320, 240), position: (300,300), flags:"WINDOW|VISIBLE")]
-    #[nwg_events( OnWindowClose: [AboutForm::on_exit], OnInit: [AboutForm::on_init] )]
+    #[nwg_control(title: "关于 - RigelA", size: (320, 240), position: (300, 300), flags: "WINDOW|VISIBLE")]
+    #[nwg_events(OnWindowClose: [AboutForm::on_exit], OnInit: [AboutForm::on_init])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
@@ -77,19 +79,5 @@ impl AboutForm {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
-    }
-}
-
-impl Formable for AboutForm {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }

@@ -11,16 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::bring_window_front;
-use crate::context::Context;
-use crate::gui::window_manager::Formable;
+use crate::{
+    bring_window_front,
+    context::Context,
+};
 use nwd::{NwgPartial, NwgUi};
 use nwg::NoticeSender;
 use std::sync::{Arc, OnceLock};
+use rigela_macros::GuiFormImpl;
 
 const MENUS: [&str; 4] = ["常规设置", "语音设置", "鼠标设置", "高级设置"];
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SettingsForm {
     context: OnceLock<Arc<Context>>,
 
@@ -132,20 +134,6 @@ impl SettingsForm {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
-    }
-}
-
-impl Formable for SettingsForm {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }
 

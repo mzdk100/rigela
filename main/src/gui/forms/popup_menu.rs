@@ -11,18 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::bring_window_front;
-use crate::context::Context;
-use crate::gui::command::{
-    about_form_cmd, check_update_cmd, custom_hotkeys_cmd, donate_cmd, exit_cmd, help_cmd,
-    settings_cmd, visit_host_website_cmd, welcome_form_cmd,
+use crate::{
+    bring_window_front,
+    context::Context,
+    gui::command::{
+        about_form_cmd, check_update_cmd, custom_hotkeys_cmd, donate_cmd, exit_cmd, help_cmd,
+        settings_cmd, visit_host_website_cmd, welcome_form_cmd,
+    },
 };
-use crate::gui::window_manager::Formable;
 use nwd::NwgUi;
 use nwg::NoticeSender;
 use std::sync::{Arc, OnceLock};
+use rigela_macros::GuiFormImpl;
 
-#[derive(Default, NwgUi)]
+#[derive(Default, NwgUi, GuiFormImpl)]
 pub struct PopupMenuForm {
     context: OnceLock<Arc<Context>>,
 
@@ -125,19 +127,5 @@ impl PopupMenuForm {
 
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
-    }
-}
-
-impl Formable for PopupMenuForm {
-    fn set_context(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap();
-    }
-
-    fn get_show_notice_sender(&self) -> NoticeSender {
-        self.show_notice.sender().clone()
-    }
-
-    fn get_exit_notice_sender(&self) -> NoticeSender {
-        self.exit_notice.sender().clone()
     }
 }

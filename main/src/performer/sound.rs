@@ -65,10 +65,10 @@ impl Sound {
         let stream = match lock.get(res_name) {
             None => {
                 drop(lock);
-                context.resource_accessor.open(&res_name).await.unwrap();
+                context.resource_provider.open(&res_name).await.unwrap();
                 loop {
                     let s = BassChannelOutputStream::from_disk_file(
-                        context.resource_accessor.get_path(&res_name).as_str(),
+                        context.resource_provider.get_path(&res_name).as_str(),
                     );
                     if s.is_valid() {
                         let mut lock = self.sound_streams.lock().await;

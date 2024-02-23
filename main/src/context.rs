@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::window_manager::WinManager;
+use crate::gui::GuiProvider;
 use crate::{
     browser::form_browser::FormBrowser, commander::Commander,
     configs::config_manager::ConfigManager, event_core, performer::Performer,
-    resources::ResourceAccessor, talent::TalentAccessor, terminator::Terminator,
+    resources::ResourceProvider, talent::TalentProvider, terminator::Terminator,
 };
 #[cfg(target_arch = "x86_64")]
 use crate::proxy32::Proxy32;
@@ -29,26 +29,26 @@ use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
 
-/// 核心上下文对象，通过此对象可以访问整个程序API
+/// 核心上下文对象，通过此对象可以访问整个读屏框架的API
 #[derive(Debug)]
 pub(crate) struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
+    pub(crate) event_core: Arc<event_core::EventCore>,
+    pub(crate) form_browser: Arc<FormBrowser>,
+    pub(crate) gui_provider: Arc<GuiProvider>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) msaa: Arc<Msaa>,
     pub(crate) ia2: Arc<Ia2>,
     pub(crate) work_runtime: Arc<Runtime>,
-    pub(crate) resource_accessor: Arc<ResourceAccessor>,
+    pub(crate) resource_provider: Arc<ResourceProvider>,
     pub(crate) peeper_server: Arc<PeeperServer>,
     pub(crate) performer: Arc<Performer>,
     #[cfg(target_arch = "x86_64")]
     pub(crate) proxy32: Arc<Proxy32>,
-    pub(crate) talent_accessor: Arc<TalentAccessor>,
+    pub(crate) talent_provider: Arc<TalentProvider>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
-    pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) form_browser: Arc<FormBrowser>,
-    pub(crate) window_manager: Arc<WinManager>,
 }
 
 impl Context {
@@ -90,10 +90,10 @@ impl Context {
             let proxy32 = Proxy32::new();
 
         // 创建资源访问器
-        let resources = ResourceAccessor::new();
+        let resources = ResourceProvider::new();
 
         // 创建能力访问器
-        let talent_accessor = TalentAccessor::new();
+        let talent_accessor = TalentProvider::new();
 
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
@@ -105,7 +105,7 @@ impl Context {
         let form_browser = FormBrowser::new();
 
         // Gui 窗口界面管理器
-        let window_manager = WinManager::new();
+        let window_manager = GuiProvider::new();
 
         Self {
             commander: commander.into(),
@@ -117,14 +117,14 @@ impl Context {
             performer: performer.into(),
             #[cfg(target_arch = "x86_64")]
             proxy32: proxy32.into(),
-            resource_accessor: resources.into(),
-            talent_accessor: talent_accessor.into(),
+            resource_provider: resources.into(),
+            talent_provider: talent_accessor.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
             work_runtime: work_runtime.into(),
             event_core: event_core.into(),
             form_browser: Arc::new(form_browser),
-            window_manager: window_manager.into(),
+            gui_provider: window_manager.into(),
         }
     }
 
@@ -167,14 +167,14 @@ impl Clone for Context {
             performer: self.performer.clone(),
             #[cfg(target_arch = "x86_64")]
             proxy32: self.proxy32.clone(),
-            resource_accessor: self.resource_accessor.clone(),
-            talent_accessor: self.talent_accessor.clone(),
+            resource_provider: self.resource_provider.clone(),
+            talent_provider: self.talent_provider.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
             work_runtime: self.work_runtime.clone(),
             event_core: self.event_core.clone(),
             form_browser: self.form_browser.clone(),
-            window_manager: self.window_manager.clone(),
+            gui_provider: self.gui_provider.clone(),
         }
     }
 }
