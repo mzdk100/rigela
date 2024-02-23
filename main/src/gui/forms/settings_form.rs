@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use crate::gui::command::{
     check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
     set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd, set_pitch_cmd,
     set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
+use crate::gui::forms::hotkeys::HotKeysUi;
 use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
 use nwg::stretch::{
@@ -24,9 +26,12 @@ use nwg::stretch::{
 };
 use nwg::{CheckBox, CheckBoxState, NoticeSender};
 use rigela_macros::GuiFormImpl;
-use std::sync::{Arc, OnceLock};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
+use win_wrap::hook::WindowsHook;
 
-const MENUS: [&str; 4] = ["常规设置", "语音设置", "鼠标设置", "高级设置"];
+const MENUS: [&str; 5] = ["常规设置", "语音设置", "热键自定义", "鼠标设置", "高级设置"];
 const FRAME_SIZE: Size<D> = Size {
     width: D::Percent(1.0),
     height: D::Auto,
@@ -34,11 +39,16 @@ const FRAME_SIZE: Size<D> = Size {
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SettingsForm {
-    context: OnceLock<Arc<Context>>,
+    pub(crate) context: OnceLock<Arc<Context>>,
+
+    pub(crate) talents: RefCell<Arc<Vec<crate::gui::forms::hotkeys::Talent>>>,
+    pub(crate) talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
+    pub(crate) hotkeys: Arc<Mutex<Vec<Keys>>>,
+    pub(crate) hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_control(size: (800, 600), position: (200, 200), title: "RigelA - 设置")]
-    #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init])]
-    window: nwg::Window,
+    #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
+    pub(crate) window: nwg::Window,
 
     #[nwg_layout(parent: window)]
     layout: nwg::FlexboxLayout,
@@ -54,6 +64,9 @@ pub struct SettingsForm {
 
     #[nwg_control(flags: "BORDER")]
     voice_frame: nwg::Frame,
+
+    #[nwg_control(flags: "BORDER")]
+    hotkeys_frame: nwg::Frame,
 
     #[nwg_control(flags: "BORDER")]
     mouse_frame: nwg::Frame,
@@ -81,6 +94,24 @@ pub struct SettingsForm {
     )]
     voice_ui: VoiceUi,
 
+    #[nwg_partial(parent: hotkeys_frame)]
+    #[nwg_events(
+    (data_view, OnKeyRelease): [SettingsForm::on_dv_key_press(SELF, EVT_DATA)],
+    (data_view, OnListViewItemChanged): [SettingsForm::on_dv_selection_changed],
+
+    (set_btn, OnButtonClick): [SettingsForm::on_set_hotkey],
+    (set_btn, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
+
+    (clear_btn, OnButtonClick): [SettingsForm::on_clear_hotkey],
+    (clear_btn, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
+
+    (finish_custom, OnNotice): [SettingsForm::on_finish_custom],
+    (cancel_custom, OnNotice): [SettingsForm::on_cancel_custom],
+
+    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    )]
+    pub(crate) hotkeys_ui: HotKeysUi,
+
     #[nwg_partial(parent: mouse_frame)]
     #[nwg_events(
     (ck_mouse_read, OnButtonClick): [SettingsForm::on_mouse_read(SELF, CTRL)],
@@ -104,6 +135,10 @@ pub struct SettingsForm {
     #[nwg_control()]
     #[nwg_events(OnNotice: [SettingsForm::on_exit_notice])]
     exit_notice: nwg::Notice,
+
+    #[nwg_control()]
+    #[nwg_events(OnNotice: [SettingsForm::on_show_hotkeys_notice])]
+    pub(crate) show_hotkeys_notice: nwg::Notice,
 }
 
 impl SettingsForm {
@@ -111,6 +146,7 @@ impl SettingsForm {
         let frames = [
             &self.general_frame,
             &self.voice_frame,
+            &self.hotkeys_frame,
             &self.mouse_frame,
             &self.advanced_frame,
         ];
@@ -215,8 +251,14 @@ impl SettingsForm {
     fn on_exit_notice(&self) {
         nwg::stop_thread_dispatch()
     }
-}
 
+    fn on_show_hotkeys_notice(&self) {
+        self.menu.set_selection(Some(2));
+        self.change_interface();
+        bring_window_front!(&self.window);
+        self.window.set_visible(true);
+    }
+}
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]

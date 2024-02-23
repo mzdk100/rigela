@@ -11,21 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::gui::forms::settings_form::SettingsForm;
 use crate::{
-    configs::config_operations::{get_hotkeys, save_hotkeys},
-    bring_window_front,
     commander::{keys::Keys, CommandType::Key},
-    context::Context,
+    configs::config_operations::{get_hotkeys, save_hotkeys},
     talent::Talented,
 };
-use nwd::NwgUi;
-use nwg::{modal_message, InsertListViewItem, MessageParams, NoticeSender};
+use nwd::NwgPartial;
+use nwg::{modal_message, InsertListViewItem, MessageParams};
 use std::{
-    cell::RefCell,
     collections::HashMap,
-    sync::{Arc, Mutex, OnceLock},
+    sync::{Arc, Mutex},
 };
-use rigela_macros::GuiFormImpl;
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
@@ -33,75 +30,54 @@ use win_wrap::{
     input::{WM_KEYDOWN, WM_SYSKEYDOWN},
 };
 
-type Talent = Arc<dyn Talented + Send + Sync>;
+pub type Talent = Arc<dyn Talented + Send + Sync>;
 
-#[derive(Default, NwgUi, GuiFormImpl)]
-pub struct HotKeysForm {
-    context: OnceLock<Arc<Context>>,
-    talents: RefCell<Arc<Vec<Talent>>>,
-    talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
-    hotkeys: Arc<Mutex<Vec<Keys>>>,
-    hook: RefCell<Option<WindowsHook>>,
-
-    #[nwg_control(size: (600, 480), position: (300, 300), title: "热键自定义", flags: "WINDOW|VISIBLE")]
-    #[nwg_events(OnWindowClose: [HotKeysForm::on_exit], OnInit: [HotKeysForm::load_data])]
-    window: nwg::Window,
-
-    #[nwg_layout(parent: window, spacing: 10)]
+#[derive(Default, NwgPartial)]
+pub struct HotKeysUi {
+    #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(6), max_row: Some(10))]
     layout: nwg::GridLayout,
 
-    #[nwg_control(size: (580, 400), list_style: nwg::ListViewStyle::Detailed, focus: true,
-    ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
-    #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 6)]
-    #[nwg_events(OnKeyRelease: [HotKeysForm::on_dv_key_press(SELF, EVT_DATA)],
-    OnListViewItemChanged: [HotKeysForm::on_dv_selection_changed])]
-    data_view: nwg::ListView,
+    #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
+    layout2: nwg::GridLayout,
+
+    #[nwg_control( list_style: nwg::ListViewStyle::Detailed, ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
+    #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 1, row_span: 6)]
+    pub(crate) data_view: nwg::ListView,
 
     #[nwg_control(text: "自定义: ")]
-    #[nwg_layout_item(layout: layout, col: 0, row: 6)]
+    #[nwg_layout_item(layout: layout, col: 0, row: 7)]
     label: nwg::Label,
 
     #[nwg_control(readonly: true, text: "请输入新的热键!", flags: "DISABLED|VISIBLE")]
-    #[nwg_layout_item(layout: layout, col: 1, row: 6, col_span: 3)]
+    #[nwg_layout_item(layout: layout, col: 1, row: 7, col_span: 3)]
     text_box: nwg::TextInput,
 
     #[nwg_control(text: "设置 (&S)")]
-    #[nwg_layout_item(layout: layout, col: 4, row: 6)]
-    #[nwg_events(OnButtonClick: [HotKeysForm::on_set_hotkey],
-    OnKeyRelease: [HotKeysForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)])]
-    set_btn: nwg::Button,
+    #[nwg_layout_item(layout: layout, col: 4, row: 7)]
+    pub(crate) set_btn: nwg::Button,
 
     #[nwg_control(text: "清除 (&C)")]
-    #[nwg_layout_item(layout: layout, col: 5, row: 6)]
-    #[nwg_events(OnButtonClick: [HotKeysForm::on_clear_hotkey],
-    OnKeyRelease: [HotKeysForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)])]
-    clear_btn: nwg::Button,
+    #[nwg_layout_item(layout: layout, col: 5, row: 7)]
+    pub(crate) clear_btn: nwg::Button,
+
+    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
+    pub(crate) btn_save: nwg::Button,
 
     #[nwg_control()]
-    #[nwg_events(OnNotice: [HotKeysForm::on_finish_custom])]
-    finish_custom: nwg::Notice,
+    pub(crate) finish_custom: nwg::Notice,
 
     #[nwg_control()]
-    #[nwg_events(OnNotice: [HotKeysForm::on_cancel_custom])]
-    cancel_custom: nwg::Notice,
-
-    #[nwg_control()]
-    #[nwg_events(OnNotice: [HotKeysForm::on_show_notice])]
-    show_notice: nwg::Notice,
-
-    #[nwg_control()]
-    #[nwg_events(OnNotice: [HotKeysForm::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    pub(crate) cancel_custom: nwg::Notice,
 }
 
-impl HotKeysForm {
+impl SettingsForm {
     // 窗口初始化
-    fn load_data(&self) {
+    pub(crate) fn load_data(&self) {
         self.init_data();
         self.init_list_cols();
         self.update_list();
-        self.clear_btn.set_enabled(false);
-        self.window.set_visible(false);
+        self.hotkeys_ui.clear_btn.set_enabled(false);
     }
 
     // 初始化列表表头
@@ -110,15 +86,17 @@ impl HotKeysForm {
             [(100, "技能名称"), (240, "初始热键"), (240, "自定义热键")];
 
         for (i, (n, s)) in COL_DATA.into_iter().enumerate() {
-            self.data_view.insert_column(nwg::InsertListViewColumn {
-                index: Some(i as i32),
-                fmt: None,
-                width: Some(n),
-                text: Some(s.into()),
-            });
+            self.hotkeys_ui
+                .data_view
+                .insert_column(nwg::InsertListViewColumn {
+                    index: Some(i as i32),
+                    fmt: None,
+                    width: Some(n),
+                    text: Some(s.into()),
+                });
         }
 
-        self.data_view.set_headers_enabled(true);
+        self.hotkeys_ui.data_view.set_headers_enabled(true);
     }
 
     // 初始化数据
@@ -130,7 +108,7 @@ impl HotKeysForm {
 
     // 更新列表项目
     fn update_list(&self) {
-        let dv = &self.data_view;
+        let dv = &self.hotkeys_ui.data_view;
         dv.clear();
 
         let talents = self.talents.borrow().clone();
@@ -165,13 +143,8 @@ impl HotKeysForm {
         }
     }
 
-    // 退出程序事件
-    fn on_exit(&self) {
-        self.window.set_visible(false);
-    }
-
     // 列表框键盘事件，当列表框有选中项按下回车，启动自定义热键配置
-    fn on_dv_key_press(&self, data: &nwg::EventData) {
+    pub(crate) fn on_dv_key_press(&self, data: &nwg::EventData) {
         let index = self.get_list_sel_index();
         if data.on_key() == nwg::keys::RETURN && index != -1 {
             self.start_custom_hotkey();
@@ -179,8 +152,8 @@ impl HotKeysForm {
     }
 
     // 列表框选择变动， 根据选中项是否存在自定义热键，来启用清除按钮
-    fn on_dv_selection_changed(&self) {
-        self.clear_btn.set_enabled(false);
+    pub(crate) fn on_dv_selection_changed(&self) {
+        self.hotkeys_ui.clear_btn.set_enabled(false);
 
         let index = self.get_list_sel_index();
         if index == -1 {
@@ -189,27 +162,27 @@ impl HotKeysForm {
 
         let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
         if self.talent_keys.borrow().get(&id_).is_some() {
-            self.clear_btn.set_enabled(true);
+            self.hotkeys_ui.clear_btn.set_enabled(true);
         }
     }
 
     // 编辑框键盘事件
     #[allow(unused)]
-    fn on_tb_key_press(&self, data: &nwg::EventData) {
+    pub(crate) fn on_tb_key_press(&self, data: &nwg::EventData) {
         if data.on_key() != nwg::keys::TAB {
             self.start_custom_hotkey();
         }
     }
 
     // 设置热键按钮事件
-    fn on_set_hotkey(&self) {
+    pub(crate) fn on_set_hotkey(&self) {
         if self.get_list_sel_index() != -1 {
             self.start_custom_hotkey();
         }
     }
 
     // 屏蔽设置按钮的回车事件，使用空格激活，避免回车响应错误
-    fn on_btn_key_release(&self, data: &nwg::EventData, _h: &nwg::ControlHandle) {
+    pub(crate) fn on_btn_key_release(&self, data: &nwg::EventData, _h: &nwg::ControlHandle) {
         if data.on_key() == nwg::keys::RETURN {
             //  Todo: 这里没有拦截住回车事件,需要使用句柄发送message拦截
             // return;;
@@ -217,7 +190,7 @@ impl HotKeysForm {
     }
 
     // 清除热键按钮事件
-    fn on_clear_hotkey(&self) {
+    pub(crate) fn on_clear_hotkey(&self) {
         let index = self.get_list_sel_index();
         if index == -1 {
             return;
@@ -251,12 +224,12 @@ impl HotKeysForm {
     }
 
     // 产生新的热键
-    fn on_finish_custom(&self) {
+    pub(crate) fn on_finish_custom(&self) {
         self.hook.take().unwrap().unhook();
 
         let hotkeys: Vec<Keys> = self.hotkeys.lock().unwrap().clone();
         let key_str = Self::keys_to_string(&hotkeys);
-        self.text_box.set_text(&key_str);
+        self.hotkeys_ui.text_box.set_text(&key_str);
 
         // 这里需要包裹，不然调用init_data会闪退
         {
@@ -287,7 +260,7 @@ impl HotKeysForm {
     }
 
     // 取消热键自定义
-    fn on_cancel_custom(&self) {
+    pub(crate) fn on_cancel_custom(&self) {
         self.hook.take().unwrap().unhook();
     }
 
@@ -308,8 +281,8 @@ impl HotKeysForm {
     fn set_hook(&self) -> WindowsHook {
         let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
         let hotkeys = Arc::clone(&self.hotkeys);
-        let finish_custom_sender = self.finish_custom.sender();
-        let cancel_custom_sender = self.cancel_custom.sender();
+        let finish_custom_sender = self.hotkeys_ui.finish_custom.sender();
+        let cancel_custom_sender = self.hotkeys_ui.cancel_custom.sender();
 
         WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
             let info: &KbdLlHookStruct = l_param.to();
@@ -352,7 +325,7 @@ impl HotKeysForm {
 
     // 获取当前列表项选中索引
     fn get_list_sel_index(&self) -> i32 {
-        let items = self.data_view.selected_items();
+        let items = self.hotkeys_ui.data_view.selected_items();
         match items.len() {
             0 => -1,
             _ => items[0] as i32,
@@ -365,14 +338,5 @@ impl HotKeysForm {
             .map(|x| -> &str { (*x).into() })
             .collect::<Vec<&str>>()
             .join("+")
-    }
-
-    fn on_show_notice(&self) {
-        bring_window_front!(&self.window);
-        self.window.set_visible(true)
-    }
-
-    fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch()
     }
 }

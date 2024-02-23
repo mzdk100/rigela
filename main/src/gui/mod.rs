@@ -18,8 +18,8 @@ mod utils;
 use crate::{
     context::Context,
     gui::forms::{
-        hotkeys::HotKeysForm, popup_menu::PopupMenuForm, settings_form::SettingsForm,
-        system_tray::SystemTray, welcome::WelcomeForm, about::AboutForm,
+        about::AboutForm, popup_menu::PopupMenuForm, settings_form::SettingsForm,
+        system_tray::SystemTray, welcome::WelcomeForm,
     },
 };
 use nwg::{NativeUi, NoticeSender};
@@ -45,8 +45,8 @@ pub(crate) struct GuiProvider {
     tray: OnceLock<(NoticeSender, NoticeSender)>,
     popup_menu: OnceLock<(NoticeSender, NoticeSender)>,
     settings: OnceLock<(NoticeSender, NoticeSender)>,
-    hotkeys: OnceLock<(NoticeSender, NoticeSender)>,
     about: OnceLock<(NoticeSender, NoticeSender)>,
+    hotkeys: OnceLock<NoticeSender>,
 }
 
 // 防止重复初始化
@@ -92,8 +92,10 @@ impl GuiProvider {
             build_form!(tray, SystemTray, context, tx);
             build_form!(popup_menu, PopupMenuForm, context, tx);
             build_form!(settings, SettingsForm, context, tx);
-            build_form!(hotkeys, HotKeysForm, context, tx);
             build_form!(about, AboutForm, context, tx);
+
+            let s = settings.show_hotkeys_notice.sender().clone();
+            tx.send((s.clone(), s.clone()));
 
             nwg::dispatch_thread_events()
         });
@@ -102,8 +104,8 @@ impl GuiProvider {
         let _ = self.tray.set(rx.recv().unwrap());
         let _ = self.popup_menu.set(rx.recv().unwrap());
         let _ = self.settings.set(rx.recv().unwrap());
-        let _ = self.hotkeys.set(rx.recv().unwrap());
         let _ = self.about.set(rx.recv().unwrap());
+        let _ = self.hotkeys.set(rx.recv().unwrap().0);
 
         self.welcome.get().unwrap().0.notice();
     }
@@ -113,7 +115,6 @@ impl GuiProvider {
         self.tray.get().unwrap().1.notice();
         self.popup_menu.get().unwrap().1.notice();
         self.settings.get().unwrap().1.notice();
-        self.hotkeys.get().unwrap().1.notice();
     }
 
     pub(crate) fn show_settings_form(&self) {
@@ -121,7 +122,7 @@ impl GuiProvider {
     }
 
     pub(crate) fn show_hotkeys_form(&self) {
-        self.hotkeys.get().unwrap().0.notice();
+        self.hotkeys.get().unwrap().notice();
     }
 
     pub(crate) fn show_popup_menu(&self) {
@@ -132,7 +133,9 @@ impl GuiProvider {
         self.welcome.get().unwrap().0.notice();
     }
 
-    pub(crate) fn show_about_form(&self) { self.about.get().unwrap().0.notice(); }
+    pub(crate) fn show_about_form(&self) {
+        self.about.get().unwrap().0.notice();
+    }
 }
 
 impl Debug for GuiProvider {
