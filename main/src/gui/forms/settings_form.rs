@@ -12,7 +12,9 @@
  */
 
 use crate::gui::command::{
-    check_update_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
+    check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
+    set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd, set_pitch_cmd,
+    set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
 use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
@@ -65,20 +67,34 @@ pub struct SettingsForm {
     (ck_auot_update, OnButtonClick): [SettingsForm::on_auto_check_update(SELF, CTRL)],
     (btn_check_update, OnButtonClick): [SettingsForm::on_check_update],
     (cb_lang, OnComboxBoxSelection): [SettingsForm::on_lang_changed(SELF, CTRL)],
-    (save_btn, OnButtonClick): [SettingsForm::save],
+    (btn_save, OnButtonClick): [SettingsForm::on_save],
     )]
     general_ui: GeneralUi,
 
     #[nwg_partial(parent: voice_frame)]
-    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
+    #[nwg_events(
+    (cb_role, OnComboxBoxSelection): [SettingsForm::on_role_changed(SELF, CTRL)],
+    (cb_speed, OnComboxBoxSelection): [SettingsForm::on_speed_changed(SELF, CTRL)],
+    (cb_pitch, OnComboxBoxSelection): [SettingsForm::on_pitch_changed(SELF, CTRL)],
+    (cb_volume, OnComboxBoxSelection): [SettingsForm::on_volume_changed(SELF, CTRL)],
+    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    )]
     voice_ui: VoiceUi,
 
     #[nwg_partial(parent: mouse_frame)]
-    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
+    #[nwg_events(
+    (ck_mouse_read, OnButtonClick): [SettingsForm::on_mouse_read(SELF, CTRL)],
+    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    )]
     mouse_ui: MouseUi,
 
     #[nwg_partial(parent: advanced_frame)]
-    #[nwg_events((save_btn, OnButtonClick): [SettingsForm::save])]
+    #[nwg_events(
+    (btn_import, OnButtonClick): [SettingsForm::on_import],
+    (btn_export, OnButtonClick): [SettingsForm::on_export],
+    (btn_reset, OnButtonClick): [SettingsForm::on_reset],
+    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    )]
     advanced_ui: AdvancedUi,
 
     #[nwg_control()]
@@ -122,7 +138,7 @@ impl SettingsForm {
         }
     }
 
-    fn save(&self) {
+    fn on_save(&self) {
         self.window.set_visible(false);
     }
 
@@ -151,6 +167,43 @@ impl SettingsForm {
     fn on_lang_changed(&self, ctrl: &GeneralUi) {
         let lang = ctrl.cb_lang.selection().unwrap();
         set_lang_cmd(self.context.get().unwrap().clone(), lang);
+    }
+
+    fn on_role_changed(&self, ctrl: &VoiceUi) {
+        let index = ctrl.cb_role.selection().unwrap();
+        set_voice_cmd(self.context.get().unwrap().clone(), index);
+    }
+
+    fn on_speed_changed(&self, ctrl: &VoiceUi) {
+        let index = ctrl.cb_speed.selection().unwrap();
+        set_speed_cmd(self.context.get().unwrap().clone(), index);
+    }
+
+    fn on_pitch_changed(&self, ctrl: &VoiceUi) {
+        let index = ctrl.cb_pitch.selection().unwrap();
+        set_pitch_cmd(self.context.get().unwrap().clone(), index);
+    }
+
+    fn on_volume_changed(&self, ctrl: &VoiceUi) {
+        let index = ctrl.cb_volume.selection().unwrap();
+        set_volume_cmd(self.context.get().unwrap().clone(), index);
+    }
+
+    fn on_mouse_read(&self, ctrl: &MouseUi) {
+        let toggle = ctrl.ck_mouse_read.check_state() == CheckBoxState::Checked;
+        set_mouse_read_cmd(self.context.get().unwrap().clone(), toggle);
+    }
+
+    fn on_import(&self) {
+        import_config_cmd(self.context.get().unwrap().clone());
+    }
+
+    fn on_export(&self) {
+        export_config_cmd(self.context.get().unwrap().clone());
+    }
+
+    fn on_reset(&self) {
+        reset_config_cmd(self.context.get().unwrap().clone());
     }
 
     fn on_show_notice(&self) {
@@ -194,7 +247,20 @@ pub struct GeneralUi {
 
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    save_btn: nwg::Button,
+    btn_save: nwg::Button,
+}
+
+#[allow(unused)]
+fn get_num_1_100() -> Vec<&'static str> {
+    vec![
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
+        "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",
+        "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46",
+        "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61",
+        "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76",
+        "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91",
+        "92", "93", "94", "95", "96", "97", "98", "99", "100",
+    ]
 }
 
 #[derive(Default, NwgPartial)]
@@ -209,7 +275,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     lb_role: nwg::Label,
 
-    #[nwg_control(collection: vec ! [])]
+    #[nwg_control(collection: vec![] )]
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
     cb_role: nwg::ComboBox<&'static str>,
 
@@ -217,7 +283,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     lb_speed: nwg::Label,
 
-    #[nwg_control(collection: vec ! [])]
+    #[nwg_control(collection: get_num_1_100() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
     cb_speed: nwg::ComboBox<&'static str>,
 
@@ -225,7 +291,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     lb_pitch: nwg::Label,
 
-    #[nwg_control(collection: vec ! [])]
+    #[nwg_control(collection: get_num_1_100() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
     cb_pitch: nwg::ComboBox<&'static str>,
 
@@ -233,13 +299,13 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     lb_volume: nwg::Label,
 
-    #[nwg_control(collection: vec ! [])]
+    #[nwg_control(collection: get_num_1_100() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
     cb_volume: nwg::ComboBox<&'static str>,
 
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    save_btn: nwg::Button,
+    btn_save: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
@@ -256,7 +322,7 @@ pub struct MouseUi {
 
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    save_btn: nwg::Button,
+    btn_save: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
@@ -281,5 +347,5 @@ pub struct AdvancedUi {
 
     #[nwg_control(text: "保存 (&S)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    save_btn: nwg::Button,
+    btn_save: nwg::Button,
 }

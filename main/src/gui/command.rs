@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_operations::apply_mouse_config;
 use crate::gui::utils::UpdateState;
 use crate::{
     context::Context,
@@ -19,7 +20,6 @@ use crate::{
 };
 use log::error;
 use rigela_utils::get_program_directory;
-use std::ops::Index;
 use std::{env::args, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
 
@@ -142,4 +142,62 @@ pub(crate) fn set_lang_cmd(_context: Arc<Context>, index: usize) {
 
     let msg = format!("设置成功！当前语言为：{}", index);
     message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+}
+
+/// 设置语音角色
+pub(crate) fn set_voice_cmd(_context: Arc<Context>, index: usize) {
+    // Todo
+
+    let msg = format!("设置成功！当前语音角色：{}", index);
+    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+}
+
+/// 设置语音速度
+pub(crate) fn set_speed_cmd(_context: Arc<Context>, index: usize) {
+    // Todo
+
+    let msg = format!("设置成功！当前语音速度为：{}", index);
+    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+}
+
+/// 设置语音音调
+pub(crate) fn set_pitch_cmd(_context: Arc<Context>, index: usize) {
+    // Todo
+
+    let msg = format!("设置成功！当前语音音调为：{}", index);
+    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+}
+
+/// 设置语音音量
+pub(crate) fn set_volume_cmd(_context: Arc<Context>, index: usize) {
+    // Todo
+
+    let msg = format!("设置成功！当前语音音量为：{}", index);
+    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+}
+
+/// 设置鼠标朗读
+pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
+    apply_mouse_config(context.clone(), toggle);
+}
+
+/// 导出配置
+pub(crate) fn export_config_cmd(_context: Arc<Context>) {
+    // Todo
+
+    message_box(HWND::default(), "导出配置成功！", "提示", MB_OK);
+}
+
+/// 导入配置
+pub(crate) fn import_config_cmd(_context: Arc<Context>) {
+    // Todo
+
+    message_box(HWND::default(), "导入配置成功！", "提示", MB_OK);
+}
+
+/// 还原默认配置
+pub(crate) fn reset_config_cmd(_context: Arc<Context>) {
+    // Todo
+
+    message_box(HWND::default(), "恢复默认配置成功！", "提示", MB_OK);
 }
