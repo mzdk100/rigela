@@ -19,6 +19,7 @@ use crate::{
 };
 use log::error;
 use rigela_utils::get_program_directory;
+use std::ops::Index;
 use std::{env::args, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
 
@@ -109,4 +110,36 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
         .args(&["/c", "start", URL])
         .spawn()
         .expect("Failed to start cmd");
+}
+
+/// 设置开机自动启动
+pub(crate) fn set_auto_start_cmd(_context: Arc<Context>, toggle: bool) {
+    // Todo
+
+    let msg = if toggle {
+        "开启成功！"
+    } else {
+        "关闭成功！"
+    };
+    message_box(HWND::default(), msg, "提示", MB_OK);
+}
+
+/// 设置自动检测更新
+pub(crate) fn set_auto_check_update_cmd(_context: Arc<Context>, toggle: bool) {
+    // Todo
+
+    let msg = if toggle {
+        "开启成功！"
+    } else {
+        "关闭成功！"
+    };
+    message_box(HWND::default(), msg, "提示", MB_OK);
+}
+
+/// 设置语言
+pub(crate) fn set_lang_cmd(_context: Arc<Context>, index: usize) {
+    // Todo
+
+    let msg = format!("设置成功！当前语言为：{}", index);
+    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
 }
