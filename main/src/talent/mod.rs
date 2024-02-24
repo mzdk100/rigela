@@ -27,7 +27,7 @@ use crate::{
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
             CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
-            ViewFocusTalent, ViewWindowTitleTalent,
+            ViewFocusTalent, ViewWindowTitleTalent, StopTtsOutputTalent,
         },
         tts::{
             CacheToClipboardTalent, IncreaseTalent, MakeWordCacheCharTalent, NextCacheCharTalent,
@@ -82,7 +82,7 @@ impl TalentProvider {
      * */
     pub(crate) fn new() -> Self {
         let talents: Vec<Arc<dyn Talented + Send + Sync>> = vec![
-            // 程序技能
+            // 程序能力
             Arc::new(ExitTalent),
             Arc::new(CurrentTimeTalent),
             Arc::new(CurrentCpuUsageTalent),
@@ -90,7 +90,9 @@ impl TalentProvider {
             Arc::new(HotkeysTalent),
             Arc::new(ViewFocusTalent),
             Arc::new(ViewWindowTitleTalent),
-            // 窗口浏览技能
+            Arc::new(StopTtsOutputTalent),
+
+            // 窗口浏览能力
             Arc::new(ModePrevTalent),
             Arc::new(ModeNextTalent),
             Arc::new(PrevElementTalent),
@@ -99,7 +101,7 @@ impl TalentProvider {
             Arc::new(PrevChildElementTalent),
             Arc::new(NextChildElementTalent),
             Arc::new(CurrChildElementTalent),
-            // 语音调节技能
+            // 语音调节能力
             Arc::new(IncreaseTalent),
             Arc::new(ReduceTalent),
             Arc::new(NextPropTalent),
@@ -109,11 +111,12 @@ impl TalentProvider {
             Arc::new(TransCacheCharTalent),
             Arc::new(MakeWordCacheCharTalent),
             Arc::new(CacheToClipboardTalent),
-            // 鼠标技能
+            // 鼠标能力
             Arc::new(ClickTalent),
             Arc::new(RightClickTalent),
             Arc::new(ReadMouseTalent),
         ];
+
         Self {
             talents: talents.into(),
         }

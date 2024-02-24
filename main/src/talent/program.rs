@@ -114,3 +114,9 @@ async fn view_focus(context: Arc<Context>) {
     let focused = context.ui_automation.get_focused_element();
     context.performer.speak(focused).await;
 }
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "停止正在输出的语音", key = (VkCtrl))]
+async fn stop_tts_output(context: Arc<Context>) {
+    context.performer.get_tts().stop_all().await;
+}

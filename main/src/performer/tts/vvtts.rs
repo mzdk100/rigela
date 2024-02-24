@@ -50,11 +50,13 @@ impl VvttsEngine {
             TtsProperty::Speed(v) => params.speed = (v as f32 * 2.5) as i32,
             TtsProperty::Volume(v) => params.volume = v,
             TtsProperty::Pitch(v) => {
-                params.pitch_baseline = if v > 50 {
+                let pitch = if v > 50 {
                     (69f32 + (v as f32 - 50f32) / 50f32 * 31f32) as i32
                 } else {
                     ((v as f32) / 50f32 * 69f32) as i32
-                }
+                };
+                params.pitch_baseline = pitch;
+                params.pitch_fluctuation = pitch;
             }
             _ => return,
         };
@@ -124,7 +126,7 @@ impl TtsEngine for VvttsEngine {
 
     async fn set_voice(&self, id: String) {
         use std::str::FromStr;
-        
+
         self.context
             .proxy32
             .as_ref()

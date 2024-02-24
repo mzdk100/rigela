@@ -52,13 +52,11 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
             match get_hotkeys(context.clone()).get(&i.get_id()) {
                 // 如果用户自定义过热键优先使用他定义的。
                 Some(keys) if match_keys(keys, &map) => {
-                    execute(context.clone(), Arc::clone(i));
-                    return LRESULT(1);
+                    return execute(context.clone(), Arc::clone(i));
                 }
                 // 如果用户没定义过这个能力的热键就使用默认的。
                 None if match_cmd_list(i.clone(), &map) => {
-                    execute(context.clone(), Arc::clone(i));
-                    return LRESULT(1);
+                    return execute(context.clone(), Arc::clone(i));
                 }
                 _ => continue,
             };
@@ -74,6 +72,12 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
 // 匹配技能项的热键列表是否与当前Hook到的按键相同
 fn match_keys(keys: &[Keys], map: &HashMap<Keys, bool>) -> bool {
+    let pressed_key_count = map.values().filter(|i| **i).count();
+    if keys.len() != pressed_key_count {
+        // 如果当前按下的键数量和能力定义的键数量不一样就直接匹配失败
+        return false;
+    }
+
     for key in keys {
         match map.get(key) {
             // 能匹配到按键，并且按键状态为按下，进入下一轮循环
@@ -92,12 +96,18 @@ fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
     })
 }
 
-// 执行技能项的操作
-fn execute(context: Arc<Context>, talent: Talent) {
+// 执行能力项的操作
+fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
     let ctx = context.clone();
+    let id = talent.get_id();
     context.main_handler.spawn(async move {
         talent.perform(ctx.clone()).await;
     });
+    if id == "stop_tts_output" {
+        // 打断语音的能力不需要拦截键盘事件
+        return LRESULT(0);
+    }
+    LRESULT(1)
 }
 
 // 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中
