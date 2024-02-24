@@ -17,7 +17,7 @@ use crate::{
 };
 use windows::core::BSTR;
 use windows::{
-    core::Interface,
+    core::ComInterface,
     Win32::{
         Foundation::POINT,
         UI::Accessibility::{
@@ -200,7 +200,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
@@ -242,9 +242,7 @@ impl UiAutomationTextRange {
             .to_string()
     }
 }
-
 unsafe impl Sync for UiAutomationTextRange {}
-
 unsafe impl Send for UiAutomationTextRange {}
 
 /*

@@ -29,11 +29,12 @@ use std::{
 };
 use win_wrap::msaa::object::AccessibleObject;
 use windows::{
-    core::{Interface, Error, IUnknown, Result, BSTR, VARIANT, Type},
+    core::{ComInterface, Error, IUnknown, Result, BSTR, HSTRING},
     Win32::{
         Foundation::{HWND, S_FALSE},
         System::{
-            Com::{CoTaskMemFree, IServiceProvider}
+            Com::{CoTaskMemFree, IServiceProvider},
+            Variant::{VariantClear, VariantInit, VARIANT, VT_BOOL, VT_BSTR, VT_I4},
         },
         UI::Accessibility::IAccessible,
     },
@@ -66,7 +67,7 @@ impl Accessible2Object {
                 _ia2_3: ia2_3,
             });
         }
-        Err(Error::new(S_FALSE, "Not supported."))
+        Err(Error::new(S_FALSE, HSTRING::from("Not supported.")))
     }
 
     /**
@@ -102,8 +103,9 @@ impl Accessible2Object {
         }
         let ia2 = self._ia2_2.as_ref().unwrap();
         unsafe {
-            let mut out = std::mem::zeroed();
+            let mut out = VariantInit();
             if ia2.attribute(BSTR::from(name), &mut out).is_err() {
+                VariantClear(&mut out).unwrap_or(());
                 return IA2ResultType::None;
             }
             out.into()
@@ -123,7 +125,7 @@ impl Accessible2Object {
             let mut caret = 0;
             let val = ia2
                 .accessibleWithCaret(&mut acc, &mut caret)
-                .and_then(|| Type::from_abi(acc as *mut c_void));
+                .from_abi(acc as *mut c_void);
             if val.is_err() {
                 return None;
             }
@@ -144,13 +146,15 @@ impl Accessible2Object {
         unsafe {
             let mut targets = std::mem::zeroed();
             let mut num = 0;
-            if ia2.relationTargetsOfType(BSTR::from(r#type), max_targets, &mut targets, &mut num).is_err() {
+            let res =
+                ia2.relationTargetsOfType(BSTR::from(r#type), max_targets, &mut targets, &mut num);
+            if res.is_err() {
                 return vec![];
             }
             let mut v = Vec::new();
             for i in 0..num {
                 let it = *targets.wrapping_add(i as usize);
-                v.push(Type::from_abi(it as *mut c_void).unwrap());
+                v.push(res.from_abi(it as *mut c_void).unwrap());
             }
             CoTaskMemFree(Some(targets as *const c_void));
             v
@@ -181,11 +185,11 @@ impl Accessible2Object {
             if let Ok(relation) = self
                 ._ia2
                 .relation(index, &mut relation)
-                .and_then(|| Type::from_abi(relation as *mut c_void))
+                .from_abi(relation as *mut c_void)
             {
                 Ok(AccessibleRelation::from_raw(&relation))
             } else {
-                Err(Error::new(S_FALSE, "Not supported."))
+                Err(Error::new(S_FALSE, HSTRING::from("Not supported.")))
             }
         }
     }
@@ -199,13 +203,14 @@ impl Accessible2Object {
         unsafe {
             let mut relations = std::mem::zeroed();
             let mut num = 0;
-            if self._ia2.relations(max_relations, &mut relations, &mut num).is_err() {
+            let res = self._ia2.relations(max_relations, &mut relations, &mut num);
+            if res.is_err() {
                 return vec![];
             }
             let mut v = vec![];
             for i in 0..num {
                 v.push(AccessibleRelation::from_raw(
-                    &Type::from_abi(relations.wrapping_add(i as usize) as *mut c_void)
+                    &res.from_abi(relations.wrapping_add(i as usize) as *mut c_void)
                         .unwrap(),
                 ));
             }
@@ -224,9 +229,9 @@ impl Accessible2Object {
     pub fn role(&self) -> i32 {
         unsafe {
             let mut role = std::mem::zeroed();
-            self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
+            self._ia2.role(&mut role).from_abi(role)
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
@@ -283,7 +288,7 @@ impl Accessible2Object {
     pub fn states(&self) -> Result<AccessibleStates> {
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2.states(&mut states).and_then(|| Type::from_abi(states))
+            self._ia2.states(&mut states).from_abi(states)
         }
     }
 
@@ -323,7 +328,7 @@ impl Accessible2Object {
     pub fn n_extended_states(&self) -> Result<i32> {
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2.nExtendedStates(&mut states).and_then(|| Type::from_abi(states))
+            self._ia2.nExtendedStates(&mut states).from_abi(states)
         }
     }
 
@@ -385,7 +390,7 @@ impl Accessible2Object {
     pub fn unique_id(&self) -> Result<i32> {
         unsafe {
             let mut id = std::mem::zeroed();
-            self._ia2.uniqueID(&mut id).and_then(|| Type::from_abi(id))
+            self._ia2.uniqueID(&mut id).from_abi(id)
         }
     }
 
@@ -398,7 +403,7 @@ impl Accessible2Object {
     pub fn window_handle(&self) -> HWND {
         unsafe {
             let mut h_wnd = std::mem::zeroed();
-            self._ia2.windowHandle(&mut h_wnd).and_then(|| Type::from_abi(h_wnd)).unwrap()
+            self._ia2.windowHandle(&mut h_wnd).from_abi(h_wnd).unwrap()
         }
     }
 
@@ -409,7 +414,7 @@ impl Accessible2Object {
     pub fn index_in_parent(&self) -> i32 {
         unsafe {
             let mut index = std::mem::zeroed();
-            let res = self._ia2.indexInParent(&mut index).and_then(|| Type::from_abi(index));
+            let res = self._ia2.indexInParent(&mut index).from_abi(index);
             if res.is_err() {
                 -1
             } else {
@@ -468,16 +473,16 @@ pub enum IA2ResultType {
 }
 
 impl From<VARIANT> for IA2ResultType {
-    fn from(value: VARIANT) -> Self {
-        if let Ok(d) = i32::try_from(&value) {
-            return Self::Num(d);
+    fn from(mut value: VARIANT) -> Self {
+        unsafe {
+            let v = match value.Anonymous.Anonymous.vt {
+                VT_I4 => Self::Num(value.Anonymous.Anonymous.Anonymous.intVal),
+                VT_BSTR => Self::Str(value.Anonymous.Anonymous.Anonymous.bstrVal.to_string()),
+                VT_BOOL => Self::Bool(value.Anonymous.Anonymous.Anonymous.boolVal.as_bool()),
+                _ => Self::None,
+            };
+            VariantClear(&mut value).unwrap_or(());
+            v
         }
-        if let Ok(d) = BSTR::try_from(&value) {
-            return Self::Str(d.to_string());
-        }
-        if let Ok(d) = bool::try_from(&value) {
-            return Self::Bool(d);
-        }
-        Self::None
     }
 }

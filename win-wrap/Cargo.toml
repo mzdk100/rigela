@@ -8,7 +8,7 @@ edition.workspace = true
 
 [dependencies.windows]
 # windows的所有API
-version = "0.53.0"
+version = "0.52.0"
 # 使用到的API特性（用于编译时间优化）
 features = [
     # 用于实现COM事件订阅

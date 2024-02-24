@@ -18,7 +18,7 @@ use windows::Win32::UI::Accessibility::{
     IUIAutomation6, IUIAutomationTableItemPattern, UIA_TableItemPatternId,
 };
 use windows::{
-    core::Interface,
+    core::ComInterface,
     Win32::UI::Accessibility::{
         IUIAutomationTablePattern, RowOrColumnMajor_ColumnMajor, RowOrColumnMajor_Indeterminate,
         RowOrColumnMajor_RowMajor, UIA_TablePatternId,

@@ -14,7 +14,7 @@
 use crate::uia::element::UiAutomationElement;
 use std::fmt::{Debug, Formatter};
 use windows::{
-    core::Interface,
+    core::ComInterface,
     Win32::UI::Accessibility::{IUIAutomationItemContainerPattern, UIA_ItemContainerPatternId},
 };
 

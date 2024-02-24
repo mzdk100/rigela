@@ -11,12 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::core::{
-    HRESULT,
-    IUnknown,
-    IUnknown_Vtbl,
-    VARIANT,
-};
+use windows::core::HRESULT;
+use windows::core::{IUnknown, IUnknown_Vtbl};
+use windows::Win32::System::Variant::VARIANT;
 use windows_interface::interface;
 
 /**

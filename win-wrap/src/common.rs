@@ -13,7 +13,7 @@
 
 use std::ffi::CString;
 pub use windows::{
-    core::{HRESULT, Result},
+    core::Result,
     Win32::{
         Foundation::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,

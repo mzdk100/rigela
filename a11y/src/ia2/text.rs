@@ -19,7 +19,7 @@ use crate::{
 use std::fmt::{Debug, Formatter};
 use win_wrap::msaa::object::AccessibleObject;
 use windows::{
-    core::{Interface, Error, Result, BSTR, Type},
+    core::{ComInterface, Error, Result, BSTR, HSTRING},
     Win32::{Foundation::S_FALSE, System::Com::IServiceProvider, UI::Accessibility::IAccessible},
 };
 
@@ -48,7 +48,7 @@ impl AccessibleText {
                 _iat2: iat2,
             });
         }
-        Err(Error::new(S_FALSE, "Not supported."))
+        Err(Error::new(S_FALSE, HSTRING::from("Not supported.")))
     }
 
     /**
@@ -198,7 +198,7 @@ impl AccessibleText {
             let mut offset = std::mem::zeroed();
             self._iat
                 .offsetAtPoint(x, y, coord_type, &mut offset)
-                .and_then(|| Type::from_abi(offset))
+                .from_abi(offset)
                 .unwrap_or(-1)
         }
     }
@@ -394,7 +394,7 @@ impl AccessibleText {
     pub fn n_characters(&self) -> i32 {
         unsafe {
             let mut num = std::mem::zeroed();
-            self._iat.nCharacters(&mut num).and_then(|| Type::from_abi(num)).unwrap_or(0)
+            self._iat.nCharacters(&mut num).from_abi(num).unwrap_or(0)
         }
     }
 
