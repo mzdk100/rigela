@@ -123,7 +123,7 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
 
 /// 设置开机自动启动
 pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
-    // Todo
+    // 在注册表添加开机自动启动
 
     save_run_on_startup(context.clone(), toggle);
 
@@ -211,6 +211,11 @@ pub(crate) fn set_volume_cmd(_context: Arc<Context>, index: usize) {
 /// 设置鼠标朗读
 pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
     apply_mouse_config(context.clone(), toggle);
+    let state = if toggle { "开启" } else { "关闭" };
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(format!("{}鼠标朗读", state).to_string()).await;
+    });
 }
 
 /// 导出配置

@@ -12,7 +12,9 @@
  */
 
 use crate::commander::keys::Keys;
-use crate::configs::config_operations::{get_auto_check_update, get_lang, get_run_on_startup};
+use crate::configs::config_operations::{
+    get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
+};
 use crate::configs::general::Lang;
 use crate::gui::command::{
     check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
@@ -268,6 +270,15 @@ impl SettingsForm {
             Lang::En => 1,
         };
         self.general_ui.cb_lang.set_selection(Some(index));
+
+        // 更新语音角色框显示
+
+        // 更新鼠标朗读显示
+        let state = match get_mouse_read_state(self.context.get().unwrap().clone()) {
+            true => CheckBoxState::Checked,
+            false => CheckBoxState::Unchecked,
+        };
+        self.mouse_ui.ck_mouse_read.set_check_state(state);
 
         self.window.set_visible(true);
         self.menu.set_focus();
