@@ -12,6 +12,8 @@
  */
 
 use crate::commander::keys::Keys;
+use crate::configs::config_operations::{get_auto_check_update, get_lang, get_run_on_startup};
+use crate::configs::general::Lang;
 use crate::gui::command::{
     check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
     set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd, set_pitch_cmd,
@@ -244,8 +246,32 @@ impl SettingsForm {
 
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
+
+        // 更新开机自启显示
+        let state = match get_run_on_startup(self.context.get().unwrap().clone()) {
+            true => CheckBoxState::Checked,
+            false => CheckBoxState::Unchecked,
+        };
+        self.general_ui.ck_run_on_startup.set_check_state(state);
+
+        // 更新自动更新显示
+        let state = match get_auto_check_update(self.context.get().unwrap().clone()) {
+            true => CheckBoxState::Checked,
+            false => CheckBoxState::Unchecked,
+        };
+        self.general_ui.ck_auot_update.set_check_state(state);
+
+        // 更新语言显示
+        let lang = get_lang(self.context.get().unwrap().clone());
+        let index = match lang {
+            Lang::Zh => 0,
+            Lang::En => 1,
+        };
+        self.general_ui.cb_lang.set_selection(Some(index));
+
         self.window.set_visible(true);
         self.menu.set_focus();
+        self.menu.set_selection(Some(0));
     }
 
     fn on_exit_notice(&self) {
@@ -255,6 +281,7 @@ impl SettingsForm {
     fn on_show_hotkeys_notice(&self) {
         self.menu.set_selection(Some(2));
         self.change_interface();
+        self.hotkeys_ui.data_view.set_focus();
         bring_window_front!(&self.window);
         self.window.set_visible(true);
     }
@@ -287,7 +314,7 @@ pub struct GeneralUi {
     #[nwg_layout_item(layout: layout, col: 2, row: 5)]
     cb_lang: nwg::ComboBox<&'static str>,
 
-    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_save: nwg::Button,
 }
@@ -345,7 +372,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
     cb_volume: nwg::ComboBox<&'static str>,
 
-    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_save: nwg::Button,
 }
@@ -362,7 +389,7 @@ pub struct MouseUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_mouse_read: CheckBox,
 
-    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_save: nwg::Button,
 }
@@ -387,7 +414,7 @@ pub struct AdvancedUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     btn_reset: nwg::Button,
 
-    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_save: nwg::Button,
 }

@@ -41,7 +41,7 @@ pub struct HotKeysUi {
     layout2: nwg::GridLayout,
 
     #[nwg_control( list_style: nwg::ListViewStyle::Detailed, ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
-    #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 1, row_span: 6)]
+    #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 8)]
     pub(crate) data_view: nwg::ListView,
 
     #[nwg_control(text: "自定义: ")]
@@ -49,18 +49,18 @@ pub struct HotKeysUi {
     label: nwg::Label,
 
     #[nwg_control(readonly: true, text: "请输入新的热键!", flags: "DISABLED|VISIBLE")]
-    #[nwg_layout_item(layout: layout, col: 1, row: 7, col_span: 3)]
+    #[nwg_layout_item(layout: layout, col: 1, row: 8, col_span: 3)]
     text_box: nwg::TextInput,
 
     #[nwg_control(text: "设置 (&S)")]
-    #[nwg_layout_item(layout: layout, col: 4, row: 7)]
+    #[nwg_layout_item(layout: layout, col: 4, row: 8)]
     pub(crate) set_btn: nwg::Button,
 
     #[nwg_control(text: "清除 (&C)")]
-    #[nwg_layout_item(layout: layout, col: 5, row: 7)]
+    #[nwg_layout_item(layout: layout, col: 5, row: 8)]
     pub(crate) clear_btn: nwg::Button,
 
-    #[nwg_control(text: "保存 (&S)")]
+    #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     pub(crate) btn_save: nwg::Button,
 

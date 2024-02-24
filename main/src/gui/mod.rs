@@ -95,7 +95,7 @@ impl GuiProvider {
             build_form!(about, AboutForm, context, tx);
 
             let s = settings.show_hotkeys_notice.sender().clone();
-            tx.send((s.clone(), s.clone()));
+            tx.send((s.clone(), s.clone())).unwrap();
 
             nwg::dispatch_thread_events()
         });

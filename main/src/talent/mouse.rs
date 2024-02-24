@@ -59,3 +59,12 @@ async fn get_point(context: Arc<Context>) -> (i32, i32) {
         }
     }
 }
+
+/// 朗读鼠标元素
+pub(crate) fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
+    let uia = context.ui_automation.clone();
+    let ele = uia.element_from_point(x, y).unwrap();
+    let pf = context.performer.clone();
+    let h = context.main_handler.clone();
+    h.spawn(async move { pf.speak(ele).await });
+}

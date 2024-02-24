@@ -12,7 +12,8 @@
  */
 
 use super::keys::Keys;
-use crate::configs::config_operations::get_hotkeys;
+use crate::configs::config_operations::{get_hotkeys, get_mouse_read_state};
+use crate::talent::mouse::mouse_read;
 use crate::{
     commander::{CommandType, Talent},
     context::Context,
@@ -121,9 +122,7 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
     let context = context.clone();
 
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {
-        if (!context.config_manager.get_config().mouse_config.is_read)
-            || w_param.0 != WM_MOUSEMOVE as usize
-        {
+        if !get_mouse_read_state(context.clone()) || w_param.0 != WM_MOUSEMOVE as usize {
             return next();
         }
 
@@ -142,13 +141,4 @@ pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
         mouse_read(context.clone(), x, y);
         next()
     })
-}
-
-// 朗读鼠标元素
-fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
-    let uia = context.ui_automation.clone();
-    let ele = uia.element_from_point(x, y).unwrap();
-    let pf = context.performer.clone();
-    let h = context.main_handler.clone();
-    h.spawn(async move { pf.speak(ele).await });
 }

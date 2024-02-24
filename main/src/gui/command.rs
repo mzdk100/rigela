@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_operations::apply_mouse_config;
+use crate::configs::config_operations::{
+    apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
+};
+use crate::configs::general::Lang;
 use crate::gui::utils::UpdateState;
 use crate::{
     context::Context,
@@ -47,7 +50,13 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 }
 
 /// 检查更新。
+#[allow(unused)]
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
+    {
+        #[cfg(debug_assertions)]
+        return;
+    }
+
     context.work_runtime.spawn(async move {
         match (auto, check_update().await) {
             (true, UpdateState::None) => {
@@ -113,35 +122,58 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
 }
 
 /// 设置开机自动启动
-pub(crate) fn set_auto_start_cmd(_context: Arc<Context>, toggle: bool) {
+pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     // Todo
 
+    save_run_on_startup(context.clone(), toggle);
+
     let msg = if toggle {
-        "开启成功！"
+        "已开启开机自动启动！"
     } else {
-        "关闭成功！"
+        "已关闭开机自动启动！"
     };
-    message_box(HWND::default(), msg, "提示", MB_OK);
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(msg.to_string()).await;
+    });
 }
 
 /// 设置自动检测更新
-pub(crate) fn set_auto_check_update_cmd(_context: Arc<Context>, toggle: bool) {
+pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
     // Todo
 
+    save_auto_check_update(context.clone(), toggle);
+
     let msg = if toggle {
-        "开启成功！"
+        "已开启自动更新！"
     } else {
-        "关闭成功！"
+        "已关闭自动更新！"
     };
-    message_box(HWND::default(), msg, "提示", MB_OK);
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(msg.to_string()).await;
+    });
 }
 
 /// 设置语言
-pub(crate) fn set_lang_cmd(_context: Arc<Context>, index: usize) {
+pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
     // Todo
 
-    let msg = format!("设置成功！当前语言为：{}", index);
-    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+    let lang = match index {
+        1 => Lang::En,
+        _ => Lang::Zh,
+    };
+    save_lang(context.clone(), &lang);
+
+    let msg = if lang == Lang::Zh {
+        "已切换为中文！"
+    } else {
+        "switch to English！"
+    };
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(msg.to_string()).await;
+    });
 }
 
 /// 设置语音角色

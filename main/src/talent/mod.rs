@@ -12,7 +12,7 @@
  */
 
 mod form_browser;
-mod mouse;
+pub(crate) mod mouse;
 mod program;
 mod tts;
 
@@ -27,7 +27,7 @@ use crate::{
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
             CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
-            ViewFocusTalent, ViewWindowTitleTalent, StopTtsOutputTalent,
+            StopTtsOutputTalent, ViewFocusTalent, ViewWindowTitleTalent,
         },
         tts::{
             CacheToClipboardTalent, IncreaseTalent, MakeWordCacheCharTalent, NextCacheCharTalent,
@@ -91,7 +91,6 @@ impl TalentProvider {
             Arc::new(ViewFocusTalent),
             Arc::new(ViewWindowTitleTalent),
             Arc::new(StopTtsOutputTalent),
-
             // 窗口浏览能力
             Arc::new(ModePrevTalent),
             Arc::new(ModeNextTalent),
