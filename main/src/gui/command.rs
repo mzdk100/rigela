@@ -187,11 +187,30 @@ pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
 }
 
 /// 设置语音角色
-pub(crate) fn set_voice_cmd(_context: Arc<Context>, index: usize) {
-    // Todo
+pub(crate) fn set_voice_cmd(context: Arc<Context>, engine: String, name: String) {
+    let ctx = context.clone();
+    let tts = context.performer.get_tts().clone();
+    context.main_handler.spawn(async move {
+        let info = tts
+            .get_all_voiceinfo()
+            .await
+            .iter()
+            .find(|v| v.name == name && v.engine == engine)
+            .unwrap()
+            .clone();
 
-    let msg = format!("设置成功！当前语音角色：{}", index);
-    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+        let mut root = ctx.config_manager.get_config();
+        let cfg = TtsConfig {
+            voice: (info.engine, info.id),
+            ..root.tts_config
+        };
+        root.tts_config = cfg.clone();
+        ctx.config_manager.set_config(root);
+        tts.apply_config(&cfg.clone()).await;
+        ctx.performer
+            .speak(format!("角色:{}", info.name).to_string())
+            .await;
+    });
 }
 
 /// 设置语音速度

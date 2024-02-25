@@ -23,7 +23,7 @@ use crate::gui::command::{
     set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
 use crate::gui::forms::hotkeys::HotKeysUi;
-use crate::performer::tts::TtsProperty;
+use crate::performer::tts::{TtsProperty, VoiceInfo};
 use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
 use nwg::stretch::{
@@ -221,7 +221,13 @@ impl SettingsForm {
 
     fn on_role_changed(&self, ctrl: &VoiceUi) {
         let index = ctrl.cb_role.selection().unwrap();
-        set_voice_cmd(self.context.get().unwrap().clone(), index);
+        let all_voice = self.all_voices.lock().unwrap().clone();
+        let mut info = all_voice[index].split("_");
+        set_voice_cmd(
+            self.context.get().unwrap().clone(),
+            info.next().unwrap().to_string(),
+            info.next().unwrap().to_string(),
+        );
     }
 
     fn on_speed_changed(&self, ctrl: &VoiceUi) {
@@ -282,6 +288,8 @@ impl SettingsForm {
         self.general_ui.cb_lang.set_selection(Some(index));
 
         // 更新语音角色框显示
+        let format_voice_info = |v: &VoiceInfo| format!("{}_{}", v.engine, v.name);
+
         let ctx = self.context.get().unwrap().clone();
         let tts = ctx.performer.get_tts();
         let all_voice = self.all_voices.clone();
@@ -296,11 +304,11 @@ impl SettingsForm {
                 .get_all_voiceinfo()
                 .await
                 .iter()
-                .map(|v| format!("角色: {}:{}", v.engine, v.name))
+                .map(|v| format_voice_info(v))
                 .collect();
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Voice)).await;
             if let TtsProperty::Voice(v) = voiceinfo {
-                *voice.lock().unwrap().deref_mut() = format!("角色: {}:{}", v.engine, v.name);
+                *voice.lock().unwrap().deref_mut() = format_voice_info(&v);
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Speed)).await;
             if let TtsProperty::Speed(v) = voiceinfo {
@@ -345,9 +353,8 @@ impl SettingsForm {
     fn update_voice_notice(&self) {
         // Todo String to &str !!
 
-        // let mut items = self.all_voices.lock().unwrap();
-        // let items = items.iter().map(|x| x.as_str()).collect();
-        // self.voice_ui.cb_role.set_collection(items);
+        let items = self.all_voices.lock().unwrap().clone();
+        self.voice_ui.cb_role.set_collection(items);
 
         self.voice_ui
             .cb_speed
@@ -393,22 +400,6 @@ pub struct GeneralUi {
     btn_save: nwg::Button,
 }
 
-#[allow(unused)]
-fn get_num_1_100() -> Vec<&'static str> {
-    let mut res = vec![
-        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
-        "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",
-        "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46",
-        "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61",
-        "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76",
-        "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91",
-        "92", "93", "94", "95", "96", "97", "98", "99", "100",
-    ];
-    res.reverse();
-
-    res
-}
-
 #[derive(Default, NwgPartial)]
 pub struct VoiceUi {
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(4), max_row: Some(10))]
@@ -423,31 +414,31 @@ pub struct VoiceUi {
 
     #[nwg_control(collection: vec![] )]
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
-    cb_role: nwg::ComboBox<&'static str>,
+    cb_role: nwg::ComboBox<String>,
 
     #[nwg_control(text: "朗读语速 (&E)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     lb_speed: nwg::Label,
 
-    #[nwg_control(collection: get_num_1_100() )]
+    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
-    cb_speed: nwg::ComboBox<&'static str>,
+    cb_speed: nwg::ComboBox<String>,
 
     #[nwg_control(text: "朗读语调 (&P)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     lb_pitch: nwg::Label,
 
-    #[nwg_control(collection: get_num_1_100() )]
+    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
-    cb_pitch: nwg::ComboBox<&'static str>,
+    cb_pitch: nwg::ComboBox<String>,
 
     #[nwg_control(text: "朗读音量 (&O)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     lb_volume: nwg::Label,
 
-    #[nwg_control(collection: get_num_1_100() )]
+    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
-    cb_volume: nwg::ComboBox<&'static str>,
+    cb_volume: nwg::ComboBox<String>,
 
     #[nwg_control]
     update_voice_notice: nwg::Notice,
