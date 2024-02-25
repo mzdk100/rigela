@@ -112,7 +112,7 @@ async fn cache_to_clipboard(context: Arc<Context>) {
 async fn speak_tts_prop(context: Arc<Context>) {
     let tts = context.performer.get_tts();
 
-    let info = match tts.get_tts_prop_value().await {
+    let info = match tts.get_tts_prop_value(None).await {
         TtsProperty::Speed(v) => format!("语速: {}", v),
         TtsProperty::Volume(v) => format!("音量: {}", v),
         TtsProperty::Pitch(v) => format!("语调: {}", v),

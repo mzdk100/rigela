@@ -219,9 +219,9 @@ impl Tts {
     }
 
     /// 获取当前TTS属性值
-    pub(crate) async fn get_tts_prop_value(&self) -> TtsProperty {
+    pub(crate) async fn get_tts_prop_value(&self, item: Option<TtsPropertyItem>) -> TtsProperty {
         let config = self.context.config_manager.get_config().tts_config.clone();
-        match config.item {
+        match item.map(|x| x).unwrap_or(config.item) {
             TtsPropertyItem::Speed => TtsProperty::Speed(config.speed),
             TtsPropertyItem::Pitch => TtsProperty::Pitch(config.pitch),
             TtsPropertyItem::Volume => TtsProperty::Volume(config.volume),
@@ -276,7 +276,7 @@ impl Tts {
     }
 
     // 应用配置到TTS
-    async fn apply_config(&self, config: &TtsConfig) {
+    pub(crate) async fn apply_config(&self, config: &TtsConfig) {
         for (_, tts) in self.all_engines.lock().await.iter() {
             if config.voice.0 == tts.get_name() {
                 tts.set_voice(config.voice.1.clone()).await;
@@ -326,6 +326,10 @@ impl Tts {
             }
         }
         voices.first().unwrap().clone()
+    }
+
+    pub(crate) async fn get_all_voiceinfo(&self) -> Vec<VoiceInfo> {
+        self.all_voices.lock().await.clone()
     }
 }
 

@@ -11,11 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_manager::ConfigRoot;
 use crate::configs::config_operations::{
     apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
 };
 use crate::configs::general::Lang;
+use crate::configs::tts::TtsConfig;
 use crate::gui::utils::UpdateState;
+use crate::performer::tts::Tts;
 use crate::{
     context::Context,
     gui::utils::{check_update, confirm_update_exists, HELP_DIR},
@@ -192,27 +195,63 @@ pub(crate) fn set_voice_cmd(_context: Arc<Context>, index: usize) {
 }
 
 /// 设置语音速度
-pub(crate) fn set_speed_cmd(_context: Arc<Context>, index: usize) {
-    // Todo
+pub(crate) fn set_speed_cmd(context: Arc<Context>, index: usize) {
+    let speed = 100 - index as i32;
 
-    let msg = format!("设置成功！当前语音速度为：{}", index);
-    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+    let mut root = context.config_manager.get_config();
+    let cfg = TtsConfig {
+        speed,
+        ..root.tts_config
+    };
+    root.tts_config = cfg.clone();
+    context.config_manager.set_config(root);
+
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(format!("语速:{}", speed).to_string()).await;
+    });
 }
 
 /// 设置语音音调
-pub(crate) fn set_pitch_cmd(_context: Arc<Context>, index: usize) {
-    // Todo
+pub(crate) fn set_pitch_cmd(context: Arc<Context>, index: usize) {
+    let pitch = 100 - index as i32;
 
-    let msg = format!("设置成功！当前语音音调为：{}", index);
-    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+    let mut root = context.config_manager.get_config();
+    let cfg = TtsConfig {
+        pitch,
+        ..root.tts_config
+    };
+    root.tts_config = cfg.clone();
+    context.config_manager.set_config(root);
+
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(format!("音调:{}", pitch).to_string()).await;
+    });
 }
 
 /// 设置语音音量
-pub(crate) fn set_volume_cmd(_context: Arc<Context>, index: usize) {
-    // Todo
+pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
+    let volume = 100 - index as i32;
 
-    let msg = format!("设置成功！当前语音音量为：{}", index);
-    message_box(HWND::default(), msg.as_str(), "提示", MB_OK);
+    let mut root = context.config_manager.get_config();
+    let cfg = TtsConfig {
+        volume,
+        ..root.tts_config
+    };
+    root.tts_config = cfg.clone();
+    context.config_manager.set_config(root);
+
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(format!("音量:{}", volume).to_string()).await;
+    });
 }
 
 /// 设置鼠标朗读

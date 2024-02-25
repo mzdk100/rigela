@@ -16,12 +16,14 @@ use crate::configs::config_operations::{
     get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
 };
 use crate::configs::general::Lang;
+use crate::configs::tts::TtsPropertyItem;
 use crate::gui::command::{
     check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
     set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd, set_pitch_cmd,
     set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
 use crate::gui::forms::hotkeys::HotKeysUi;
+use crate::performer::tts::TtsProperty;
 use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
 use nwg::stretch::{
@@ -32,6 +34,7 @@ use nwg::{CheckBox, CheckBoxState, NoticeSender};
 use rigela_macros::GuiFormImpl;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::hook::WindowsHook;
 
@@ -49,6 +52,12 @@ pub struct SettingsForm {
     pub(crate) talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
     pub(crate) hotkeys: Arc<Mutex<Vec<Keys>>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
+
+    all_voices: Arc<Mutex<Vec<String>>>,
+    voice: Arc<Mutex<String>>,
+    speed: Arc<Mutex<i32>>,
+    pitch: Arc<Mutex<i32>>,
+    volume: Arc<Mutex<i32>>,
 
     #[nwg_control(size: (800, 600), position: (200, 200), title: "RigelA - 设置")]
     #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
@@ -94,6 +103,7 @@ pub struct SettingsForm {
     (cb_speed, OnComboxBoxSelection): [SettingsForm::on_speed_changed(SELF, CTRL)],
     (cb_pitch, OnComboxBoxSelection): [SettingsForm::on_pitch_changed(SELF, CTRL)],
     (cb_volume, OnComboxBoxSelection): [SettingsForm::on_volume_changed(SELF, CTRL)],
+    (update_voice_notice, OnNotice): [SettingsForm::update_voice_notice],
     (btn_save, OnButtonClick): [SettingsForm::on_save],
     )]
     voice_ui: VoiceUi,
@@ -272,6 +282,41 @@ impl SettingsForm {
         self.general_ui.cb_lang.set_selection(Some(index));
 
         // 更新语音角色框显示
+        let ctx = self.context.get().unwrap().clone();
+        let tts = ctx.performer.get_tts();
+        let all_voice = self.all_voices.clone();
+        let voice = self.voice.clone();
+        let speed = self.speed.clone();
+        let pitch = self.pitch.clone();
+        let volume = self.volume.clone();
+        let update_voice_sender = self.voice_ui.update_voice_notice.sender().clone();
+
+        ctx.work_runtime.spawn(async move {
+            *all_voice.lock().unwrap().deref_mut() = tts
+                .get_all_voiceinfo()
+                .await
+                .iter()
+                .map(|v| format!("角色: {}:{}", v.engine, v.name))
+                .collect();
+            let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Voice)).await;
+            if let TtsProperty::Voice(v) = voiceinfo {
+                *voice.lock().unwrap().deref_mut() = format!("角色: {}:{}", v.engine, v.name);
+            }
+            let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Speed)).await;
+            if let TtsProperty::Speed(v) = voiceinfo {
+                *speed.lock().unwrap().deref_mut() = v;
+            }
+            let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Pitch)).await;
+            if let TtsProperty::Pitch(v) = voiceinfo {
+                *pitch.lock().unwrap().deref_mut() = v;
+            }
+            let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Volume)).await;
+            if let TtsProperty::Volume(v) = voiceinfo {
+                *volume.lock().unwrap().deref_mut() = v;
+            }
+
+            update_voice_sender.notice();
+        });
 
         // 更新鼠标朗读显示
         let state = match get_mouse_read_state(self.context.get().unwrap().clone()) {
@@ -295,6 +340,24 @@ impl SettingsForm {
         self.hotkeys_ui.data_view.set_focus();
         bring_window_front!(&self.window);
         self.window.set_visible(true);
+    }
+
+    fn update_voice_notice(&self) {
+        // Todo String to &str !!
+
+        // let mut items = self.all_voices.lock().unwrap();
+        // let items = items.iter().map(|x| x.as_str()).collect();
+        // self.voice_ui.cb_role.set_collection(items);
+
+        self.voice_ui
+            .cb_speed
+            .set_selection(Some((100 - self.speed.lock().unwrap().clone()) as usize));
+        self.voice_ui
+            .cb_pitch
+            .set_selection(Some((100 - self.pitch.lock().unwrap().clone()) as usize));
+        self.voice_ui
+            .cb_volume
+            .set_selection(Some((100 - self.volume.lock().unwrap().clone()) as usize));
     }
 }
 #[derive(Default, NwgPartial)]
@@ -332,7 +395,7 @@ pub struct GeneralUi {
 
 #[allow(unused)]
 fn get_num_1_100() -> Vec<&'static str> {
-    vec![
+    let mut res = vec![
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
         "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",
         "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46",
@@ -340,7 +403,10 @@ fn get_num_1_100() -> Vec<&'static str> {
         "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76",
         "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91",
         "92", "93", "94", "95", "96", "97", "98", "99", "100",
-    ]
+    ];
+    res.reverse();
+
+    res
 }
 
 #[derive(Default, NwgPartial)]
@@ -382,6 +448,9 @@ pub struct VoiceUi {
     #[nwg_control(collection: get_num_1_100() )]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
     cb_volume: nwg::ComboBox<&'static str>,
+
+    #[nwg_control]
+    update_voice_notice: nwg::Notice,
 
     #[nwg_control(text: "关闭 (&C)")]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
