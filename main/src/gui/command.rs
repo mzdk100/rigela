@@ -11,23 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_manager::ConfigRoot;
 use crate::configs::config_operations::{
     apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
 };
 use crate::configs::general::Lang;
 use crate::configs::tts::TtsConfig;
 use crate::gui::utils::UpdateState;
-use crate::performer::tts::Tts;
 use crate::{
     context::Context,
     gui::utils::{check_update, confirm_update_exists, HELP_DIR},
     talent::Talented,
 };
 use log::error;
+use nwg::{message, MessageParams};
 use rigela_utils::get_program_directory;
+use std::ffi::OsString;
 use std::path::PathBuf;
+use std::time::Duration;
 use std::{env::args, process::Command, sync::Arc};
+use tokio::time::sleep;
 use win_wrap::common::{message_box, set_startup_registry, HWND, MB_OK};
 
 /// 退出程序。
@@ -284,22 +286,37 @@ pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
 }
 
 /// 导出配置
-pub(crate) fn export_config_cmd(_context: Arc<Context>) {
+pub(crate) fn export_config_cmd(_context: Arc<Context>, path: OsString) {
     // Todo
 
-    message_box(HWND::default(), "导出配置成功！", "提示", MB_OK);
+    message_box(HWND::default(), path.to_str().unwrap(), "提示", MB_OK);
 }
 
 /// 导入配置
-pub(crate) fn import_config_cmd(_context: Arc<Context>) {
+pub(crate) fn import_config_cmd(_context: Arc<Context>, path: OsString) {
     // Todo
 
-    message_box(HWND::default(), "导入配置成功！", "提示", MB_OK);
+    message_box(HWND::default(), path.to_str().unwrap(), "提示", MB_OK);
 }
 
 /// 还原默认配置
-pub(crate) fn reset_config_cmd(_context: Arc<Context>) {
-    // Todo
+pub(crate) fn reset_config_cmd(context: Arc<Context>) {
+    let info = "您确定要恢复所有的设置到默认配置吗?";
 
-    message_box(HWND::default(), "恢复默认配置成功！", "提示", MB_OK);
+    let msg_params = MessageParams {
+        title: "确认",
+        content: &info,
+        buttons: nwg::MessageButtons::OkCancel,
+        icons: nwg::MessageIcons::Question,
+    };
+    if message(&msg_params) == nwg::MessageChoice::Cancel {
+        return;
+    }
+
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        // Todo: 提示语音没有播报
+        pf.speak("恢复完成!".to_string()).await;
+        sleep(Duration::from_millis(1000)).await;
+    });
 }

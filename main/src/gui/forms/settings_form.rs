@@ -251,11 +251,17 @@ impl SettingsForm {
     }
 
     fn on_import(&self) {
-        import_config_cmd(self.context.get().unwrap().clone());
+        if self.advanced_ui.import_dialog.run(Some(&self.window)) {
+            let path = self.advanced_ui.import_dialog.get_selected_item().unwrap();
+            import_config_cmd(self.context.get().unwrap().clone(), path);
+        }
     }
 
     fn on_export(&self) {
-        export_config_cmd(self.context.get().unwrap().clone());
+        if self.advanced_ui.export_dialog.run(Some(&self.window)) {
+            let path = self.advanced_ui.export_dialog.get_selected_item().unwrap();
+            export_config_cmd(self.context.get().unwrap().clone(), path);
+        }
     }
 
     fn on_reset(&self) {
@@ -467,19 +473,25 @@ pub struct MouseUi {
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
+    #[nwg_resource(title: "请选择需要导出的文件夹:", action: nwg::FileDialogAction::Save)]
+    export_dialog: nwg::FileDialog,
+
+    #[nwg_resource(title: "请选择需要导入的文件:", action: nwg::FileDialogAction::Open)]
+    import_dialog: nwg::FileDialog,
+
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "导入配置... (&I)")]
-    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
-    btn_import: nwg::Button,
-
     #[nwg_control(text: "导出配置... (&E)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     btn_export: nwg::Button,
+
+    #[nwg_control(text: "导入配置... (&I)")]
+    #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    btn_import: nwg::Button,
 
     #[nwg_control(text: "恢复默认配置 (&R)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
