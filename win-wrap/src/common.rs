@@ -234,7 +234,7 @@ pub fn unhook_windows_hook_ex(h_hook: HHOOK) -> Result<()> {
  * `h_object` 打开对象的有效句柄。
  * */
 pub fn close_handle(h_object: HANDLE) {
-    unsafe { CloseHandle(h_object) }.expect("Can't close the object handle.")
+    unsafe { CloseHandle(h_object) }.unwrap_or(())
 }
 
 /**
