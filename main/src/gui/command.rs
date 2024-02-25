@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_manager::ConfigRoot;
 use crate::configs::config_operations::{
     apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
 };
@@ -134,9 +135,9 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
 /// 设置开机自动启动
 pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     let path = args().nth(0).unwrap();
-    set_startup_registry("RigelA", &PathBuf::from(path), toggle)
-        .expect("Failed to set startup registry");
-
+    if set_startup_registry("RigelA", &PathBuf::from(path), toggle).is_err() {
+        error!("registry operation failed! ");
+    }
     save_run_on_startup(context.clone(), toggle);
 
     let msg = if toggle {
@@ -152,8 +153,6 @@ pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
 
 /// 设置自动检测更新
 pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
-    // Todo
-
     save_auto_check_update(context.clone(), toggle);
 
     let msg = if toggle {
@@ -207,7 +206,7 @@ pub(crate) fn set_voice_cmd(context: Arc<Context>, engine: String, name: String)
             ..root.tts_config
         };
         root.tts_config = cfg.clone();
-        ctx.config_manager.set_config(root);
+        ctx.config_manager.set_config(&root);
         tts.apply_config(&cfg.clone()).await;
         ctx.performer
             .speak(format!("角色:{}", info.name).to_string())
@@ -225,7 +224,7 @@ pub(crate) fn set_speed_cmd(context: Arc<Context>, index: usize) {
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 
     let tts = context.performer.get_tts();
     let pf = context.performer.clone();
@@ -245,7 +244,7 @@ pub(crate) fn set_pitch_cmd(context: Arc<Context>, index: usize) {
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 
     let tts = context.performer.get_tts();
     let pf = context.performer.clone();
@@ -265,7 +264,7 @@ pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 
     let tts = context.performer.get_tts();
     let pf = context.performer.clone();
@@ -313,10 +312,27 @@ pub(crate) fn reset_config_cmd(context: Arc<Context>) {
         return;
     }
 
+    // 保存配置的默认值
+    let cfg = ConfigRoot::default();
+    context.config_manager.set_config(&cfg);
+
+    // 关闭开机自动启动
+    let path = args().nth(0).unwrap();
+    if set_startup_registry("RigelA", &PathBuf::from(path), false).is_err() {
+        error!("关闭开机自动启动失败");
+    }
+
     let pf = context.performer.clone();
+    let ctx = context.clone();
+    let tts = context.performer.get_tts();
+    let tts_cfg = cfg.tts_config.clone();
     context.main_handler.spawn(async move {
-        // Todo: 提示语音没有播报
+        // 应用默认配置到TTS
+        tts.apply_config(&tts_cfg.clone()).await;
+
+        // 重新显示设置界面，更新界面上的状态值
+        ctx.gui_provider.show_settings_form();
+
         pf.speak("恢复完成!".to_string()).await;
-        sleep(Duration::from_millis(1000)).await;
     });
 }

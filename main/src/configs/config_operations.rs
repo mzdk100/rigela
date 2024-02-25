@@ -26,7 +26,7 @@ pub(crate) fn get_mouse_read_state(context: Arc<Context>) -> bool {
 pub(crate) fn apply_mouse_config(context: Arc<Context>, is_read: bool) {
     let mut root = context.config_manager.get_config();
     root.mouse_config = MouseConfig { is_read };
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 }
 
 // ------  键盘配置  -------
@@ -41,7 +41,7 @@ pub(crate) fn get_hotkeys(context: Arc<Context>) -> HashMap<String, Vec<Keys>> {
 pub(crate) fn save_hotkeys(context: Arc<Context>, hotkeys: HashMap<String, Vec<Keys>>) {
     let mut config = context.config_manager.get_config();
     config.hotkeys_config.talent_keys = hotkeys;
-    context.config_manager.set_config(config);
+    context.config_manager.set_config(&config);
 }
 
 // ------  常规配置  -------
@@ -59,7 +59,7 @@ pub(crate) fn save_run_on_startup(context: Arc<Context>, run_on_startup: bool) {
         run_on_startup,
         ..root.general_config
     };
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 }
 
 /// 获取是否自动更新
@@ -75,7 +75,7 @@ pub(crate) fn save_auto_check_update(context: Arc<Context>, auto_check_update: b
         auto_check_update,
         ..root.general_config
     };
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 }
 
 /// 获取当前语言
@@ -91,5 +91,5 @@ pub(crate) fn save_lang(context: Arc<Context>, lang: &Lang) {
         lang: lang.clone(),
         ..root.general_config
     };
-    context.config_manager.set_config(root);
+    context.config_manager.set_config(&root);
 }

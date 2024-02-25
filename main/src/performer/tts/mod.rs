@@ -215,7 +215,7 @@ impl Tts {
         };
 
         self.apply_config(&root.tts_config).await;
-        self.context.config_manager.set_config(root);
+        self.context.config_manager.set_config(&root);
     }
 
     /// 获取当前TTS属性值
@@ -304,7 +304,7 @@ impl Tts {
             },
         };
         self.apply_config(&root.tts_config).await;
-        self.context.config_manager.set_config(root);
+        self.context.config_manager.set_config(&root);
     }
 
     async fn switch_voice(

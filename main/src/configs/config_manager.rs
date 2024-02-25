@@ -71,7 +71,7 @@ impl ConfigManager {
     }
 
     /// 修改当前的配置，修改完写入配置文件
-    pub(crate) fn set_config(&self, config: ConfigRoot) {
+    pub(crate) fn set_config(&self, config: &ConfigRoot) {
         *self.config.lock().unwrap().deref_mut() = config.clone();
         *self.update_time.lock().unwrap().deref_mut() = Instant::now();
         self.write();

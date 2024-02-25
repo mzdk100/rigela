@@ -14,7 +14,8 @@
 use std::ffi::CString;
 use std::path::PathBuf;
 use windows::Win32::System::Registry::{
-    RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW, KEY_WRITE, REG_SZ,
+    RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW, KEY_WRITE,
+    REG_SZ,
 };
 pub use windows::{
     core::Result,
@@ -432,7 +433,18 @@ pub fn set_startup_registry(
         if enable {
             RegSetValueExW(hkey, &HSTRING::from(program_name), 0, REG_SZ, Some(&path))?;
         } else {
-            RegDeleteValueW(hkey, &HSTRING::from(program_name))?;
+            let mut data = 0;
+            let res = RegQueryValueExW(
+                hkey,
+                &HSTRING::from(program_name),
+                None,
+                None,
+                None,
+                Some(&mut data),
+            )?;
+            if data != 0 {
+                RegDeleteValueW(hkey, &HSTRING::from(program_name))?;
+            }
         }
         RegCloseKey(hkey)?;
     }
