@@ -16,6 +16,11 @@ use crate::performer::sound::SoundArgument::WithFreq;
 use std::sync::Arc;
 use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
 
+//noinspection SpellCheckingInspection
+/**
+ * 订阅进度通知事件。
+ * `context` 读屏框架的上下文环境。
+ * */
 pub(crate) async fn subscribe_progress_events(context: Arc<Context>) {
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
@@ -33,9 +38,9 @@ pub(crate) async fn subscribe_progress_events(context: Arc<Context>) {
                 .get_value(child)
                 .trim_matches(|c| c == '%' || c == ' ')
                 .parse::<u32>()
-            else {
-                return;
-            };
+                else {
+                    return;
+                };
             let performer = performer.clone();
 
             main_handler.spawn(async move {

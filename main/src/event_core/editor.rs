@@ -23,6 +23,11 @@ use log::error;
 use std::sync::Arc;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
 
+//noinspection SpellCheckingInspection
+/**
+ * 订阅编辑器事件。
+ * `context` 读屏框架的上下文环境。
+ * */
 pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_uia_events(context.clone()).await;
     subscribe_ia2_events(context).await;

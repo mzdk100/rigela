@@ -15,8 +15,10 @@ use crate::model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet};
 use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
-use tokio::net::windows::named_pipe::NamedPipeClient;
-use tokio::sync::Mutex;
+use tokio::{
+    net::windows::named_pipe::NamedPipeClient,
+    sync::Mutex,
+};
 
 #[derive(Debug)]
 pub struct Proxy32Client {
@@ -47,33 +49,31 @@ impl Proxy32Client {
             data: data.clone(),
         };
         {
-            let mut lock = self.stream.lock().await;
-            if let Err(e) = lock.send(&packet).await {
+            if let Err(e) = self.stream.lock().await.send(&packet).await {
                 error!("{}", e);
             }
-            let res = lock.recv().await;
-            match res {
-                Err(PipeStreamError::ReadEof) => return None,
-                Ok(p) if p.id == id => return Some(p.data),
-                Ok(p) => {
-                    self.cached.lock().await.0.insert(p.id, p.data);
+        }
+        let res = loop {
+            let lock = self.cached.lock().await;
+
+            match lock.0.get(&id) {
+                None => {
+                    drop(lock);
+                    let res = self.stream.lock().await.recv().await;
+                    match res {
+                        Err(PipeStreamError::ReadEof) => return None,
+                        Ok(p) if p.id == id => return Some(p.data),
+                        Ok(p) => {
+                            self.cached.lock().await.0.insert(p.id, p.data);
+                        }
+                        _ => {}
+                    }
                 }
-                _ => {}
+                Some(x) => break x.clone(),
             }
-        }
-        {
-            let mut lock = self.cached.lock().await;
-            let res = match lock.0.get(&id) {
-                None => None,
-                Some(x) => Some(x.clone()),
-            };
-            if let Some(data) = res {
-                lock.0.remove(&packet.id);
-                Some(data)
-            } else {
-                None
-            }
-        }
+        };
+        self.cached.lock().await.0.remove(&id);
+        Some(res)
     }
 
     /**

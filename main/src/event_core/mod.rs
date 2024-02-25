@@ -15,14 +15,18 @@ mod dialog;
 mod editor;
 mod focus;
 mod ime;
+mod input;
 mod progress;
 
 use crate::{
     context::Context,
     event_core::{
-        dialog::subscribe_dialog_events, editor::subscribe_editor_events,
-        focus::subscribe_focus_events, ime::subscribe_ime_events,
+        dialog::subscribe_dialog_events,
+        editor::subscribe_editor_events,
+        focus::subscribe_focus_events,
+        ime::subscribe_ime_events,
         progress::subscribe_progress_events,
+        input::subscribe_input_events,
     },
 };
 use std::{
@@ -94,7 +98,7 @@ impl EventCore {
         subscribe_dialog_events(context.clone()).await;
 
         // 订阅输入事件
-        speak_input(context.clone()).await;
+        subscribe_input_events(context.clone()).await;
 
         // 订阅输入法候选事件
         subscribe_ime_events(context.clone()).await;
@@ -127,20 +131,4 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
             }
         });
     });
-}
-
-// 朗读输入
-async fn speak_input(context: Arc<Context>) {
-    let ctx = context.clone();
-
-    context
-        .peeper_server
-        .add_on_input_char_listener(move |c| {
-            let performer = ctx.performer.clone();
-
-            ctx.main_handler.spawn(async move {
-                performer.speak(c).await;
-            });
-        })
-        .await;
 }

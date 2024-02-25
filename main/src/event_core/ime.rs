@@ -13,12 +13,11 @@
 
 use crate::{context::Context, performer::sound::SoundArgument::Single};
 use peeper::model::CandidateList;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc};
 use tokio::io::AsyncReadExt;
 
 pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 
-// 订阅输入法的事件
 pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
     let words = match context.resource_provider.open("words.txt").await {
         Ok(mut f) => {
@@ -70,20 +69,13 @@ fn handle_ime_candidate(
     words: Arc<HashMap<String, String>>,
 ) {
     let performer = context.performer.clone();
-    let event_core = context.event_core.clone();
 
-    context.main_handler.spawn(async move {
+    context.task_manager.push("ime", context.main_handler.spawn(async move {
         let candidate = candidate_list.list[candidate_list.selection as usize]
             .clone()
             .trim_end()
             .to_string();
         if candidate.is_empty() {
-            return;
-        }
-        if event_core
-            .should_ignore(candidate.clone(), Duration::from_millis(100))
-            .await
-        {
             return;
         }
         if !performer.speak(candidate_list.clone()).await {
@@ -95,5 +87,5 @@ fn handle_ime_candidate(
             // 朗读候选文字的解释词
             performer.speak(x.clone()).await;
         }
-    });
+    }));
 }

@@ -11,11 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::GuiProvider;
 use crate::{
-    browser::form_browser::FormBrowser, commander::Commander,
-    configs::config_manager::ConfigManager, event_core, performer::Performer,
-    resources::ResourceProvider, talent::TalentProvider, terminator::Terminator,
+    gui::GuiProvider,
+    browser::form_browser::FormBrowser,
+    commander::Commander,
+    configs::config_manager::ConfigManager,
+    event_core,
+    performer::Performer,
+    resources::ResourceProvider,
+    talent::TalentProvider,
+    terminator::Terminator,
+    tasks::TaskManager,
 };
 #[cfg(target_arch = "x86_64")]
 use crate::proxy32::Proxy32;
@@ -47,6 +53,7 @@ pub(crate) struct Context {
     #[cfg(target_arch = "x86_64")]
     pub(crate) proxy32: Arc<Proxy32>,
     pub(crate) talent_provider: Arc<TalentProvider>,
+    pub(crate) task_manager: Arc<TaskManager>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
 }
@@ -89,11 +96,14 @@ impl Context {
         #[cfg(target_arch = "x86_64")]
             let proxy32 = Proxy32::new();
 
-        // 创建资源访问器
-        let resources = ResourceProvider::new();
+        // 创建资源提供者
+        let resource_provider = ResourceProvider::new();
 
-        // 创建能力访问器
-        let talent_accessor = TalentProvider::new();
+        // 创建能力提供者
+        let talent_provider = TalentProvider::new();
+
+        // 创建任务管理器
+        let task_manager = TaskManager::new();
 
         // 创建UiAutomation
         let ui_automation = UiAutomation::new();
@@ -117,8 +127,9 @@ impl Context {
             performer: performer.into(),
             #[cfg(target_arch = "x86_64")]
             proxy32: proxy32.into(),
-            resource_provider: resources.into(),
-            talent_provider: talent_accessor.into(),
+            resource_provider: resource_provider.into(),
+            talent_provider: talent_provider.into(),
+            task_manager: task_manager.into(),
             terminator: terminator.into(),
             ui_automation: ui_automation.into(),
             work_runtime: work_runtime.into(),
@@ -169,6 +180,7 @@ impl Clone for Context {
             proxy32: self.proxy32.clone(),
             resource_provider: self.resource_provider.clone(),
             talent_provider: self.talent_provider.clone(),
+            task_manager: self.task_manager.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
             work_runtime: self.work_runtime.clone(),
