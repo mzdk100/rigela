@@ -78,7 +78,11 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
 
         // 启动更新器
         let child = match confirm_update_exists().await {
-            Ok(_) => Command::new(get_program_directory().join("libs/update.exe"))
+            Ok(_) => Command::new("cmd.exe")
+                // 需要使用cmd.exe辅助启动，使用start参数不等待，否则当更新器尝试kill主进程时，更新器自己也会被kill
+                .arg("/c")
+                .arg("start")
+                .arg(get_program_directory().join("libs/update.exe"))
                 .arg(args().nth(0).unwrap())
                 .spawn(),
             Err(_) => {

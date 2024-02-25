@@ -20,7 +20,6 @@ use std::{
     env::args,
     env::temp_dir,
     fs::{copy, remove_file},
-    io::{Error, ErrorKind},
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -100,15 +99,10 @@ pub(crate) async fn download_and_replace_bin(
     }
     drop(output_file);
 
-    if !kill().await {
-        return Err(Box::new(Error::new(
-            ErrorKind::Other,
-            "Ca n't kill the process.",
-        )));
-    }
-
     // 替换
     let target = args().nth(1).unwrap();
+    info!("Killing process: {}.", &target);
+    kill().await;
     info!("Copying {} to {}.", path.display(), &target);
     copy(&path, Path::new(&target))?;
     info!("Removing {}.", &path.display());
