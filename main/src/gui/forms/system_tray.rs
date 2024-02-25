@@ -11,14 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_operations::get_auto_check_update;
 use crate::{
     context::Context,
     gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd},
 };
 use nwd::NwgUi;
 use nwg::NoticeSender;
-use std::sync::{Arc, OnceLock};
 use rigela_macros::GuiFormImpl;
+use std::sync::{Arc, OnceLock};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SystemTray {
@@ -62,7 +63,9 @@ pub struct SystemTray {
 impl SystemTray {
     fn on_init(&self) {
         // 启动程序自动检查更新
-        check_update_cmd(self.context.get().unwrap().clone(), true);
+        if get_auto_check_update(self.context.get().unwrap().clone()) {
+            check_update_cmd(self.context.get().unwrap().clone(), true);
+        }
     }
 
     fn show_menu(&self) {

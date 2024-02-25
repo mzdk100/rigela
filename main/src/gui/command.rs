@@ -23,8 +23,9 @@ use crate::{
 };
 use log::error;
 use rigela_utils::get_program_directory;
+use std::path::PathBuf;
 use std::{env::args, process::Command, sync::Arc};
-use win_wrap::common::{message_box, HWND, MB_OK};
+use win_wrap::common::{message_box, set_startup_registry, HWND, MB_OK};
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {
@@ -123,7 +124,9 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
 
 /// 设置开机自动启动
 pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
-    // 在注册表添加开机自动启动
+    let path = args().nth(0).unwrap();
+    set_startup_registry("RigelA", &PathBuf::from(path), toggle)
+        .expect("Failed to set startup registry");
 
     save_run_on_startup(context.clone(), toggle);
 

@@ -12,6 +12,10 @@
  */
 
 use std::ffi::CString;
+use std::path::PathBuf;
+use windows::Win32::System::Registry::{
+    RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW, KEY_WRITE, REG_SZ,
+};
 pub use windows::{
     core::Result,
     Win32::{
@@ -20,6 +24,7 @@ pub use windows::{
             WAIT_EVENT, WPARAM,
         },
         Globalization::HIMC,
+        System::Registry::{HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_USERS},
         System::SystemServices::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
@@ -398,4 +403,39 @@ pub fn message_box(h_wnd: HWND, text: &str, caption: &str, r#type: MESSAGEBOX_ST
     unsafe {
         MessageBoxW(h_wnd, &HSTRING::from(text), &HSTRING::from(caption), r#type);
     }
+}
+
+/// 添加开机自启
+pub fn set_startup_registry(
+    program_name: &str,
+    program_path: &PathBuf,
+    enable: bool,
+) -> Result<()> {
+    let path = program_path.to_str().unwrap();
+    let path = path.encode_utf16().chain(Some(0)).collect::<Vec<_>>();
+    let path: Vec<u8> = path
+        .iter()
+        .flat_map(|&x| x.to_le_bytes().to_vec())
+        .collect();
+
+    let mut hkey: HKEY = HKEY::default();
+    let software_key = r#"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"#;
+
+    unsafe {
+        RegOpenKeyExW(
+            HKEY_CURRENT_USER,
+            &HSTRING::from(software_key),
+            0,
+            KEY_WRITE,
+            &mut hkey,
+        )?;
+        if enable {
+            RegSetValueExW(hkey, &HSTRING::from(program_name), 0, REG_SZ, Some(&path))?;
+        } else {
+            RegDeleteValueW(hkey, &HSTRING::from(program_name))?;
+        }
+        RegCloseKey(hkey)?;
+    }
+
+    Ok(())
 }
