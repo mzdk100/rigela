@@ -291,10 +291,13 @@ pub(crate) fn export_config_cmd(_context: Arc<Context>, path: PathBuf) {
 }
 
 /// 导入配置
-pub(crate) fn import_config_cmd(_context: Arc<Context>, path: PathBuf) {
+pub(crate) fn import_config_cmd(context: Arc<Context>, path: PathBuf) {
     if restore_data(&path).is_err() {
         error!("恢复数据失败");
     }
+
+    context.config_manager.init();
+    reapply_config(context.clone());
 
     message_box(HWND::default(), "导入成功!", "提示", MB_OK);
 }
@@ -302,7 +305,6 @@ pub(crate) fn import_config_cmd(_context: Arc<Context>, path: PathBuf) {
 /// 还原默认配置
 pub(crate) fn reset_config_cmd(context: Arc<Context>) {
     let info = "您确定要恢复所有的设置到默认配置吗?";
-
     let msg_params = MessageParams {
         title: "确认",
         content: &info,
@@ -313,22 +315,26 @@ pub(crate) fn reset_config_cmd(context: Arc<Context>) {
         return;
     }
 
-    // 保存配置的默认值
-    let cfg = ConfigRoot::default();
-    context.config_manager.set_config(&cfg);
+    context.config_manager.set_config(&ConfigRoot::default());
+    reapply_config(context.clone());
+}
 
-    // 关闭开机自动启动
+// 重新应用配置
+fn reapply_config(context: Arc<Context>) {
+    let config = context.config_manager.get_config();
+
     let path = args().nth(0).unwrap();
-    if set_startup_registry("RigelA", &PathBuf::from(path), false).is_err() {
+    let enable = config.general_config.run_on_startup.clone();
+    if set_startup_registry("RigelA", &PathBuf::from(path), enable).is_err() {
         error!("关闭开机自动启动失败");
     }
 
     let pf = context.performer.clone();
     let ctx = context.clone();
     let tts = context.performer.get_tts();
-    let tts_cfg = cfg.tts_config.clone();
+    let tts_cfg = config.tts_config.clone();
     context.main_handler.spawn(async move {
-        // 应用默认配置到TTS
+        // 应用配置到TTS
         tts.apply_config(&tts_cfg.clone()).await;
 
         // 重新显示设置界面，更新界面上的状态值
