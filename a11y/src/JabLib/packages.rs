@@ -18,15 +18,11 @@ const MAX_STRING_SIZE: u32 = 1024;
 #[allow(unused)]
 const SHORT_STRING_SIZE: u32 = 256;
 
-#[allow(unused)]
+pub(crate) type JBoolean = u8;
 pub(crate) type JChar = u16;
-#[allow(unused)]
 pub(crate) type JInt = i32;
-#[allow(unused)]
 pub(crate) type JFloat = f32;
-#[allow(unused)]
 pub(crate) type JLong = i64;
-#[allow(unused)]
 pub(crate) type JObject = *const ();
 
 #[cfg(target_arch = "x86")]
@@ -880,4 +876,215 @@ pub(crate) struct GetAccessibleKeyBindingsPackage {
     accessibleContext: JObject64,
     /// the key bindings
     rAccessibleKeyBindings: AccessibleKeyBindings,
+}
+
+
+/**
+ ******************************************************
+ *  AccessibleIcon packages
+ ******************************************************
+ * */
+const MAX_ICON_INFO: u32 = 8;
+
+/// an icon assocated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleIconInfo {
+    /// icon description
+    pub(crate) description: [u16; SHORT_STRING_SIZE as usize],
+    /// icon height
+    pub(crate) height: JInt,
+    /// icon width
+    pub(crate) width: JInt,
+}
+
+/// all the icons associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleIcons {
+    /// number of icons
+    pub(crate) iconsCount: JInt,
+    /// the icons
+    pub(crate) iconInfo: [AccessibleIconInfo; MAX_ICON_INFO as usize],
+}
+
+/// struct to get the icons associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleIconsPackage {
+    /// the virtual machine id
+    pub(crate) vmID: i32,
+    /// the component
+    pub(crate) accessibleContext: JObject64,
+    /// the icons
+    pub(crate) rAccessibleIcons: AccessibleIcons,
+}
+
+
+/**
+ ******************************************************
+ *  AccessibleTable packages
+ ******************************************************
+ * */
+
+const MAX_TABLE_SELECTIONS: u32 = 64;
+
+/// table information
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTableInfo {
+    /// AccesibleContext
+    pub(crate) caption: JObject64,
+    /// AccessibleContext
+    pub(crate) summary: JObject64,
+    pub(crate) rowCount: JInt,
+    pub(crate) columnCount: JInt,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) accessibleTable: JObject64,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableInfoPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) rTableInfo: AccessibleTableInfo,
+}
+
+/// table cell information
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleTableCellInfo {
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) index: JInt,
+    pub(crate) row: JInt,
+    pub(crate) column: JInt,
+    pub(crate) rowExtent: JInt,
+    pub(crate) columnExtent: JInt,
+    pub(crate) isSelected: JBoolean,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableCellInfoPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) row: JInt,
+    pub(crate) column: JInt,
+    pub(crate) rTableCellInfo: AccessibleTableCellInfo,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableRowHeaderPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) rTableInfo: AccessibleTableInfo,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableColumnHeaderPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) rTableInfo: AccessibleTableInfo,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableRowDescriptionPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) row: JInt,
+    pub(crate) rAccessibleContext: JObject64,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableColumnDescriptionPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleContext: JObject64,
+    pub(crate) column: JInt,
+    pub(crate) rAccessibleContext: JObject64,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableRowSelectionCountPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) rCount: JInt,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct IsAccessibleTableRowSelectedPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) row: JInt,
+    pub(crate) rResult: JBoolean,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableRowSelectionsPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) count: JInt,
+    pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableColumnSelectionCountPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) rCount: JInt,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct IsAccessibleTableColumnSelectedPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) column: JInt,
+    pub(crate) rResult: JBoolean,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableColumnSelectionsPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) count: JInt,
+    pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
+}
+
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableRowPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) index: JInt,
+    pub(crate) rRow: JInt,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableColumnPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) index: JInt,
+    pub(crate) rColumn: JInt,
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleTableIndexPackage {
+    pub(crate) vmID: i32,
+    pub(crate) accessibleTable: JObject64,
+    pub(crate) row: JInt,
+    pub(crate) column: JInt,
+    pub(crate) rIndex: JInt,
 }

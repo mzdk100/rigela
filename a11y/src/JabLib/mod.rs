@@ -27,6 +27,10 @@ use crate::{
             AccessibleTextAttributesInfo,
             JavaObject,
             VisibleChildrenInfo,
+            AccessibleIcons,
+            AccessibleKeyBindings,
+            AccessibleRelationSetInfo,
+            AccessibleTableInfo,
         }
     },
     jab,
@@ -46,7 +50,6 @@ use windows::{
     core::{Error, HSTRING},
     Win32::Foundation::S_FALSE,
 };
-use crate::JabLib::packages::{AccessibleKeyBindings, AccessibleRelationSetInfo};
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -508,6 +511,70 @@ impl JabLib {
         }
         Some(info)
     }
+
+    /**
+     * 返回与组件关联的图标列表。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_icons(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleIcons> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_icons, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 将指定表的表行标题作为表返回。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_table_row_header(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_table_row_header, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 将指定表的表列标题作为表返回。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_table_column_header(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_table_column_header, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 返回指定表中指定列的说明。列说明符是从零开始的。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `column` 列索引。
+     * */
+    pub(crate) fn get_accessible_table_column_description(&self, vm_id: i32, ac: AccessibleContext, column: JInt) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(self.h_module, get_accessible_table_column_description, vm_id, ac,column)
+    }
+
+    /**
+     * 返回指定表中指定行的描述。行说明符是从零开始的。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `row` 行索引。
+     * */
+    pub(crate) fn get_accessible_table_row_description(&self, vm_id: i32, ac: AccessibleContext, row: JInt) -> Option<AccessibleContext> {
+        pump_waiting_messages();
+        jab!(self.h_module, get_accessible_table_row_description, vm_id, ac,row)
+    }
 }
 
 impl Drop for JabLib {
@@ -572,12 +639,14 @@ mod test_jab {
             dbg!(descendent);
             jab.release_java_object(vm_id, descendent);
         }
-        test1(&jab, vm_id, ac);
+        //test1(&jab, vm_id, ac);
         dbg!(jab.request_focus(vm_id, ac));
         dbg!(jab.get_visible_children_count(vm_id, ac));
         dbg!(jab.get_visible_children(vm_id, ac, 0));
         dbg!(jab.get_events_waiting());
         dbg!(jab.get_caret_location(vm_id, ac, 0));
+        dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
+        dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
 
         jab.release_java_object(vm_id, ac);
 
@@ -594,5 +663,8 @@ mod test_jab {
         dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
         dbg!(jab.get_accessible_relation_set(vm_id, ac));
         dbg!(jab.get_accessible_key_bindings(vm_id, ac));
+        dbg!(jab.get_accessible_icons(vm_id, ac));
+        dbg!(jab.get_accessible_table_row_header(vm_id, ac));
+        dbg!(jab.get_accessible_table_column_header(vm_id, ac));
     }
 }

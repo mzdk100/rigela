@@ -265,4 +265,54 @@ macro_rules! jab {
             $info
         )
     };
+    ($module:expr,get_accessible_icons,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleIcons,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleIcons) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_table_row_header,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableRowHeader,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_table_column_header,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableColumnHeader,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_table_column_description,$vm_id:expr,$ac:expr,$column:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableColumnDescription,
+            extern "cdecl" fn(i32, AccessibleContext,JInt) -> AccessibleContext,
+            $vm_id,
+            $ac,
+            $column
+        )
+    };
+    ($module:expr,get_accessible_table_row_description,$vm_id:expr,$ac:expr,$row:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableRowDescription,
+            extern "cdecl" fn(i32, AccessibleContext,JInt) -> AccessibleContext,
+            $vm_id,
+            $ac,
+            $row
+        )
+    };
 }
