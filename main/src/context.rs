@@ -11,20 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    gui::GuiProvider,
-    browser::form_browser::FormBrowser,
-    commander::Commander,
-    configs::config_manager::ConfigManager,
-    event_core,
-    performer::Performer,
-    resources::ResourceProvider,
-    talent::TalentProvider,
-    terminator::Terminator,
-    tasks::TaskManager,
-};
+use crate::configs::general::Lang;
 #[cfg(target_arch = "x86_64")]
 use crate::proxy32::Proxy32;
+use crate::{
+    browser::form_browser::FormBrowser, commander::Commander,
+    configs::config_manager::ConfigManager, event_core, gui::GuiProvider, performer::Performer,
+    resources::ResourceProvider, talent::TalentProvider, tasks::TaskManager,
+    terminator::Terminator,
+};
 use a11y::ia2::Ia2;
 use log::info;
 use peeper::server::PeeperServer;
@@ -94,7 +89,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-            let proxy32 = Proxy32::new();
+        let proxy32 = Proxy32::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -146,6 +141,11 @@ impl Context {
         let ctx = Arc::new(self.clone());
         self.commander.apply(ctx.clone());
         self.config_manager.init();
+        let lang = match self.config_manager.get_config().general_config.lang.clone() {
+            Lang::Zh => "zh-CN",
+            Lang::En => "en",
+        };
+        rust_i18n::set_locale(lang);
         let performer = self.performer.clone();
         self.work_runtime.spawn(async move {
             performer.apply(ctx).await;
