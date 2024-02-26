@@ -1,5 +1,87 @@
 _version: 2
 
+about.title:
+  en: About - RigelA
+  zh-CN: 关于 - RigelA
+
+about.info:
+  en: "Version: 0.1.0;\r\n\r\n Author: SmileSky\r\nSource Site: https://gitcode.net/mzdk100/rigela"
+  zh-CN: "版本号: 0.1.0;\r\n\r\n 作者: SmileSky\r\n开源地址: https://gitcode.net/mzdk100/rigela"
+
+about.btn_ok:
+  en: OK
+  zh-CN: 确定
+  
+hotkeys.btn_clear:
+  en: Clear (&L)
+  zh-CN: 清除 (&L)
+hotkeys.btn_close:
+  en: Close (&C)
+  zh-CN: 关闭 (&C)
+hotkeys.btn_set:
+  en: Set (&S)
+  zh-CN: 设置 (&S)
+hotkeys.col_custom_key:
+  en: Custom Keys
+  zh-CN: 自定义热键
+hotkeys.col_init_key:
+  en: Init Keys
+  zh-CN: 初始热键
+hotkeys.col_talent_name:
+  en: Talent Name
+  zh-CN: 技能名称
+hotkeys.lb_custom:
+  en: "Custom:"
+  zh-CN: "自定义:"
+hotkeys.tb_keys_info:
+  en: Please input new keys..
+  zh-CN: 请输入新的热键..
+  
+hotkeys.confirm_clear:
+  en: You confirm clear the keys of %{value}
+  zh-CN: 您确定要删除 %{value} 的自定义热键?
+
+hotkeys.confirm_apply_keys:
+  en: "Are you sure you want to apply \ n %{keys} \ n to %{value}?"
+  zh-CN: "您确定要将\n%{keys}\n应用到 %{value} 吗?"
+hotkeys.confirm_title:
+  en: Confirm
+  zh-CN: 确认
+hotkeys.please_input_info:
+  en: Please press the key you like on the keyboard, ESC to cancel
+  zh-CN: 请在键盘上按下您喜欢的热键，ESC取消
+
+popupmenu.about_item:
+  en: About (&A)
+  zh-CN: 关于 (&A)
+popupmenu.check_update_item:
+  en: Check Update (&U)
+  zh-CN: 检测升级 (&U)
+popupmenu.custom_hotkeys_item:
+  en: Custom Hotkeys (&K)
+  zh-CN: 自定义快捷键 (&K)
+popupmenu.donate_item:
+  en: I Want to donate (&D)
+  zh-CN: 我要捐助 (&D)
+popupmenu.exit_item:
+  en: Exit (&X)
+  zh-CN: 退出 (&X)
+popupmenu.help_item:
+  en: Help (&H)
+  zh-CN: 帮助 (&H)
+popupmenu.visit_host_item:
+  en: Source Site (&O)
+  zh-CN: 开源首页 (&O)
+popupmenu.welcome_item:
+  en: Welcome Form (&W)
+  zh-CN: 欢迎窗口 (&W)
+
+popupmenu.setting_item:
+  en: Settings (&S)
+  zh-CN: 设置 (&S)
+
+
+
 welcome.title:
   en: Welcome to RigelA!
   zh-CN: 欢迎您使用雷革读屏！

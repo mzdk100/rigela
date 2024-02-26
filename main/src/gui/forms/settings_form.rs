@@ -114,16 +114,16 @@ pub struct SettingsForm {
     (data_view, OnKeyRelease): [SettingsForm::on_dv_key_press(SELF, EVT_DATA)],
     (data_view, OnListViewItemChanged): [SettingsForm::on_dv_selection_changed],
 
-    (set_btn, OnButtonClick): [SettingsForm::on_set_hotkey],
-    (set_btn, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
+    (btn_set, OnButtonClick): [SettingsForm::on_set_hotkey],
+    (btn_set, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
 
-    (clear_btn, OnButtonClick): [SettingsForm::on_clear_hotkey],
-    (clear_btn, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
+    (btn_clear, OnButtonClick): [SettingsForm::on_clear_hotkey],
+    (btn_clear, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
 
     (finish_custom, OnNotice): [SettingsForm::on_finish_custom],
     (cancel_custom, OnNotice): [SettingsForm::on_cancel_custom],
 
-    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     pub(crate) hotkeys_ui: HotKeysUi,
 

@@ -44,25 +44,25 @@ pub struct HotKeysUi {
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 8)]
     pub(crate) data_view: nwg::ListView,
 
-    #[nwg_control(text: "自定义: ")]
+    #[nwg_control(text: &t!("hotkeys.lb_custom"))]
     #[nwg_layout_item(layout: layout, col: 0, row: 7)]
-    label: nwg::Label,
+    lb_custom: nwg::Label,
 
-    #[nwg_control(readonly: true, text: "请输入新的热键!", flags: "DISABLED|VISIBLE")]
+    #[nwg_control(readonly: true, text: &t!("hotkeys.tb_keys_info"), flags: "DISABLED|VISIBLE")]
     #[nwg_layout_item(layout: layout, col: 1, row: 8, col_span: 3)]
-    text_box: nwg::TextInput,
+    tb_keys_info: nwg::TextInput,
 
-    #[nwg_control(text: "设置 (&S)")]
+    #[nwg_control(text: &t!("hotkeys.btn_set"))]
     #[nwg_layout_item(layout: layout, col: 4, row: 8)]
-    pub(crate) set_btn: nwg::Button,
+    pub(crate) btn_set: nwg::Button,
 
-    #[nwg_control(text: "清除 (&C)")]
+    #[nwg_control(text: &t!("hotkeys.btn_clear"))]
     #[nwg_layout_item(layout: layout, col: 5, row: 8)]
-    pub(crate) clear_btn: nwg::Button,
+    pub(crate) btn_clear: nwg::Button,
 
-    #[nwg_control(text: "关闭 (&C)")]
+    #[nwg_control(text: &t!("hotkeys.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    pub(crate) btn_save: nwg::Button,
+    pub(crate) btn_close: nwg::Button,
 
     #[nwg_control()]
     pub(crate) finish_custom: nwg::Notice,
@@ -77,15 +77,18 @@ impl SettingsForm {
         self.init_data();
         self.init_list_cols();
         self.update_list();
-        self.hotkeys_ui.clear_btn.set_enabled(false);
+        self.hotkeys_ui.btn_clear.set_enabled(false);
     }
 
     // 初始化列表表头
     fn init_list_cols(&self) {
-        const COL_DATA: [(i32, &str); 3] =
-            [(100, "技能名称"), (240, "初始热键"), (240, "自定义热键")];
+        let col_data = [
+            (100, t!("hotkeys.col_talent_name")),
+            (240, t!("hotkeys.col_init_key")),
+            (240, t!("hotkeys.col_custom_key")),
+        ];
 
-        for (i, (n, s)) in COL_DATA.into_iter().enumerate() {
+        for (i, (n, s)) in col_data.into_iter().enumerate() {
             self.hotkeys_ui
                 .data_view
                 .insert_column(nwg::InsertListViewColumn {
@@ -153,7 +156,7 @@ impl SettingsForm {
 
     // 列表框选择变动， 根据选中项是否存在自定义热键，来启用清除按钮
     pub(crate) fn on_dv_selection_changed(&self) {
-        self.hotkeys_ui.clear_btn.set_enabled(false);
+        self.hotkeys_ui.btn_clear.set_enabled(false);
 
         let index = self.get_list_sel_index();
         if index == -1 {
@@ -162,7 +165,7 @@ impl SettingsForm {
 
         let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
         if self.talent_keys.borrow().get(&id_).is_some() {
-            self.hotkeys_ui.clear_btn.set_enabled(true);
+            self.hotkeys_ui.btn_clear.set_enabled(true);
         }
     }
 
@@ -201,10 +204,10 @@ impl SettingsForm {
             let talent = talents.get(index as usize).unwrap();
             let doc = talent.get_doc();
             let id_ = talent.get_id();
-            let info = format!("您确定要删除 {} 的自定义热键?", doc);
+            let info = t!("hotkeys.confirm_clear", value = doc).to_string();
 
             let msg_params = MessageParams {
-                title: "确认",
+                title: &t!("hotkeys.confirm_title"),
                 content: &info,
                 buttons: nwg::MessageButtons::OkCancel,
                 icons: nwg::MessageIcons::Question,
@@ -229,7 +232,7 @@ impl SettingsForm {
 
         let hotkeys: Vec<Keys> = self.hotkeys.lock().unwrap().clone();
         let key_str = Self::keys_to_string(&hotkeys);
-        self.hotkeys_ui.text_box.set_text(&key_str);
+        self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
         // 这里需要包裹，不然调用init_data会闪退
         {
@@ -237,10 +240,10 @@ impl SettingsForm {
             let talents = talents.get(self.get_list_sel_index() as usize).unwrap();
             let doc = talents.get_doc();
             let id_ = talents.get_id();
-            let info = format!("您确定要将\n{}\n应用到 {} 吗?", key_str, doc);
+            let info = t!("hotkeys.confirm_apply_keys", keys = key_str, value = doc).to_string();
 
             let msg_params = MessageParams {
-                title: "确认",
+                title: &t!("hotkeys.confirm_title"),
                 content: &info,
                 buttons: nwg::MessageButtons::OkCancel,
                 icons: nwg::MessageIcons::Question,
@@ -266,12 +269,12 @@ impl SettingsForm {
 
     // 开始自定义热键
     fn start_custom_hotkey(&self) {
-        const INFO: &str = "请在键盘上按下您喜欢的热键，ESC取消";
+        let info = t!("hotkeys.please_input_info").to_string();
 
         let context = self.context.get().unwrap().clone();
         let pf = context.performer.clone();
         context.main_handler.spawn(async move {
-            pf.speak(INFO.to_string()).await;
+            pf.speak(info).await;
         });
 
         *self.hook.borrow_mut() = Some(self.set_hook());

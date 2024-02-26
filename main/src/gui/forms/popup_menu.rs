@@ -21,8 +21,8 @@ use crate::{
 };
 use nwd::NwgUi;
 use nwg::NoticeSender;
-use std::sync::{Arc, OnceLock};
 use rigela_macros::GuiFormImpl;
+use std::sync::{Arc, OnceLock};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct PopupMenuForm {
@@ -34,42 +34,42 @@ pub struct PopupMenuForm {
     #[nwg_control(parent: window, popup: true)]
     tray_menu: nwg::Menu,
 
-    #[nwg_control(parent: tray_menu, text: "设置 (&S)")]
+    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.setting_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_setting])]
     setting_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: & t ! ("welcome.btn_donate"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.donate_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_donate])]
     donate_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "欢迎窗口 (&W)")]
+    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.welcome_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_welcome_form])]
     welcome_form_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "自定义快捷键 (&K)")]
+    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.custom_hotkeys_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_custom_hotkeys])]
     costom_hotkeys_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "帮助 (&H)")]
+    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.help_item"))]
     out_help_item: nwg::Menu,
 
-    #[nwg_control(parent: out_help_item, text: "开源首页 (&O)")]
+    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.visit_host_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_visit_host])]
     visit_host_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: "帮助 (&H)")]
+    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.help_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_help])]
     help_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: "检测升级 (&U)")]
+    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.check_update_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_check_update])]
     check_update_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: "关于 (&A)")]
+    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.about_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_about])]
     about_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "退出 (&X)")]
+    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.exit_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_exit])]
     exit_item: nwg::MenuItem,
 
