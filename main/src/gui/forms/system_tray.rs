@@ -32,22 +32,22 @@ pub struct SystemTray {
     #[nwg_resource(source_file: Some("./test_rc/cog.ico"))]
     icon: nwg::Icon,
 
-    #[nwg_control(icon: Some(& data.icon), tip: Some("RigelA"))]
+    #[nwg_control(icon: Some(& data.icon), tip: Some(&t!("tray.tip")))]
     #[nwg_events(MousePressLeftUp: [SystemTray::show_menu], OnContextMenu: [SystemTray::show_menu])]
     tray: nwg::TrayNotification,
 
     #[nwg_control(parent: window, popup: true)]
     tray_menu: nwg::Menu,
 
-    #[nwg_control(parent: tray_menu, text: "设置 (&S)")]
+    #[nwg_control(parent: tray_menu, text: &t!("tray.setting_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_setting])]
     setting_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "帮助 (&H)")]
+    #[nwg_control(parent: tray_menu, text: &t!("tray.help_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_help])]
     help_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: "退出 (&X)")]
+    #[nwg_control(parent: tray_menu, text: &t!("tray.exit_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_exit])]
     exit_item: nwg::MenuItem,
 

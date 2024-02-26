@@ -82,6 +82,24 @@ popupmenu.setting_item:
 
 
 
+
+tray.exit_item:
+  en: Exit (&X)
+  zh-CN: 退出 (&X)
+tray.help_item:
+  en: Help (&H)
+  zh-CN: 帮助 (&H)
+tray.setting_item:
+  en: Settings (&S)
+  zh-CN: 设置 (&S)
+tray.tip:
+  en: RigelA
+  zh-CN: RigelA
+
+welcome.info:
+  en: "RigelA is an open-source screen reading project built using the Rust language. We respect openness and freedom, and continue to contribute to the construction of accessible infrastructure. Our common goal is to ensure that everyone enjoys technology equally!"
+  zh-CN: "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！"
+
 welcome.title:
   en: Welcome to RigelA!
   zh-CN: 欢迎您使用雷革读屏！

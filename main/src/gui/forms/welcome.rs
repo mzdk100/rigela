@@ -18,10 +18,8 @@ use crate::{
 };
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
-use std::sync::{Arc, OnceLock};
 use rigela_macros::GuiFormImpl;
-
-const INFO: &str = "RigelA是一个开源读屏项目，使用 rust 语言构建，我们尊重开放和自由，并持续为无障碍基础设施建设贡献力量，让每一个人平等享受科技是我们共同的目标！";
+use std::sync::{Arc, OnceLock};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct WelcomeForm {
@@ -34,7 +32,7 @@ pub struct WelcomeForm {
     #[nwg_layout(parent: window, spacing: 5)]
     layout: nwg::GridLayout,
 
-    #[nwg_control(text: INFO, readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
+    #[nwg_control(text: &t!("welcome.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [WelcomeForm::on_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextBox,
