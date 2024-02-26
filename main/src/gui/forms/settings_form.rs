@@ -35,6 +35,7 @@ use rigela_macros::GuiFormImpl;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::DerefMut;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::hook::WindowsHook;
 
@@ -253,14 +254,20 @@ impl SettingsForm {
     fn on_import(&self) {
         if self.advanced_ui.import_dialog.run(Some(&self.window)) {
             let path = self.advanced_ui.import_dialog.get_selected_item().unwrap();
-            import_config_cmd(self.context.get().unwrap().clone(), path);
+            import_config_cmd(
+                self.context.get().unwrap().clone(),
+                PathBuf::from(path.as_os_str()),
+            );
         }
     }
 
     fn on_export(&self) {
         if self.advanced_ui.export_dialog.run(Some(&self.window)) {
             let path = self.advanced_ui.export_dialog.get_selected_item().unwrap();
-            export_config_cmd(self.context.get().unwrap().clone(), path);
+            export_config_cmd(
+                self.context.get().unwrap().clone(),
+                PathBuf::from(path.as_os_str()),
+            );
         }
     }
 
@@ -473,10 +480,10 @@ pub struct MouseUi {
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[nwg_resource(title: "请选择需要导出的文件夹:", action: nwg::FileDialogAction::Save)]
+    #[nwg_resource(title: "请选择需要导出的文件夹:", action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
     export_dialog: nwg::FileDialog,
 
-    #[nwg_resource(title: "请选择需要导入的文件:", action: nwg::FileDialogAction::Open)]
+    #[nwg_resource(title: "请选择需要导入的文件:", action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
     import_dialog: nwg::FileDialog,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]

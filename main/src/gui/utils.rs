@@ -17,6 +17,12 @@ use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
 use std::env::args;
 use std::error::Error;
+use std::fs::File;
+use std::io;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+use zip::write::FileOptions;
+use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const HELP_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/help.txt?format=json&viewer=simple";
@@ -43,6 +49,7 @@ pub(crate) enum UpdateState {
 
     HasNewest,
 }
+
 /// 检测是否需要更新
 pub(crate) async fn check_update() -> UpdateState {
     let newest_md5 = get_newest_docs_md5().await;
@@ -166,6 +173,64 @@ pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn Error>> {
         write_file(&path, &resp.bytes().await?).await?;
         Ok(())
     }
+}
+
+/// 备份数据
+pub(crate) fn backup_data(target: &PathBuf) -> Result<(), Box<dyn Error>> {
+    let zip_file_path = Path::new(target.to_str().unwrap());
+    let zip_file = File::create(&zip_file_path)?;
+
+    let mut zip = ZipWriter::new(zip_file);
+    let options = FileOptions::default().compression_method(CompressionMethod::DEFLATE);
+
+    let mut files_to_compress: Vec<PathBuf> = vec![];
+    let resources_path = get_program_directory().join("resources");
+    for entry in resources_path.read_dir()? {
+        let path = entry?.path();
+        if path.is_file() {
+            files_to_compress.push(path);
+        }
+    }
+    files_to_compress.push(get_program_directory().join("config.toml"));
+
+    for file_path in &files_to_compress {
+        let file = File::open(file_path)?;
+        let file_name = file_path.file_name().unwrap().to_str().unwrap();
+
+        zip.start_file(file_name, options)?;
+
+        let mut buffer = Vec::new();
+        io::copy(&mut file.take(u64::MAX), &mut buffer)?;
+
+        zip.write_all(&buffer)?;
+    }
+
+    zip.finish()?;
+    Ok(())
+}
+
+/// 还原备份数据
+pub(crate) fn restore_data(source: &PathBuf) -> Result<(), Box<dyn Error>> {
+    let zip_file_path = Path::new(source.as_os_str());
+    let zip_file = File::open(zip_file_path)?;
+
+    let mut archive = ZipArchive::new(zip_file)?;
+    let extraction_dir = get_program_directory();
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let file_name = file.name().to_owned();
+
+        let target_path = match file_name.as_str() {
+            "config.toml" => extraction_dir.join(file_name),
+            _ => extraction_dir.join("resources").join(file_name),
+        };
+
+        let mut output_file = File::create(&target_path)?;
+        io::copy(&mut file, &mut output_file)?;
+    }
+
+    Ok(())
 }
 
 //noinspection DuplicatedCode

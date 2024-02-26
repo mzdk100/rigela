@@ -17,7 +17,7 @@ use crate::configs::config_operations::{
 };
 use crate::configs::general::Lang;
 use crate::configs::tts::TtsConfig;
-use crate::gui::utils::UpdateState;
+use crate::gui::utils::{backup_data, restore_data, UpdateState};
 use crate::{
     context::Context,
     gui::utils::{check_update, confirm_update_exists, HELP_DIR},
@@ -26,11 +26,8 @@ use crate::{
 use log::error;
 use nwg::{message, MessageParams};
 use rigela_utils::get_program_directory;
-use std::ffi::OsString;
 use std::path::PathBuf;
-use std::time::Duration;
 use std::{env::args, process::Command, sync::Arc};
-use tokio::time::sleep;
 use win_wrap::common::{message_box, set_startup_registry, HWND, MB_OK};
 
 /// 退出程序。
@@ -285,17 +282,21 @@ pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
 }
 
 /// 导出配置
-pub(crate) fn export_config_cmd(_context: Arc<Context>, path: OsString) {
-    // Todo
+pub(crate) fn export_config_cmd(_context: Arc<Context>, path: PathBuf) {
+    if backup_data(&path).is_err() {
+        error!("备份数据失败");
+    }
 
-    message_box(HWND::default(), path.to_str().unwrap(), "提示", MB_OK);
+    message_box(HWND::default(), "导出成功!", "提示", MB_OK);
 }
 
 /// 导入配置
-pub(crate) fn import_config_cmd(_context: Arc<Context>, path: OsString) {
-    // Todo
+pub(crate) fn import_config_cmd(_context: Arc<Context>, path: PathBuf) {
+    if restore_data(&path).is_err() {
+        error!("恢复数据失败");
+    }
 
-    message_box(HWND::default(), path.to_str().unwrap(), "提示", MB_OK);
+    message_box(HWND::default(), "导入成功!", "提示", MB_OK);
 }
 
 /// 还原默认配置
