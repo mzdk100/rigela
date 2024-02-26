@@ -80,8 +80,75 @@ popupmenu.setting_item:
   en: Settings (&S)
   zh-CN: 设置 (&S)
 
-
-
+settings.auto_check_update:
+  en:  Auto Update (&A)
+  zh-CN: 自动更新 (&A)
+settings.btn_close:
+  en:  Close (&C)
+  zh-CN: 关闭 (&C)
+settings.btn_export:
+  en:  Export Configuration... (&E)
+  zh-CN: 导出配置... (&E)
+settings.btn_import:
+  en: Import Configuration... (&I)
+  zh-CN: 导入配置... (&I)
+settings.btn_reset:
+  en: Restore Default Configuration (&R)
+  zh-CN: 恢复默认配置 (&R)
+settings.check_update:
+  en: Check Update (&C)
+  zh-CN: 检查更新 (&C)
+settings.ck_mouse_read:
+  en:  Read Mouse (&R)
+  zh-CN: 朗读鼠标 (&R)
+settings.export_title:
+  en: "Please select the folder to export the configuration file:"
+  zh-CN: "请选择需要导出的文件夹:"
+settings.import_title:
+  en: "Please select the file to import the configuration:"
+  zh-CN: "请选择需要导入的文件:"
+settings.lang:
+  en:  Language(Need Restart) (&L)
+  zh-CN: 语言(重启生效) (&L)
+settings.lang_en_item:
+  en: English
+  zh-CN: English
+settings.lang_zh_item:
+  en: 中文
+  zh-CN: 中文
+settings.lb_pitch:
+  en:  Pitch (&P)
+  zh-CN: 朗读语调 (&P)
+settings.lb_role:
+  en: Role (&R)
+  zh-CN: 朗读角色 (&R)
+settings.lb_speed:
+  en: Speed (&S)
+  zh-CN: 朗读语速 (&E)
+settings.lb_volume:
+  en: Volume (&O)
+  zh-CN: 朗读音量 (&O)
+settings.menu_advanced_item:
+  en: Advanced
+  zh-CN: 高级设置
+settings.menu_general_item:
+  en: General
+  zh-CN: 常规设置
+settings.menu_hotkeys_item:
+  en: Hot Keys
+  zh-CN: 热键自定义
+settings.menu_mouse_item:
+  en: Mouse
+  zh-CN: 鼠标设置
+settings.menu_voice_item:
+  en: TTS
+  zh-CN: 语音设置
+settings.run_on_startup:
+  en: Run on Startup (&R)
+  zh-CN: 开机启动 (&R)
+settings.title:
+  en: RigelA - Settings
+  zh-CN: RigelA - 设置
 
 tray.exit_item:
   en: Exit (&X)

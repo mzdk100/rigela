@@ -39,7 +39,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::hook::WindowsHook;
 
-const MENUS: [&str; 5] = ["常规设置", "语音设置", "热键自定义", "鼠标设置", "高级设置"];
 const FRAME_SIZE: Size<D> = Size {
     width: D::Percent(1.0),
     height: D::Auto,
@@ -60,17 +59,23 @@ pub struct SettingsForm {
     pitch: Arc<Mutex<i32>>,
     volume: Arc<Mutex<i32>>,
 
-    #[nwg_control(size: (800, 600), position: (200, 200), title: "RigelA - 设置")]
+    #[nwg_control(size: (800, 600), position: (200, 200), title: &t!("settings.title"))]
     #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
     pub(crate) window: nwg::Window,
 
     #[nwg_layout(parent: window)]
     layout: nwg::FlexboxLayout,
 
-    #[nwg_control(collection: MENUS.to_vec())]
+    #[nwg_control(collection: vec![
+    t!("settings.menu_general_item").to_string(), 
+    t!("settings.menu_voice_item").to_string(),
+    t!("settings.menu_hotkeys_item").to_string(),
+    t!("settings.menu_mouse_item").to_string(),
+    t!("settings.menu_advanced_item").to_string(),
+    ])]
     #[nwg_layout_item(layout: layout, size: Size{width: D::Points(150.0), height: D::Auto})]
     #[nwg_events(OnListBoxSelect: [SettingsForm::change_interface])]
-    menu: nwg::ListBox<&'static str>,
+    menu: nwg::ListBox<String>,
 
     #[nwg_control]
     #[nwg_layout_item(layout: layout, size: FRAME_SIZE)]
@@ -94,7 +99,7 @@ pub struct SettingsForm {
     (ck_auot_update, OnButtonClick): [SettingsForm::on_auto_check_update(SELF, CTRL)],
     (btn_check_update, OnButtonClick): [SettingsForm::on_check_update],
     (cb_lang, OnComboxBoxSelection): [SettingsForm::on_lang_changed(SELF, CTRL)],
-    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     general_ui: GeneralUi,
 
@@ -105,7 +110,7 @@ pub struct SettingsForm {
     (cb_pitch, OnComboxBoxSelection): [SettingsForm::on_pitch_changed(SELF, CTRL)],
     (cb_volume, OnComboxBoxSelection): [SettingsForm::on_volume_changed(SELF, CTRL)],
     (update_voice_notice, OnNotice): [SettingsForm::update_voice_notice],
-    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     voice_ui: VoiceUi,
 
@@ -130,7 +135,7 @@ pub struct SettingsForm {
     #[nwg_partial(parent: mouse_frame)]
     #[nwg_events(
     (ck_mouse_read, OnButtonClick): [SettingsForm::on_mouse_read(SELF, CTRL)],
-    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     mouse_ui: MouseUi,
 
@@ -139,7 +144,7 @@ pub struct SettingsForm {
     (btn_import, OnButtonClick): [SettingsForm::on_import],
     (btn_export, OnButtonClick): [SettingsForm::on_export],
     (btn_reset, OnButtonClick): [SettingsForm::on_reset],
-    (btn_save, OnButtonClick): [SettingsForm::on_save],
+    (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     advanced_ui: AdvancedUi,
 
@@ -390,29 +395,32 @@ pub struct GeneralUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "开机启动 (&R)")]
+    #[nwg_control(text: &t!("settings.run_on_startup"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_run_on_startup: CheckBox,
 
-    #[nwg_control(text: "自动更新 (&A)")]
+    #[nwg_control(text: &t!("settings.auto_check_update"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     ck_auot_update: CheckBox,
 
-    #[nwg_control(text: "检查更新 (&C)")]
+    #[nwg_control(text: &t!("settings.check_update"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     btn_check_update: nwg::Button,
 
-    #[nwg_control(text: "语言 (&L)")]
+    #[nwg_control(text: &t!("settings.lang"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 5)]
     lb_lang: nwg::Label,
 
-    #[nwg_control(collection: vec ! ["中文", "English"])]
+    #[nwg_control(collection: vec ! [
+    t!("settings.lang_zh_item").to_string(), 
+    t!("settings.lang_en_item").to_string(),
+    ])]
     #[nwg_layout_item(layout: layout, col: 2, row: 5)]
-    cb_lang: nwg::ComboBox<&'static str>,
+    cb_lang: nwg::ComboBox<String>,
 
-    #[nwg_control(text: "关闭 (&C)")]
+    #[nwg_control(text: &t!("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_save: nwg::Button,
+    btn_close: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
@@ -423,7 +431,7 @@ pub struct VoiceUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "朗读角色 (&R)")]
+    #[nwg_control(text: &t!("settings.lb_role"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     lb_role: nwg::Label,
 
@@ -431,7 +439,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
     cb_role: nwg::ComboBox<String>,
 
-    #[nwg_control(text: "朗读语速 (&E)")]
+    #[nwg_control(text:&t!("settings.lb_speed"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     lb_speed: nwg::Label,
 
@@ -439,7 +447,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
     cb_speed: nwg::ComboBox<String>,
 
-    #[nwg_control(text: "朗读语调 (&P)")]
+    #[nwg_control(text:  &t!("settings.lb_pitch"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     lb_pitch: nwg::Label,
 
@@ -447,7 +455,7 @@ pub struct VoiceUi {
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
     cb_pitch: nwg::ComboBox<String>,
 
-    #[nwg_control(text: "朗读音量 (&O)")]
+    #[nwg_control(text: &t!("settings.lb_volume"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     lb_volume: nwg::Label,
 
@@ -458,9 +466,9 @@ pub struct VoiceUi {
     #[nwg_control]
     update_voice_notice: nwg::Notice,
 
-    #[nwg_control(text: "关闭 (&C)")]
+    #[nwg_control(text: &t!("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_save: nwg::Button,
+    btn_close: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
@@ -471,21 +479,21 @@ pub struct MouseUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "朗读鼠标 (&R)")]
+    #[nwg_control(text: &t!("settings.ck_mouse_read"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_mouse_read: CheckBox,
 
-    #[nwg_control(text: "关闭 (&C)")]
+    #[nwg_control(text: &t!("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_save: nwg::Button,
+    btn_close: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[nwg_resource(title: "请选择需要导出的文件夹:", action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
+    #[nwg_resource(title: t!("settings.export_title").to_string(), action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
     export_dialog: nwg::FileDialog,
 
-    #[nwg_resource(title: "请选择需要导入的文件:", action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
+    #[nwg_resource(title: t!("settings.import_title").to_string(), action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
     import_dialog: nwg::FileDialog,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
@@ -494,19 +502,19 @@ pub struct AdvancedUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "导出配置... (&E)")]
+    #[nwg_control(text: &t!("settings.btn_export"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     btn_export: nwg::Button,
 
-    #[nwg_control(text: "导入配置... (&I)")]
+    #[nwg_control(text: &t!("settings.btn_import"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     btn_import: nwg::Button,
 
-    #[nwg_control(text: "恢复默认配置 (&R)")]
+    #[nwg_control(text: &t!("settings.btn_reset"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     btn_reset: nwg::Button,
 
-    #[nwg_control(text: "关闭 (&C)")]
+    #[nwg_control(text: &t!("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_save: nwg::Button,
+    btn_close: nwg::Button,
 }
