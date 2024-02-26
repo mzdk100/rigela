@@ -1088,3 +1088,126 @@ pub(crate) struct GetAccessibleTableIndexPackage {
     pub(crate) column: JInt,
     pub(crate) rIndex: JInt,
 }
+
+
+/**
+ ******************************************************
+ *  AccessibleHypertext packagess
+ ******************************************************
+ * */
+
+/// maximum number of hyperlinks returned
+const MAX_HYPERLINKS: u32 = 64;
+
+/// hyperlink information
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleHyperlinkInfo {
+    /// the hyperlink text
+    pub(crate) text: [u16; SHORT_STRING_SIZE as usize],
+    /// index in the hypertext document where the link begins
+    pub(crate) startIndex: JInt,
+    /// index in the hypertext document where the link ends
+    pub(crate) endIndex: JInt,
+    /// AccessibleHyperlink object
+    pub(crate) accessibleHyperlink: JObject64,
+}
+
+/// hypertext information
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleHypertextInfo {
+    /// number of hyperlinks
+    pub(crate) linkCount: JInt,
+    /// the hyperlinks
+    pub(crate) links: [AccessibleHyperlinkInfo; MAX_HYPERLINKS as usize],
+    /// AccessibleHypertext object
+    pub(crate) accessibleHypertext: JObject64,
+}
+
+/// struct for sending a message to get the hypertext for an AccessibleContext
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleHypertextPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleContext with hypertext
+    pub(crate) accessibleContext: JObject64,
+    /// returned hypertext
+    pub(crate) rAccessibleHypertextInfo: AccessibleHypertextInfo,
+}
+
+/// struct for sending a message to activate a hyperlink
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct ActivateAccessibleHyperlinkPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleContext containing the link
+    pub(crate) accessibleContext: JObject64,
+    /// the link to activate
+    pub(crate) accessibleHyperlink: JObject64,
+    /// hyperlink activation return value
+    pub(crate) rResult: BOOL,
+}
+
+/// struct for sending a message to get the number of hyperlinks in a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleHyperlinkCountPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleContext containing AccessibleHypertext
+    pub(crate) accessibleContext: JObject64,
+    /// link count return value
+    pub(crate) rLinkCount: JInt,
+}
+
+/// struct for sending a message to get the hypertext for an AccessibleContext
+/// starting at a specified index in the document
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleHypertextExtPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleContext with hypertext
+    pub(crate) accessibleContext: JObject64,
+    /// start index in document
+    pub(crate) startIndex: JInt,
+    /// returned hypertext
+    pub(crate) rAccessibleHypertextInfo: AccessibleHypertextInfo,
+    /// whether call succeeded
+    pub(crate) rSuccess: BOOL,
+}
+
+/// struct for sending a message to get the nth hyperlink in a document;
+/// maps to AccessibleHypertext.getLink
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleHyperlinkPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleHypertext
+    pub(crate) hypertext: JObject64,
+    /// hyperlink index
+    pub(crate) linkIndex: JInt,
+    /// returned hyperlink
+    pub(crate) rAccessibleHyperlinkInfo: AccessibleHyperlinkInfo,
+}
+
+/// struct for sending a message to get the index into an array
+/// of hyperlinks that is associated with a character index in a
+/// document; maps to AccessibleHypertext.getLinkIndex
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleHypertextLinkIndexPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// AccessibleHypertext
+    pub(crate) hypertext: JObject64,
+    /// character index in document
+    pub(crate) charIndex: JInt,
+    /// returned hyperlink index
+    pub(crate) rLinkIndex: JInt,
+}
+

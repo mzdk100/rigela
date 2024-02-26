@@ -315,4 +315,57 @@ macro_rules! jab {
             $row
         )
     };
+    ($module:expr,select_text_range,$vm_id:expr,$ac:expr,$start_index:expr,$end_index:expr) => {
+        call_proc!(
+            $module,
+            selectTextRange,
+            extern "cdecl" fn(i32, AccessibleContext,JInt, JInt) -> BOOL,
+            $vm_id,
+            $ac,
+            $start_index,
+            $end_index
+        )
+    };
+    ($module:expr,get_accessible_table_info,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableInfo,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_virtual_accessible_name,$vm_id:expr,$ac:expr,$name:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getVirtualAccessibleName,
+            extern "cdecl" fn(i32, AccessibleContext,*mut u16,i32) -> BOOL,
+            $vm_id,
+            $ac,
+            $name,
+            $len
+        )
+    };
+    ($module:expr,get_accessible_hypertext,$vm_id:expr,$ac:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleHypertext,
+            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleHypertextInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_hypertext_ext,$vm_id:expr,$ac:expr,$start_index:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleHypertextExt,
+            extern "cdecl" fn(i32, AccessibleContext,JInt,*mut AccessibleHypertextInfo) -> BOOL,
+            $vm_id,
+            $ac,
+            $start_index,
+            $info
+        )
+    };
 }

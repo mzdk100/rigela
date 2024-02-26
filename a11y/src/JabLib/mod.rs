@@ -15,23 +15,22 @@ mod calls;
 mod packages;
 
 use crate::{
-    JabLib::{
-        packages::{
-            AccessibleActions,
-            AccessibleContextInfo,
-            JObject64,
-            JInt,
-            AccessBridgeVersionInfo,
-            AccessibleContext,
-            AccessibleTextRectInfo,
-            AccessibleTextAttributesInfo,
-            JavaObject,
-            VisibleChildrenInfo,
-            AccessibleIcons,
-            AccessibleKeyBindings,
-            AccessibleRelationSetInfo,
-            AccessibleTableInfo,
-        }
+    JabLib::packages::{
+        AccessibleActions,
+        AccessibleContextInfo,
+        JObject64,
+        JInt,
+        AccessBridgeVersionInfo,
+        AccessibleContext,
+        AccessibleTextRectInfo,
+        AccessibleTextAttributesInfo,
+        JavaObject,
+        VisibleChildrenInfo,
+        AccessibleIcons,
+        AccessibleKeyBindings,
+        AccessibleRelationSetInfo,
+        AccessibleTableInfo,
+        AccessibleHypertextInfo,
     },
     jab,
 };
@@ -575,6 +574,80 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module, get_accessible_table_row_description, vm_id, ac,row)
     }
+
+    /**
+     * 在两个索引之间选择文本。所选内容包括起始索引处的文本和结束索引处的文字。返回是否成功。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `start_index` 开始索引。
+     * `end_index` 结束索引。
+     * */
+    pub(crate) fn select_text_range(&self, vm_id: i32, ac: AccessibleContext, start_index: JInt, end_index: JInt) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module, select_text_range, vm_id, ac,start_index,end_index).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 返回有关表的信息，例如标题、摘要、行和列计数以及AccessibleTable。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_table_info(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_table_info, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取基于JAWS算法的组件的AccessibleName。返回是否成功。
+     * Bug ID 4916682-实现JAWS AccessibleName策略
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `len` 名称长度。
+     * */
+    pub(crate) fn get_virtual_accessible_name(&self, vm_id: i32, ac: AccessibleContext, len: i32) -> Option<Vec<u16>> {
+        pump_waiting_messages();
+        let mut name = Vec::new();
+        for _ in 0..len {
+            name.push(0);
+        }
+        if !jab!(self.h_module, get_virtual_accessible_name, vm_id, ac,name.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(name)
+    }
+
+    /**
+     * 返回与组件关联的超文本信息。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * */
+    pub(crate) fn get_accessible_hypertext(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleHypertextInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_hypertext, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 遍历组件中的超链接。返回从超链接索引start_index开始的组件的超文本信息。对于此方法的每次调用，返回的AccessibleHypertextInfo对象不超过MAX_HYPERLINKS个。出现错误时返回None。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `start_index` 开始索引。
+     * */
+    pub(crate) fn get_accessible_hypertext_ext(&self, vm_id: i32, ac: AccessibleContext, start_index: JInt) -> Option<AccessibleHypertextInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module, get_accessible_hypertext_ext, vm_id, ac,start_index,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
 }
 
 impl Drop for JabLib {
@@ -640,13 +713,13 @@ mod test_jab {
             jab.release_java_object(vm_id, descendent);
         }
         //test1(&jab, vm_id, ac);
+        //test2(&jab, vm_id, ac);
+
         dbg!(jab.request_focus(vm_id, ac));
         dbg!(jab.get_visible_children_count(vm_id, ac));
         dbg!(jab.get_visible_children(vm_id, ac, 0));
         dbg!(jab.get_events_waiting());
         dbg!(jab.get_caret_location(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
 
         jab.release_java_object(vm_id, ac);
 
@@ -666,5 +739,15 @@ mod test_jab {
         dbg!(jab.get_accessible_icons(vm_id, ac));
         dbg!(jab.get_accessible_table_row_header(vm_id, ac));
         dbg!(jab.get_accessible_table_column_header(vm_id, ac));
+        dbg!(jab.select_text_range(vm_id, ac, 0, 8));
+    }
+
+    fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
+        dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
+        dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
+        dbg!(jab.get_accessible_table_info(vm_id, ac));
+        dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
+        dbg!(jab.get_accessible_hypertext(vm_id, ac));
+        dbg!(jab.get_accessible_hypertext_ext(vm_id, ac, 0));
     }
 }
