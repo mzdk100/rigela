@@ -364,10 +364,12 @@ impl SettingsForm {
     }
 
     fn update_voice_notice(&self) {
-        // Todo String to &str !!
-
         let items = self.all_voices.lock().unwrap().clone();
-        self.voice_ui.cb_role.set_collection(items);
+        self.voice_ui.cb_role.set_collection(items.clone());
+
+        let item_str = self.voice.lock().unwrap().clone();
+        let index = items.iter().position(|v| v == &item_str).unwrap();
+        self.voice_ui.cb_role.set_selection(Some(index));
 
         self.voice_ui
             .cb_speed
