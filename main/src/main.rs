@@ -66,8 +66,6 @@ async fn main() {
     info!("The current locale of the user is {}.", locale);
     // 让I18N国际化模块的语言跟随系统
     rust_i18n::set_locale(locale.as_str());
-    // Test English
-    // rust_i18n::set_locale("en");
 
     // 使用发射台启动主程序
     info!("Launching RigelA...");

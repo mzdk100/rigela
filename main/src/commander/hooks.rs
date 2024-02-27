@@ -12,6 +12,7 @@
  */
 
 use super::keys::Keys;
+use crate::commander::keys::Keys::{VkCapital, VkNumlock};
 use crate::configs::config_operations::{get_hotkeys, get_mouse_read_state};
 use crate::talent::mouse::mouse_read;
 use crate::{
@@ -22,12 +23,13 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
+use win_wrap::input::get_key_state;
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
     hook::HOOK_TYPE_MOUSE_LL,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
+    input::{VK_CAPITAL, VK_NUMLOCK, WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
 /// 设置键盘钩子
@@ -64,7 +66,11 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         let key: Keys = (info.vkCode, is_extended).into();
-        context.commander.set_last_pressed_key(key);
+        context.commander.set_last_pressed_key(&key);
+
+        if info.vkCode as u16 == VK_CAPITAL.0 || key == VkNumlock {
+            read_lock_key_state_changed(context.clone());
+        }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁
         next()
@@ -109,6 +115,31 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
         return LRESULT(0);
     }
     LRESULT(1)
+}
+
+// 播报锁定键的状态变化
+fn read_lock_key_state_changed(context: Arc<Context>) {
+    let info = match context.commander.get_last_pressed_key() {
+        VkCapital => {
+            let (_, state) = get_key_state(VK_CAPITAL);
+            match state {
+                true => "大写".to_string(),
+                false => "小写".to_string(),
+            }
+        }
+        VkNumlock => {
+            let (_, state) = get_key_state(VK_NUMLOCK);
+            match state {
+                true => "热键".to_string(),
+                false => "数字".to_string(),
+            }
+        }
+        _ => "".to_string(),
+    };
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(info).await;
+    });
 }
 
 // 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中

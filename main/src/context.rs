@@ -139,13 +139,20 @@ impl Context {
      * */
     pub(crate) fn apply(&self) {
         let ctx = Arc::new(self.clone());
+
+        // 初始化命令管理器
         self.commander.apply(ctx.clone());
+
+        // 加载配置文件
         self.config_manager.init();
+        // 设置语言
         let lang = match self.config_manager.get_config().general_config.lang.clone() {
             Lang::Zh => "zh-CN",
             Lang::En => "en",
         };
         rust_i18n::set_locale(lang);
+
+        // 启动表演者
         let performer = self.performer.clone();
         self.work_runtime.spawn(async move {
             performer.apply(ctx).await;

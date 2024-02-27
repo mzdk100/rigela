@@ -96,7 +96,7 @@ impl Commander {
      * 设置最后一次按下的键。
      * `key` 键盘枚举。
      * */
-    pub(crate) fn set_last_pressed_key(&self, key: Keys) {
-        *self.last_pressed_key.lock().unwrap() = key;
+    pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
+        *self.last_pressed_key.lock().unwrap() = key.clone();
     }
 }
