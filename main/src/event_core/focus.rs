@@ -17,6 +17,7 @@ use crate::{
     performer::sound::SoundArgument::Single,
 };
 use std::{sync::Arc, time::Duration};
+use win_wrap::uia::pattern::value::UiAutomationValuePattern;
 use win_wrap::{
     msaa::object::{ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM},
     uia::element::ControlType,
@@ -28,24 +29,33 @@ use win_wrap::{
  * `context` 读屏框架的上下文环境。
  * */
 pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
-    // 给UI Automation的焦点改变绑定处理事件
     let ctx = context.clone();
+
+    // 给UI Automation的焦点改变绑定处理事件
     context.ui_automation.add_focus_changed_listener(move |x| {
         let event_core = ctx.event_core.clone();
         let performer = ctx.performer.clone();
 
-        // 异步执行元素朗读
         ctx.main_handler.spawn(async move {
-            if let ControlType::ListItem = x.get_control_type() {
+            match x.get_control_type() {
                 // 列表项目的事件让MSAA处理，因为很多列表只有MSAA支持的完善
-                if event_core
-                    .should_ignore(x.get_name(), Duration::from_millis(100))
-                    .await
-                {
+                ControlType::ListItem => {
                     // 过滤重复的事件，因为同时订阅了UIA和MSAA的focus事件，就会有事件的重复
+                    let (same, interval) = (x.get_name(), Duration::from_millis(100));
+                    if event_core.should_ignore(same, interval).await {
+                        return;
+                    }
+                }
+                // 编辑框和组合框朗读
+                ControlType::ComboBox | ControlType::Edit => {
+                    let vp = UiAutomationValuePattern::obtain(&x).unwrap();
+                    let value = format!("{} {}", x.get_name(), vp.get_value().unwrap());
+                    performer.speak(value).await;
                     return;
                 }
+                _ => {}
             }
+
             performer.speak(x).await;
         });
     });

@@ -16,3 +16,4 @@ pub mod legacy;
 pub mod table;
 pub mod text;
 pub mod toggle;
+pub mod value;
