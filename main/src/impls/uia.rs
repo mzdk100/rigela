@@ -20,13 +20,18 @@ use win_wrap::{
     common::RECT,
     uia::{
         element::UiAutomationElement,
-        pattern::{legacy::UiAutomationIAccessiblePattern, text::UiAutomationTextRange},
+        pattern::{
+            legacy::UiAutomationIAccessiblePattern,
+            text::UiAutomationTextRange,
+            toggle::{ToggleState, UiAutomationTogglePattern},
+        },
     },
 };
 
 trait ElementNameExt {
     fn get_name_better(&self) -> String;
 }
+
 impl ElementNameExt for UiAutomationElement {
     fn get_name_better(&self) -> String {
         let mut name = self.get_name();
@@ -44,7 +49,6 @@ impl ElementNameExt for UiAutomationElement {
                 name = accessible.get_description();
             }
         }
-
         name
     }
 }
@@ -77,8 +81,33 @@ impl Browsable for UiAutomationElement {
 /// 给UIA元素实现朗读接口
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
-        let name = self.get_name_better();
-        format!("{}: {}", name, self.get_localized_control_type())
+        let mut text = self.get_name_better();
+
+        let control_type = self.get_localized_control_type();
+        if !control_type.is_empty() {
+            text += format!(", {}", control_type).as_str()
+        }
+
+        let accelerator_key = self.get_accelerator_key();
+        if !accelerator_key.is_empty() {
+            text += format!(", {}", accelerator_key).as_str()
+        }
+
+        let access_key = self.get_access_key();
+        if !access_key.is_empty() {
+            text += format!(", {}", access_key).as_str()
+        }
+
+        let toggle = UiAutomationTogglePattern::obtain(self);
+        if toggle.is_ok() {
+            text += format!(", {}", match toggle.unwrap().get_toggle_state() {
+                ToggleState::On => t!("uia.toggle_on"),
+                ToggleState::Off => t!("uia.toggle_off"),
+                ToggleState::Indeterminate => t!("uia.toggle_indeterminate")
+            }).as_str();
+        }
+
+        text
     }
 }
 

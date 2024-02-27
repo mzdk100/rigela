@@ -1,0 +1,13 @@
+_version: 2
+
+uia.toggle_on:
+  en: On
+  zh-CN: 开启
+
+uia.toggle_off:
+  en: Off
+  zh-CN: 关闭
+
+uia.toggle_indeterminate:
+  en: Indeterminate state
+  zh-CN: 状态不确定
