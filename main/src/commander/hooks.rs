@@ -68,8 +68,11 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let key: Keys = (info.vkCode, is_extended).into();
         context.commander.set_last_pressed_key(&key);
 
-        if info.vkCode as u16 == VK_CAPITAL.0 || key == VkNumlock {
-            read_lock_key_state_changed(context.clone());
+        if info.vkCode as u16 == VK_CAPITAL.0 {
+            read_lock_key_state_changed(context.clone(), true);
+        }
+        if key == VkNumlock {
+            read_lock_key_state_changed(context.clone(), false);
         }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -118,23 +121,22 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
 }
 
 // 播报锁定键的状态变化
-fn read_lock_key_state_changed(context: Arc<Context>) {
-    let info = match context.commander.get_last_pressed_key() {
-        VkCapital => {
+fn read_lock_key_state_changed(context: Arc<Context>, capital_or_num: bool) {
+    let info = match capital_or_num {
+        true => {
             let (_, state) = get_key_state(VK_CAPITAL);
             match state {
-                true => "大写".to_string(),
-                false => "小写".to_string(),
+                true => "小写".to_string(),
+                false => "大写".to_string(),
             }
         }
-        VkNumlock => {
+        false => {
             let (_, state) = get_key_state(VK_NUMLOCK);
             match state {
                 true => "热键".to_string(),
                 false => "数字".to_string(),
             }
         }
-        _ => "".to_string(),
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
