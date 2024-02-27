@@ -56,10 +56,10 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 /// 检查更新。
 #[allow(unused)]
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
-    {
-        #[cfg(debug_assertions)]
-        return;
-    }
+    // {
+    //     #[cfg(debug_assertions)]
+    //     return;
+    // }
 
     context.work_runtime.spawn(async move {
         match (auto, check_update().await) {
@@ -69,11 +69,21 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
             }
             (false, UpdateState::None) => {
                 // 手动检查, 未检测到更新需要弹窗提示
-                message_box(HWND::default(), "当前版本已是最新版本！", "提示", MB_OK);
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_newest_version"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
                 return;
             }
             (_, UpdateState::Updated) => {
-                message_box(HWND::default(), "您已经更新到最新版！", "提示", MB_OK);
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_newest_version"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
                 return;
             }
             _ => {}
@@ -89,7 +99,12 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
                 .arg(args().nth(0).unwrap())
                 .spawn(),
             Err(_) => {
-                message_box(HWND::default(), "更新器不存在！", "提示", MB_OK);
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_no_updater"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
                 return;
             }
         };
@@ -111,7 +126,7 @@ pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
 
 /// 打开捐赠界面。
 pub(crate) fn donate_cmd(_context: Arc<Context>) {
-    message_box(HWND::default(), "感谢支持！", "RigelA", MB_OK);
+    message_box(HWND::default(), &t!("cmd.msg_thanks"), "RigelA", MB_OK);
 }
 
 /// 打开关于窗口
@@ -138,13 +153,13 @@ pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     save_run_on_startup(context.clone(), toggle);
 
     let msg = if toggle {
-        "已开启开机自动启动！"
+        t!("cmd.msg_auto_start_on").to_string()
     } else {
-        "已关闭开机自动启动！"
+        t!("cmd.msg_auto_start_off").to_string()
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg.to_string()).await;
+        pf.speak(msg).await;
     });
 }
 
@@ -153,13 +168,13 @@ pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
     save_auto_check_update(context.clone(), toggle);
 
     let msg = if toggle {
-        "已开启自动更新！"
+        t!("cmd.msg_auto_check_on").to_string()
     } else {
-        "已关闭自动更新！"
+        t!("cmd.msg_auto_check_off").to_string()
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg.to_string()).await;
+        pf.speak(msg).await;
     });
 }
 
@@ -174,13 +189,13 @@ pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
     save_lang(context.clone(), &lang);
 
     let msg = if lang == Lang::Zh {
-        "已切换为中文！"
+        t!("cmd.msg_switch_to_zh").to_string()
     } else {
-        "switch to English！"
+        t!("cmd.msg_switch_to_en").to_string()
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg.to_string()).await;
+        pf.speak(msg).await;
     });
 }
 
@@ -206,7 +221,7 @@ pub(crate) fn set_voice_cmd(context: Arc<Context>, engine: String, name: String)
         ctx.config_manager.set_config(&root);
         tts.apply_config(&cfg.clone()).await;
         ctx.performer
-            .speak(format!("角色:{}", info.name).to_string())
+            .speak(t!("cmd.tts_role", value = info.name))
             .await;
     });
 }
@@ -227,7 +242,7 @@ pub(crate) fn set_speed_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(format!("语速:{}", speed).to_string()).await;
+        pf.speak(t!("cmd.tts_speed", value = speed)).await;
     });
 }
 
@@ -247,7 +262,7 @@ pub(crate) fn set_pitch_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(format!("音调:{}", pitch).to_string()).await;
+        pf.speak(t!("cmd.tts_pitch", value = pitch)).await;
     });
 }
 
@@ -267,17 +282,21 @@ pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(format!("音量:{}", volume).to_string()).await;
+        pf.speak(t!("cmd.tts_volume", value = volume)).await;
     });
 }
 
 /// 设置鼠标朗读
 pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
     apply_mouse_config(context.clone(), toggle);
-    let state = if toggle { "开启" } else { "关闭" };
+
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(format!("{}鼠标朗读", state).to_string()).await;
+        let state = match toggle {
+            true => t!("cmd.msg_mouse_read_on"),
+            false => t!("cmd.msg_mouse_read_off"),
+        };
+        pf.speak(state).await;
     });
 }
 
@@ -287,7 +306,12 @@ pub(crate) fn export_config_cmd(_context: Arc<Context>, path: PathBuf) {
         error!("备份数据失败");
     }
 
-    message_box(HWND::default(), "导出成功!", "提示", MB_OK);
+    message_box(
+        HWND::default(),
+        &t!("cmd.msg_export_success"),
+        &t!("cmd.msg_mind_title"),
+        MB_OK,
+    );
 }
 
 /// 导入配置
@@ -299,15 +323,19 @@ pub(crate) fn import_config_cmd(context: Arc<Context>, path: PathBuf) {
     context.config_manager.init();
     reapply_config(context.clone());
 
-    message_box(HWND::default(), "导入成功!", "提示", MB_OK);
+    message_box(
+        HWND::default(),
+        &t!("cmd.msg_import_success"),
+        &t!("cmd.msg_mind_title"),
+        MB_OK,
+    );
 }
 
 /// 还原默认配置
 pub(crate) fn reset_config_cmd(context: Arc<Context>) {
-    let info = "您确定要恢复所有的设置到默认配置吗?";
     let msg_params = MessageParams {
-        title: "确认",
-        content: &info,
+        title: &t!("cmd.msg_confirm_title"),
+        content: &t!("cmd.msg_reset_confirm"),
         buttons: nwg::MessageButtons::OkCancel,
         icons: nwg::MessageIcons::Question,
     };
@@ -340,6 +368,6 @@ fn reapply_config(context: Arc<Context>) {
         // 重新显示设置界面，更新界面上的状态值
         ctx.gui_provider.show_settings_form();
 
-        pf.speak("恢复完成!".to_string()).await;
+        pf.speak(t!("cmd.msg_reset_success")).await;
     });
 }

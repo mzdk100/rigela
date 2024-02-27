@@ -186,3 +186,69 @@ welcome.btn_help:
 welcome.btn_close:
   en: Close (&C)
   zh-CN: 关闭 (&C)
+
+
+cmd.msg_auto_check_off:
+  en: Turn off auto update
+  zh-CN: 已关闭自动更新!
+cmd.msg_auto_check_on:
+  en: Turn on auto update
+  zh-CN: 已开启自动更新！
+cmd.msg_auto_start_off:
+  en: Turn off auto start
+  zh-CN: 已关闭开机自动启动！
+cmd.msg_auto_start_on:
+  en: Turn on auto start
+  zh-CN: 已开启开机自动启动！
+cmd.msg_confirm_title:
+  en: Confirm
+  zh-CN: 确认
+cmd.msg_export_success:
+  en: Export success!
+  zh-CN: 导出成功!
+cmd.msg_import_success:
+  en: Import success!
+  zh-CN: 导入成功!
+cmd.msg_mind_title:
+  en: Note
+  zh-CN: 提示
+cmd.msg_mouse_read_off:
+  en: Mouse Reading already off
+  zh-CN: 已关闭鼠标朗读
+cmd.msg_mouse_read_on:
+  en: Mouse Reading already on
+  zh-CN: 已开启鼠标朗读
+cmd.msg_newest_version:
+  en: You are using the newest version!
+  zh-CN: 当前版本已是最新版本！
+cmd.msg_no_updater:
+  en: No need to update!
+  zh-CN: 您已经更新到最新版！
+cmd.msg_reset_confirm:
+  en: Would you like to restore all settings to default?
+  zh-CN: 您确定要恢复所有的设置到默认配置吗?
+cmd.msg_reset_success:
+  en: Restore success!
+  zh-CN: 恢复完成!
+cmd.msg_switch_to_en:
+  en: Switch to English！
+  zh-CN: Switch to English！
+cmd.msg_switch_to_zh:
+  en: 已切换为中文！
+  zh-CN: 已切换为中文！
+cmd.msg_thanks:
+  en: Thanks for your support!
+  zh-CN: 感谢支持！
+"cmd.tts_pitch":
+  en: "Pitch: %{value}"
+  zh-CN: "音调: %{value}"
+"cmd.tts_role":
+  en: "ole: %{value}"
+  zh-CN: "角色: %{value}"
+"cmd.tts_speed":
+  en: "Speed: %{value}"
+  zh-CN: "语速: %{value}"
+"cmd.tts_volume":
+  en: "Volume: %{value}"
+  zh-CN: "音量: %{value}"
+
