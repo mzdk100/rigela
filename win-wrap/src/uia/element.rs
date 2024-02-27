@@ -186,7 +186,34 @@ impl UiAutomationElement {
     #[allow(dead_code)]
     pub fn get_class_name(&self) -> String {
         unsafe { self._current.CurrentClassName() }
-            .expect("Can't get the class name of element.")
+            .unwrap_or(BSTR::new())
+            .to_string()
+    }
+
+    /**
+     * 获取项目状态。
+     * */
+    pub fn get_item_status(&self) -> String {
+        unsafe { self._current.CurrentItemStatus() }
+            .unwrap_or(BSTR::new())
+            .to_string()
+    }
+
+    /**
+     * 获取加速键。
+     * */
+    pub fn get_accelerator_key(&self) -> String {
+        unsafe { self._current.CurrentAcceleratorKey() }
+            .unwrap_or(BSTR::new())
+            .to_string()
+    }
+
+    /**
+     * 获取访问键。
+     * */
+    pub fn get_access_key(&self) -> String {
+        unsafe { self._current.CurrentAccessKey() }
+            .unwrap_or(BSTR::new())
             .to_string()
     }
 }
