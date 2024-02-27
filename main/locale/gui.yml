@@ -239,16 +239,16 @@ cmd.msg_switch_to_zh:
 cmd.msg_thanks:
   en: Thanks for your support!
   zh-CN: 感谢支持！
-"cmd.tts_pitch":
+cmd.tts_pitch:
   en: "Pitch: %{value}"
   zh-CN: "音调: %{value}"
-"cmd.tts_role":
+cmd.tts_role:
   en: "ole: %{value}"
   zh-CN: "角色: %{value}"
-"cmd.tts_speed":
+cmd.tts_speed:
   en: "Speed: %{value}"
   zh-CN: "语速: %{value}"
-"cmd.tts_volume":
+cmd.tts_volume:
   en: "Volume: %{value}"
   zh-CN: "音量: %{value}"
 

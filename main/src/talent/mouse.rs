@@ -26,7 +26,7 @@ use win_wrap::input::{click, get_cur_mouse_point, right_click};
 async fn click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
-    context.performer.speak("单击".to_string()).await;
+    context.performer.speak(t!("mouse.click")).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -34,7 +34,7 @@ async fn click(context: Arc<Context>) {
 async fn right_click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
-    context.performer.speak("右击".to_string()).await;
+    context.performer.speak(t!("mouse.right_click")).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -42,8 +42,11 @@ async fn right_click(context: Arc<Context>) {
 async fn read_mouse(context: Arc<Context>) {
     let is_read = !context.config_manager.get_config().mouse_config.is_read;
     apply_mouse_config(context.clone(), is_read);
-    let state = if is_read { "开启" } else { "关闭" };
-    context.performer.speak(format!("{}鼠标朗读", state)).await;
+    let state = match is_read {
+        true => t!("mouse.state_on"),
+        false => t!("mouse.state_off"),
+    };
+    context.performer.speak(state).await;
 }
 
 async fn get_point(context: Arc<Context>) -> (i32, i32) {
