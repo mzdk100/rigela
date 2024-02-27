@@ -87,6 +87,8 @@ async-trait = "0.1.77"
 
 # 解析html
 select = "0.6.0"
+
+# 压缩解压
 zip = "0.6.6"
 
 [dependencies.reqwest]
