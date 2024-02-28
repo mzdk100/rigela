@@ -69,10 +69,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
         if info.vkCode as u16 == VK_CAPITAL.0 || info.vkCode as u16 == VK_NUMLOCK.0 {
             let subject = context.event_core.get_subject();
-            subject
-                .lock()
-                .unwrap()
-                .notify(&Event::LockKey(info.vkCode as u16));
+            subject.notify(&Event::LockKey(info.vkCode as u16));
         }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁

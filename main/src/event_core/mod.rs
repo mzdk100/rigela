@@ -31,10 +31,8 @@ use crate::{
 };
 use event_observer::*;
 use std::fmt::{Debug, Formatter};
-use std::{
-    sync::{Arc, Mutex as StdMutex},
-    time::{Duration, SystemTime},
-};
+use std::sync::{Arc, OnceLock};
+use std::time::{Duration, SystemTime};
 use tokio::sync::{Mutex, OnceCell};
 
 type EventCoreSubject = Subject<Event>;
@@ -51,7 +49,7 @@ pub(crate) struct EventItem {
 pub(crate) struct EventCore {
     context: OnceCell<Arc<Context>>,
     filter: Arc<Mutex<Vec<EventItem>>>,
-    subject: Arc<StdMutex<EventCoreSubject>>,
+    subject: OnceLock<Arc<EventCoreSubject>>,
 }
 
 impl EventCore {
@@ -59,7 +57,7 @@ impl EventCore {
         Self {
             context: OnceCell::new(),
             filter: Arc::new(vec![].into()),
-            subject: Arc::new(EventCoreSubject::new().into()),
+            subject: OnceLock::new(),
         }
     }
 
@@ -117,14 +115,13 @@ impl EventCore {
 
         // 订阅动态事件
         let ctx = context.clone();
-        self.subject
-            .lock()
-            .unwrap()
-            .add_arc_observer(ctx.event_core.clone());
+        let mut subject = EventCoreSubject::new();
+        subject.add_arc_observer(ctx.event_core.clone());
+        let _ = self.subject.set(Arc::new(subject));
     }
 
-    pub(crate) fn get_subject(&self) -> Arc<StdMutex<EventCoreSubject>> {
-        self.subject.clone()
+    pub(crate) fn get_subject(&self) -> Arc<EventCoreSubject> {
+        self.subject.get().unwrap().clone()
     }
 
     /**
