@@ -22,7 +22,7 @@ use a11y::ia2::{
 };
 use log::error;
 use std::sync::Arc;
-use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
+use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
 
 //noinspection SpellCheckingInspection
 /**
@@ -47,11 +47,15 @@ async fn subscribe_uia_events(context: Arc<Context>) {
     // group.add_changes_listener(|| {});
 
     group.add_text_selection_changed_listener(move |element| {
-        let text_pattern = match UiAutomationTextPattern2::obtain(&element) {
+        let text_pattern = match UiAutomationTextPattern::obtain(&element) {
             Ok(p) => p,
             Err(_) => return,
         };
-        let caret = text_pattern.get_caret_range();
+        let selection = text_pattern.get_selection();
+        if selection.is_empty() {
+            return;
+        }
+        let caret = selection[0].clone();
         match commander.get_last_pressed_key() {
             VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
