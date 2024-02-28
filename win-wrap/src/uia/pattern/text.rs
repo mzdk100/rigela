@@ -16,6 +16,7 @@ use crate::{
     uia::element::UiAutomationElement,
 };
 use windows::core::BSTR;
+use windows::Win32::UI::Accessibility::{IUIAutomationTextPattern2, UIA_TextPattern2Id};
 use windows::{
     core::ComInterface,
     Win32::{
@@ -122,6 +123,31 @@ impl UiAutomationTextPattern {
             return Some(UiAutomationTextRange::obtain(&x));
         }
         None
+    }
+}
+
+pub struct UiAutomationTextPattern2(IUIAutomationTextPattern2);
+
+impl UiAutomationTextPattern2 {
+    pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
+        let result = unsafe { value.get_raw().GetCurrentPattern(UIA_TextPattern2Id) };
+        match result {
+            Ok(pattern) => Ok(UiAutomationTextPattern2(
+                pattern.cast::<IUIAutomationTextPattern2>().unwrap(),
+            )),
+            Err(e) => Err(format!("Can't get the TextPattern. ({})", e)),
+        }
+    }
+
+    // 获取插入符范围。
+    pub fn get_caret_range(&self) -> UiAutomationTextRange {
+        let mut active = BOOL::default();
+        let mut range = None;
+        unsafe {
+            self.0.GetCaretRange(&mut active, &mut range).unwrap();
+        }
+
+        UiAutomationTextRange::obtain(&range.unwrap())
     }
 }
 
@@ -242,7 +268,9 @@ impl UiAutomationTextRange {
             .to_string()
     }
 }
+
 unsafe impl Sync for UiAutomationTextRange {}
+
 unsafe impl Send for UiAutomationTextRange {}
 
 /*
