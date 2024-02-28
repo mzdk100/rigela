@@ -20,11 +20,13 @@ use crate::{
     talent::Talented,
 };
 use keys::Keys;
+use std::fmt::{Debug, Formatter};
+use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::hook::WindowsHook;
 
 type Talent = Arc<dyn Talented + Send + Sync>;
-
+type KeyCallbackFn = Arc<dyn Fn(Keys) + Send + Sync>;
 /**
  * 命令类型枚举。
  * */
@@ -41,11 +43,11 @@ pub(crate) enum CommandType {
 /**
  * 指挥官结构。
  * */
-#[derive(Clone, Debug)]
 pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
+    key_callback_fns: Mutex<Vec<KeyCallbackFn>>,
 }
 
 impl Commander {
@@ -58,6 +60,7 @@ impl Commander {
             keyboard_hook: OnceLock::new(),
             mouse_hook: OnceLock::new(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
+            key_callback_fns: Mutex::new(Vec::new()),
         }
     }
 
@@ -98,5 +101,23 @@ impl Commander {
      * */
     pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
         *self.last_pressed_key.lock().unwrap() = key.clone();
+        for callback in self.key_callback_fns.lock().unwrap().iter() {
+            callback(key.clone());
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn add_key_event_listener(&self, listener: KeyCallbackFn) {
+        self.key_callback_fns
+            .lock()
+            .unwrap()
+            .deref_mut()
+            .push(listener);
+    }
+}
+
+impl Debug for Commander {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Commander").finish()
     }
 }
