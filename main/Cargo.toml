@@ -88,6 +88,7 @@ async-trait = "0.1.77"
 # 解析html
 select = "0.6.0"
 zip = "0.6.6"
+event-observer = "0.1.0"
 
 [dependencies.reqwest]
 # 网络请求

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use crate::{
     commander::keys::Keys::{VkDown, VkUp},
     context::Context,
@@ -98,3 +99,6 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         });
     })
 }
+
+/// 处理编辑框的光标键播报
+pub(crate) async fn handle_cusor_key(_context: Arc<Context>, _key: Keys) {}
