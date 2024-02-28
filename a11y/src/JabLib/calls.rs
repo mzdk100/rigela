@@ -368,4 +368,241 @@ macro_rules! jab {
             $info
         )
     };
+    ($module:expr,do_accessible_actions,$vm_id:expr,$ac:expr,$actions_to_do:expr,$failure:expr) => {
+        call_proc!(
+            $module,
+            doAccessibleActions,
+            extern "cdecl" fn(i32, AccessibleContext,*const AccessibleActionsToDo,*mut JInt) -> BOOL,
+            $vm_id,
+            $ac,
+            $actions_to_do,
+            $failure
+        )
+    };
+    ($module:expr,set_text_contents,$vm_id:expr,$ac:expr,$text:expr) => {
+        call_proc!(
+            $module,
+            setTextContents,
+            extern "cdecl" fn(i32, AccessibleContext,*const u16) -> BOOL,
+            $vm_id,
+            $ac,
+            $text
+        )
+    };
+    ($module:expr,set_caret_update_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setCaretUpdateFP,
+            extern "cdecl" fn(AccessBridgeCaretUpdateFp),
+            $cb
+        )
+    };
+    ($module:expr,set_focus_gained_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setFocusGainedFP,
+            extern "cdecl" fn(AccessBridgeFocusGainedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_focus_lost_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setFocusLostFP,
+            extern "cdecl" fn(AccessBridgeFocusLostFp),
+            $cb
+        )
+    };
+    ($module:expr,set_java_shutdown_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setJavaShutdownFP,
+            extern "cdecl" fn(AccessBridgeJavaShutdownFp),
+            $cb
+        )
+    };
+    ($module:expr,set_menu_canceled_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMenuCanceledFP,
+            extern "cdecl" fn(AccessBridgeMenuCanceledFp),
+            $cb
+        )
+    };
+    ($module:expr,set_menu_deselected_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMenuDeselectedFP,
+            extern "cdecl" fn(AccessBridgeMenuDeselectedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_menu_selected_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMenuSelectedFP,
+            extern "cdecl" fn(AccessBridgeMenuSelectedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_mouse_clicked_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMouseClickedFP,
+            extern "cdecl" fn(AccessBridgeMouseClickedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_mouse_entered_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMouseEnteredFP,
+            extern "cdecl" fn(AccessBridgeMouseEnteredFp),
+            $cb
+        )
+    };
+    ($module:expr,set_mouse_exited_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMouseExitedFP,
+            extern "cdecl" fn(AccessBridgeMouseExitedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_mouse_pressed_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMousePressedFP,
+            extern "cdecl" fn(AccessBridgeMousePressedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_mouse_released_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setMouseReleasedFP,
+            extern "cdecl" fn(AccessBridgeMouseReleasedFp),
+            $cb
+        )
+    };
+    ($module:expr,set_popup_menu_canceled_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPopupMenuCanceledFP,
+            extern "cdecl" fn(AccessBridgePopupMenuCanceledFp),
+            $cb
+        )
+    };
+    ($module:expr,set_popup_menu_will_become_invisible_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPopupMenuWillBecomeInvisibleFP,
+            extern "cdecl" fn(AccessBridgePopupMenuWillBecomeInvisibleFp),
+            $cb
+        )
+    };
+    ($module:expr,set_popup_menu_will_become_visible_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPopupMenuWillBecomeVisibleFP,
+            extern "cdecl" fn(AccessBridgePopupMenuWillBecomeVisibleFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_active_descendent_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyActiveDescendentChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyActiveDescendentChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_caret_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyCaretChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyCaretChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_child_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyChildChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyChildChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_description_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyDescriptionChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyDescriptionChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_name_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyNameChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyNameChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_selection_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertySelectionChangeFP,
+            extern "cdecl" fn(AccessBridgePropertySelectionChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_state_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyStateChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyStateChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_table_model_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyTableModelChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyTableModelChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_text_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyTextChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyTextChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_value_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyValueChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyValueChangeFp),
+            $cb
+        )
+    };
+    ($module:expr,set_property_visible_data_change_fp,$cb:expr) => {
+        call_proc!(
+            $module,
+            setPropertyVisibleDataChangeFP,
+            extern "cdecl" fn(AccessBridgePropertyVisibleDataChangeFp),
+            $cb
+        )
+    };
 }

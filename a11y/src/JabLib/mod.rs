@@ -11,26 +11,59 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod callbacks;
 mod calls;
 mod packages;
 
 use crate::{
-    JabLib::packages::{
-        AccessibleActions,
-        AccessibleContextInfo,
-        JObject64,
-        JInt,
-        AccessBridgeVersionInfo,
-        AccessibleContext,
-        AccessibleTextRectInfo,
-        AccessibleTextAttributesInfo,
-        JavaObject,
-        VisibleChildrenInfo,
-        AccessibleIcons,
-        AccessibleKeyBindings,
-        AccessibleRelationSetInfo,
-        AccessibleTableInfo,
-        AccessibleHypertextInfo,
+    JabLib::{
+        packages::{
+            AccessibleActions,
+            AccessibleContextInfo,
+            JObject64,
+            JInt,
+            AccessBridgeVersionInfo,
+            AccessibleContext,
+            AccessibleTextRectInfo,
+            AccessibleTextAttributesInfo,
+            JavaObject,
+            VisibleChildrenInfo,
+            AccessibleIcons,
+            AccessibleKeyBindings,
+            AccessibleRelationSetInfo,
+            AccessibleTableInfo,
+            AccessibleHypertextInfo,
+            AccessibleActionsToDo,
+        },
+        callbacks::{
+            AccessBridgeCaretUpdateFp,
+            AccessBridgeFocusGainedFp,
+            AccessBridgeFocusLostFp,
+            AccessBridgeMenuCanceledFp,
+            AccessBridgeMouseClickedFp,
+            AccessBridgeMouseReleasedFp,
+            AccessBridgePopupMenuCanceledFp,
+            AccessBridgePopupMenuWillBecomeInvisibleFp,
+            AccessBridgePopupMenuWillBecomeVisibleFp,
+            AccessBridgePropertyActiveDescendentChangeFp,
+            AccessBridgePropertyTextChangeFp,
+            AccessBridgePropertyValueChangeFp,
+            AccessBridgeJavaShutdownFp,
+            AccessBridgeMenuDeselectedFp,
+            AccessBridgeMenuSelectedFp,
+            AccessBridgeMouseEnteredFp,
+            AccessBridgeMouseExitedFp,
+            AccessBridgeMousePressedFp,
+            AccessBridgePropertyCaretChangeFp,
+            AccessBridgePropertyChangeFp,
+            AccessBridgePropertyChildChangeFp,
+            AccessBridgePropertyDescriptionChangeFp,
+            AccessBridgePropertyNameChangeFp,
+            AccessBridgePropertySelectionChangeFp,
+            AccessBridgePropertyStateChangeFp,
+            AccessBridgePropertyTableModelChangeFp,
+            AccessBridgePropertyVisibleDataChangeFp,
+        },
     },
     jab,
 };
@@ -648,6 +681,272 @@ impl JabLib {
         }
         Some(info)
     }
+
+    /**
+     * 请求组件执行可访问操作的列表。如果执行了所有操作，则返回TRUE。当第一个请求的操作失败时返回FALSE，在这种情况下，“failure”包含失败操作的索引。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `actions_to_do` 要执行的动作列表。
+     * */
+    pub(crate) fn do_accessible_actions(&self, vm_id: i32, ac: AccessibleContext, actions_to_do: *const AccessibleActionsToDo) -> (bool, JInt) {
+        pump_waiting_messages();
+        let mut failure = unsafe { std::mem::zeroed() };
+        (jab!(self.h_module, do_accessible_actions, vm_id, ac,actions_to_do,&mut failure).unwrap_or(FALSE).as_bool(), failure)
+    }
+
+    /**
+     * 设置可编辑的文本内容。AccessibleContext必须实现AccessibleEditableText并可编辑。可以设置的最大文本长度为MAX_STRING_SIZE-1。返回是否成功。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `text` 文字内容。
+     * */
+    pub(crate) fn set_text_contents(&self, vm_id: i32, ac: AccessibleContext, text: *const u16) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module,set_text_contents,vm_id,ac,text).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 设置插入点更新时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_caret_update_fp(&self, cb: AccessBridgeCaretUpdateFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_caret_update_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置得到焦点时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_focus_gained_fp(&self, cb: AccessBridgeFocusGainedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_focus_gained_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置失去焦点时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_focus_lost_fp(&self, cb: AccessBridgeFocusLostFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_focus_lost_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置jvm关闭时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_java_shutdown_fp(&self, cb: AccessBridgeJavaShutdownFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_java_shutdown_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置菜单被取消时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_menu_canceled_fp(&self, cb: AccessBridgeMenuCanceledFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_menu_canceled_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置菜单被取消选择时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_menu_deselected_fp(&self, cb: AccessBridgeMenuDeselectedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_menu_deselected_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置菜单被选择时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_menu_selected_fp(&self, cb: AccessBridgeMenuSelectedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_menu_selected_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置鼠标点击时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_mouse_clicked_fp(&self, cb: AccessBridgeMouseClickedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_mouse_clicked_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置鼠标进入时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_mouse_entered_fp(&self, cb: AccessBridgeMouseEnteredFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_mouse_entered_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置鼠标离开时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_mouse_exited_fp(&self, cb: AccessBridgeMouseExitedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_mouse_exited_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置鼠标被按下时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_mouse_pressed_fp(&self, cb: AccessBridgeMousePressedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_mouse_pressed_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置鼠标被释放时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_mouse_released_fp(&self, cb: AccessBridgeMouseReleasedFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_mouse_released_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置弹出菜单被取消时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_popup_menu_canceled_fp(&self, cb: AccessBridgePopupMenuCanceledFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_popup_menu_canceled_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置弹出菜单将要隐藏时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_popup_menu_will_become_invisible_fp(&self, cb: AccessBridgePopupMenuWillBecomeInvisibleFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_popup_menu_will_become_invisible_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置弹出菜单将要显示时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_popup_menu_will_become_visible_fp(&self, cb: AccessBridgePopupMenuWillBecomeVisibleFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_popup_menu_will_become_visible_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性激活、取消激活时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_active_descendent_change_fp(&self, cb: AccessBridgePropertyActiveDescendentChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_active_descendent_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性插入点改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_caret_change_fp(&self, cb: AccessBridgePropertyCaretChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_caret_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_change_fp(&self, cb: AccessBridgePropertyChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性孩子改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_child_change_fp(&self, cb: AccessBridgePropertyChildChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_child_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性描述改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_description_change_fp(&self, cb: AccessBridgePropertyDescriptionChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_description_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性名称改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_name_change_fp(&self, cb: AccessBridgePropertyNameChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_name_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性选择改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_selection_change_fp(&self, cb: AccessBridgePropertySelectionChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_selection_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性状态改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_state_change_fp(&self, cb: AccessBridgePropertyStateChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_state_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性表格模式改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_table_model_change_fp(&self, cb: AccessBridgePropertyTableModelChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_table_model_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性文字改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_text_change_fp(&self, cb: AccessBridgePropertyTextChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_text_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性值改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_value_change_fp(&self, cb: AccessBridgePropertyValueChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_value_change_fp,cb).unwrap_or(())
+    }
+
+    /**
+     * 设置属性可见数据改变时的处理函数。
+     * `cb` 接收事件的函数。
+     * */
+    pub(crate) fn set_property_visible_data_change_fp(&self, cb: AccessBridgePropertyVisibleDataChangeFp) {
+        pump_waiting_messages();
+        jab!(self.h_module,set_property_visible_data_change_fp,cb).unwrap_or(())
+    }
 }
 
 impl Drop for JabLib {
@@ -661,9 +960,8 @@ impl Drop for JabLib {
 
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
-    use crate::JabLib::{packages::ACCESSIBLE_PANEL, JabLib};
+    use crate::JabLib::{packages::{ACCESSIBLE_PANEL, AccessibleActionsToDo, AccessibleContext}, JabLib};
     use win_wrap::common::{find_window, get_desktop_window};
-    use crate::JabLib::packages::AccessibleContext;
 
     #[test]
     fn main() {
@@ -720,6 +1018,9 @@ mod test_jab {
         dbg!(jab.get_visible_children(vm_id, ac, 0));
         dbg!(jab.get_events_waiting());
         dbg!(jab.get_caret_location(vm_id, ac, 0));
+        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
+        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
+        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
 
         jab.release_java_object(vm_id, ac);
 

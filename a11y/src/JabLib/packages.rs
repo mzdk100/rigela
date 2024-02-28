@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::cmp::min;
 use win_wrap::common::BOOL;
 
 #[allow(unused)]
@@ -661,7 +662,7 @@ const MAX_ACTION_INFO: u32 = 256;
 const MAX_ACTIONS_TO_DO: u32 = 32;
 
 /// an action assocated with a component
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleActionInfo {
     /// action name
@@ -678,9 +679,55 @@ pub(crate) struct AccessibleActions {
     pub(crate) actionInfo: [AccessibleActionInfo; MAX_ACTION_INFO as usize],
 }
 
+/// struct for requesting the actions associated with a component
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct GetAccessibleActionsPackage {
+    pub(crate) vmID: i32,
+    /// the component
+    pub(crate) accessibleContext: JObject64,
+    /// the actions
+    pub(crate) rAccessibleActions: AccessibleActions,
+}
 
-// AccessibleText packages
+/// list of AccessibleActions to do
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct AccessibleActionsToDo {
+    /// number of actions to do
+    pub(crate) actionsCount: JInt,
+    /// the accessible actions to do
+    pub(crate) actions: [AccessibleActionInfo; MAX_ACTIONS_TO_DO as usize],
+}
 
+impl AccessibleActionsToDo {
+    pub(crate) fn from_actions(actions: &AccessibleActions) -> AccessibleActionsToDo {
+        let mut to_do: AccessibleActionsToDo = unsafe { std::mem::zeroed() };
+        for i in 0..min(MAX_ACTIONS_TO_DO, actions.actionsCount as u32) {
+            to_do.actions[i as usize] = actions.actionInfo[i as usize];
+        }
+        to_do
+    }
+}
+
+/// struct for sending a message to do one or more actions
+#[derive(Debug)]
+#[repr(C)]
+pub(crate) struct DoAccessibleActionsPackage {
+    /// the virtual machine ID
+    pub(crate) vmID: i32,
+    /// component to do the action
+    pub(crate) accessibleContext: JObject64,
+    /// the accessible actions to do
+    pub(crate) actionsToDo: AccessibleActionsToDo,
+    /// action return value
+    pub(crate) rResult: BOOL,
+    /// index of action that failed if rResult is FALSE
+    pub(crate) failure: JInt,
+}
+
+
+/// AccessibleText packages
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTextInfo {
