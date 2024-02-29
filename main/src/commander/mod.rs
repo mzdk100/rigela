@@ -20,13 +20,15 @@ use crate::{
     talent::Talented,
 };
 use keys::Keys;
-use std::fmt::{Debug, Formatter};
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::{
+    fmt::{Debug, Formatter},
+    sync::{Arc, Mutex, OnceLock},
+};
 use win_wrap::hook::WindowsHook;
 
 type Talent = Arc<dyn Talented + Send + Sync>;
 type KeyCallbackFn = Arc<dyn Fn(Keys) + Send + Sync>;
+
 /**
  * 命令类型枚举。
  * */
@@ -47,7 +49,7 @@ pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
-    key_callback_fns: Mutex<Vec<KeyCallbackFn>>,
+    key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
 }
 
 impl Commander {
@@ -101,18 +103,22 @@ impl Commander {
      * */
     pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
         *self.last_pressed_key.lock().unwrap() = key.clone();
-        for callback in self.key_callback_fns.lock().unwrap().iter() {
-            callback(key.clone());
+
+        let callbacks = { self.key_callback_fns.lock().unwrap().clone() };
+        // 到这里lock已经没有生存期了，由于每一个callback的函数行为未知，所以一定要在没有锁的情况下执行他们
+        for callback in callbacks.iter() {
+            if callback.0.contains(key) {
+                callback.1(key.clone());
+            }
         }
     }
 
     #[allow(dead_code)]
-    pub(crate) fn add_key_event_listener(&self, listener: KeyCallbackFn) {
+    pub(crate) fn add_key_event_listener(&self, keys: &[Keys], listener: impl Fn(Keys) + Sync + Send + 'static) {
         self.key_callback_fns
             .lock()
             .unwrap()
-            .deref_mut()
-            .push(listener);
+            .push((Vec::from(keys), Arc::new(listener)));
     }
 }
 
