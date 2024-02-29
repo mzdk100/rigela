@@ -36,9 +36,9 @@ use windows::{
         BSTR,
         VARIANT,
         Interface,
-        IUnknown,
     },
 };
+use windows::Win32::System::Com::IDispatch;
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
     ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_BUTTONMENU,
@@ -331,7 +331,7 @@ impl AccessibleObject {
             let Ok(v) = self.0.accNavigate(nav_dir, &VARIANT::from(start)) else {
                 return AccessibleResultType::None;
             };
-            let Ok(d) = IUnknown::try_from(&v) else {
+            let Ok(d) = IDispatch::try_from(&v) else {
                 return match u32::try_from(&v) {
                     Ok(d) => AccessibleResultType::ChildId(d),
                     Err(_) => AccessibleResultType::None
@@ -351,7 +351,7 @@ impl AccessibleObject {
             let Ok(v) = self.0.accHitTest(left, top) else {
                 return AccessibleResultType::None;
             };
-            if let Ok(d) = IUnknown::try_from(&v) {
+            if let Ok(d) = IDispatch::try_from(&v) {
                 return AccessibleResultType::Object(d);
             }
             AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
@@ -366,7 +366,7 @@ impl AccessibleObject {
             let Ok(v) = self.0.accFocus() else {
                 return AccessibleResultType::None;
             };
-            if let Ok(d) = IUnknown::try_from(&v) {
+            if let Ok(d) = IDispatch::try_from(&v) {
                 return AccessibleResultType::Object(d);
             }
             AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
@@ -381,7 +381,7 @@ impl AccessibleObject {
             let Ok(v) = self.0.accSelection() else {
                 return AccessibleResultType::None;
             };
-            if let Ok(d) = IUnknown::try_from(&v) {
+            if let Ok(d) = IDispatch::try_from(&v) {
                 return AccessibleResultType::Object(d);
             }
             AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
@@ -442,7 +442,7 @@ impl AccessibleObject {
                 Ok(_) => {
                     let mut v = vec![];
                     for i in 0..cnt {
-                        if let Ok(d) = IUnknown::try_from(&arr[i as usize]) {
+                        if let Ok(d) = IDispatch::try_from(&arr[i as usize]) {
                             v.push(AccessibleObject::from_raw(d.cast().unwrap(), 0));
                         }
                         if let Ok(d) = i32::try_from(&arr[i as usize]) {
@@ -507,7 +507,7 @@ impl AccessibleObject {
 pub enum AccessibleResultType {
     None,
     ChildId(u32),
-    Object(IUnknown),
+    Object(IDispatch),
 }
 
 impl Debug for AccessibleObject {

@@ -17,7 +17,7 @@ use windows::core::{
     IUnknown_Vtbl,
     VARIANT,
 };
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * This interface gives access to a single numerical value.

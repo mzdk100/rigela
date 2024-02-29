@@ -13,7 +13,7 @@
 
 use super::AccessibleAction::{IAccessibleAction, IAccessibleAction_Impl, IAccessibleAction_Vtbl};
 use windows::core::{HRESULT, VARIANT};
-use windows_interface::interface;
+use windows::core::interface;
 
 //noinspection SpellCheckingInspection
 /**

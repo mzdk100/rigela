@@ -13,7 +13,7 @@
 
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * A value specifying a color in ARGB format, where each 8-bit color component specifies alpha, red, green, and blue respectively.

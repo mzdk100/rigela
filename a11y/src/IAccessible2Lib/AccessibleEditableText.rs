@@ -14,7 +14,7 @@
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * This interface provides clipboard capability to text objects.

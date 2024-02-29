@@ -9,9 +9,6 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-windows-interface = "0.54.0"
-
 [dependencies.win-wrap]
 path = "../win-wrap"
 
@@ -21,6 +18,7 @@ path = "../utils"
 [dependencies.windows]
 version = "0.54.0"
 features = [
+    "windows-interface",
     "Win32_System_Com",
     "Win32_System_Variant",
     "Win32_UI_Accessibility"

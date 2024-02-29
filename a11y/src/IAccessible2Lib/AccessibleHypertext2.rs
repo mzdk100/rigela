@@ -18,7 +18,7 @@ use super::{
     },
 };
 use windows::core::HRESULT;
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * This interface exposes information about hypertext in a document.
