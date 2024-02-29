@@ -19,7 +19,6 @@ mod input;
 mod progress;
 
 use crate::commander::keys::Keys;
-use crate::event_core::input::handle_lockkey;
 use crate::{
     context::Context,
     event_core::{
@@ -34,8 +33,6 @@ use std::sync::{Arc, OnceLock};
 use std::time::{Duration, SystemTime};
 use tokio::sync::{Mutex, OnceCell};
 
-type EventCoreSubject = Subject<Event>;
-
 /// 事件过滤器
 #[derive(Debug)]
 pub(crate) struct EventItem {
@@ -48,7 +45,6 @@ pub(crate) struct EventItem {
 pub(crate) struct EventCore {
     context: OnceCell<Arc<Context>>,
     filter: Arc<Mutex<Vec<EventItem>>>,
-    subject: OnceLock<Arc<EventCoreSubject>>,
 }
 
 impl EventCore {
@@ -56,7 +52,6 @@ impl EventCore {
         Self {
             context: OnceCell::new(),
             filter: Arc::new(vec![].into()),
-            subject: OnceLock::new(),
         }
     }
 
@@ -111,16 +106,6 @@ impl EventCore {
 
         // 订阅进度栏事件
         subscribe_progress_events(context.clone()).await;
-
-        // 订阅动态事件
-        let ctx = context.clone();
-        let mut subject = EventCoreSubject::new();
-        subject.add_arc_observer(ctx.event_core.clone());
-        let _ = self.subject.set(Arc::new(subject));
-    }
-
-    pub(crate) fn get_subject(&self) -> Arc<EventCoreSubject> {
-        self.subject.get().unwrap().clone()
     }
 
     /**
@@ -132,26 +117,6 @@ impl EventCore {
 impl Debug for EventCore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EventCore").finish()
-    }
-}
-
-unsafe impl Send for EventCore {}
-
-unsafe impl Sync for EventCore {}
-
-/// 分派事件
-impl Observer<Event> for EventCore {
-    #[allow(unreachable_patterns)]
-    fn on_notify(&self, event: &Event) {
-        let context = self.context.get().unwrap().clone();
-        let ctx = context.clone();
-        let event = event.clone();
-        context.main_handler.spawn(async move {
-            match event {
-                Event::LockKey(vk) => handle_lockkey(ctx.clone(), vk).await,
-                _ => {}
-            }
-        });
     }
 }
 
@@ -171,13 +136,3 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
         });
     });
 }
-
-#[allow(unused)]
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum Event {
-    CursorKey(Keys),
-    LockKey(u16),
-}
-
-unsafe impl Send for Event {}
-unsafe impl Sync for Event {}

@@ -62,6 +62,7 @@ pub(crate) enum Keys {
     VkShift,
     VkAlt,
     VkWin,
+    VkNumPad0,
     VkNumPad1,
     VkNumPad2,
     VkNumPad3,
@@ -314,9 +315,9 @@ impl From<(u32, bool)> for Keys {
 
         match (vk, ext) {
             // 读屏主热键
-            (VK_INSERT, false) => Self::VkRigelA,
-            (VK_INSERT, true) => Self::VkRigelA,
-            (VK_CAPITAL, false) => Self::VkRigelA,
+            (VK_INSERT, false) => Self::VkNumPad0,
+            (VK_INSERT, true) => Self::VkInsert,
+            (VK_CAPITAL, false) => Self::VkCapital,
 
             // 小键盘数字键
             (VK_END, false) => Self::VkNumPad1,
@@ -616,6 +617,9 @@ macro_rules! impl_keys_str_into {
 
 impl_keys_str_into!(
     "RigelA" => Keys::VkRigelA,
+
+    "大写锁定" => Keys::VkCapital,
+    "小键盘0" => Keys::VkNumPad0,
 
     "小键盘1" => Keys::VkNumPad1,
     "小键盘2" => Keys::VkNumPad2,

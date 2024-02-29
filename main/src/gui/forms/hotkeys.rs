@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys::{VkCapital, VkInsert, VkNumPad0, VkRigelA};
 use crate::gui::forms::settings_form::SettingsForm;
 use crate::{
     commander::{keys::Keys, CommandType::Key},
@@ -290,7 +291,12 @@ impl SettingsForm {
         WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
             let info: &KbdLlHookStruct = l_param.to();
             let is_extended = info.flags.contains(LLKHF_EXTENDED);
-            let cur_key = (info.vkCode, is_extended).into();
+            let key = (info.vkCode, is_extended).into();
+            let cur_key = match key {
+                VkNumPad0 | VkCapital | VkInsert => VkRigelA,
+                _ => key,
+            };
+
             let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
             {
                 key_track.lock().unwrap().insert(cur_key, pressed);

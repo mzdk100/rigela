@@ -12,8 +12,8 @@
  */
 
 use super::keys::Keys;
+use crate::commander::keys::Keys::*;
 use crate::configs::config_operations::{get_hotkeys, get_mouse_read_state};
-use crate::event_core::Event;
 use crate::talent::mouse::mouse_read;
 use crate::{
     commander::{CommandType, Talent},
@@ -28,7 +28,7 @@ use win_wrap::{
     ext::LParamExt,
     hook::HOOK_TYPE_MOUSE_LL,
     hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{VK_CAPITAL, VK_NUMLOCK, WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
+    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
 /// 设置键盘钩子
@@ -43,6 +43,8 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
         let key = (info.vkCode, is_extended).into();
+
+
         let fns = context.commander.get_key_callback_fns();
         for (keys, callback) in fns.iter() {
             if keys.contains(&key) {
@@ -51,7 +53,11 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         let mut map = key_track.write().unwrap();
-        map.insert((info.vkCode, is_extended).into(), pressed);
+        let key = match key {
+            VkNumPad0 | VkCapital | VkInsert => VkRigelA,
+            _ => key,
+        };
+        map.insert(key, pressed);
 
         if !pressed {
             drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -70,14 +76,6 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
                 }
                 _ => continue,
             };
-        }
-
-        let key: Keys = (info.vkCode, is_extended).into();
-        context.commander.set_last_pressed_key(&key);
-
-        if info.vkCode as u16 == VK_CAPITAL.0 || info.vkCode as u16 == VK_NUMLOCK.0 {
-            let subject = context.event_core.get_subject();
-            subject.notify(&Event::LockKey(info.vkCode as u16));
         }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁

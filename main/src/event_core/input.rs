@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys::{VkCapital, VkNumlock};
 use crate::context::Context;
 use std::sync::Arc;
 use win_wrap::input::{get_key_state, VK_CAPITAL, VK_NUMLOCK};
@@ -22,6 +23,8 @@ use win_wrap::input::{get_key_state, VK_CAPITAL, VK_NUMLOCK};
  * */
 pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
     let ctx = context.clone();
+
+    subscribe_lock_key_events(context.clone()).await;
 
     context
         .peeper_server
@@ -37,20 +40,36 @@ pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
 }
 
 /// 处理锁定键状态更改播报
-pub(crate) async fn handle_lockkey(context: Arc<Context>, vk: u16) {
-    let mut info: &str = "";
-    if vk == VK_CAPITAL.0 {
-        let (_, state) = get_key_state(VK_CAPITAL);
-        info = match state {
-            true => "小写",
-            false => "大写",
-        }
-    } else if vk == VK_NUMLOCK.0 {
-        let (_, state) = get_key_state(VK_NUMLOCK);
-        info = match state {
-            true => "热键",
-            false => "数字",
-        }
-    }
-    context.performer.speak(info.to_string()).await;
+pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
+    let ctx = context.clone();
+
+    context
+        .commander
+        .add_key_event_listener(&vec![VkCapital, VkNumlock], move |key, pressed| {
+            if !pressed {
+                return;
+            }
+
+            let info = match key {
+                VkCapital => {
+                    let (_, state) = get_key_state(VK_CAPITAL);
+                    match state {
+                        true => "小写",
+                        false => "大写",
+                    }
+                }
+                VkNumlock => {
+                    let (_, state) = get_key_state(VK_NUMLOCK);
+                    match state {
+                        true => "热键",
+                        false => "数字",
+                    }
+                }
+                _ => "",
+            };
+            let pf = ctx.performer.clone();
+            ctx.main_handler.spawn(async move {
+                pf.speak(info.to_string()).await;
+            });
+        });
 }
