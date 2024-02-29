@@ -44,7 +44,6 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
         let key = (info.vkCode, is_extended).into();
 
-
         let fns = context.commander.get_key_callback_fns();
         for (keys, callback) in fns.iter() {
             if keys.contains(&key) {
