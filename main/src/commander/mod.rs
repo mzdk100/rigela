@@ -27,7 +27,7 @@ use std::{
 use win_wrap::hook::WindowsHook;
 
 type Talent = Arc<dyn Talented + Send + Sync>;
-type KeyCallbackFn = Arc<dyn Fn(Keys) + Send + Sync>;
+type KeyCallbackFn = Arc<dyn Fn(Keys, bool) + Send + Sync>;
 
 /**
  * 命令类型枚举。
@@ -104,21 +104,28 @@ impl Commander {
     pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
         *self.last_pressed_key.lock().unwrap() = key.clone();
 
-        let callbacks = { self.key_callback_fns.lock().unwrap().clone() };
+        // let callbacks = { self.key_callback_fns.lock().unwrap().clone() };
         // 到这里lock已经没有生存期了，由于每一个callback的函数行为未知，所以一定要在没有锁的情况下执行他们
-        for callback in callbacks.iter() {
-            if callback.0.contains(key) {
-                callback.1(key.clone());
-            }
-        }
+        // for callback in callbacks.iter() {
+        //     if callback.0.contains(key) {
+        //         callback.1(key.clone());
+        //     }
+        // }
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn add_key_event_listener(&self, keys: &[Keys], listener: impl Fn(Keys) + Sync + Send + 'static) {
+    pub(crate) fn add_key_event_listener(
+        &self,
+        keys: &[Keys],
+        listener: impl Fn(Keys, bool) + Sync + Send + 'static,
+    ) {
         self.key_callback_fns
             .lock()
             .unwrap()
             .push((Vec::from(keys), Arc::new(listener)));
+    }
+
+    pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
+        self.key_callback_fns.lock().unwrap().clone()
     }
 }
 

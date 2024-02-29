@@ -20,8 +20,6 @@ use a11y::ia2::{
 use log::error;
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
-use tokio::time::sleep;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
 
 //noinspection SpellCheckingInspection
@@ -119,24 +117,27 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
     let keys = [Keys::VkUp, Keys::VkDown];
     let ctx = context.clone();
 
-    context
-        .commander
-        .add_key_event_listener(&keys, move |_key| {
-            let ctrl = ctx.ui_automation.get_focused_element();
+    let cb = move |_key, pressed| {
+        let ctrl = ctx.ui_automation.get_focused_element();
 
-            if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
-                {
+        if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
+            match pressed {
+                true => {
                     *line_handled().lock().unwrap().deref_mut() = false;
                 }
-                let pf = ctx.performer.clone();
-                ctx.main_handler.spawn(async move {
-                    sleep(Duration::from_millis(20)).await;
-                    if !*line_handled().lock().unwrap() {
-                        let caret = pattern.get_caret_range();
-                        caret.expand_to_enclosing_unit(TextUnit::Line);
-                        pf.speak(caret).await;
-                    }
-                });
+                false => {
+                    let pf = ctx.performer.clone();
+                    ctx.main_handler.spawn(async move {
+                        if !*line_handled().lock().unwrap() {
+                            let caret = pattern.get_caret_range();
+                            caret.expand_to_enclosing_unit(TextUnit::Line);
+                            pf.speak(caret).await;
+                        }
+                    });
+                }
             }
-        });
+        }
+    };
+
+    context.commander.add_key_event_listener(&keys, cb);
 }

@@ -42,6 +42,14 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let is_extended = info.flags.contains(LLKHF_EXTENDED);
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
+        let key = (info.vkCode, is_extended).into();
+        let fns = context.commander.get_key_callback_fns();
+        for (keys, callback) in fns.iter() {
+            if keys.contains(&key) {
+                callback(key, pressed);
+            }
+        }
+
         let mut map = key_track.write().unwrap();
         map.insert((info.vkCode, is_extended).into(), pressed);
 
