@@ -17,7 +17,7 @@ use windows::Win32::System::Registry::{
     RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegSetValueExW, KEY_WRITE, REG_SZ,
 };
 pub use windows::{
-    core::Result,
+    core::{HRESULT, Result},
     Win32::{
         Foundation::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
@@ -68,6 +68,7 @@ use windows::{
         },
     },
 };
+use windows::Win32::Foundation::WIN32_ERROR;
 
 /**
  * 播放一个声音。
@@ -296,7 +297,7 @@ pub fn get_proc_address(h_module: HMODULE, proc_name: &str) -> FARPROC {
 /**
  * 查询调用线程的最后错误代码值。 最后一个错误代码按线程进行维护。多个线程不会覆盖彼此的最后错误代码。
  * */
-pub fn get_last_error() -> Result<()> {
+pub fn get_last_error() -> WIN32_ERROR {
     unsafe { GetLastError() }
 }
 
@@ -428,17 +429,17 @@ pub fn set_startup_registry(
             0,
             KEY_WRITE,
             &mut hkey,
-        )?;
+        ).ok()?;
         if enable {
-            RegSetValueExW(hkey, &HSTRING::from(program_name), 0, REG_SZ, Some(&path))?;
+            RegSetValueExW(hkey, &HSTRING::from(program_name), 0, REG_SZ, Some(&path)).ok()?;
         } else {
             // let mut data = 0;
-            // let res = RegQueryValueExW(hkey,&HSTRING::from(program_name),None,None,None,Some(&mut data),)?;
+            // let res = RegQueryValueExW(hkey,&HSTRING::from(program_name),None,None,None,Some(&mut data),).ok()?;
             // if data != 0 {
-            RegDeleteValueW(hkey, &HSTRING::from(program_name))?;
+            RegDeleteValueW(hkey, &HSTRING::from(program_name)).ok()?;
             // }
         }
-        RegCloseKey(hkey)?;
+        RegCloseKey(hkey).ok()?;
     }
 
     Ok(())

@@ -20,7 +20,7 @@ use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessible_Vtbl};
-use windows_interface::interface;
+use windows::core::interface;
 
 //noinspection SpellCheckingInspection
 /**
@@ -340,8 +340,10 @@ use windows_interface::interface;
  * */
 #[allow(dead_code)]
 pub struct IA2Locale {
-    language: BSTR, // ISO 639-1 Alpha-2 two character language code
-    country: BSTR,  // ISO 3166-1 Alpha-2 two character country codes
+    language: BSTR,
+    // ISO 639-1 Alpha-2 two character language code
+    country: BSTR,
+    // ISO 3166-1 Alpha-2 two character country codes
     variant: BSTR,  // Application-specific variant of the locale
 }
 
@@ -454,7 +456,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * this method is implemented on the combo box itself.
      * ATs can use this interface if a child list is not found.
      * */
-    pub fn groupPosition(
+    pub(crate) fn groupPosition(
         &self,
         groupLevel: *mut i32,
         similarItemsInGroup: *mut i32,
@@ -479,7 +481,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
      * Returns the localized extended role.
      * `localizedExtendedRole` @retrieval S_FALSE if there is nothing to return, [out] value is NULL
      * */
-    pub fn localizedExtendedRole(&self, localizedExtendedRole: *mut BSTR) -> HRESULT;
+    pub(crate) fn localizedExtendedRole(&self, localizedExtendedRole: *mut BSTR) -> HRESULT;
 
     /**
      * Returns the number of extended states.

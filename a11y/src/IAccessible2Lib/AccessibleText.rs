@@ -15,7 +15,7 @@ use super::IA2CommonTypes::{IA2CoordinateType, IA2ScrollType};
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * A structure containing a substring and the start and end offsets in the enclosing string.
@@ -23,8 +23,10 @@ use windows_interface::interface;
  * */
 #[allow(dead_code)]
 pub struct IA2TextSegment {
-    text: BSTR, // A segment's copy of a text taken from an enclosing paragraph.
-    start: i32, // The first character's index of the segment in the enclosing text.
+    text: BSTR,
+    // A segment's copy of a text taken from an enclosing paragraph.
+    start: i32,
+    // The first character's index of the segment in the enclosing text.
     end: i32, // Index of the character following the last character of the segment in the enclosing text.
 }
 

@@ -13,7 +13,7 @@
 
 use crate::uia::element::UiAutomationElement;
 use std::fmt::{Debug, Formatter};
-use windows::core::{ComInterface, BSTR};
+use windows::core::{Interface, BSTR};
 use windows::Win32::UI::Accessibility::{IUIAutomationValuePattern, UIA_ValuePatternId};
 
 /// ValuePattern
@@ -66,4 +66,5 @@ impl Debug for UiAutomationValuePattern {
 }
 
 unsafe impl Send for UiAutomationValuePattern {}
+
 unsafe impl Sync for UiAutomationValuePattern {}

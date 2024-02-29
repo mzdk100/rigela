@@ -12,9 +12,8 @@
  */
 
 use super::AccessibleAction::{IAccessibleAction, IAccessibleAction_Impl, IAccessibleAction_Vtbl};
-use windows::core::HRESULT;
-use windows::Win32::System::Variant::VARIANT;
-use windows_interface::interface;
+use windows::core::{HRESULT, VARIANT};
+use windows::core::interface;
 
 //noinspection SpellCheckingInspection
 /**

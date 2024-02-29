@@ -38,7 +38,10 @@ impl Launcher {
      * */
     pub(crate) fn new() -> Self {
         // 初始化COM线程模型。
-        co_initialize_multi_thread().expect("Can't initialize the com environment.");
+        let res = co_initialize_multi_thread();
+        if res.is_err() {
+            error!("Can't initialize the com environment. {}", res.message());
+        }
 
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();

@@ -13,8 +13,32 @@
 
 use crate::common::{Result, HWND};
 use std::fmt::{Debug, Display, Formatter};
-use windows::Win32::System::Variant::VARIANT;
-use windows::Win32::UI::Accessibility::AccessibleChildren;
+use windows::{
+    Win32::{
+        UI::{
+            Accessibility::{
+                AccessibleChildren,
+                AccessibleObjectFromEvent,
+                AccessibleObjectFromPoint,
+                AccessibleObjectFromWindow,
+                GetRoleTextW,
+                GetStateTextW,
+                IAccessible,
+                WindowFromAccessibleObject,
+            },
+            WindowsAndMessaging::{OBJID_CARET, OBJID_WINDOW},
+        },
+        Foundation::{POINT, S_FALSE},
+    },
+    core::{
+        Error,
+        Type,
+        BSTR,
+        VARIANT,
+        Interface,
+    },
+};
+use windows::Win32::System::Com::IDispatch;
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
     ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_BUTTONMENU,
@@ -33,23 +57,6 @@ pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_SPLITBUTTON, ROLE_SYSTEM_STATICTEXT, ROLE_SYSTEM_STATUSBAR, ROLE_SYSTEM_TABLE,
     ROLE_SYSTEM_TEXT, ROLE_SYSTEM_TITLEBAR, ROLE_SYSTEM_TOOLBAR, ROLE_SYSTEM_TOOLTIP,
     ROLE_SYSTEM_WHITESPACE, ROLE_SYSTEM_WINDOW, STATE_SYSTEM_HASPOPUP, STATE_SYSTEM_NORMAL,
-};
-use windows::{
-    core::{ComInterface, Error, Type, BSTR, HSTRING},
-    Win32::{
-        Foundation::{POINT, S_FALSE},
-        System::{
-            Com::IDispatch,
-            Variant::{VariantClear, VariantInit, VT_DISPATCH, VT_EMPTY, VT_I4},
-        },
-        UI::{
-            Accessibility::{
-                AccessibleObjectFromEvent, AccessibleObjectFromPoint, AccessibleObjectFromWindow,
-                GetRoleTextW, GetStateTextW, IAccessible, WindowFromAccessibleObject,
-            },
-            WindowsAndMessaging::{OBJID_CARET, OBJID_WINDOW},
-        },
-    },
 };
 
 pub struct AccessibleObject(IAccessible, i32);
@@ -119,26 +126,12 @@ impl AccessibleObject {
         let acc = unsafe {
             let mut p_acc: Option<IAccessible> = None;
             let point = POINT { x, y };
-            let mut var = VariantInit();
-            if let Err(e) = AccessibleObjectFromPoint(point, &mut p_acc, &mut var) {
-                VariantClear(&mut var).unwrap_or(());
-                return Err(e);
+            let mut var = VARIANT::new();
+            AccessibleObjectFromPoint(point, &mut p_acc, &mut var)?;
+            match p_acc {
+                None => return Err(Error::new(S_FALSE, &format!("Can't obtain the accessible object at ({}, {}).", x, y))),
+                Some(r) => (r, i32::try_from(&var).unwrap_or(0)),
             }
-            let val = match p_acc {
-                None => {
-                    VariantClear(&mut var).unwrap_or(());
-                    return Err(Error::new(
-                        S_FALSE,
-                        HSTRING::from(format!(
-                            "Can't obtain the accessible object at ({}, {}).",
-                            x, y
-                        )),
-                    ));
-                }
-                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.intVal),
-            };
-            VariantClear(&mut var).unwrap_or(());
-            val
         };
         Ok((Self(acc.0, acc.1), acc.1))
     }
@@ -160,19 +153,18 @@ impl AccessibleObject {
             {
                 return Err(e);
             }
-            let val = match p_acc {
+            match p_acc {
                 None => {
                     return Err(Error::new(
                         S_FALSE,
-                        HSTRING::from(format!(
+                        &format!(
                             "Can't obtain the accessible object, the h_wnd is {}.",
                             h_wnd.0
-                        )),
+                        ),
                     ));
                 }
-                Some(r) => (r, var.Anonymous.Anonymous.Anonymous.intVal),
-            };
-            val
+                Some(r) => (r, i32::try_from(&var).unwrap_or(0)),
+            }
         };
         Ok((Self(acc.0, acc.1), acc.1))
     }
@@ -183,13 +175,8 @@ impl AccessibleObject {
      * */
     pub fn get_name(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self.0.get_accName(var.clone()).unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+            self.0.get_accName(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -198,16 +185,10 @@ impl AccessibleObject {
      * */
     pub fn get_description(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self
+            self
                 .0
-                .get_accDescription(var.clone())
-                .unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+                .get_accDescription(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -216,13 +197,8 @@ impl AccessibleObject {
      * */
     pub fn get_help(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self.0.get_accHelp(var.clone()).unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+            self.0.get_accHelp(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -231,15 +207,10 @@ impl AccessibleObject {
      * */
     pub fn get_help_topic(&self, child: i32) -> (String, i32) {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
             let mut help_file = BSTR::new();
-            let mut id_topic = 0i32;
-            self.0
-                .get_accHelpTopic(&mut help_file, var.clone(), &mut id_topic)
-                .unwrap_or(());
-            VariantClear(&mut var).unwrap_or(());
+            let id_topic = self.0
+                .get_accHelpTopic(&mut help_file, &VARIANT::from(child))
+                .unwrap_or(0);
             (help_file.to_string(), id_topic)
         }
     }
@@ -250,16 +221,10 @@ impl AccessibleObject {
      * */
     pub fn get_keyboard_shortcut(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self
+            self
                 .0
-                .get_accKeyboardShortcut(var.clone())
-                .unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+                .get_accKeyboardShortcut(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -268,13 +233,8 @@ impl AccessibleObject {
      * */
     pub fn get_value(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self.0.get_accValue(var.clone()).unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+            self.0.get_accValue(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -283,16 +243,10 @@ impl AccessibleObject {
      * */
     pub fn get_default_action(&self, child: i32) -> String {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = self
+            self
                 .0
-                .get_accDefaultAction(var.clone())
-                .unwrap_or(BSTR::new());
-            VariantClear(&mut var).unwrap_or(());
-            val.to_string()
-        }
+                .get_accDefaultAction(&VARIANT::from(child))
+        }.unwrap_or(BSTR::new()).to_string()
     }
 
     /**
@@ -301,21 +255,11 @@ impl AccessibleObject {
      * */
     pub fn get_role(&self, child: i32) -> u32 {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = if let Ok(mut v) = self.0.get_accRole(var.clone()) {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => v.Anonymous.Anonymous.Anonymous.uintVal,
-                    _ => 0,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
+            if let Ok(v) = self.0.get_accRole(&VARIANT::from(child)) {
+                return u32::try_from(&v).unwrap_or(0);
             } else {
                 0
-            };
-            VariantClear(&mut var).unwrap_or(());
-            val
+            }
         }
     }
 
@@ -347,21 +291,11 @@ impl AccessibleObject {
      * */
     pub fn get_state(&self, child: i32) -> u32 {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = if let Ok(mut v) = self.0.get_accState(var.clone()) {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => v.Anonymous.Anonymous.Anonymous.uintVal,
-                    _ => 0,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
+            if let Ok(v) = self.0.get_accState(&VARIANT::from(child)) {
+                return u32::try_from(&v).unwrap_or(0);
             } else {
                 0
-            };
-            VariantClear(&mut var).unwrap_or(());
-            val
+            }
         }
     }
 
@@ -371,11 +305,7 @@ impl AccessibleObject {
      * */
     pub fn do_default_action(&self, child: i32) {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            self.0.accDoDefaultAction(var.clone()).unwrap_or(());
-            VariantClear(&mut var).unwrap_or(());
+            self.0.accDoDefaultAction(&VARIANT::from(child)).unwrap_or(());
         }
     }
 
@@ -387,11 +317,7 @@ impl AccessibleObject {
      * */
     pub fn select(&self, flags: i32, child: i32) {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            self.0.accSelect(flags, var.clone()).unwrap_or(());
-            VariantClear(&mut var).unwrap_or(());
+            self.0.accSelect(flags, &VARIANT::from(child)).unwrap_or(());
         }
     }
 
@@ -402,27 +328,16 @@ impl AccessibleObject {
      * */
     pub fn navigate(&self, nav_dir: i32, start: i32) -> AccessibleResultType {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = start;
-            let val = if let Ok(mut v) = self.0.accNavigate(nav_dir, var.clone()) {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => AccessibleResultType::ChildId(v.Anonymous.Anonymous.Anonymous.uintVal),
-                    VT_EMPTY => AccessibleResultType::None,
-                    VT_DISPATCH => AccessibleResultType::Object(
-                        (&*v.Anonymous.Anonymous.Anonymous.ppdispVal)
-                            .clone()
-                            .unwrap(),
-                    ),
-                    _ => AccessibleResultType::None,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
-            } else {
-                AccessibleResultType::None
+            let Ok(v) = self.0.accNavigate(nav_dir, &VARIANT::from(start)) else {
+                return AccessibleResultType::None;
             };
-            VariantClear(&mut var).unwrap_or(());
-            val
+            let Ok(d) = IDispatch::try_from(&v) else {
+                return match u32::try_from(&v) {
+                    Ok(d) => AccessibleResultType::ChildId(d),
+                    Err(_) => AccessibleResultType::None
+                };
+            };
+            AccessibleResultType::Object(d)
         }
     }
 
@@ -433,22 +348,13 @@ impl AccessibleObject {
      * */
     pub fn hit_test(&self, left: i32, top: i32) -> AccessibleResultType {
         unsafe {
-            if let Ok(mut v) = self.0.accHitTest(left, top) {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => AccessibleResultType::ChildId(v.Anonymous.Anonymous.Anonymous.uintVal),
-                    VT_EMPTY => AccessibleResultType::None,
-                    VT_DISPATCH => AccessibleResultType::Object(
-                        (&*v.Anonymous.Anonymous.Anonymous.ppdispVal)
-                            .clone()
-                            .unwrap(),
-                    ),
-                    _ => AccessibleResultType::None,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
-            } else {
-                AccessibleResultType::None
+            let Ok(v) = self.0.accHitTest(left, top) else {
+                return AccessibleResultType::None;
+            };
+            if let Ok(d) = IDispatch::try_from(&v) {
+                return AccessibleResultType::Object(d);
             }
+            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
         }
     }
 
@@ -457,22 +363,13 @@ impl AccessibleObject {
      * */
     pub fn focus(&self) -> AccessibleResultType {
         unsafe {
-            if let Ok(mut v) = self.0.accFocus() {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => AccessibleResultType::ChildId(v.Anonymous.Anonymous.Anonymous.uintVal),
-                    VT_EMPTY => AccessibleResultType::None,
-                    VT_DISPATCH => AccessibleResultType::Object(
-                        (&*v.Anonymous.Anonymous.Anonymous.ppdispVal)
-                            .clone()
-                            .unwrap(),
-                    ),
-                    _ => AccessibleResultType::None,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
-            } else {
-                AccessibleResultType::None
+            let Ok(v) = self.0.accFocus() else {
+                return AccessibleResultType::None;
+            };
+            if let Ok(d) = IDispatch::try_from(&v) {
+                return AccessibleResultType::Object(d);
             }
+            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
         }
     }
 
@@ -481,22 +378,13 @@ impl AccessibleObject {
      * */
     pub fn selection(&self) -> AccessibleResultType {
         unsafe {
-            if let Ok(mut v) = self.0.accSelection() {
-                let val = match v.Anonymous.Anonymous.vt {
-                    VT_I4 => AccessibleResultType::ChildId(v.Anonymous.Anonymous.Anonymous.uintVal),
-                    VT_EMPTY => AccessibleResultType::None,
-                    VT_DISPATCH => AccessibleResultType::Object(
-                        (&*v.Anonymous.Anonymous.Anonymous.ppdispVal)
-                            .clone()
-                            .unwrap(),
-                    ),
-                    _ => AccessibleResultType::None,
-                };
-                VariantClear(&mut v).unwrap_or(());
-                val
-            } else {
-                AccessibleResultType::None
+            let Ok(v) = self.0.accSelection() else {
+                return AccessibleResultType::None;
+            };
+            if let Ok(d) = IDispatch::try_from(&v) {
+                return AccessibleResultType::Object(d);
             }
+            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
         }
     }
 
@@ -506,7 +394,7 @@ impl AccessibleObject {
     pub fn parent(&self) -> AccessibleResultType {
         unsafe {
             if let Ok(r) = self.0.accParent() {
-                AccessibleResultType::Object(r)
+                AccessibleResultType::Object(r.cast().unwrap())
             } else {
                 AccessibleResultType::None
             }
@@ -531,10 +419,7 @@ impl AccessibleObject {
      * */
     pub fn get_child(&self, child: i32) -> Result<AccessibleObject> {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            match self.0.get_accChild(var) {
+            match self.0.get_accChild(&VARIANT::from(child)) {
                 Err(e) => Err(e),
                 Ok(o) => Ok(AccessibleObject::from_raw(o.cast().unwrap(), 0)),
             }
@@ -557,27 +442,12 @@ impl AccessibleObject {
                 Ok(_) => {
                     let mut v = vec![];
                     for i in 0..cnt {
-                        let child = match arr[i as usize].Anonymous.Anonymous.vt {
-                            VT_I4 => AccessibleObject::from_raw(
-                                self.0.clone(),
-                                arr[i as usize].Anonymous.Anonymous.Anonymous.intVal,
-                            ),
-                            VT_DISPATCH => AccessibleObject::from_raw(
-                                arr[i as usize]
-                                    .Anonymous
-                                    .Anonymous
-                                    .Anonymous
-                                    .pdispVal
-                                    .as_ref()
-                                    .unwrap()
-                                    .cast()
-                                    .unwrap(),
-                                0,
-                            ),
-                            _ => continue,
-                        };
-                        v.push(child);
-                        VariantClear(&mut arr[i as usize]).unwrap_or(());
+                        if let Ok(d) = IDispatch::try_from(&arr[i as usize]) {
+                            v.push(AccessibleObject::from_raw(d.cast().unwrap(), 0));
+                        }
+                        if let Ok(d) = i32::try_from(&arr[i as usize]) {
+                            v.push(AccessibleObject::from_raw(self.0.clone(), d));
+                        }
                     }
                     Ok(v)
                 }
@@ -592,19 +462,14 @@ impl AccessibleObject {
     pub fn location(&self, child: i32) -> (i32, i32, i32, i32) {
         unsafe {
             let (mut left, mut top, mut width, mut height) = (0i32, 0i32, 0i32, 0i32);
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
-            let val = if let Ok(_) =
+            if let Ok(_) =
                 self.0
-                    .accLocation(&mut left, &mut top, &mut width, &mut height, var.clone())
+                    .accLocation(&mut left, &mut top, &mut width, &mut height, &VARIANT::from(child))
             {
                 (left, top, width, height)
             } else {
                 (0, 0, 0, 0)
-            };
-            VariantClear(&mut var).unwrap_or(());
-            val
+            }
         }
     }
 
@@ -623,13 +488,9 @@ impl AccessibleObject {
      * */
     pub fn put_value(&self, child: i32, value: String) {
         unsafe {
-            let mut var = VariantInit();
-            (*var.Anonymous.Anonymous).vt = VT_I4;
-            (*var.Anonymous.Anonymous).Anonymous.intVal = child;
             self.0
-                .put_accValue(var.clone(), &BSTR::from(value.as_str()))
+                .put_accValue(&VARIANT::from(child), &BSTR::from(value.as_str()))
                 .unwrap_or(());
-            VariantClear(&mut var).unwrap_or(());
         }
     }
 
@@ -668,4 +529,5 @@ impl Display for AccessibleObject {
 }
 
 unsafe impl Sync for AccessibleObject {}
+
 unsafe impl Send for AccessibleObject {}

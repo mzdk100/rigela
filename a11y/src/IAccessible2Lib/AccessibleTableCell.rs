@@ -13,7 +13,7 @@
 
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows_interface::interface;
+use windows::core::interface;
 
 /**
  * This interface gives access to the cells of a two-dimensional table.
