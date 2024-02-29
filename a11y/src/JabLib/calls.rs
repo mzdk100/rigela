@@ -605,4 +605,111 @@ macro_rules! jab {
             $cb
         )
     };
+    ($module:expr,activate_accessible_hyperlink,$vm_id:expr,$ac:expr,$link:expr) => {
+        call_proc!(
+            $module,
+            activateAccessibleHyperlink,
+            extern "cdecl" fn(i32,AccessibleContext,AccessibleHyperlink) -> BOOL,
+            $vm_id,
+            $ac,
+            $link
+        )
+    };
+    ($module:expr,add_accessible_selection_from_context,$vm_id:expr,$as:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            addAccessibleSelectionFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection,i32),
+            $vm_id,
+            $as,
+            $index
+        )
+    };
+    ($module:expr,remove_accessible_selection_from_context,$vm_id:expr,$as:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            removeAccessibleSelectionFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection,i32),
+            $vm_id,
+            $as,
+            $index
+        )
+    };
+    ($module:expr,clear_accessible_selection_from_context,$vm_id:expr,$as:expr) => {
+        call_proc!(
+            $module,
+            clearAccessibleSelectionFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection),
+            $vm_id,
+            $as
+        )
+    };
+    ($module:expr,select_all_accessible_selection_from_context,$vm_id:expr,$as:expr) => {
+        call_proc!(
+            $module,
+            selectAllAccessibleSelectionFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection),
+            $vm_id,
+            $as
+        )
+    };
+    ($module:expr,get_accessible_hyperlink,$vm_id:expr,$ah:expr,$index:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleHyperlink,
+            extern "cdecl" fn(i32,AccessibleHypertext,JInt,*mut AccessibleHypertextInfo) -> BOOL,
+            $vm_id,
+            $ah,
+            $index,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_hyperlink_count,$vm_id:expr,$ah:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleHyperlinkCount,
+            extern "cdecl" fn(i32,AccessibleHypertext) -> JInt,
+            $vm_id,
+            $ah
+        )
+    };
+    ($module:expr,get_accessible_hypertext_link_index,$vm_id:expr,$ah:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleHypertextLinkIndex,
+            extern "cdecl" fn(i32,AccessibleHypertext,JInt) -> JInt,
+            $vm_id,
+            $ah,
+            $index
+        )
+    };
+    ($module:expr,get_accessible_selection_count_from_context,$vm_id:expr,$as:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleSelectionCountFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection) -> i32,
+            $vm_id,
+            $as
+        )
+    };
+    ($module:expr,get_accessible_selection_from_context,$vm_id:expr,$as:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleSelectionFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection,i32) -> JObject,
+            $vm_id,
+            $as,
+            $index
+        )
+    };
+    ($module:expr,is_accessible_child_selected_from_context,$vm_id:expr,$as:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            isAccessibleChildSelectedFromContext,
+            extern "cdecl" fn(i32,AccessibleSelection,i32) -> BOOL,
+            $vm_id,
+            $as,
+            $index
+        )
+    };
 }

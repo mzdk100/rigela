@@ -34,6 +34,9 @@ use crate::{
             AccessibleTableInfo,
             AccessibleHypertextInfo,
             AccessibleActionsToDo,
+            AccessibleHyperlink,
+            AccessibleSelection,
+            AccessibleHypertext,
         },
         callbacks::{
             AccessBridgeCaretUpdateFp,
@@ -85,6 +88,7 @@ use windows::{
     },
     Win32::Foundation::S_FALSE,
 };
+use crate::JabLib::packages::JObject;
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -264,7 +268,7 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn getAccessibleContextInfo(
+    pub(crate) fn get_accessible_context_info(
         &self,
         vm_id: i32,
         ac: AccessibleContext,
@@ -950,6 +954,145 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module,set_property_visible_data_change_fp,cb).unwrap_or(())
     }
+
+    /**
+     * 请求激活超链接。
+     * `vm_id` 虚拟机ID。
+     * `ac` 可访问上下文。
+     * `link` 超链接对象。
+     * */
+    pub(crate) fn activate_accessible_hyperlink(&self, vm_id: i32, ac: AccessibleContext, link: AccessibleHyperlink) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module,activate_accessible_hyperlink,vm_id,ac,link).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 把某个项目添加到选区。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleSelection设置为TRUE，则AccessibleContext中包含AccessibleSelection信息。
+     * AccessibleSelection支持是第一个可以通过添加和删除选择中的项目来操作用户界面（而不是查询）的地方。
+     * 有些函数使用子坐标中的索引，而其他函数则使用选择坐标。
+     * 例如，通过传递子索引从选择中添加到删除（例如，将第四个子项添加到选择中）。
+     * 另一方面，枚举选定的子对象是在选择坐标中完成的（例如，获取选定的第一个对象的AccessibleContext）。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn add_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) {
+        pump_waiting_messages();
+        jab!(self.h_module,add_accessible_selection_from_context,vm_id,r#as,index).unwrap_or(())
+    }
+
+    /**
+     * 把某个项目从选区中移除。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleSelection设置为TRUE，则AccessibleContext中包含AccessibleSelection信息。
+     * AccessibleSelection支持是第一个可以通过添加和删除选择中的项目来操作用户界面（而不是查询）的地方。
+     * 有些函数使用子坐标中的索引，而其他函数则使用选择坐标。
+     * 例如，通过传递子索引从选择中添加到删除（例如，将第四个子项添加到选择中）。
+     * 另一方面，枚举选定的子对象是在选择坐标中完成的（例如，获取选定的第一个对象的AccessibleContext）。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn remove_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) {
+        pump_waiting_messages();
+        jab!(self.h_module,remove_accessible_selection_from_context,vm_id,r#as,index).unwrap_or(())
+    }
+
+    /**
+     * 清除选区。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleSelection设置为TRUE，则AccessibleContext中包含AccessibleSelection信息。
+     * AccessibleSelection支持是第一个可以通过添加和删除选择中的项目来操作用户界面（而不是查询）的地方。
+     * 有些函数使用子坐标中的索引，而其他函数则使用选择坐标。
+     * 例如，通过传递子索引从选择中添加到删除（例如，将第四个子项添加到选择中）。
+     * 另一方面，枚举选定的子对象是在选择坐标中完成的（例如，获取选定的第一个对象的AccessibleContext）。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问上下文。
+     * */
+    pub(crate) fn clear_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection) {
+        pump_waiting_messages();
+        jab!(self.h_module,clear_accessible_selection_from_context,vm_id,r#as).unwrap_or(())
+    }
+
+    /**
+     * 选择所有。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleSelection设置为TRUE，则AccessibleContext中包含AccessibleSelection信息。
+     * AccessibleSelection支持是第一个可以通过添加和删除选择中的项目来操作用户界面（而不是查询）的地方。
+     * 有些函数使用子坐标中的索引，而其他函数则使用选择坐标。
+     * 例如，通过传递子索引从选择中添加到删除（例如，将第四个子项添加到选择中）。
+     * 另一方面，枚举选定的子对象是在选择坐标中完成的（例如，获取选定的第一个对象的AccessibleContext）。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问上下文。
+     * */
+    pub(crate) fn select_all_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection) {
+        pump_waiting_messages();
+        jab!(self.h_module,select_all_accessible_selection_from_context,vm_id,r#as).unwrap_or(())
+    }
+
+    /**
+     * 返回文档中的第n个超链接。映射到AccessibleHypertext.getLink。出现错误时返回None。
+     * `vm_id` 虚拟机ID。
+     * `ah` 可访问超文本。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_hyperlink(&self, vm_id: i32, ah: AccessibleContext, index: JInt) -> Option<AccessibleHypertextInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_hyperlink,vm_id,ah,index,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 返回组件中的超链接数。映射到AccessibleHypertext.getLinkCount。出现错误时返回-1。
+     * `vm_id` 虚拟机ID。
+     * `ah` 可访问超文本。
+     * */
+    pub(crate) fn get_accessible_hyperlink_count(&self, vm_id: i32, ah: AccessibleHypertext) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_hyperlink_count,vm_id,ah).unwrap_or(-1)
+    }
+
+    /**
+     * 将索引返回到与文档中的字符索引关联的超链接数组中。映射到AccessibleHypertext.getLinkIndex。出现错误时返回-1。
+     * `vm_id` 虚拟机ID。
+     * `ah` 可访问超文本。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_hypertext_link_index(&self, vm_id: i32, ah: AccessibleHypertext, index: JInt) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_hypertext_link_index,vm_id,ah,index).unwrap_or(-1)
+    }
+
+    /**
+     * 获取选区中的对象数量。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问选择上下文。
+     * */
+    pub(crate) fn get_accessible_selection_count_from_context(&self, vm_id: i32, r#as: AccessibleSelection) -> i32 {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_selection_count_from_context,vm_id,r#as).unwrap_or(-1)
+    }
+
+    /**
+     * 获取选区中的对象。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问选择上下文。
+     * */
+    pub(crate) fn get_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) -> Option<JObject> {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_selection_from_context,vm_id,r#as,index)
+    }
+
+    /**
+     * 判断对象是否被选中。
+     * `vm_id` 虚拟机ID。
+     * `as` 可访问选择上下文。
+     * */
+    pub(crate) fn is_accessible_child_selected_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module,is_accessible_child_selected_from_context,vm_id,r#as,index).unwrap_or(FALSE).as_bool()
+    }
 }
 
 impl Drop for JabLib {
@@ -1015,15 +1158,8 @@ mod test_jab {
         }
         //test1(&jab, vm_id, ac);
         //test2(&jab, vm_id, ac);
-
-        dbg!(jab.request_focus(vm_id, ac));
-        dbg!(jab.get_visible_children_count(vm_id, ac));
-        dbg!(jab.get_visible_children(vm_id, ac, 0));
-        dbg!(jab.get_events_waiting());
-        dbg!(jab.get_caret_location(vm_id, ac, 0));
-        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
-        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
-        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
+        //test3(&jab, vm_id, ac);
+        test4(&jab, vm_id, ac);
 
         jab.release_java_object(vm_id, ac);
 
@@ -1034,7 +1170,7 @@ mod test_jab {
         dbg!(jab.set_caret_position(vm_id, ac, 2));
         let version_info = jab.get_version_info(vm_id);
         dbg!(version_info);
-        let info = jab.getAccessibleContextInfo(vm_id, ac);
+        let info = jab.get_accessible_context_info(vm_id, ac);
         dbg!(info);
         dbg!(jab.get_accessible_actions(vm_id, ac));
         dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
@@ -1053,5 +1189,34 @@ mod test_jab {
         dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
         dbg!(jab.get_accessible_hypertext(vm_id, ac));
         dbg!(jab.get_accessible_hypertext_ext(vm_id, ac, 0));
+        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
+        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
+        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
+    }
+
+    fn test3(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
+        let info = jab.get_accessible_hypertext(vm_id, ac).unwrap();
+        dbg!(&info);
+        dbg!(jab.activate_accessible_hyperlink(vm_id, ac, info.links[0].accessibleHyperlink));
+        dbg!(jab.get_accessible_hyperlink(vm_id, info.accessibleHypertext, 0));
+        dbg!(jab.get_accessible_hyperlink_count(vm_id, info.accessibleHypertext));
+        dbg!(jab.get_accessible_hypertext_link_index(vm_id, info.accessibleHypertext, 0));
+    }
+
+    fn test4(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
+        dbg!(jab.request_focus(vm_id, ac));
+        dbg!(jab.get_visible_children_count(vm_id, ac));
+        dbg!(jab.get_visible_children(vm_id, ac, 0));
+        dbg!(jab.get_events_waiting());
+        dbg!(jab.get_caret_location(vm_id, ac, 0));
+        let info = jab.get_accessible_context_info(vm_id, ac).unwrap();
+        dbg!(&info);
+        jab.add_accessible_selection_from_context(vm_id, ac, 0);
+        jab.remove_accessible_selection_from_context(vm_id, ac, 0);
+        jab.clear_accessible_selection_from_context(vm_id, ac);
+        jab.select_all_accessible_selection_from_context(vm_id, ac);
+        dbg!(jab.get_accessible_selection_count_from_context(vm_id, ac));
+        dbg!(jab.get_accessible_selection_from_context(vm_id, ac, 0));
+        dbg!(jab.is_accessible_child_selected_from_context(vm_id, ac, 0));
     }
 }
