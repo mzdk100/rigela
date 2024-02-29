@@ -12,17 +12,17 @@
  */
 
 use crate::commander::keys::Keys;
-use crate::{
-    commander::keys::Keys::{VkDown, VkUp},
-    context::Context,
-};
+use crate::context::Context;
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
     WinEventSourceExt,
 };
 use log::error;
-use std::sync::Arc;
-use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
+use std::ops::DerefMut;
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
+use tokio::time::sleep;
+use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
 
 //noinspection SpellCheckingInspection
 /**
@@ -31,9 +31,11 @@ use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern};
  * */
 pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_uia_events(context.clone()).await;
-    subscribe_ia2_events(context).await;
+    subscribe_ia2_events(context.clone()).await;
+    subscribe_cusor_key_events(context.clone()).await;
 }
 
+#[allow(dead_code)]
 async fn subscribe_uia_events(context: Arc<Context>) {
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
@@ -47,22 +49,25 @@ async fn subscribe_uia_events(context: Arc<Context>) {
     // group.add_changes_listener(|| {});
 
     group.add_text_selection_changed_listener(move |element| {
-        let text_pattern = match UiAutomationTextPattern::obtain(&element) {
+        let pattern = match UiAutomationTextPattern2::obtain(&element) {
             Ok(p) => p,
             Err(_) => return,
         };
-        let selection = text_pattern.get_selection();
-        if selection.is_empty() {
-            return;
-        }
-        let caret = selection[0].clone();
+
+        let caret = pattern.get_caret_range();
+
         match commander.get_last_pressed_key() {
-            VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+            Keys::VkUp | Keys::VkDown => {
+                {
+                    *line_handled().lock().unwrap().deref_mut() = true;
+                }
+                caret.expand_to_enclosing_unit(TextUnit::Line);
+            }
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
-        let performer = performer.clone();
+        let pf = performer.clone();
         main_handler.spawn(async move {
-            performer.speak(caret).await;
+            pf.speak(caret).await;
         });
     });
 
@@ -94,7 +99,7 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         };
         let caret = text.caret_offset().unwrap_or(0);
         let (_, _, text) = match commander.get_last_pressed_key() {
-            VkDown | VkUp => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+            Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
             _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
         };
         let performer = performer.clone();
@@ -104,5 +109,34 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
     })
 }
 
+fn line_handled() -> &'static Mutex<bool> {
+    static INSTANCE: OnceLock<Mutex<bool>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(false))
+}
+
 /// 处理编辑框的光标键播报
-pub(crate) async fn handle_cusor_key(_context: Arc<Context>, _key: Keys) {}
+pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
+    let keys = [Keys::VkUp, Keys::VkDown];
+    let ctx = context.clone();
+
+    context
+        .commander
+        .add_key_event_listener(&keys, move |_key| {
+            let ctrl = ctx.ui_automation.get_focused_element();
+
+            if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
+                {
+                    *line_handled().lock().unwrap().deref_mut() = false;
+                }
+                let pf = ctx.performer.clone();
+                ctx.main_handler.spawn(async move {
+                    sleep(Duration::from_millis(20)).await;
+                    if !*line_handled().lock().unwrap() {
+                        let caret = pattern.get_caret_range();
+                        caret.expand_to_enclosing_unit(TextUnit::Line);
+                        pf.speak(caret).await;
+                    }
+                });
+            }
+        });
+}

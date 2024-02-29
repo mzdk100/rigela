@@ -19,7 +19,6 @@ mod input;
 mod progress;
 
 use crate::commander::keys::Keys;
-use crate::event_core::editor::handle_cusor_key;
 use crate::event_core::input::handle_lockkey;
 use crate::{
     context::Context,
@@ -149,7 +148,6 @@ impl Observer<Event> for EventCore {
         let event = event.clone();
         context.main_handler.spawn(async move {
             match event {
-                Event::CursorKey(key) => handle_cusor_key(ctx.clone(), key).await,
                 Event::LockKey(vk) => handle_lockkey(ctx.clone(), vk).await,
                 _ => {}
             }

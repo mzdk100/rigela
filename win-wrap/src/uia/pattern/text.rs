@@ -16,6 +16,7 @@ use crate::{
     uia::element::UiAutomationElement,
 };
 use windows::core::BSTR;
+use windows::Win32::UI::Accessibility::{IUIAutomationTextPattern2, UIA_TextPattern2Id};
 use windows::{
     core::Interface,
     Win32::{
@@ -125,6 +126,33 @@ impl UiAutomationTextPattern {
     }
 }
 
+pub struct UiAutomationTextPattern2(IUIAutomationTextPattern2);
+
+impl UiAutomationTextPattern2 {
+    pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
+        let result = unsafe { value.get_raw().GetCurrentPattern(UIA_TextPattern2Id) };
+
+        match result {
+            Ok(pattern) => Ok(UiAutomationTextPattern2(
+                pattern.cast::<IUIAutomationTextPattern2>().unwrap(),
+            )),
+
+            Err(e) => Err(format!("Can't get the TextPattern. ({})", e)),
+        }
+    }
+
+    // 获取插入符范围。
+    pub fn get_caret_range(&self) -> UiAutomationTextRange {
+        let mut active = BOOL::default();
+        let range = unsafe { self.0.GetCaretRange(&mut active).unwrap() };
+
+        UiAutomationTextRange::obtain(&range)
+    }
+}
+
+unsafe impl Send for UiAutomationTextPattern2 {}
+unsafe impl Sync for UiAutomationTextPattern2 {}
+
 trait TextRangeArray {
     fn to_vec(&self) -> Vec<UiAutomationTextRange>;
 }
@@ -200,7 +228,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
