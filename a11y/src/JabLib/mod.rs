@@ -88,7 +88,7 @@ use windows::{
     },
     Win32::Foundation::S_FALSE,
 };
-use crate::JabLib::packages::JObject;
+use crate::JabLib::packages::{AccessibleTable, AccessibleTableCellInfo, JObject};
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -1093,6 +1093,134 @@ impl JabLib {
         pump_waiting_messages();
         jab!(self.h_module,is_accessible_child_selected_from_context,vm_id,r#as,index).unwrap_or(FALSE).as_bool()
     }
+
+    /**
+     * 判断表格某行是否被选中。如果选择了指定的从零开始的行，则返回true。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `row` 行索引。
+     * */
+    pub(crate) fn is_accessible_table_row_selected(&self, vm_id: i32, at: AccessibleTable, row: JInt) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module,is_accessible_table_row_selected,vm_id,at,row).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 判断表格某列是否被选中。如果选择了指定的从零开始的列，则返回true。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `column` 列索引。
+     * */
+    pub(crate) fn is_accessible_table_column_selected(&self, vm_id: i32, at: AccessibleTable, column: JInt) -> bool {
+        pump_waiting_messages();
+        jab!(self.h_module,is_accessible_table_column_selected,vm_id,at,column).unwrap_or(FALSE).as_bool()
+    }
+
+    /**
+     * 返回有关指定表单元格的信息。行和列说明符是从零开始的。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `row` 行索引。
+     * `column` 列索引。
+     * */
+    pub(crate) fn get_accessible_table_cell_info(&self, vm_id: i32, at: AccessibleTable, row: JInt, column: JInt) -> Option<AccessibleTableCellInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_table_cell_info,vm_id,at,row,column,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 返回指定单元格索引处单元格的列编号。这些值以零为基础。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_table_column(&self, vm_id: i32, at: AccessibleTable, index: JInt) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_table_column,vm_id,at,index).unwrap_or(0)
+    }
+
+    /**
+     * 返回指定单元格索引处单元格的行号。这些值以零为基础。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_table_row(&self, vm_id: i32, at: AccessibleTable, index: JInt) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_table_row,vm_id,at,index).unwrap_or(0)
+    }
+
+    /**
+     * 返回表中选定的列数。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * */
+    pub(crate) fn get_accessible_table_column_selection_count(&self, vm_id: i32, at: AccessibleTable) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_table_column_selection_count,vm_id,at).unwrap_or(0)
+    }
+
+    /**
+     * 返回表中选定的行数。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * */
+    pub(crate) fn get_accessible_table_row_selection_count(&self, vm_id: i32, at: AccessibleTable) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_table_row_selection_count,vm_id,at).unwrap_or(0)
+    }
+
+    /**
+     * 返回表中指定行和列偏移量的索引。这些值以零为基础。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `row` 行索引。
+     * `column` 列索引。
+     * */
+    pub(crate) fn get_accessible_table_index(&self, vm_id: i32, at: AccessibleTable, row: JInt, column: JInt) -> JInt {
+        pump_waiting_messages();
+        jab!(self.h_module,get_accessible_table_index,vm_id,at,row,column).unwrap_or(0)
+    }
+
+    /**
+     * 返回所选列的从零开始的索引数组。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `count` 数组长度。
+     * */
+    pub(crate) fn get_accessible_table_column_selections(&self, vm_id: i32, at: AccessibleTable, count: JInt) -> Option<Vec<JInt>> {
+        pump_waiting_messages();
+        let mut arr = Vec::new();
+        for _ in 0..count {
+            arr.push(0);
+        }
+        if !jab!(self.h_module,get_accessible_table_column_selections,vm_id,at,count,arr.as_mut_ptr()).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        return Some(arr);
+    }
+
+    /**
+     * 返回所选行的从零开始的索引数组。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问表格上下文。
+     * `count` 数组长度。
+     * */
+    pub(crate) fn get_accessible_table_row_selections(&self, vm_id: i32, at: AccessibleTable, count: JInt) -> Option<Vec<JInt>> {
+        pump_waiting_messages();
+        let mut arr = Vec::new();
+        for _ in 0..count {
+            arr.push(0);
+        }
+        if !jab!(self.h_module,get_accessible_table_row_selections,vm_id,at,count,arr.as_mut_ptr()).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        return Some(arr);
+    }
 }
 
 impl Drop for JabLib {
@@ -1157,9 +1285,9 @@ mod test_jab {
             jab.release_java_object(vm_id, descendent);
         }
         //test1(&jab, vm_id, ac);
-        //test2(&jab, vm_id, ac);
+        test2(&jab, vm_id, ac);
         //test3(&jab, vm_id, ac);
-        test4(&jab, vm_id, ac);
+        //test4(&jab, vm_id, ac);
 
         jab.release_java_object(vm_id, ac);
 
@@ -1177,21 +1305,28 @@ mod test_jab {
         dbg!(jab.get_accessible_relation_set(vm_id, ac));
         dbg!(jab.get_accessible_key_bindings(vm_id, ac));
         dbg!(jab.get_accessible_icons(vm_id, ac));
-        dbg!(jab.get_accessible_table_row_header(vm_id, ac));
-        dbg!(jab.get_accessible_table_column_header(vm_id, ac));
+        dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
         dbg!(jab.select_text_range(vm_id, ac, 0, 8));
     }
 
     fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
         dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
         dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_info(vm_id, ac));
-        dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
-        dbg!(jab.get_accessible_hypertext(vm_id, ac));
-        dbg!(jab.get_accessible_hypertext_ext(vm_id, ac, 0));
-        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
-        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
-        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
+        dbg!(jab.get_accessible_table_row_header(vm_id, ac));
+        dbg!(jab.get_accessible_table_column_header(vm_id, ac));
+        if let Some(info) = jab.get_accessible_table_info(vm_id, ac) {
+            dbg!(&info);
+            dbg!(jab.is_accessible_table_row_selected(vm_id, info.accessibleTable, 0));
+            dbg!(jab.is_accessible_table_column_selected(vm_id, info.accessibleTable, 0));
+            dbg!(jab.get_accessible_table_cell_info(vm_id, info.accessibleTable, 0, 0));
+            dbg!(jab.get_accessible_table_column(vm_id, info.accessibleTable, 0));
+            dbg!(jab.get_accessible_table_row(vm_id, info.accessibleTable, 0));
+            dbg!(jab.get_accessible_table_column_selection_count(vm_id, info.accessibleTable));
+            dbg!(jab.get_accessible_table_row_selection_count(vm_id, info.accessibleTable));
+            dbg!(jab.get_accessible_table_index(vm_id, info.accessibleTable, 0, 0));
+            dbg!(jab.get_accessible_table_column_selections(vm_id, info.accessibleTable, 1));
+            dbg!(jab.get_accessible_table_row_selections(vm_id, info.accessibleTable, 1));
+        }
     }
 
     fn test3(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
@@ -1201,6 +1336,10 @@ mod test_jab {
         dbg!(jab.get_accessible_hyperlink(vm_id, info.accessibleHypertext, 0));
         dbg!(jab.get_accessible_hyperlink_count(vm_id, info.accessibleHypertext));
         dbg!(jab.get_accessible_hypertext_link_index(vm_id, info.accessibleHypertext, 0));
+        dbg!(jab.get_accessible_hypertext_ext(vm_id, ac, 0));
+        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
+        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
+        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
     }
 
     fn test4(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {

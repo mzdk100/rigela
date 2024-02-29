@@ -712,4 +712,107 @@ macro_rules! jab {
             $index
         )
     };
+    ($module:expr,is_accessible_table_row_selected,$vm_id:expr,$at:expr,$row:expr) => {
+        call_proc!(
+            $module,
+            isAccessibleTableRowSelected,
+            extern "cdecl" fn(i32,AccessibleTable,JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $row
+        )
+    };
+    ($module:expr,is_accessible_table_column_selected,$vm_id:expr,$at:expr,$column:expr) => {
+        call_proc!(
+            $module,
+            isAccessibleTableColumnSelected,
+            extern "cdecl" fn(i32,AccessibleTable,JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $column
+        )
+    };
+    ($module:expr,get_accessible_table_cell_info,$vm_id:expr,$at:expr,$row:expr,$column:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableCellInfo,
+            extern "cdecl" fn(i32,AccessibleTable,JInt,JInt,*mut AccessibleTableCellInfo) -> BOOL,
+            $vm_id,
+            $at,
+            $row,
+            $column,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_table_column,$vm_id:expr,$at:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableColumn,
+            extern "cdecl" fn(i32,AccessibleTable,JInt) -> JInt,
+            $vm_id,
+            $at,
+            $index
+        )
+    };
+    ($module:expr,get_accessible_table_row,$vm_id:expr,$at:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableRow,
+            extern "cdecl" fn(i32,AccessibleTable,JInt) -> JInt,
+            $vm_id,
+            $at,
+            $index
+        )
+    };
+    ($module:expr,get_accessible_table_column_selection_count,$vm_id:expr,$at:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableColumnSelectionCount,
+            extern "cdecl" fn(i32,AccessibleTable) -> JInt,
+            $vm_id,
+            $at
+        )
+    };
+    ($module:expr,get_accessible_table_row_selection_count,$vm_id:expr,$at:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableRowSelectionCount,
+            extern "cdecl" fn(i32,AccessibleTable) -> JInt,
+            $vm_id,
+            $at
+        )
+    };
+    ($module:expr,get_accessible_table_index,$vm_id:expr,$at:expr,$row:expr,$column:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableIndex,
+            extern "cdecl" fn(i32,AccessibleTable,JInt,JInt) -> JInt,
+            $vm_id,
+            $at,
+            $row,
+            $column
+        )
+    };
+    ($module:expr,get_accessible_table_column_selections,$vm_id:expr,$at:expr,$count:expr,$selections:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableColumnSelections,
+            extern "cdecl" fn(i32,AccessibleTable,JInt,*mut JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $count,
+            $selections
+        )
+    };
+    ($module:expr,get_accessible_table_row_selections,$vm_id:expr,$at:expr,$count:expr,$selections:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTableRowSelections,
+            extern "cdecl" fn(i32,AccessibleTable,JInt,*mut JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $count,
+            $selections
+        )
+    };
 }
