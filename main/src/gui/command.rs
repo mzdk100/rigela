@@ -11,14 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_manager::ConfigRoot;
-use crate::configs::config_operations::{
-    apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
-};
-use crate::configs::general::Lang;
-use crate::configs::tts::TtsConfig;
-use crate::gui::utils::{backup_data, restore_data, UpdateState};
 use crate::{
+    configs::{
+        tts::TtsConfig,
+        general::Lang,
+        config_operations::{
+            apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
+        },
+        config_manager::ConfigRoot,
+    },
+    gui::utils::{backup_data, restore_data, UpdateState, set_startup_registry},
     context::Context,
     gui::utils::{check_update, confirm_update_exists, HELP_DIR},
     talent::Talented,
@@ -26,9 +28,13 @@ use crate::{
 use log::error;
 use nwg::{message, MessageParams};
 use rigela_utils::get_program_directory;
-use std::path::PathBuf;
-use std::{env::args, process::Command, sync::Arc};
-use win_wrap::common::{message_box, set_startup_registry, HWND, MB_OK};
+use std::{
+    path::PathBuf,
+    env::args,
+    process::Command,
+    sync::Arc,
+};
+use win_wrap::common::{message_box, HWND, MB_OK};
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {

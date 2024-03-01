@@ -54,6 +54,7 @@ impl UiAutomationTogglePattern {
     /**
      * 检索控件的状态。
      * */
+    #[allow(non_upper_case_globals)]
     pub fn get_toggle_state(&self) -> ToggleState {
         let state = unsafe { self.0.CurrentToggleState() };
         if state.is_err() {

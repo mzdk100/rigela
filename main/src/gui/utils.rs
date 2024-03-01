@@ -15,14 +15,18 @@ use log::error;
 use rigela_utils::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
-use std::env::args;
-use std::error::Error;
-use std::fs::File;
-use std::io;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use zip::write::FileOptions;
-use zip::{CompressionMethod, ZipArchive, ZipWriter};
+use std::{
+    env::args,
+    error::Error,
+    fs::File,
+    io::{copy, Read, Write},
+    path::{Path, PathBuf},
+};
+use win_wrap::registry::{
+    reg_close_key, reg_delete_value, reg_open_key_ex, reg_set_value_ex, HKEY_CURRENT_USER,
+    KEY_WRITE, REG_SZ,
+};
+use zip::{write::FileOptions, CompressionMethod, ZipArchive, ZipWriter};
 
 const HELP_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/help.txt?format=json&viewer=simple";
@@ -200,7 +204,7 @@ pub(crate) fn backup_data(target: &PathBuf) -> Result<(), Box<dyn Error>> {
         zip.start_file(file_name, options)?;
 
         let mut buffer = Vec::new();
-        io::copy(&mut file.take(u64::MAX), &mut buffer)?;
+        copy(&mut file.take(u64::MAX), &mut buffer)?;
 
         zip.write_all(&buffer)?;
     }
@@ -227,7 +231,7 @@ pub(crate) fn restore_data(source: &PathBuf) -> Result<(), Box<dyn Error>> {
         };
 
         let mut output_file = File::create(&target_path)?;
-        io::copy(&mut file, &mut output_file)?;
+        copy(&mut file, &mut output_file)?;
     }
 
     Ok(())
@@ -284,4 +288,30 @@ struct GitcodeFileData {
 
     #[serde(rename = "raw_path")]
     raw_path: String,
+}
+
+/// 添加开机自启
+pub fn set_startup_registry(
+    program_name: &str,
+    program_path: &PathBuf,
+    enable: bool,
+) -> win_wrap::common::Result<()> {
+    let path = program_path.to_str().unwrap();
+    let path = path.encode_utf16().chain(Some(0)).collect::<Vec<_>>();
+    let path: Vec<u8> = path
+        .iter()
+        .flat_map(|&x| x.to_le_bytes().to_vec())
+        .collect();
+
+    let software_key = r#"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"#;
+    let hkey = reg_open_key_ex(HKEY_CURRENT_USER, Some(software_key), 0, KEY_WRITE);
+
+    if enable {
+        reg_set_value_ex(hkey, Some(program_name), 0, REG_SZ, Some(&path))?;
+    } else {
+        reg_delete_value(hkey, Some(program_name))?;
+    }
+    reg_close_key(hkey);
+
+    Ok(())
 }
