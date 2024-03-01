@@ -37,6 +37,14 @@ use crate::{
             AccessibleHyperlink,
             AccessibleSelection,
             AccessibleHypertext,
+            AccessibleTable,
+            AccessibleTableCellInfo,
+            AccessibleText,
+            AccessibleTextInfo,
+            AccessibleTextSelectionInfo,
+            JObject,
+            AccessibleTextItemsInfo,
+            AccessibleValue,
         },
         callbacks::{
             AccessBridgeCaretUpdateFp,
@@ -88,7 +96,6 @@ use windows::{
     },
     Win32::Foundation::S_FALSE,
 };
-use crate::JabLib::packages::{AccessibleTable, AccessibleTableCellInfo, JObject};
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -1221,6 +1228,195 @@ impl JabLib {
         }
         return Some(arr);
     }
+
+    /**
+     * 获取文本选区信息。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * */
+    pub(crate) fn get_accessible_text_selection_info(&self, vm_id: i32, at: AccessibleText) -> Option<AccessibleTextSelectionInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_text_selection_info,vm_id,at,&mut info).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取文本信息。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `x` X坐标。
+     * `y` Y坐标。
+     * */
+    pub(crate) fn get_accessible_text_info(&self, vm_id: i32, at: AccessibleText, x: JInt, y: JInt) -> Option<AccessibleTextInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_text_info,vm_id,at,&mut info,x,y).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取文本属性。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_text_attributes(&self, vm_id: i32, at: AccessibleText, index: JInt) -> (*const u8, AccessibleTextAttributesInfo) {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        let char = jab!(self.h_module,get_accessible_text_attributes,vm_id,at,index,&mut info).unwrap_or(std::ptr::null());
+        (char, info)
+    }
+
+    /**
+     * 获取文本项目。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_text_items(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<AccessibleTextItemsInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_text_items,vm_id,at,&mut info,index).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取文本行边界。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_text_line_bounds(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<(JInt, JInt)> {
+        pump_waiting_messages();
+        let (mut start, mut end) = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_text_line_bounds,vm_id,at,index,&mut start,&mut end).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some((start, end))
+    }
+
+    /**
+     * 获取文本范围。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `start_index` 开始索引。
+     * `end_index` 结束索引。
+     * `len` 长度。
+     * */
+    pub(crate) fn get_accessible_text_range(&self, vm_id: i32, at: AccessibleText, start_index: JInt, end_index: JInt, len: i16) -> Option<Vec<u16>> {
+        pump_waiting_messages();
+        let mut text = Vec::new();
+        for _ in 0..len {
+            text.push(0);
+        }
+        if !jab!(self.h_module,get_accessible_text_range,vm_id,at,start_index,end_index,text.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(text)
+    }
+
+    /**
+     * 获取文本矩形范围。
+     * 如果将AccessibleContextInfo数据结构中的标志AccessibleText设置为TRUE，则AccessibleContext中包含AccessibleText信息。
+     * 文件AccessBridgePackages.h定义了这些函数中使用的结构值。
+     * Java Access Bridge API回调对它们进行了描述。
+     * `vm_id` 虚拟机ID。
+     * `at` 可访问文字上下文。
+     * `index` 索引。
+     * */
+    pub(crate) fn get_accessible_text_rect(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<AccessibleTextRectInfo> {
+        pump_waiting_messages();
+        let mut info = unsafe { std::mem::zeroed() };
+        if !jab!(self.h_module,get_accessible_text_rect,vm_id,at,&mut info,index).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(info)
+    }
+
+    /**
+     * 获取当前值。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleValue设置为TRUE，则AccessibleContext对象中包含AccessibleValue信息。
+     * 返回的值是字符串（char*value），因为无法提前判断该值是整数、浮点值还是Java语言构造java.lang.Number的子类的其他对象。
+     * `vm_id` 虚拟机ID。
+     * `av` 可访问值上下文。
+     * `len` 接收文本的长度。
+     * */
+    pub(crate) fn get_current_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+        pump_waiting_messages();
+        let mut value = Vec::new();
+        for _ in 0..len {
+            value.push(0);
+        }
+        if !jab!(self.h_module,get_current_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(value)
+    }
+
+    /**
+     * 获取最大值。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleValue设置为TRUE，则AccessibleContext对象中包含AccessibleValue信息。
+     * 返回的值是字符串（char*value），因为无法提前判断该值是整数、浮点值还是Java语言构造java.lang.Number的子类的其他对象。
+     * `vm_id` 虚拟机ID。
+     * `av` 可访问值上下文。
+     * `len` 接收文本的长度。
+     * */
+    pub(crate) fn get_maximum_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+        pump_waiting_messages();
+        let mut value = Vec::new();
+        for _ in 0..len {
+            value.push(0);
+        }
+        if !jab!(self.h_module,get_maximum_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(value)
+    }
+
+    /**
+     * 获取最小值。
+     * 如果AccessibleContextInfo数据结构中的标志AccessibleValue设置为TRUE，则AccessibleContext对象中包含AccessibleValue信息。
+     * 返回的值是字符串（char*value），因为无法提前判断该值是整数、浮点值还是Java语言构造java.lang.Number的子类的其他对象。
+     * `vm_id` 虚拟机ID。
+     * `av` 可访问值上下文。
+     * `len` 接收文本的长度。
+     * */
+    pub(crate) fn get_minimum_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+        pump_waiting_messages();
+        let mut value = Vec::new();
+        for _ in 0..len {
+            value.push(0);
+        }
+        if !jab!(self.h_module,get_minimum_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+            return None;
+        }
+        Some(value)
+    }
 }
 
 impl Drop for JabLib {
@@ -1284,10 +1480,11 @@ mod test_jab {
             dbg!(descendent);
             jab.release_java_object(vm_id, descendent);
         }
-        //test1(&jab, vm_id, ac);
-        test2(&jab, vm_id, ac);
+        test1(&jab, vm_id, ac);
+        // test2(&jab, vm_id, ac);
         //test3(&jab, vm_id, ac);
         //test4(&jab, vm_id, ac);
+        //test5(&jab, vm_id, ac);
 
         jab.release_java_object(vm_id, ac);
 
@@ -1301,12 +1498,13 @@ mod test_jab {
         let info = jab.get_accessible_context_info(vm_id, ac);
         dbg!(info);
         dbg!(jab.get_accessible_actions(vm_id, ac));
-        dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
         dbg!(jab.get_accessible_relation_set(vm_id, ac));
         dbg!(jab.get_accessible_key_bindings(vm_id, ac));
         dbg!(jab.get_accessible_icons(vm_id, ac));
         dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
-        dbg!(jab.select_text_range(vm_id, ac, 0, 8));
+        dbg!(jab.get_current_accessible_value_from_context(vm_id, ac, 10));
+        dbg!(jab.get_maximum_accessible_value_from_context(vm_id, ac, 10));
+        dbg!(jab.get_minimum_accessible_value_from_context(vm_id, ac, 10));
     }
 
     fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
@@ -1357,5 +1555,17 @@ mod test_jab {
         dbg!(jab.get_accessible_selection_count_from_context(vm_id, ac));
         dbg!(jab.get_accessible_selection_from_context(vm_id, ac, 0));
         dbg!(jab.is_accessible_child_selected_from_context(vm_id, ac, 0));
+    }
+
+    fn test5(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
+        dbg!(jab.select_text_range(vm_id, ac, 0, 8));
+        dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
+        dbg!(jab.get_accessible_text_selection_info(vm_id, ac));
+        dbg!(jab.get_accessible_text_info(vm_id, ac, 100, 100));
+        dbg!(jab.get_accessible_text_attributes(vm_id, ac, 0));
+        dbg!(jab.get_accessible_text_items(vm_id, ac, 0));
+        dbg!(jab.get_accessible_text_line_bounds(vm_id, ac, 0));
+        dbg!(jab.get_accessible_text_range(vm_id, ac, 0, 20, 20));
+        dbg!(jab.get_accessible_text_rect(vm_id, ac, 0));
     }
 }

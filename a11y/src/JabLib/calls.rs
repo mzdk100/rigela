@@ -815,4 +815,117 @@ macro_rules! jab {
             $selections
         )
     };
+    ($module:expr,get_accessible_text_selection_info,$vm_id:expr,$at:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextSelectionInfo,
+            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextSelectionInfo) -> BOOL,
+            $vm_id,
+            $at,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_text_info,$vm_id:expr,$at:expr,$info:expr,$x:expr,$y:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextInfo,
+            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextInfo,JInt,JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $info,
+            $x,
+            $y
+        )
+    };
+    ($module:expr,get_accessible_text_attributes,$vm_id:expr,$at:expr,$index:expr,$info:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextAttributes,
+            extern "cdecl" fn(i32,AccessibleText,JInt,*mut AccessibleTextAttributesInfo) -> *const u8,
+            $vm_id,
+            $at,
+            $index,
+            $info
+        )
+    };
+    ($module:expr,get_accessible_text_items,$vm_id:expr,$at:expr,$info:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextItems,
+            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextItemsInfo,JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $info,
+            $index
+        )
+    };
+    ($module:expr,get_accessible_text_line_bounds,$vm_id:expr,$at:expr,$index:expr,$start_index:expr,$end_index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextLineBounds,
+            extern "cdecl" fn(i32,AccessibleText,JInt,*mut JInt,*mut JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $index,
+            $start_index,
+            $end_index
+        )
+    };
+    ($module:expr,get_accessible_text_range,$vm_id:expr,$at:expr,$start_index:expr,$end_index:expr,$text:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextRange,
+            extern "cdecl" fn(i32,AccessibleText,JInt,JInt,*mut u16,i16) -> BOOL,
+            $vm_id,
+            $at,
+            $start_index,
+            $end_index,
+            $text,
+            $len
+        )
+    };
+    ($module:expr,get_accessible_text_rect,$vm_id:expr,$at:expr,$info:expr,$index:expr) => {
+        call_proc!(
+            $module,
+            getAccessibleTextRect,
+            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextRectInfo,JInt) -> BOOL,
+            $vm_id,
+            $at,
+            $info,
+            $index
+        )
+    };
+    ($module:expr,get_current_accessible_value_from_context,$vm_id:expr,$av:expr,$value:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getCurrentAccessibleValueFromContext,
+            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            $vm_id,
+            $av,
+            $value,
+            $len
+        )
+    };
+    ($module:expr,get_maximum_accessible_value_from_context,$vm_id:expr,$av:expr,$value:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getMaximumAccessibleValueFromContext,
+            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            $vm_id,
+            $av,
+            $value,
+            $len
+        )
+    };
+    ($module:expr,get_minimum_accessible_value_from_context,$vm_id:expr,$av:expr,$value:expr,$len:expr) => {
+        call_proc!(
+            $module,
+            getMinimumAccessibleValueFromContext,
+            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            $vm_id,
+            $av,
+            $value,
+            $len
+        )
+    };
 }
