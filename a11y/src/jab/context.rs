@@ -20,11 +20,14 @@ use crate::{
     jab::role::AccessibleRole,
 };
 use win_wrap::common::HWND;
+use crate::jab::version::AccessBridgeVersionInfo;
+use crate::JabLib::packages::AccessibleContextInfo;
 
 pub struct AccessibleContext<'lib> {
     _lib: &'lib JabLib,
     _ac: AC,
     _vm_id: i32,
+    _info: Option<AccessibleContextInfo>,
 }
 
 impl<'lib> AccessibleContext<'lib> {
@@ -34,16 +37,19 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: lib,
                 _ac: ac,
                 _vm_id: vm_id,
+                _info: lib.get_accessible_context_info(vm_id, ac),
             });
         }
         None
     }
+
     pub fn from_focus(lib: &'lib JabLib, h_wnd: HWND) -> Option<AccessibleContext<'lib>> {
         if let Some((vm_id, ac)) = lib.get_accessible_context_with_focus(h_wnd) {
             return Some(Self {
                 _lib: lib,
                 _ac: ac,
                 _vm_id: vm_id,
+                _info: lib.get_accessible_context_info(vm_id, ac),
             });
         }
         None
@@ -67,6 +73,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: ac,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, ac),
             });
         }
         None
@@ -82,6 +89,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: child,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, child),
             });
         }
         None
@@ -96,6 +104,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: parent,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, parent),
             });
         }
         None
@@ -111,6 +120,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: parent,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, parent),
             });
         }
         None
@@ -126,6 +136,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: parent_or_root,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, parent_or_root),
             });
         }
         None
@@ -140,6 +151,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: top,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, top),
             });
         }
         None
@@ -154,6 +166,7 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: descendent,
                 _vm_id: self._vm_id,
+                _info: self._lib.get_accessible_context_info(self._vm_id, descendent),
             });
         }
         None
@@ -164,6 +177,26 @@ impl<'lib> AccessibleContext<'lib> {
      * */
     pub fn get_depth(&self) -> i32 {
         self._lib.get_object_depth(self._vm_id, self._ac)
+    }
+
+    /**
+     * 获取应用程序正在使用的 Java Access Bridge 实例的版本信息。您可以使用此信息来确定您的 Java Access Bridge 版本的可用功能。
+     * */
+    pub fn get_version(&self) -> Option<AccessBridgeVersionInfo> {
+        if let Some(version_info) = self._lib.get_version_info(self._vm_id) {
+            return Some(AccessBridgeVersionInfo::from(&version_info));
+        }
+        None
+    }
+
+    /**
+     * 获取对象名称。
+     * */
+    pub fn get_name(&self) -> Option<String> {
+        let Some(ref info) = self._info else {
+            return None;
+        };
+        Some(String::from_utf16_lossy(&info.name).trim_matches('\0').to_string())
     }
 }
 
@@ -181,6 +214,10 @@ impl<'lib> Drop for AccessibleContext<'lib> {
 
 impl<'lib> Debug for AccessibleContext<'lib> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AccessibleContext(vm_id:{}, ac:{})", self._vm_id, self._ac as isize)
+        let mut info = String::new();
+        if let Some(name) = self.get_name() {
+            info += format!("name:{},", name).as_str();
+        }
+        write!(f, "AccessibleContext({})", info)
     }
 }

@@ -13,6 +13,7 @@
 
 pub mod context;
 pub mod role;
+pub mod version;
 
 use std::path::PathBuf;
 use crate::{
@@ -42,7 +43,7 @@ impl Jab {
      * `target` 目标窗口句柄。
      * */
     pub fn get_context_from_hwnd(&self, target: HWND) -> Option<AccessibleContext> {
-        AccessibleContext::from_focus(&self._lib, target)
+        AccessibleContext::from_hwnd(&self._lib, target)
     }
 
     /**
@@ -89,15 +90,12 @@ mod test_jab {
         dbg!(context.get_top_level());
         dbg!(context.get_active_descendent());
         dbg!(context.get_depth());
+        dbg!(context.get_version());
         dbg!(&jab);
     }
 
     fn test1(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
         dbg!(jab.set_caret_position(vm_id, ac, 2));
-        let version_info = jab.get_version_info(vm_id);
-        dbg!(version_info);
-        let info = jab.get_accessible_context_info(vm_id, ac);
-        dbg!(info);
         dbg!(jab.get_accessible_actions(vm_id, ac));
         dbg!(jab.get_accessible_relation_set(vm_id, ac));
         dbg!(jab.get_accessible_key_bindings(vm_id, ac));
