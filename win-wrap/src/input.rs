@@ -18,8 +18,8 @@ use windows::Win32::UI::Input::Ime::{
     ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    mouse_event, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN,
-    MOUSEEVENTF_RIGHTUP,
+    keybd_event, mouse_event, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN,
+    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
 };
 use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, SetCursorPos};
 pub use windows::Win32::UI::{
@@ -110,6 +110,14 @@ pub fn get_key_state(key: VirtualKey) -> (bool, bool) {
     let high = state >> 8;
     let low = state & 0xffi16;
     (high != 0, low != 0)
+}
+
+/// 模拟按键
+pub fn send_key(key: VirtualKey) {
+    unsafe {
+        keybd_event(key.0 as u8, 0, KEYEVENTF_EXTENDEDKEY, 0);
+        keybd_event(key.0 as u8, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+    }
 }
 
 /**
