@@ -19,10 +19,12 @@ use crate::{
     commander::{CommandType, Talent},
     context::Context,
 };
+use std::ops::DerefMut;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
+use win_wrap::input::{get_key_state, send_key, VK_CAPITAL};
 use win_wrap::{
     common::LRESULT,
     ext::LParamExt,
@@ -44,6 +46,11 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
         let key = (info.vkCode, is_extended).into();
 
+        if key == VkCapital {
+            capital_handle(context.clone(), pressed);
+        }
+
+        // 调用已在指挥器注册过的回调函数
         let fns = context.commander.get_key_callback_fns();
         for (keys, callback) in fns.iter() {
             if keys.contains(&key) {
@@ -52,6 +59,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         let mut map = key_track.write().unwrap();
+        // 转换RigelA键
         let key = match key {
             VkNumPad0 | VkCapital | VkInsert => VkRigelA,
             _ => key,
@@ -120,6 +128,42 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
         return LRESULT(0);
     }
     LRESULT(1)
+}
+
+//  ---  处理大写锁定键  ---
+// 如果需要使用大写锁定键作为热键使用，会持续按住这个键，
+// 如果只是快速的按下并松开这个键，就保持这个键的锁定转换功能。
+// 当检测到持续按住这个键的时候，需要取消掉他的锁定转换操作。
+
+// 保存大写锁定键当前状态，是否是重复按下, 是否更改
+// 返回结果： CapitalLockState, Option<IsDoubleClick>, IsChanged
+pub(crate) fn get_capital_state() -> &'static Mutex<(bool, Option<bool>, bool)> {
+    static INSTANCE: OnceLock<Mutex<(bool, Option<bool>, bool)>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new((false, None, false)))
+}
+
+fn capital_handle(_context: Arc<Context>, pressed: bool) {
+    let (old_state, old_repeat, changed) = get_capital_state().lock().unwrap().clone();
+    if pressed && old_repeat.is_none() {
+        // 第一次按下
+        let (_, state) = get_key_state(VK_CAPITAL);
+        *get_capital_state().lock().unwrap().deref_mut() = (!state, Some(false), true);
+    } else if pressed && old_repeat.is_some() {
+        // 按住没有释放
+        *get_capital_state().lock().unwrap().deref_mut() = (old_state, Some(true), false);
+    } else if !pressed {
+        // 松开
+        match old_repeat {
+            Some(false) => {}
+            Some(true) => {
+                // 还原大小写锁定状态
+                // Todo  还原未成功
+                send_key(VK_CAPITAL);
+            }
+            None => unreachable!(),
+        }
+        *get_capital_state().lock().unwrap().deref_mut() = (old_state, None, changed);
+    }
 }
 
 // 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中

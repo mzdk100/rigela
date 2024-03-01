@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::hooks::get_capital_state;
 use crate::commander::keys::Keys::{VkCapital, VkNumlock};
 use crate::context::Context;
 use std::sync::Arc;
-use win_wrap::input::{get_key_state, VK_CAPITAL, VK_NUMLOCK};
+use win_wrap::input::{get_key_state, VK_NUMLOCK};
 
 //noinspection SpellCheckingInspection
 /**
@@ -46,19 +47,16 @@ pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
     context
         .commander
         .add_key_event_listener(&vec![VkCapital, VkNumlock], move |key, pressed| {
-            if !pressed {
-                return;
-            }
-
             let info = match key {
-                VkCapital => {
-                    let (_, state) = get_key_state(VK_CAPITAL);
+                VkCapital if !pressed => {
+                    let (state, _, c) = get_capital_state().lock().unwrap().clone();
                     match state {
-                        true => "小写",
-                        false => "大写",
+                        true if c => "大写",
+                        false if c => "小写",
+                        _ => "",
                     }
                 }
-                VkNumlock => {
+                VkNumlock if pressed => {
                     let (_, state) = get_key_state(VK_NUMLOCK);
                     match state {
                         true => "热键",
