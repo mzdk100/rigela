@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#![allow(non_snake_case)]
-
+//noinspection RsModuleNaming
 pub(crate) mod IAccessible2Lib;
+//noinspection RsModuleNaming
+#[allow(non_snake_case)]
 pub(crate) mod JabLib;
 
 pub mod ia2;
+pub mod jab;
