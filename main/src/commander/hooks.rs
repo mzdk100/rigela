@@ -19,7 +19,7 @@ use crate::{
     commander::{CommandType, Talent},
     context::Context,
 };
-use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
@@ -38,17 +38,22 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
     let context = context.clone();
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
+    // 暂停键盘钩子
+    let ignore_hook = Arc::new(Mutex::new(false));
+    // 大小写锁定键状态
+    let capital_key_state = Arc::new(Mutex::new(false));
+    // 暂停大小写键转换功能
+    let ignore_capital_key = Arc::new(Mutex::new(false));
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+        if *ignore_hook.lock().unwrap().deref() {
+            return next();
+        }
+
         let info: &KbdLlHookStruct = l_param.to();
         let is_extended = info.flags.contains(LLKHF_EXTENDED);
         let key = (info.vkCode, is_extended).into();
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
-
-        let mut capital_result = LRESULT(0);
-        if info.vkCode as u16 == VK_CAPITAL.0 {
-            capital_result = capital_handle(pressed);
-        }
 
         // 调用已在指挥器注册过的回调函数
         let fns = context.commander.get_key_callback_fns();
@@ -86,8 +91,23 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
             };
         }
 
+        let key_count = map.values().filter(|i| **i).count();
+        if key_count > 1 {
+            *ignore_capital_key.lock().unwrap().deref_mut() = true;
+        }
         if info.vkCode as u16 == VK_CAPITAL.0 {
-            return capital_result;
+            if !pressed {
+                if key_count == 0 && *ignore_capital_key.lock().unwrap().deref() == false {
+                    let state = *capital_key_state.lock().unwrap().deref();
+                    capital_handle(context.clone(), state, &ignore_hook);
+                }
+                *ignore_capital_key.lock().unwrap().deref_mut() = false;
+            } else {
+                let (_, state) = get_key_state(VK_CAPITAL);
+                *capital_key_state.lock().unwrap().deref_mut() = state;
+            }
+
+            return LRESULT(1);
         }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -135,46 +155,20 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
     LRESULT(1)
 }
 
-//  ---  处理大写锁定键  ---
-// 如果需要使用大写锁定键作为热键使用，会持续按住这个键，
-// 如果只是快速的按下并松开这个键，就保持这个键的锁定转换功能。
-// 当检测到持续按住这个键的时候，需要拦截掉他的锁定转换操作。
-
-// 保存大写锁定键当前状态，是否是重复按下, 是否更改
-// 返回结果： CapitalLockState, Option<IsRepeat>, IsChanged
-pub(crate) fn get_capital_state() -> &'static Mutex<(bool, Option<bool>, bool)> {
-    static INSTANCE: OnceLock<Mutex<(bool, Option<bool>, bool)>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new((false, None, false)))
-}
-
-fn capital_handle(pressed: bool) -> LRESULT {
-    let (old_state, old_repeat, changed) = get_capital_state().lock().unwrap().clone();
-
-    match pressed {
-        true if old_repeat.is_none() => {
-            // 第一次按下
-            let (_, state) = get_key_state(VK_CAPITAL);
-            *get_capital_state().lock().unwrap().deref_mut() = (!state, Some(false), true);
-            LRESULT(1)
-        }
-        true => {
-            // 按住没有释放
-            *get_capital_state().lock().unwrap().deref_mut() = (old_state, Some(true), false);
-            LRESULT(1)
-        }
-        false => {
-            // 松开
-            *get_capital_state().lock().unwrap().deref_mut() = (old_state, None, changed);
-
-            match old_repeat {
-                Some(false) => {
-                    send_key(VK_CAPITAL);
-                    LRESULT(0)
-                }
-                _ => LRESULT(1),
-            }
-        }
+// 处理大小写锁定键
+fn capital_handle(context: Arc<Context>, state: bool, hook_toggle: &Mutex<bool>) {
+    {
+        *hook_toggle.lock().unwrap().deref_mut() = true;
     }
+    send_key(VK_CAPITAL);
+    {
+        *hook_toggle.lock().unwrap().deref_mut() = false;
+    }
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        let info = if !state { "大写" } else { "小写" };
+        pf.speak(info.to_string()).await;
+    });
 }
 
 // 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中
