@@ -42,12 +42,12 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         let info: &KbdLlHookStruct = l_param.to();
         let is_extended = info.flags.contains(LLKHF_EXTENDED);
+        let key = (info.vkCode, is_extended).into();
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
-        let key = (info.vkCode, is_extended).into();
-
-        if key == VkCapital {
-            capital_handle(context.clone(), pressed);
+        let mut capital_result = LRESULT(0);
+        if info.vkCode as u16 == VK_CAPITAL.0 {
+            capital_result = capital_handle(pressed);
         }
 
         // 调用已在指挥器注册过的回调函数
@@ -58,15 +58,16 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
             }
         }
 
-        let mut map = key_track.write().unwrap();
         // 转换RigelA键
         let key = match key {
             VkNumPad0 | VkCapital | VkInsert => VkRigelA,
             _ => key,
         };
+
+        let mut map = key_track.write().unwrap();
         map.insert(key, pressed);
 
-        if !pressed {
+        if !pressed && info.vkCode as u16 != VK_CAPITAL.0 {
             drop(map); // 必须先释放锁再next()，否则可能会死锁
             return next();
         }
@@ -83,6 +84,10 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
                 }
                 _ => continue,
             };
+        }
+
+        if info.vkCode as u16 == VK_CAPITAL.0 {
+            return capital_result;
         }
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -133,36 +138,42 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
 //  ---  处理大写锁定键  ---
 // 如果需要使用大写锁定键作为热键使用，会持续按住这个键，
 // 如果只是快速的按下并松开这个键，就保持这个键的锁定转换功能。
-// 当检测到持续按住这个键的时候，需要取消掉他的锁定转换操作。
+// 当检测到持续按住这个键的时候，需要拦截掉他的锁定转换操作。
 
 // 保存大写锁定键当前状态，是否是重复按下, 是否更改
-// 返回结果： CapitalLockState, Option<IsDoubleClick>, IsChanged
+// 返回结果： CapitalLockState, Option<IsRepeat>, IsChanged
 pub(crate) fn get_capital_state() -> &'static Mutex<(bool, Option<bool>, bool)> {
     static INSTANCE: OnceLock<Mutex<(bool, Option<bool>, bool)>> = OnceLock::new();
     INSTANCE.get_or_init(|| Mutex::new((false, None, false)))
 }
 
-fn capital_handle(_context: Arc<Context>, pressed: bool) {
+fn capital_handle(pressed: bool) -> LRESULT {
     let (old_state, old_repeat, changed) = get_capital_state().lock().unwrap().clone();
-    if pressed && old_repeat.is_none() {
-        // 第一次按下
-        let (_, state) = get_key_state(VK_CAPITAL);
-        *get_capital_state().lock().unwrap().deref_mut() = (!state, Some(false), true);
-    } else if pressed && old_repeat.is_some() {
-        // 按住没有释放
-        *get_capital_state().lock().unwrap().deref_mut() = (old_state, Some(true), false);
-    } else if !pressed {
-        // 松开
-        match old_repeat {
-            Some(false) => {}
-            Some(true) => {
-                // 还原大小写锁定状态
-                // Todo  还原未成功
-                send_key(VK_CAPITAL);
-            }
-            None => unreachable!(),
+
+    match pressed {
+        true if old_repeat.is_none() => {
+            // 第一次按下
+            let (_, state) = get_key_state(VK_CAPITAL);
+            *get_capital_state().lock().unwrap().deref_mut() = (!state, Some(false), true);
+            LRESULT(1)
         }
-        *get_capital_state().lock().unwrap().deref_mut() = (old_state, None, changed);
+        true => {
+            // 按住没有释放
+            *get_capital_state().lock().unwrap().deref_mut() = (old_state, Some(true), false);
+            LRESULT(1)
+        }
+        false => {
+            // 松开
+            *get_capital_state().lock().unwrap().deref_mut() = (old_state, None, changed);
+
+            match old_repeat {
+                Some(false) => {
+                    send_key(VK_CAPITAL);
+                    LRESULT(0)
+                }
+                _ => LRESULT(1),
+            }
+        }
     }
 }
 
