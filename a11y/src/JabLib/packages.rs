@@ -23,6 +23,7 @@ pub(crate) type JBoolean = u8;
 pub(crate) type JChar = u16;
 pub(crate) type JInt = i32;
 pub(crate) type JFloat = f32;
+#[allow(unused)]
 pub(crate) type JLong = i64;
 pub(crate) type JObject = *const ();
 
@@ -701,6 +702,7 @@ pub(crate) struct AccessibleActionsToDo {
 }
 
 impl AccessibleActionsToDo {
+    #[allow(dead_code)]
     pub(crate) fn from_actions(actions: &AccessibleActions) -> AccessibleActionsToDo {
         let mut to_do: AccessibleActionsToDo = unsafe { std::mem::zeroed() };
         for i in 0..min(MAX_ACTIONS_TO_DO, actions.actionsCount as u32) {
