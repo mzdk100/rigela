@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod callbacks;
-mod calls;
-mod packages;
+pub(crate) mod callbacks;
+pub(crate) mod calls;
+pub(crate) mod packages;
 
 use crate::{
     JabLib::{
@@ -81,7 +81,10 @@ use crate::{
 use rigela_utils::call_proc;
 use std::{
     env::var,
-    path::{Path, PathBuf},
+    path::{
+        PathBuf,
+        Path,
+    },
 };
 use win_wrap::{
     common::{
@@ -99,7 +102,7 @@ use windows::{
 
 #[allow(unused)]
 #[derive(Debug)]
-pub struct JabLib {
+pub(crate) struct JabLib {
     h_module: HMODULE,
 }
 
@@ -1425,147 +1428,5 @@ impl Drop for JabLib {
             return;
         }
         free_library(self.h_module);
-    }
-}
-
-#[cfg(all(test, target_arch = "x86_64"))]
-mod test_jab {
-    use crate::JabLib::{packages::{ACCESSIBLE_PANEL, AccessibleActionsToDo, AccessibleContext}, JabLib};
-    use win_wrap::common::{find_window, get_desktop_window};
-
-    #[test]
-    fn main() {
-        let jab = JabLib::new(None).unwrap();
-        assert!(!jab.is_java_window(get_desktop_window()));
-        let h_wnd = find_window(Some("SunAwtFrame"), None);
-        assert!(jab.is_java_window(h_wnd));
-        let ac = jab.get_accessible_context_from_hwnd(h_wnd);
-        dbg!(ac);
-        let (vm_id, ac) = ac.unwrap();
-        let h_wnd2 = jab.get_hwnd_from_accessible_context(vm_id, ac);
-        assert_eq!(h_wnd, h_wnd2);
-        if let Some(ac2) = jab.get_accessible_context_at(vm_id, ac, 100, 100) {
-            dbg!(ac2);
-            jab.release_java_object(vm_id, ac2);
-        }
-        jab.release_java_object(vm_id, ac);
-        let ac = jab.get_accessible_context_with_focus(h_wnd);
-        dbg!(ac);
-        let (vm_id, ac) = ac.unwrap();
-        if let Some(child) = jab.get_accessible_child_from_context(vm_id, ac, 0) {
-            dbg!(child);
-            jab.release_java_object(vm_id, child);
-        }
-        if let Some(parent) = jab.get_accessible_parent_from_context(vm_id, ac) {
-            dbg!(parent);
-            jab.release_java_object(vm_id, parent);
-        }
-        dbg!(jab.is_same_object(vm_id, ac, ac));
-        if let Some(parent) = jab.get_parent_with_role(vm_id, ac, ACCESSIBLE_PANEL) {
-            dbg!(parent);
-            jab.release_java_object(vm_id, parent);
-        }
-        if let Some(parent_or_root) =
-            jab.get_parent_with_role_else_root(vm_id, ac, ACCESSIBLE_PANEL)
-        {
-            dbg!(parent_or_root);
-            jab.release_java_object(vm_id, parent_or_root);
-        }
-        if let Some(top) = jab.get_top_level_object(vm_id, ac) {
-            dbg!(top);
-            jab.release_java_object(vm_id, top);
-        }
-        dbg!(jab.get_object_depth(vm_id, ac));
-        if let Some(descendent) = jab.get_active_descendent(vm_id, ac) {
-            dbg!(descendent);
-            jab.release_java_object(vm_id, descendent);
-        }
-        test1(&jab, vm_id, ac);
-        // test2(&jab, vm_id, ac);
-        //test3(&jab, vm_id, ac);
-        //test4(&jab, vm_id, ac);
-        //test5(&jab, vm_id, ac);
-
-        jab.release_java_object(vm_id, ac);
-
-        dbg!(jab);
-    }
-
-    fn test1(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.set_caret_position(vm_id, ac, 2));
-        let version_info = jab.get_version_info(vm_id);
-        dbg!(version_info);
-        let info = jab.get_accessible_context_info(vm_id, ac);
-        dbg!(info);
-        dbg!(jab.get_accessible_actions(vm_id, ac));
-        dbg!(jab.get_accessible_relation_set(vm_id, ac));
-        dbg!(jab.get_accessible_key_bindings(vm_id, ac));
-        dbg!(jab.get_accessible_icons(vm_id, ac));
-        dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
-        dbg!(jab.get_current_accessible_value_from_context(vm_id, ac, 10));
-        dbg!(jab.get_maximum_accessible_value_from_context(vm_id, ac, 10));
-        dbg!(jab.get_minimum_accessible_value_from_context(vm_id, ac, 10));
-    }
-
-    fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_row_header(vm_id, ac));
-        dbg!(jab.get_accessible_table_column_header(vm_id, ac));
-        if let Some(info) = jab.get_accessible_table_info(vm_id, ac) {
-            dbg!(&info);
-            dbg!(jab.is_accessible_table_row_selected(vm_id, info.accessibleTable, 0));
-            dbg!(jab.is_accessible_table_column_selected(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_cell_info(vm_id, info.accessibleTable, 0, 0));
-            dbg!(jab.get_accessible_table_column(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_row(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_column_selection_count(vm_id, info.accessibleTable));
-            dbg!(jab.get_accessible_table_row_selection_count(vm_id, info.accessibleTable));
-            dbg!(jab.get_accessible_table_index(vm_id, info.accessibleTable, 0, 0));
-            dbg!(jab.get_accessible_table_column_selections(vm_id, info.accessibleTable, 1));
-            dbg!(jab.get_accessible_table_row_selections(vm_id, info.accessibleTable, 1));
-        }
-    }
-
-    fn test3(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        let info = jab.get_accessible_hypertext(vm_id, ac).unwrap();
-        dbg!(&info);
-        dbg!(jab.activate_accessible_hyperlink(vm_id, ac, info.links[0].accessibleHyperlink));
-        dbg!(jab.get_accessible_hyperlink(vm_id, info.accessibleHypertext, 0));
-        dbg!(jab.get_accessible_hyperlink_count(vm_id, info.accessibleHypertext));
-        dbg!(jab.get_accessible_hypertext_link_index(vm_id, info.accessibleHypertext, 0));
-        dbg!(jab.get_accessible_hypertext_ext(vm_id, ac, 0));
-        let actions = jab.get_accessible_actions(vm_id, ac).unwrap();
-        dbg!(jab.do_accessible_actions(vm_id, ac, &AccessibleActionsToDo::from_actions(&actions)));
-        dbg!(jab.set_text_contents(vm_id, ac, [103u16, 104, 0].as_ptr()));
-    }
-
-    fn test4(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.request_focus(vm_id, ac));
-        dbg!(jab.get_visible_children_count(vm_id, ac));
-        dbg!(jab.get_visible_children(vm_id, ac, 0));
-        dbg!(jab.get_events_waiting());
-        dbg!(jab.get_caret_location(vm_id, ac, 0));
-        let info = jab.get_accessible_context_info(vm_id, ac).unwrap();
-        dbg!(&info);
-        jab.add_accessible_selection_from_context(vm_id, ac, 0);
-        jab.remove_accessible_selection_from_context(vm_id, ac, 0);
-        jab.clear_accessible_selection_from_context(vm_id, ac);
-        jab.select_all_accessible_selection_from_context(vm_id, ac);
-        dbg!(jab.get_accessible_selection_count_from_context(vm_id, ac));
-        dbg!(jab.get_accessible_selection_from_context(vm_id, ac, 0));
-        dbg!(jab.is_accessible_child_selected_from_context(vm_id, ac, 0));
-    }
-
-    fn test5(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.select_text_range(vm_id, ac, 0, 8));
-        dbg!(jab.get_text_attributes_in_range(vm_id, ac, 2, 5));
-        dbg!(jab.get_accessible_text_selection_info(vm_id, ac));
-        dbg!(jab.get_accessible_text_info(vm_id, ac, 100, 100));
-        dbg!(jab.get_accessible_text_attributes(vm_id, ac, 0));
-        dbg!(jab.get_accessible_text_items(vm_id, ac, 0));
-        dbg!(jab.get_accessible_text_line_bounds(vm_id, ac, 0));
-        dbg!(jab.get_accessible_text_range(vm_id, ac, 0, 20, 20));
-        dbg!(jab.get_accessible_text_rect(vm_id, ac, 0));
     }
 }
