@@ -18,7 +18,6 @@ mod ime;
 mod input;
 mod progress;
 
-use crate::commander::keys::Keys;
 use crate::{
     context::Context,
     event_core::{
@@ -27,10 +26,11 @@ use crate::{
         progress::subscribe_progress_events,
     },
 };
-use event_observer::*;
-use std::fmt::{Debug, Formatter};
-use std::sync::{Arc, OnceLock};
-use std::time::{Duration, SystemTime};
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 use tokio::sync::{Mutex, OnceCell};
 
 /// 事件过滤器

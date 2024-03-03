@@ -11,26 +11,39 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use super::keys::Keys;
-use crate::commander::keys::Keys::*;
-use crate::configs::config_operations::{get_hotkeys, get_mouse_read_state};
-use crate::talent::mouse::mouse_read;
 use crate::{
-    commander::{CommandType, Talent},
+    configs::config_operations::{get_hotkeys, get_mouse_read_state},
+    commander::{
+        keys::Keys,
+        CommandType,
+        Talent,
+    },
+    talent::mouse::mouse_read,
     context::Context,
 };
-use std::ops::{Deref, DerefMut};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
-use win_wrap::input::{get_key_state, send_key, VK_CAPITAL};
 use win_wrap::{
+    input::{
+        get_key_state,
+        send_key,
+        VK_CAPITAL,
+        WM_KEYDOWN,
+        WM_MOUSEMOVE,
+        WM_SYSKEYDOWN,
+    },
     common::LRESULT,
     ext::LParamExt,
-    hook::HOOK_TYPE_MOUSE_LL,
-    hook::{KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
+    hook::{
+        HOOK_TYPE_MOUSE_LL,
+        KbdLlHookStruct,
+        MsLlHookStruct,
+        WindowsHook,
+        HOOK_TYPE_KEYBOARD_LL,
+        LLKHF_EXTENDED,
+    },
 };
 
 /// 设置键盘钩子
@@ -47,7 +60,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         // 根据状态条件暂停钩子处理
-        if *ignore_hook.lock().unwrap().deref() {
+        if *ignore_hook.lock().unwrap() {
             return next();
         }
 
@@ -66,7 +79,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
 
         // 转换RigelA键
         let key = match key {
-            VkNumPad0 | VkCapital | VkInsert => VkRigelA,
+            Keys::VkNumPad0 | Keys::VkCapital | Keys::VkInsert => Keys::VkRigelA,
             _ => key,
         };
 
@@ -81,23 +94,26 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
             }
             true => {
                 // 所有键按下都把大写锁定键的状态切换关闭
-                *ignore_capital_key.lock().unwrap().deref_mut() = true;
+                *ignore_capital_key.lock().unwrap() = true;
+                // 保存最后按下的键
+                context.commander.set_last_pressed_key(&key);
+
+                // 执行能力操作
+                for i in talents.iter() {
+                    match get_hotkeys(context.clone()).get(&i.get_id()) {
+                        // 如果用户自定义过热键优先使用他定义的。
+                        Some(keys) if match_keys(keys, &map) => {
+                            return execute(context.clone(), Arc::clone(i));
+                        }
+                        // 如果用户没定义过这个能力的热键就使用默认的。
+                        None if match_cmd_list(i.clone(), &map) => {
+                            return execute(context.clone(), Arc::clone(i));
+                        }
+                        _ => continue,
+                    };
+                }
             }
             _ => {}
-        }
-
-        for i in talents.iter() {
-            match get_hotkeys(context.clone()).get(&i.get_id()) {
-                // 如果用户自定义过热键优先使用他定义的。
-                Some(keys) if match_keys(keys, &map) => {
-                    return execute(context.clone(), Arc::clone(i));
-                }
-                // 如果用户没定义过这个能力的热键就使用默认的。
-                None if match_cmd_list(i.clone(), &map) => {
-                    return execute(context.clone(), Arc::clone(i));
-                }
-                _ => continue,
-            };
         }
 
         let key_count = map.values().filter(|i| **i).count();
@@ -107,16 +123,16 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
                 true => {
                     // 如果按下大写锁定键，保存状态
                     let (_, state) = get_key_state(VK_CAPITAL);
-                    *capital_key_state.lock().unwrap().deref_mut() = state;
+                    *capital_key_state.lock().unwrap() = state;
                     // 如果单独按下大写锁定键，开启锁定键的状态改变
                     if key_count == 1 {
-                        *ignore_capital_key.lock().unwrap().deref_mut() = false;
+                        *ignore_capital_key.lock().unwrap() = false;
                     }
                 }
                 false => {
                     // 松开按键时，检测是否允许改变状态，如果允许，关闭钩子处理，模拟发送锁定键并播报状态
-                    if *ignore_capital_key.lock().unwrap().deref() == false {
-                        let state = *capital_key_state.lock().unwrap().deref();
+                    if *ignore_capital_key.lock().unwrap() == false {
+                        let state = *capital_key_state.lock().unwrap();
                         capital_handle(context.clone(), state, &ignore_hook);
                     }
                 }
@@ -174,11 +190,11 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
 // 处理大小写锁定键
 fn capital_handle(context: Arc<Context>, state: bool, hook_toggle: &Mutex<bool>) {
     {
-        *hook_toggle.lock().unwrap().deref_mut() = true;
+        *hook_toggle.lock().unwrap() = true;
     }
     send_key(VK_CAPITAL);
     {
-        *hook_toggle.lock().unwrap().deref_mut() = false;
+        *hook_toggle.lock().unwrap() = false;
     }
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
