@@ -11,15 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::context::Context;
+use crate::{
+    commander::keys::Keys,
+    context::Context,
+    performer::sound::SoundArgument::Single,
+};
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
     WinEventSourceExt,
 };
 use log::error;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::{
+    sync::{Arc, Mutex, OnceLock}
+};
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
 
 //noinspection SpellCheckingInspection
@@ -57,7 +61,7 @@ async fn subscribe_uia_events(context: Arc<Context>) {
         match commander.get_last_pressed_key() {
             Keys::VkUp | Keys::VkDown => {
                 {
-                    *line_handled().lock().unwrap().deref_mut() = true;
+                    *line_handled().lock().unwrap() = true;
                 }
                 caret.expand_to_enclosing_unit(TextUnit::Line);
             }
@@ -123,7 +127,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
         if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
             match pressed {
                 true => {
-                    *line_handled().lock().unwrap().deref_mut() = false;
+                    *line_handled().lock().unwrap() = false;
                 }
                 false => {
                     let pf = ctx.performer.clone();
@@ -131,6 +135,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
                         if !*line_handled().lock().unwrap() {
                             let caret = pattern.get_caret_range();
                             caret.expand_to_enclosing_unit(TextUnit::Line);
+                            pf.play_sound(Single("edge.wav")).await;
                             pf.speak(caret).await;
                         }
                     });
