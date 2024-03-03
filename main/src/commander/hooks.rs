@@ -46,6 +46,7 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
     let ignore_capital_key = Arc::new(Mutex::new(false));
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
+        // 根据状态条件暂停钩子处理
         if *ignore_hook.lock().unwrap().deref() {
             return next();
         }
@@ -72,9 +73,17 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let mut map = key_track.write().unwrap();
         map.insert(key, pressed);
 
-        if !pressed && info.vkCode as u16 != VK_CAPITAL.0 {
-            drop(map); // 必须先释放锁再next()，否则可能会死锁
-            return next();
+        match pressed {
+            // 松开按键，需要排除大写锁定键，由后面的大写锁定键代码专门处理
+            false if info.vkCode as u16 != VK_CAPITAL.0 => {
+                drop(map); // 必须先释放锁再next()，否则可能会死锁
+                return next();
+            }
+            true => {
+                // 所有键按下都把大写锁定键的状态切换关闭
+                *ignore_capital_key.lock().unwrap().deref_mut() = true;
+            }
+            _ => {}
         }
 
         for i in talents.iter() {
@@ -92,21 +101,28 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         }
 
         let key_count = map.values().filter(|i| **i).count();
-        if key_count > 1 {
-            *ignore_capital_key.lock().unwrap().deref_mut() = true;
-        }
+        // 大写锁定键处理
         if info.vkCode as u16 == VK_CAPITAL.0 {
-            if !pressed {
-                if key_count == 0 && *ignore_capital_key.lock().unwrap().deref() == false {
-                    let state = *capital_key_state.lock().unwrap().deref();
-                    capital_handle(context.clone(), state, &ignore_hook);
+            match pressed {
+                true => {
+                    // 如果按下大写锁定键，保存状态
+                    let (_, state) = get_key_state(VK_CAPITAL);
+                    *capital_key_state.lock().unwrap().deref_mut() = state;
+                    // 如果单独按下大写锁定键，开启锁定键的状态改变
+                    if key_count == 1 {
+                        *ignore_capital_key.lock().unwrap().deref_mut() = false;
+                    }
                 }
-                *ignore_capital_key.lock().unwrap().deref_mut() = false;
-            } else {
-                let (_, state) = get_key_state(VK_CAPITAL);
-                *capital_key_state.lock().unwrap().deref_mut() = state;
+                false => {
+                    // 松开按键时，检测是否允许改变状态，如果允许，关闭钩子处理，模拟发送锁定键并播报状态
+                    if *ignore_capital_key.lock().unwrap().deref() == false {
+                        let state = *capital_key_state.lock().unwrap().deref();
+                        capital_handle(context.clone(), state, &ignore_hook);
+                    }
+                }
             }
 
+            // 所有的大写锁定键全部拦截住，满足状态改变条件时，关闭钩子处理，模拟发送锁定键
             return LRESULT(1);
         }
 
