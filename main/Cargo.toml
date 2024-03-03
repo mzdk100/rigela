@@ -80,7 +80,7 @@ chrono = "0.4.34"
 rust-i18n = "3.0.1"
 
 # 日志库
-log = "0.4.20"
+log = "0.4.21"
 
 # 异步trait
 async-trait = "0.1.77"
@@ -90,7 +90,6 @@ select = "0.6.0"
 
 # 压缩解压
 zip = "0.6.6"
-event-observer = "0.1.0"
 
 [dependencies.reqwest]
 # 网络请求

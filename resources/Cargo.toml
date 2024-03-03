@@ -13,7 +13,7 @@ repository.workspace = true
 bitar = "0.11.0"
 blake2 = "0.11.0-pre.3"
 url = "2.5.0"
-log = "0.4.20"
+log = "0.4.21"
 
 [dependencies.futures-util]
 version = "0.3.30"
