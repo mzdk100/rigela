@@ -43,7 +43,7 @@ impl<'lib> AccessibleContext<'lib> {
         None
     }
 
-    pub fn from_focus(lib: &'lib JabLib, h_wnd: HWND) -> Option<AccessibleContext<'lib>> {
+    pub(crate) fn from_focus(lib: &'lib JabLib, h_wnd: HWND) -> Option<AccessibleContext<'lib>> {
         if let Some((vm_id, ac)) = lib.get_accessible_context_with_focus(h_wnd) {
             return Some(Self {
                 _lib: lib,

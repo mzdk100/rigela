@@ -20,7 +20,8 @@ use crate::JabLib::packages::{ACCESSIBLE_ALERT, ACCESSIBLE_AWT_COMPONENT, ACCESS
  *      Defines all AccessibleRoles in Local.US
  ******************************************************
  * */
-pub(crate) enum AccessibleRole {
+#[allow(dead_code)]
+pub enum AccessibleRole {
     /**
      * Object is used to alert the user about something.
      * */
