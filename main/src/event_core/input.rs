@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys::{VkCapital, VkNumlock};
+use crate::commander::keys::Keys::{VkNumlock, VkScroll};
 use crate::context::Context;
 use std::sync::Arc;
-use win_wrap::input::{get_key_state, VK_NUMLOCK};
+use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};
 
 //noinspection SpellCheckingInspection
 /**
@@ -42,23 +42,34 @@ pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
 /// 处理锁定键状态更改播报
 pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
     let ctx = context.clone();
+    let handle = move |key, pressed: bool| {
+        if !pressed {
+            return;
+        }
 
+        let info = match key {
+            VkScroll => {
+                let (_, state) = get_key_state(VK_SCROLL);
+                match state {
+                    true => "滚动",
+                    false => "滚动锁定",
+                }
+            }
+            VkNumlock => {
+                let (_, state) = get_key_state(VK_NUMLOCK);
+                match state {
+                    true => "热键",
+                    false => "数字",
+                }
+            }
+            _ => unreachable!(),
+        };
+        let pf = ctx.performer.clone();
+        ctx.main_handler.spawn(async move {
+            pf.speak(info.to_string()).await;
+        });
+    };
     context
         .commander
-        .add_key_event_listener(&vec![VkCapital, VkNumlock], move |key, pressed| {
-            let info = match key {
-                VkNumlock if pressed => {
-                    let (_, state) = get_key_state(VK_NUMLOCK);
-                    match state {
-                        true => "热键",
-                        false => "数字",
-                    }
-                }
-                _ => "",
-            };
-            let pf = ctx.performer.clone();
-            ctx.main_handler.spawn(async move {
-                pf.speak(info.to_string()).await;
-            });
-        });
+        .add_key_event_listener(&vec![VkScroll, VkNumlock], handle);
 }

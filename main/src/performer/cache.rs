@@ -11,6 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::context::Context;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::io::AsyncReadExt;
 use tokio::sync::Mutex;
 
 /// 缓冲区
@@ -19,15 +23,32 @@ pub(crate) struct Cache {
     data: Mutex<String>,
     char_list: Mutex<Vec<char>>,
     index: Mutex<Option<usize>>,
+    words: Arc<HashMap<String, String>>,
 }
 
 impl Cache {
+    //noinspection DuplicatedCode
     /// 创建缓存对象
-    pub(crate) fn new() -> Self {
+    pub(crate) async fn build(context: Arc<Context>) -> Self {
+        let words = match context.resource_provider.open("words.txt").await {
+            Ok(mut f) => {
+                let mut s = String::new();
+                f.read_to_string(&mut s).await.unwrap_or(0);
+                let mut v = HashMap::new();
+                for i in s.lines() {
+                    let mut j = i.split("=");
+                    v.insert(j.next().unwrap().to_string(), j.next().unwrap().to_string());
+                }
+                Arc::new(v)
+            }
+            Err(_) => Arc::new(HashMap::new()),
+        };
+
         Self {
             data: Mutex::new("".to_string()),
             char_list: Mutex::new(vec![]),
             index: Mutex::new(None),
+            words,
         }
     }
 
@@ -79,6 +100,10 @@ impl Cache {
         }
 
         self.char_list.lock().await.first().unwrap().clone()
+    }
+
+    pub(crate) fn get_words(&self) -> Arc<HashMap<String, String>> {
+        self.words.clone()
     }
 }
 

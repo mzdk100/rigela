@@ -59,6 +59,12 @@ async fn prev_prop(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区上一字符", key = (VkRigelA, VkLeft))]
 async fn prev_cache_char(context: Arc<Context>) {
+    {
+        *crate::event_core::editor::editor_key_handle()
+            .lock()
+            .unwrap() = true;
+    }
+
     let cache = context.performer.get_cache();
     let text = cache.get(CacheDirection::Backward).await;
     let tts = context.performer.get_tts();
@@ -69,6 +75,12 @@ async fn prev_cache_char(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区下一字符", key = (VkRigelA, VkRight))]
 async fn next_cache_char(context: Arc<Context>) {
+    {
+        *crate::event_core::editor::editor_key_handle()
+            .lock()
+            .unwrap() = true;
+    }
+
     let cache = context.performer.get_cache();
     let text = cache.get(CacheDirection::Forward).await;
     let tts = context.performer.get_tts();
@@ -91,13 +103,20 @@ async fn trans_cache_char(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区当前字符组词", key = (VkRigelA, VkDown))]
 async fn make_word_cache_char(context: Arc<Context>) {
+    {
+        *crate::event_core::editor::editor_key_handle()
+            .lock()
+            .unwrap() = true;
+    }
+
     let cache = context.performer.get_cache();
+    let words = context.performer.get_cache().get_words();
     let text = cache.get(CacheDirection::Current).await;
-    // Todo: 生成词组
+    let word = words.get(&text).unwrap_or(&text);
 
     let tts = context.performer.get_tts();
     tts.stop().await;
-    tts.speak(text).await;
+    tts.speak(word.clone()).await;
 }
 
 //noinspection RsUnresolvedReference

@@ -35,8 +35,8 @@ pub(crate) trait Speakable {
 #[derive(Debug)]
 pub(crate) struct Performer {
     tts: OnceCell<Arc<Tts>>,
+    cache: OnceCell<Arc<cache::Cache>>,
     sound: Arc<Sound>,
-    cache: Arc<cache::Cache>,
 }
 
 impl Performer {
@@ -44,8 +44,8 @@ impl Performer {
     pub(crate) fn new() -> Self {
         Self {
             tts: OnceCell::new().into(),
+            cache: OnceCell::new().into(),
             sound: Sound::new().into(),
-            cache: Arc::new(cache::Cache::new()).into(),
         }
     }
 
@@ -63,6 +63,9 @@ impl Performer {
             .await
             .add_engine(VvttsEngine::new(context.clone()))
             .await;
+        self.cache
+            .set(Arc::new(cache::Cache::build(context.clone()).await))
+            .unwrap_or(());
     }
 
     /// 获取表演者的TTS对象
@@ -72,7 +75,7 @@ impl Performer {
 
     /// 获取表演者的缓冲区
     pub(crate) fn get_cache(&self) -> Arc<cache::Cache> {
-        self.cache.clone()
+        self.cache.get().unwrap().clone()
     }
 
     /**
@@ -90,7 +93,9 @@ impl Performer {
             if let Some(tts) = self.tts.get() {
                 tts.stop().await;
                 // 更新缓存
-                self.cache.update(text.clone()).await;
+                if let Some(cache) = self.cache.get() {
+                    cache.update(text.clone()).await;
+                }
                 return tts.speak(text).await;
             }
             // 如果tts没有加载好，就继续等待

@@ -12,7 +12,7 @@
  */
 
 mod dialog;
-mod editor;
+pub(crate) mod editor;
 mod focus;
 mod ime;
 mod input;

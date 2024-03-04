@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys::{VkDown, VkLeft, VkRight, VkUp};
 use crate::{commander::keys::Keys, context::Context, performer::sound::SoundArgument::Single};
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
@@ -50,15 +51,13 @@ async fn subscribe_uia_events(context: Arc<Context>) {
             Err(_) => return,
         };
 
-        let caret = pattern.get_caret_range();
+        {
+            *editor_key_handle().lock().unwrap() = true;
+        }
 
+        let caret = pattern.get_caret_range();
         match commander.get_last_pressed_key() {
-            Keys::VkUp | Keys::VkDown => {
-                {
-                    *line_handled().lock().unwrap() = true;
-                }
-                caret.expand_to_enclosing_unit(TextUnit::Line);
-            }
+            VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
         let pf = performer.clone();
@@ -95,7 +94,7 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         };
         let caret = text.caret_offset().unwrap_or(0);
         let (_, _, text) = match commander.get_last_pressed_key() {
-            Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+            VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
             _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
         };
         let performer = performer.clone();
@@ -105,38 +104,42 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
     })
 }
 
-fn line_handled() -> &'static Mutex<bool> {
+pub(crate) fn editor_key_handle() -> &'static Mutex<bool> {
     static INSTANCE: OnceLock<Mutex<bool>> = OnceLock::new();
     INSTANCE.get_or_init(|| Mutex::new(false))
 }
 
 /// 处理编辑框的光标键播报
 pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
-    let keys = [Keys::VkUp, Keys::VkDown];
     let ctx = context.clone();
 
-    let cb = move |_key, pressed| {
+    let cb = move |key: Keys, pressed| {
         let ctrl = ctx.ui_automation.get_focused_element();
-
         if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
             match pressed {
                 true => {
-                    *line_handled().lock().unwrap() = false;
+                    *editor_key_handle().lock().unwrap() = false;
                 }
                 false => {
-                    let pf = ctx.performer.clone();
-                    ctx.main_handler.spawn(async move {
-                        if !*line_handled().lock().unwrap() {
-                            let caret = pattern.get_caret_range();
-                            caret.expand_to_enclosing_unit(TextUnit::Line);
+                    if !*editor_key_handle().lock().unwrap() {
+                        let caret = pattern.get_caret_range();
+                        match key {
+                            VkLeft | VkRight => caret.expand_to_enclosing_unit(TextUnit::Character),
+                            VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                            _ => {}
+                        }
+
+                        let pf = ctx.performer.clone();
+                        ctx.main_handler.spawn(async move {
                             pf.play_sound(Single("edge.wav")).await;
                             pf.speak(caret).await;
-                        }
-                    });
+                        });
+                    }
                 }
             }
         }
     };
 
+    let keys = [VkUp, VkDown, VkLeft, VkRight];
     context.commander.add_key_event_listener(&keys, cb);
 }

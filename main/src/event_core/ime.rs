@@ -11,13 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::event_core::editor::editor_key_handle;
 use crate::{context::Context, performer::sound::SoundArgument::Single};
 use peeper::model::CandidateList;
+use std::ops::DerefMut;
 use std::{collections::HashMap, sync::Arc};
 use tokio::io::AsyncReadExt;
 
 pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 
+//noinspection DuplicatedCode
 pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
     let words = match context.resource_provider.open("words.txt").await {
         Ok(mut f) => {
@@ -69,6 +72,11 @@ fn handle_ime_candidate(
     words: Arc<HashMap<String, String>>,
 ) {
     let performer = context.performer.clone();
+
+    {
+        // 关闭编辑框键盘事件朗读
+        *editor_key_handle().lock().unwrap().deref_mut() = true;
+    }
 
     context.task_manager.push(
         "ime",
