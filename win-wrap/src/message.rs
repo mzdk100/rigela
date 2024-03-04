@@ -28,14 +28,17 @@ use windows::{
 
 #[macro_export]
 macro_rules! wm {
-    ($field:ident) => {
+    ($prefix:expr,$field:ident) => {
         $field
             .get_or_init(|| {
                 register_window_message(
-                    format!("{}_{}", module_path!(), stringify!($field)).as_str(),
+                    format!("{}_{}", $prefix, stringify!($field)).as_str(),
                 )
             })
             .clone()
+    };
+    ($field:ident) => {
+        wm!(module_path!(), $field)
     };
 }
 
