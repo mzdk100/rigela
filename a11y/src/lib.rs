@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+
 use std::path::PathBuf;
-use rigela_utils::library::setup_library;
+use rigela_utils::library::{get_library_path, setup_library};
 
 //noinspection RsModuleNaming
 pub(crate) mod IAccessible2Lib;
@@ -23,15 +24,30 @@ pub(crate) mod JabLib;
 pub mod ia2;
 pub mod jab;
 
+const IA2_LIB_NAME: &str = "IAccessible2Proxy.dll";
+const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
 
 /**
  * 安装动态库。
  * */
-pub fn setup() -> (PathBuf, PathBuf) {
+pub fn setup() {
     // 注册IAccessible2Proxy.dll
-    let ia2_path = setup_library("IAccessible2Proxy.dll", include_bytes!("../lib/IAccessible2Proxy.dll"));
+    setup_library(IA2_LIB_NAME, include_bytes!("../lib/IAccessible2Proxy.dll"));
 
     // 释放windowsaccessbridge-64.dll
-    let jab_path = setup_library("windowsaccessbridge-64.dll", include_bytes!("../lib/windowsaccessbridge-64.dll"));
-    (ia2_path, jab_path)
+    setup_library(JAB_LIB_NAME, include_bytes!("../lib/windowsaccessbridge-64.dll"));
+}
+
+/**
+ * 获取IA2动态库的安装路径。
+ * */
+pub fn get_ia2_lib_path() -> PathBuf {
+    get_library_path(IA2_LIB_NAME)
+}
+
+/**
+ * 获取JAB动态库的安装路径。
+ * */
+pub fn get_jab_lib_path() -> PathBuf {
+    get_library_path(JAB_LIB_NAME)
 }

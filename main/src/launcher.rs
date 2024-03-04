@@ -24,7 +24,7 @@ use rigela_utils::{
 };
 use std::sync::Arc;
 use tokio::process::Command;
-use a11y::setup;
+use a11y::{get_ia2_lib_path, setup};
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -43,6 +43,8 @@ impl Launcher {
         if res.is_err() {
             error!("Can't initialize the com environment. {}", res.message());
         }
+        // 安装a11y的运行时
+        setup();
 
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
         let (terminator, waiter) = Terminator::new();
@@ -79,12 +81,9 @@ impl Launcher {
             performer.play_sound(Single("launch.wav")).await;
         });
 
-        // 安装一些dll
-        let (ia2_path, _) = setup();
-
         // 注册com组件库
         self.context.work_runtime.spawn(async move {
-            register_service((&ia2_path).to_str().unwrap()).await;
+            register_service((&get_ia2_lib_path()).to_str().unwrap()).await;
         });
 
         // peeper 可以监控远进程中的信息
