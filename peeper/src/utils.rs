@@ -11,6 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub(crate) const MODULE_PATH: &str = module_path!();
+#[macro_export]
+macro_rules! wm {
+    ($field:ident) => {
+        win_wrap::wm!(crate::utils::MODULE_PATH, $field)
+    };
+}
+
 /**
  * 获取一个管道名称。
  * */

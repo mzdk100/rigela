@@ -11,12 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    client::PeeperClient,
-    handler::{on_ime, on_input_char},
-    HOOK_INIT,
-    HOOK_UNINIT,
-};
+use crate::{client::PeeperClient, handler::{on_ime, on_input_char}, HOOK_INIT, HOOK_UNINIT, wm};
 use log::debug;
 use std::{ffi::c_void, sync::RwLock};
 use win_wrap::{
@@ -24,7 +19,6 @@ use win_wrap::{
     ext::LParamExt,
     hook::CwpStruct,
     message::register_window_message,
-    wm,
 };
 use windows::Win32::{
     Foundation::{BOOL, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM},

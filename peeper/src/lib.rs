@@ -42,7 +42,6 @@ use win_wrap::{
         SMTO_ABORTIFHUNG, SMTO_BLOCK,
     },
     threading::{get_current_thread_id, ThreadNotify},
-    wm,
 };
 
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
