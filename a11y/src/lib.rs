@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::path::PathBuf;
+use rigela_utils::library::setup_library;
+
 //noinspection RsModuleNaming
 pub(crate) mod IAccessible2Lib;
 //noinspection RsModuleNaming
@@ -19,3 +22,16 @@ pub(crate) mod JabLib;
 
 pub mod ia2;
 pub mod jab;
+
+
+/**
+ * 安装动态库。
+ * */
+pub fn setup() -> (PathBuf, PathBuf) {
+    // 注册IAccessible2Proxy.dll
+    let ia2_path = setup_library("IAccessible2Proxy.dll", include_bytes!("../lib/IAccessible2Proxy.dll"));
+
+    // 释放windowsaccessbridge-64.dll
+    let jab_path = setup_library("windowsaccessbridge-64.dll", include_bytes!("../lib/windowsaccessbridge-64.dll"));
+    (ia2_path, jab_path)
+}

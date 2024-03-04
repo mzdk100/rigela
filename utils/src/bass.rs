@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{call_proc, fs::get_program_directory};
+use crate::{
+    call_proc,
+    library::setup_library,
+};
 use log::{error, info};
 use std::{
     ffi::{c_void, CString},
-    fs::create_dir,
     sync::OnceLock,
     time::Duration,
 };
@@ -309,26 +311,7 @@ pub struct BassChannelOutputStream {
 
 impl BassChannelOutputStream {
     fn create(slot: impl FnOnce(HMODULE) -> Option<i32>) -> Self {
-        #[cfg(target_arch = "x86_64")]
-        use std::{fs::OpenOptions, io::Write};
-
-        let bass_path = get_program_directory().join("libs");
-        if !bass_path.exists() {
-            create_dir(&bass_path).unwrap();
-        }
-
-        let bass_path = bass_path.join(LIB_NAME);
-        #[cfg(target_arch = "x86_64")]
-        if !bass_path.exists() {
-            let lib_bin = include_bytes!("../lib/bass.dll");
-            OpenOptions::new()
-                .write(true)
-                .create(true)
-                .open(&bass_path)
-                .unwrap()
-                .write_all(lib_bin)
-                .unwrap();
-        }
+        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass.dll"));
         let h_module = match load_library(bass_path.to_str().unwrap()) {
             Ok(h) => h,
             Err(e) => {

@@ -19,25 +19,12 @@ pub mod clip;
 pub mod fs;
 #[cfg(feature = "killer")]
 pub mod killer;
+#[cfg(feature = "library")]
+pub mod library;
 #[cfg(feature = "logger")]
 pub mod logger;
 #[cfg(feature = "pipe")]
 pub mod pipe;
-
-#[macro_export]
-macro_rules! call_proc {
-    ($module:expr,$name:ident,$def:ty,$($arg:expr),*) => {{
-        let f = get_proc_address($module, stringify!($name));
-        if !f.is_none() {
-            unsafe {
-                let r = (&*((&f) as *const FARPROC as *const $def)) ($($arg),*);
-                Some(r)
-            }
-        } else {
-            None
-        }
-    }};
-}
 
 //noinspection HttpUrlsUsage
 pub const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";

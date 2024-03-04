@@ -18,14 +18,13 @@ use crate::{
     terminator::{TerminationWaiter, Terminator},
 };
 use log::{error, info};
-use rigela_resources::clone_resource;
 use rigela_utils::{
-    fs::{get_file_modified_duration, get_program_directory, write_file},
     killer::{kill, listen_to_killing},
-    SERVER_HOME_URI,
+    library::setup_library,
 };
 use std::sync::Arc;
 use tokio::process::Command;
+use a11y::setup;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -80,13 +79,16 @@ impl Launcher {
             performer.play_sound(Single("launch.wav")).await;
         });
 
-        // 注册一些com组件库
+        // 安装一些dll
+        let (ia2_path, _) = setup();
+
+        // 注册com组件库
         self.context.work_runtime.spawn(async move {
-            register_service("IAccessible2Proxy.dll").await;
+            register_service((&ia2_path).to_str().unwrap()).await;
         });
 
         // peeper 可以监控远进程中的信息
-        put_peeper().await;
+        put_peeper();
         peeper::mount();
         let peeper_server = self.context.peeper_server.clone();
         self.context.work_runtime.spawn(async move {
@@ -138,43 +140,25 @@ impl Launcher {
     }
 }
 
+async fn register_service(path: &str) {
+    match Command::new("regsvr32").arg("/s").arg(path).spawn() {
+        Ok(mut p) => match p.wait().await {
+            Ok(_) => info!("Register {} is successfully.", path),
+            Err(e) => error!("Can't register the dll server ({}). {}", path, e),
+        },
+        Err(e) => error!("Can't register the dll server ({}). {}", path, e),
+    }
+}
+
 /**
  * 安装peeper.dll文件。
  * */
-async fn put_peeper() {
+fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
         let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
         let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
-    let peeper_path = get_program_directory().join("libs/peeper.dll");
-    if let Err(e) = write_file(&peeper_path, peeper_dll).await {
-        error!("{}", e);
-    };
-}
-
-/**
- * 注册类库。
- * `dll_name` 库名称。
- * */
-async fn register_service(dll_name: &str) {
-    let path = get_program_directory().join("libs").join(dll_name);
-    if get_file_modified_duration(&path).await > 3600 * 6 {
-        match clone_resource(format!("{}/{}", SERVER_HOME_URI, dll_name), &path).await {
-            Ok(_) => {}
-            Err(e) => {
-                error!("Can't register {}. {}", dll_name, e);
-                return;
-            }
-        }
-    }
-
-    match Command::new("regsvr32").arg("/s").arg(path).spawn() {
-        Ok(mut p) => match p.wait().await {
-            Ok(_) => info!("Register {} is successfully.", dll_name),
-            Err(e) => error!("Can't register the dll server ({}). {}", dll_name, e),
-        },
-        Err(e) => error!("Can't register the dll server ({}). {}", dll_name, e),
-    }
+    setup_library("peeper.dll", peeper_dll);
 }

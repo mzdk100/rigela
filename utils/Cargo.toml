@@ -10,10 +10,11 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-bass = ["win-wrap/common"]
+bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
 fs = ["home", "tokio/fs", "tokio/io-util"]
 killer = []
+library = []
 logger = ["log4rs"]
 pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/time"]
 

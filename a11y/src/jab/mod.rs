@@ -16,7 +16,7 @@ pub mod role;
 pub mod version;
 
 use crate::{jab::context::AccessibleContext, JabLib::JabLib};
-use std::path::PathBuf;
+use rigela_utils::library::get_library_path;
 use win_wrap::common::HWND;
 
 #[derive(Debug)]
@@ -28,8 +28,9 @@ impl Jab {
     /**
      * 创建一个新实例。
      * */
-    pub fn new(path: Option<PathBuf>) -> Self {
-        let lib = JabLib::new(path).unwrap();
+    pub fn new() -> Self {
+        let path = get_library_path("windowsaccessbridge-64.dll");
+        let lib = JabLib::new(Some(path)).unwrap();
         Self { _lib: lib }
     }
 
@@ -70,7 +71,7 @@ mod test_jab {
 
     #[test]
     fn main() {
-        let jab = Jab::new(None);
+        let jab = Jab::new();
         assert!(!jab.is_java_window(get_desktop_window()));
         let h_wnd = find_window(Some("SunAwtFrame"), None);
         assert!(jab.is_java_window(h_wnd));

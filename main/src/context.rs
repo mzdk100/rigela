@@ -26,6 +26,7 @@ use peeper::server::PeeperServer;
 use rigela_utils::fs::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
+use a11y::jab::Jab;
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -38,6 +39,7 @@ pub(crate) struct Context {
     pub(crate) event_core: Arc<event_core::EventCore>,
     pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) gui_provider: Arc<GuiProvider>,
+    pub(crate) jab: Arc<Jab>,
     pub(crate) main_handler: Arc<Handle>,
     pub(crate) msaa: Arc<Msaa>,
     pub(crate) ia2: Arc<Ia2>,
@@ -77,6 +79,9 @@ impl Context {
         // IA2（扩展了MSAA)
         let ia2 = Ia2::new();
 
+        // JAB (Java Access Bridge，无障碍访问桥)
+        let jab = Jab::new();
+
         // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
         let work_runtime = Builder::new_multi_thread()
             .worker_threads(2)
@@ -89,7 +94,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-        let proxy32 = Proxy32::new();
+            let proxy32 = Proxy32::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -118,6 +123,7 @@ impl Context {
             main_handler: main_handler.into(),
             msaa: msaa.into(),
             ia2: ia2.into(),
+            jab: jab.into(),
             peeper_server: peeper_server.into(),
             performer: performer.into(),
             #[cfg(target_arch = "x86_64")]
@@ -181,6 +187,7 @@ impl Clone for Context {
             main_handler: self.main_handler.clone(),
             msaa: self.msaa.clone(),
             ia2: self.ia2.clone(),
+            jab: self.jab.clone(),
             peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
             #[cfg(target_arch = "x86_64")]
