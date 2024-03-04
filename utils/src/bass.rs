@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{call_proc, get_program_directory};
+use crate::{call_proc, fs::get_program_directory};
 use log::{error, info};
 use std::{
     ffi::{c_void, CString},
@@ -296,7 +296,8 @@ const BASS_ATTRIB_MUSIC_VOL_GLOBAL: i32 = 0x105;
 #[allow(unused)]
 const BASS_ATTRIB_MUSIC_ACTIVE: i32 = 0x106;
 #[allow(unused)]
-const BASS_ATTRIB_MUSIC_VOL_CHAN: i32 = 0x200; // + channel #
+const BASS_ATTRIB_MUSIC_VOL_CHAN: i32 = 0x200;
+// + channel #
 #[allow(unused)]
 const BASS_ATTRIB_MUSIC_VOL_INST: i32 = 0x300; // + instrument #
 

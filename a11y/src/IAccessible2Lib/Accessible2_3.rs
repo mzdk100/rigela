@@ -12,9 +12,9 @@
  */
 
 use super::Accessible2_2::{IAccessible2_2, IAccessible2_2_Impl, IAccessible2_2_Vtbl};
+use windows::core::interface;
 use windows::core::IUnknown;
 use windows::core::HRESULT;
-use windows::core::interface;
 
 /**
  * This structure represents a directional range of the content. It is defined

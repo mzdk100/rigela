@@ -11,22 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-extern crate proc_macro;
 
-mod gui;
-mod talent;
-mod utils;
+use clipboard::{ClipboardContext, ClipboardProvider};
 
-use crate::gui::parse_gui;
-use proc_macro::TokenStream;
-use talent::parse_talent;
-
-#[proc_macro_attribute]
-pub fn talent(args: TokenStream, item: TokenStream) -> TokenStream {
-    parse_talent(args.into(), item.into()).into()
+/**
+ * 获取剪贴板文本数据。
+ * */
+pub fn get_clipboard_text() -> String {
+    let mut ctx = ClipboardContext::new().unwrap();
+    ctx.get_contents().unwrap()
 }
 
-#[proc_macro_derive(GuiFormImpl)]
-pub fn gui_form_impl(input: TokenStream) -> TokenStream {
-    parse_gui(input.into()).into()
+/**
+ * 设置剪贴板文本数据。
+ * `text` 数据内容。
+ * */
+pub fn set_clipboard_text(text: String) {
+    let mut ctx = ClipboardContext::new().unwrap();
+    ctx.set_contents(text).unwrap()
 }

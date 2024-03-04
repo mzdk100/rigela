@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use windows::core::interface;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows::core::interface;
 
 /**
  * A value specifying a color in ARGB format, where each 8-bit color component specifies alpha, red, green, and blue respectively.

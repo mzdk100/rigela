@@ -12,9 +12,9 @@
  */
 
 use super::AccessibleText::{IAccessibleText, IAccessibleText_Impl, IAccessibleText_Vtbl};
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
-use windows::core::interface;
 
 /**
  * This interface gives read-only access to text.

@@ -15,10 +15,7 @@ use crate::model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet};
 use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
 use std::collections::HashMap;
-use tokio::{
-    net::windows::named_pipe::NamedPipeClient,
-    sync::Mutex,
-};
+use tokio::{net::windows::named_pipe::NamedPipeClient, sync::Mutex};
 
 #[derive(Debug)]
 pub struct Proxy32Client {

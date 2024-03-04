@@ -12,10 +12,10 @@
  */
 
 use super::IA2CommonTypes::IA2CoordinateType;
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows::core::interface;
 
 /**
  * This interface represents images and icons.
@@ -39,7 +39,7 @@ pub(crate) unsafe trait IAccessibleImage: IUnknown {
      * `coordinateType` Specifies whether the returned coordinates should be relative to the screen or the parent object.
      * `x` `y` */
     fn imagePosition(&self, coordinateType: IA2CoordinateType, x: *mut i32, y: *mut i32)
-                     -> HRESULT;
+        -> HRESULT;
 
     /**
      * Returns the size of the image in units specified by parent's coordinate system.

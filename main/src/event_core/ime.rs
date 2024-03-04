@@ -70,22 +70,25 @@ fn handle_ime_candidate(
 ) {
     let performer = context.performer.clone();
 
-    context.task_manager.push("ime", context.main_handler.spawn(async move {
-        let candidate = candidate_list.list[candidate_list.selection as usize]
-            .clone()
-            .trim_end()
-            .to_string();
-        if candidate.is_empty() {
-            return;
-        }
-        if !performer.speak(candidate_list.clone()).await {
-            // 如果语音被打断就不继续朗读候选的解释词
-            return;
-        }
-        if let Some(x) = words.get(&candidate) {
-            performer.play_sound(Single("tip.wav")).await;
-            // 朗读候选文字的解释词
-            performer.speak(x.clone()).await;
-        }
-    }));
+    context.task_manager.push(
+        "ime",
+        context.main_handler.spawn(async move {
+            let candidate = candidate_list.list[candidate_list.selection as usize]
+                .clone()
+                .trim_end()
+                .to_string();
+            if candidate.is_empty() {
+                return;
+            }
+            if !performer.speak(candidate_list.clone()).await {
+                // 如果语音被打断就不继续朗读候选的解释词
+                return;
+            }
+            if let Some(x) = words.get(&candidate) {
+                performer.play_sound(Single("tip.wav")).await;
+                // 朗读候选文字的解释词
+                performer.speak(x.clone()).await;
+            }
+        }),
+    );
 }

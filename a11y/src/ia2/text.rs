@@ -19,7 +19,7 @@ use crate::{
 use std::fmt::{Debug, Formatter};
 use win_wrap::msaa::object::AccessibleObject;
 use windows::{
-    core::{Interface, Error, Result, BSTR, Type},
+    core::{Error, Interface, Result, Type, BSTR},
     Win32::{Foundation::S_FALSE, System::Com::IServiceProvider, UI::Accessibility::IAccessible},
 };
 
@@ -394,7 +394,10 @@ impl AccessibleText {
     pub fn n_characters(&self) -> i32 {
         unsafe {
             let mut num = std::mem::zeroed();
-            self._iat.nCharacters(&mut num).and_then(|| Type::from_abi(num)).unwrap_or(0)
+            self._iat
+                .nCharacters(&mut num)
+                .and_then(|| Type::from_abi(num))
+                .unwrap_or(0)
         }
     }
 

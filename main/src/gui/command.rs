@@ -13,27 +13,24 @@
 
 use crate::{
     configs::{
-        tts::TtsConfig,
-        general::Lang,
+        config_manager::ConfigRoot,
         config_operations::{
             apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
         },
-        config_manager::ConfigRoot,
+        general::Lang,
+        tts::TtsConfig,
     },
-    gui::utils::{backup_data, restore_data, UpdateState, set_startup_registry},
     context::Context,
-    gui::utils::{check_update, confirm_update_exists, HELP_DIR},
+    gui::utils::{
+        backup_data, check_update, confirm_update_exists, restore_data, set_startup_registry,
+        UpdateState, HELP_DIR,
+    },
     talent::Talented,
 };
 use log::error;
 use nwg::{message, MessageParams};
-use rigela_utils::get_program_directory;
-use std::{
-    path::PathBuf,
-    env::args,
-    process::Command,
-    sync::Arc,
-};
+use rigela_utils::fs::get_program_directory;
+use std::{env::args, path::PathBuf, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
 
 /// 退出程序。

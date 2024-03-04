@@ -13,31 +13,6 @@
 
 use crate::common::{Result, HWND};
 use std::fmt::{Debug, Display, Formatter};
-use windows::{
-    Win32::{
-        UI::{
-            Accessibility::{
-                AccessibleChildren,
-                AccessibleObjectFromEvent,
-                AccessibleObjectFromPoint,
-                AccessibleObjectFromWindow,
-                GetRoleTextW,
-                GetStateTextW,
-                IAccessible,
-                WindowFromAccessibleObject,
-            },
-            WindowsAndMessaging::{OBJID_CARET, OBJID_WINDOW},
-        },
-        Foundation::{POINT, S_FALSE},
-    },
-    core::{
-        Error,
-        Type,
-        BSTR,
-        VARIANT,
-        Interface,
-    },
-};
 use windows::Win32::System::Com::IDispatch;
 pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_ALERT, ROLE_SYSTEM_ANIMATION, ROLE_SYSTEM_APPLICATION, ROLE_SYSTEM_BORDER,
@@ -57,6 +32,20 @@ pub use windows::Win32::UI::Accessibility::{
     ROLE_SYSTEM_SPLITBUTTON, ROLE_SYSTEM_STATICTEXT, ROLE_SYSTEM_STATUSBAR, ROLE_SYSTEM_TABLE,
     ROLE_SYSTEM_TEXT, ROLE_SYSTEM_TITLEBAR, ROLE_SYSTEM_TOOLBAR, ROLE_SYSTEM_TOOLTIP,
     ROLE_SYSTEM_WHITESPACE, ROLE_SYSTEM_WINDOW, STATE_SYSTEM_HASPOPUP, STATE_SYSTEM_NORMAL,
+};
+use windows::{
+    core::{Error, Interface, Type, BSTR, VARIANT},
+    Win32::{
+        Foundation::{POINT, S_FALSE},
+        UI::{
+            Accessibility::{
+                AccessibleChildren, AccessibleObjectFromEvent, AccessibleObjectFromPoint,
+                AccessibleObjectFromWindow, GetRoleTextW, GetStateTextW, IAccessible,
+                WindowFromAccessibleObject,
+            },
+            WindowsAndMessaging::{OBJID_CARET, OBJID_WINDOW},
+        },
+    },
 };
 
 pub struct AccessibleObject(IAccessible, i32);
@@ -129,7 +118,12 @@ impl AccessibleObject {
             let mut var = VARIANT::new();
             AccessibleObjectFromPoint(point, &mut p_acc, &mut var)?;
             match p_acc {
-                None => return Err(Error::new(S_FALSE, &format!("Can't obtain the accessible object at ({}, {}).", x, y))),
+                None => {
+                    return Err(Error::new(
+                        S_FALSE,
+                        &format!("Can't obtain the accessible object at ({}, {}).", x, y),
+                    ))
+                }
                 Some(r) => (r, i32::try_from(&var).unwrap_or(0)),
             }
         };
@@ -174,9 +168,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_name(&self, child: i32) -> String {
-        unsafe {
-            self.0.get_accName(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accName(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -184,11 +178,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_description(&self, child: i32) -> String {
-        unsafe {
-            self
-                .0
-                .get_accDescription(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accDescription(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -196,9 +188,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_help(&self, child: i32) -> String {
-        unsafe {
-            self.0.get_accHelp(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accHelp(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -208,7 +200,8 @@ impl AccessibleObject {
     pub fn get_help_topic(&self, child: i32) -> (String, i32) {
         unsafe {
             let mut help_file = BSTR::new();
-            let id_topic = self.0
+            let id_topic = self
+                .0
                 .get_accHelpTopic(&mut help_file, &VARIANT::from(child))
                 .unwrap_or(0);
             (help_file.to_string(), id_topic)
@@ -220,11 +213,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_keyboard_shortcut(&self, child: i32) -> String {
-        unsafe {
-            self
-                .0
-                .get_accKeyboardShortcut(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accKeyboardShortcut(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -232,9 +223,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_value(&self, child: i32) -> String {
-        unsafe {
-            self.0.get_accValue(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accValue(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -242,11 +233,9 @@ impl AccessibleObject {
      * `child` 子对象ID，0是对象本身。
      * */
     pub fn get_default_action(&self, child: i32) -> String {
-        unsafe {
-            self
-                .0
-                .get_accDefaultAction(&VARIANT::from(child))
-        }.unwrap_or(BSTR::new()).to_string()
+        unsafe { self.0.get_accDefaultAction(&VARIANT::from(child)) }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
@@ -305,7 +294,9 @@ impl AccessibleObject {
      * */
     pub fn do_default_action(&self, child: i32) {
         unsafe {
-            self.0.accDoDefaultAction(&VARIANT::from(child)).unwrap_or(());
+            self.0
+                .accDoDefaultAction(&VARIANT::from(child))
+                .unwrap_or(());
         }
     }
 
@@ -334,7 +325,7 @@ impl AccessibleObject {
             let Ok(d) = IDispatch::try_from(&v) else {
                 return match u32::try_from(&v) {
                     Ok(d) => AccessibleResultType::ChildId(d),
-                    Err(_) => AccessibleResultType::None
+                    Err(_) => AccessibleResultType::None,
                 };
             };
             AccessibleResultType::Object(d)
@@ -462,10 +453,13 @@ impl AccessibleObject {
     pub fn location(&self, child: i32) -> (i32, i32, i32, i32) {
         unsafe {
             let (mut left, mut top, mut width, mut height) = (0i32, 0i32, 0i32, 0i32);
-            if let Ok(_) =
-                self.0
-                    .accLocation(&mut left, &mut top, &mut width, &mut height, &VARIANT::from(child))
-            {
+            if let Ok(_) = self.0.accLocation(
+                &mut left,
+                &mut top,
+                &mut width,
+                &mut height,
+                &VARIANT::from(child),
+            ) {
                 (left, top, width, height)
             } else {
                 (0, 0, 0, 0)

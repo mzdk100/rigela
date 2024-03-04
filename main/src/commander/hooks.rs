@@ -12,38 +12,23 @@
  */
 
 use crate::{
+    commander::{keys::Keys, CommandType, Talent},
     configs::config_operations::{get_hotkeys, get_mouse_read_state},
-    commander::{
-        keys::Keys,
-        CommandType,
-        Talent,
-    },
-    talent::mouse::mouse_read,
     context::Context,
+    talent::mouse::mouse_read,
 };
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock, RwLock},
 };
 use win_wrap::{
-    input::{
-        get_key_state,
-        send_key,
-        VK_CAPITAL,
-        WM_KEYDOWN,
-        WM_MOUSEMOVE,
-        WM_SYSKEYDOWN,
-    },
     common::LRESULT,
     ext::LParamExt,
     hook::{
-        HOOK_TYPE_MOUSE_LL,
-        KbdLlHookStruct,
-        MsLlHookStruct,
-        WindowsHook,
-        HOOK_TYPE_KEYBOARD_LL,
+        KbdLlHookStruct, MsLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, HOOK_TYPE_MOUSE_LL,
         LLKHF_EXTENDED,
     },
+    input::{get_key_state, send_key, VK_CAPITAL, WM_KEYDOWN, WM_MOUSEMOVE, WM_SYSKEYDOWN},
 };
 
 /// 设置键盘钩子

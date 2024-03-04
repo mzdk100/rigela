@@ -11,17 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::fmt::{Debug, Formatter};
-use crate::{
-    JabLib::{
-        JabLib,
-        packages::AccessibleContext as AC,
-    },
-    jab::role::AccessibleRole,
-};
-use win_wrap::common::HWND;
 use crate::jab::version::AccessBridgeVersionInfo;
 use crate::JabLib::packages::AccessibleContextInfo;
+use crate::{
+    jab::role::AccessibleRole,
+    JabLib::{packages::AccessibleContext as AC, JabLib},
+};
+use std::fmt::{Debug, Formatter};
+use win_wrap::common::HWND;
 
 pub struct AccessibleContext<'lib> {
     _lib: &'lib JabLib,
@@ -59,7 +56,8 @@ impl<'lib> AccessibleContext<'lib> {
      * 从顶级窗口的AccessibleContext返回HWND。
      * */
     pub fn get_hwnd(&self) -> HWND {
-        self._lib.get_hwnd_from_accessible_context(self._vm_id, self._ac)
+        self._lib
+            .get_hwnd_from_accessible_context(self._vm_id, self._ac)
     }
 
     /**
@@ -68,7 +66,10 @@ impl<'lib> AccessibleContext<'lib> {
      * `y` Y坐标。
      * */
     pub fn get_at(&self, x: i32, y: i32) -> Option<AccessibleContext<'lib>> {
-        if let Some(ac) = self._lib.get_accessible_context_at(self._vm_id, self._ac, x, y) {
+        if let Some(ac) = self
+            ._lib
+            .get_accessible_context_at(self._vm_id, self._ac, x, y)
+        {
             return Some(Self {
                 _lib: self._lib,
                 _ac: ac,
@@ -84,7 +85,10 @@ impl<'lib> AccessibleContext<'lib> {
      * `index` 子对象索引。
      * */
     pub fn get_child(&self, index: i32) -> Option<AccessibleContext<'lib>> {
-        if let Some(child) = self._lib.get_accessible_child_from_context(self._vm_id, self._ac, index) {
+        if let Some(child) =
+            self._lib
+                .get_accessible_child_from_context(self._vm_id, self._ac, index)
+        {
             return Some(Self {
                 _lib: self._lib,
                 _ac: child,
@@ -99,7 +103,10 @@ impl<'lib> AccessibleContext<'lib> {
      * 返回一个表示可访问上下文对象的父级的对象。
      * */
     pub fn get_parent(&self) -> Option<AccessibleContext<'lib>> {
-        if let Some(parent) = self._lib.get_accessible_parent_from_context(self._vm_id, self._ac) {
+        if let Some(parent) = self
+            ._lib
+            .get_accessible_parent_from_context(self._vm_id, self._ac)
+        {
             return Some(Self {
                 _lib: self._lib,
                 _ac: parent,
@@ -115,7 +122,10 @@ impl<'lib> AccessibleContext<'lib> {
      * `role` 角色枚举。
      * */
     pub fn get_parent_with_role(&self, role: &AccessibleRole) -> Option<AccessibleContext<'lib>> {
-        if let Some(parent) = self._lib.get_parent_with_role(self._vm_id, self._ac, role.to_str()) {
+        if let Some(parent) = self
+            ._lib
+            .get_parent_with_role(self._vm_id, self._ac, role.to_str())
+        {
             return Some(Self {
                 _lib: self._lib,
                 _ac: parent,
@@ -130,13 +140,21 @@ impl<'lib> AccessibleContext<'lib> {
      * 返回具有指定角色的AccessibleContext，该角色是给定对象的祖先。如果具有指定角色的对象不存在，则返回Java窗口的顶级对象。出现错误时返回None。
      * `role` 角色枚举。
      * */
-    pub fn get_parent_with_role_else_root(&self, role: &AccessibleRole) -> Option<AccessibleContext<'lib>> {
-        if let Some(parent_or_root) = self._lib.get_parent_with_role_else_root(self._vm_id, self._ac, role.to_str()) {
+    pub fn get_parent_with_role_else_root(
+        &self,
+        role: &AccessibleRole,
+    ) -> Option<AccessibleContext<'lib>> {
+        if let Some(parent_or_root) =
+            self._lib
+                .get_parent_with_role_else_root(self._vm_id, self._ac, role.to_str())
+        {
             return Some(Self {
                 _lib: self._lib,
                 _ac: parent_or_root,
                 _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, parent_or_root),
+                _info: self
+                    ._lib
+                    .get_accessible_context_info(self._vm_id, parent_or_root),
             });
         }
         None
@@ -166,7 +184,9 @@ impl<'lib> AccessibleContext<'lib> {
                 _lib: self._lib,
                 _ac: descendent,
                 _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, descendent),
+                _info: self
+                    ._lib
+                    .get_accessible_context_info(self._vm_id, descendent),
             });
         }
         None
@@ -196,7 +216,11 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(ref info) = self._info else {
             return None;
         };
-        Some(String::from_utf16_lossy(&info.name).trim_matches('\0').to_string())
+        Some(
+            String::from_utf16_lossy(&info.name)
+                .trim_matches('\0')
+                .to_string(),
+        )
     }
 }
 

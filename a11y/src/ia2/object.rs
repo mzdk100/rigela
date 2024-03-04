@@ -29,12 +29,10 @@ use std::{
 };
 use win_wrap::msaa::object::AccessibleObject;
 use windows::{
-    core::{Interface, Error, IUnknown, Result, BSTR, VARIANT, Type},
+    core::{Error, IUnknown, Interface, Result, Type, BSTR, VARIANT},
     Win32::{
         Foundation::{HWND, S_FALSE},
-        System::{
-            Com::{CoTaskMemFree, IServiceProvider}
-        },
+        System::Com::{CoTaskMemFree, IServiceProvider},
         UI::Accessibility::IAccessible,
     },
 };
@@ -144,7 +142,10 @@ impl Accessible2Object {
         unsafe {
             let mut targets = std::mem::zeroed();
             let mut num = 0;
-            if ia2.relationTargetsOfType(BSTR::from(r#type), max_targets, &mut targets, &mut num).is_err() {
+            if ia2
+                .relationTargetsOfType(BSTR::from(r#type), max_targets, &mut targets, &mut num)
+                .is_err()
+            {
                 return vec![];
             }
             let mut v = Vec::new();
@@ -199,14 +200,17 @@ impl Accessible2Object {
         unsafe {
             let mut relations = std::mem::zeroed();
             let mut num = 0;
-            if self._ia2.relations(max_relations, &mut relations, &mut num).is_err() {
+            if self
+                ._ia2
+                .relations(max_relations, &mut relations, &mut num)
+                .is_err()
+            {
                 return vec![];
             }
             let mut v = vec![];
             for i in 0..num {
                 v.push(AccessibleRelation::from_raw(
-                    &Type::from_abi(relations.wrapping_add(i as usize) as *mut c_void)
-                        .unwrap(),
+                    &Type::from_abi(relations.wrapping_add(i as usize) as *mut c_void).unwrap(),
                 ));
             }
             v
@@ -226,7 +230,7 @@ impl Accessible2Object {
             let mut role = std::mem::zeroed();
             self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
@@ -283,7 +287,9 @@ impl Accessible2Object {
     pub fn states(&self) -> Result<AccessibleStates> {
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2.states(&mut states).and_then(|| Type::from_abi(states))
+            self._ia2
+                .states(&mut states)
+                .and_then(|| Type::from_abi(states))
         }
     }
 
@@ -323,7 +329,9 @@ impl Accessible2Object {
     pub fn n_extended_states(&self) -> Result<i32> {
         unsafe {
             let mut states = std::mem::zeroed();
-            self._ia2.nExtendedStates(&mut states).and_then(|| Type::from_abi(states))
+            self._ia2
+                .nExtendedStates(&mut states)
+                .and_then(|| Type::from_abi(states))
         }
     }
 
@@ -398,7 +406,10 @@ impl Accessible2Object {
     pub fn window_handle(&self) -> HWND {
         unsafe {
             let mut h_wnd = std::mem::zeroed();
-            self._ia2.windowHandle(&mut h_wnd).and_then(|| Type::from_abi(h_wnd)).unwrap()
+            self._ia2
+                .windowHandle(&mut h_wnd)
+                .and_then(|| Type::from_abi(h_wnd))
+                .unwrap()
         }
     }
 
@@ -409,7 +420,10 @@ impl Accessible2Object {
     pub fn index_in_parent(&self) -> i32 {
         unsafe {
             let mut index = std::mem::zeroed();
-            let res = self._ia2.indexInParent(&mut index).and_then(|| Type::from_abi(index));
+            let res = self
+                ._ia2
+                .indexInParent(&mut index)
+                .and_then(|| Type::from_abi(index));
             if res.is_err() {
                 -1
             } else {

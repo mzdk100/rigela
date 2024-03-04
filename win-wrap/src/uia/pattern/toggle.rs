@@ -16,14 +16,10 @@ use std::fmt::{Debug, Formatter};
 use windows::{
     core::Interface,
     Win32::UI::Accessibility::{
-        IUIAutomationTogglePattern,
+        IUIAutomationTogglePattern, ToggleState_Indeterminate, ToggleState_Off, ToggleState_On,
         UIA_TogglePatternId,
-        ToggleState_Indeterminate,
-        ToggleState_Off,
-        ToggleState_On,
     },
 };
-
 
 /**
  * 提供对控件的访问，该控件可以在一组状态之间循环，并在设置状态后保持状态。
@@ -36,11 +32,7 @@ impl UiAutomationTogglePattern {
      * 从UI元素获取此模式。
      * */
     pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
-        let pattern = unsafe {
-            value
-                .get_raw()
-                .GetCurrentPattern(UIA_TogglePatternId)
-        };
+        let pattern = unsafe { value.get_raw().GetCurrentPattern(UIA_TogglePatternId) };
         if let Err(e) = pattern {
             return Err(format!("Can't get the TogglePattern. ({})", e));
         }

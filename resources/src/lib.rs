@@ -152,7 +152,7 @@ pub async fn clone_resource(resource_url: String, save_path: &PathBuf) -> Result
                 url,
                 expected_checksum
             )
-                .as_str(),
+            .as_str(),
         ));
     }
     info!(

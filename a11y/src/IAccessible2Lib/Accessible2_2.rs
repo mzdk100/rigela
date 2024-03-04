@@ -12,10 +12,10 @@
  */
 
 use super::Accessible2::{IAccessible2, IAccessible2_Impl, IAccessible2_Vtbl};
+use windows::core::interface;
 use windows::core::IUnknown;
 use windows::core::BSTR;
 use windows::core::{HRESULT, VARIANT};
-use windows::core::interface;
 
 /**
  * This interface exposes the primary set of information about an IAccessible2 enabled accessible object.

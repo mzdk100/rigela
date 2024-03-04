@@ -168,7 +168,7 @@ macro_rules! bring_window_front {
                 win_wrap::common::SW_SHOW,
             );
             win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
-            win_wrap::common::set_active_window(win_wrap::common::HWND(h as isize));
+            win_wrap::input::set_active_window(win_wrap::common::HWND(h as isize));
 
             win_wrap::common::attach_thread_input(
                 current_thread_id,

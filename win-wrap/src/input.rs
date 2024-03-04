@@ -11,17 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::common::{BOOL, HIMC, HWND, LPARAM};
-use crate::ext::StringExt;
-use windows::Win32::Foundation::POINT;
-use windows::Win32::UI::Input::Ime::{
-    ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext, ImmReleaseContext,
+use crate::{
+    common::{BOOL, HIMC, HWND, LPARAM},
+    ext::StringExt,
 };
-use windows::Win32::UI::Input::KeyboardAndMouse::{
-    keybd_event, mouse_event, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN,
-    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
-};
-use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, SetCursorPos};
 pub use windows::Win32::UI::{
     Input::{
         Ime::{
@@ -84,12 +77,38 @@ pub use windows::Win32::UI::{
 };
 use windows::{
     core::imp::{heap_alloc, heap_free},
-    Win32::UI::Input::KeyboardAndMouse::{
-        GetAsyncKeyState, GetKeyNameTextW, GetKeyState, VIRTUAL_KEY,
+    Win32::{
+        Foundation::POINT,
+        UI::{
+            Input::{
+                Ime::{
+                    ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext,
+                    ImmReleaseContext,
+                },
+                KeyboardAndMouse::{
+                    keybd_event, mouse_event, GetAsyncKeyState, GetKeyNameTextW, GetKeyState,
+                    SetActiveWindow, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN,
+                    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, VIRTUAL_KEY,
+                },
+            },
+            WindowsAndMessaging::{GetCursorPos, SetCursorPos},
+        },
     },
 };
 
 pub type VirtualKey = VIRTUAL_KEY;
+
+/**
+ * 激活窗口。 窗口必须附加到调用线程的消息队列。
+ * 如果函数成功，则返回值是以前处于活动状态的窗口的句柄。
+ * 如果函数失败，则返回值为 NULL。 要获得更多的错误信息，请调用 get_last_error。
+ * set_active_window 函数激活窗口，但如果应用程序在后台，则不会激活窗口。 当系统激活窗口时，如果窗口的应用程序位于前台，则窗口将进入 Z的前台 (顶部顺序)。
+ * 如果 由 h_wnd 参数标识的窗口是由调用线程创建的，则调用线程的活动窗口状态将设置为 h_wnd。 否则，调用线程的活动窗口状态设置为 NULL。
+ * `h_wnd` 要激活的顶级窗口的句柄。
+ * */
+pub fn set_active_window(h_wnd: HWND) {
+    unsafe { SetActiveWindow(h_wnd) };
+}
 
 /**
  * 获取一个键的按下状态（从上一次调用此函数开始计算），返回的第一个值表示按下过这个键并一直到现在都处于按下状态，第二个值表示是否再次按下过他。

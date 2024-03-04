@@ -12,7 +12,7 @@
  */
 
 use log::error;
-use rigela_utils::{get_program_directory, read_file, write_file};
+use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
 use std::{

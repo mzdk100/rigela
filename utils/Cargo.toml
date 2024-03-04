@@ -9,34 +9,44 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+bass = ["win-wrap/common"]
+clip = ["clipboard"]
+fs = ["home", "tokio/fs", "tokio/io-util"]
+killer = []
+logger = ["log4rs"]
+pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/time"]
+
 [dependencies]
-# 操作剪贴板
-clipboard = "0.5.0"
-# 获取用户目录的路径
-home = "0.5.9"
 # 输出日志
 log = "0.4.21"
-# 记录日志
-log4rs = "1.3.0"
+
+[dependencies.home]
+version = "0.5.9"
+optional = true
+
+[dependencies.clipboard]
+version = "0.5.0"
+optional = true
+
+[dependencies.log4rs]
+version = "1.3.0"
+optional = true
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
 version = "1.0.197"
-features = ["derive"]
+optional = true
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
 version = "1.36.0"
-features = [
-    "macros",
-    "time"
-]
+optional = true
 
 [dependencies.serde_json_bytes]
 version = "0.2.2"
-
-[dependencies.rigela-resources]
-path = "../resources"
+optional = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
+optional = true

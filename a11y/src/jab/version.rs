@@ -28,10 +28,18 @@ pub struct AccessBridgeVersionInfo {
 impl AccessBridgeVersionInfo {
     pub(crate) fn from(info: &ABVI) -> Self {
         Self {
-            vm_version: String::from_utf16_lossy(&info.VMversion).trim_matches('\0').to_string(),
-            bridge_java_class_version: String::from_utf16_lossy(&info.bridgeJavaClassVersion).trim_matches('\0').to_string(),
-            bridge_java_dll_version: String::from_utf16_lossy(&info.bridgeJavaDLLVersion).trim_matches('\0').to_string(),
-            bridge_win_dll_version: String::from_utf16_lossy(&info.bridgeWinDLLVersion).trim_matches('\0').to_string(),
+            vm_version: String::from_utf16_lossy(&info.VMversion)
+                .trim_matches('\0')
+                .to_string(),
+            bridge_java_class_version: String::from_utf16_lossy(&info.bridgeJavaClassVersion)
+                .trim_matches('\0')
+                .to_string(),
+            bridge_java_dll_version: String::from_utf16_lossy(&info.bridgeJavaDLLVersion)
+                .trim_matches('\0')
+                .to_string(),
+            bridge_win_dll_version: String::from_utf16_lossy(&info.bridgeWinDLLVersion)
+                .trim_matches('\0')
+                .to_string(),
         }
     }
 }

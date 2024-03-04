@@ -16,11 +16,11 @@ use super::{
     AccessibleStates::AccessibleStates,
     IA2CommonTypes::{IA2CoordinateType, IA2ScrollType},
 };
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessible_Vtbl};
-use windows::core::interface;
 
 //noinspection SpellCheckingInspection
 /**
@@ -344,7 +344,7 @@ pub struct IA2Locale {
     // ISO 639-1 Alpha-2 two character language code
     country: BSTR,
     // ISO 3166-1 Alpha-2 two character country codes
-    variant: BSTR,  // Application-specific variant of the locale
+    variant: BSTR, // Application-specific variant of the locale
 }
 
 /**

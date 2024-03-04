@@ -26,8 +26,8 @@ use tokio::{
  * `pipe_name` 管道名称。
  * */
 pub async fn client_connect<T>(pipe_name: &str) -> PipeStream<T, NamedPipeClient>
-    where
-        T: for<'de> Deserialize<'de> + Serialize,
+where
+    T: for<'de> Deserialize<'de> + Serialize,
 {
     // 使用循环方法连接管道，因为可能在连接的时候管道还没创建完毕
     let client = loop {
@@ -50,8 +50,8 @@ pub async fn client_connect<T>(pipe_name: &str) -> PipeStream<T, NamedPipeClient
  * `pipe_name` 管道名称。
  * */
 pub async fn server_run<T>(pipe_name: &str) -> PipeStream<T, NamedPipeServer>
-    where
-        T: for<'de> Deserialize<'de> + Serialize,
+where
+    T: for<'de> Deserialize<'de> + Serialize,
 {
     let server = ServerOptions::new().create(pipe_name).unwrap();
     server.connect().await.unwrap();
@@ -60,18 +60,18 @@ pub async fn server_run<T>(pipe_name: &str) -> PipeStream<T, NamedPipeServer>
 
 #[derive(Debug)]
 pub struct PipeStream<R, T>
-    where
-        R: for<'de> Deserialize<'de> + Serialize,
-        T: AsyncRead + AsyncWrite,
+where
+    R: for<'de> Deserialize<'de> + Serialize,
+    T: AsyncRead + AsyncWrite,
 {
     _packet: Option<R>,
     reader: BufReader<T>,
 }
 
 impl<R, T> PipeStream<R, T>
-    where
-        R: for<'de> Deserialize<'de> + Serialize,
-        T: AsyncRead + AsyncWrite + Unpin,
+where
+    R: for<'de> Deserialize<'de> + Serialize,
+    T: AsyncRead + AsyncWrite + Unpin,
 {
     /**
      * 创建一个管道的流，用于发送和接收数据。

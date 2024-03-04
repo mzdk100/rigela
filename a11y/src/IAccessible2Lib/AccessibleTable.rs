@@ -12,10 +12,10 @@
  */
 
 use super::IA2CommonTypes::IA2TableModelChange;
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows::core::interface;
 
 /**
  * This interface gives access to a two-dimensional table.

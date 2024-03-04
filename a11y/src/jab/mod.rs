@@ -15,11 +15,8 @@ pub mod context;
 pub mod role;
 pub mod version;
 
+use crate::{jab::context::AccessibleContext, JabLib::JabLib};
 use std::path::PathBuf;
-use crate::{
-    jab::context::AccessibleContext,
-    JabLib::JabLib,
-};
 use win_wrap::common::HWND;
 
 #[derive(Debug)]
@@ -33,9 +30,7 @@ impl Jab {
      * */
     pub fn new(path: Option<PathBuf>) -> Self {
         let lib = JabLib::new(path).unwrap();
-        Self {
-            _lib: lib
-        }
+        Self { _lib: lib }
     }
 
     /**
@@ -63,13 +58,15 @@ impl Jab {
     }
 }
 
-
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
-    use crate::JabLib::{packages::{AccessibleActionsToDo, AccessibleContext}, JabLib};
-    use win_wrap::common::{find_window, get_desktop_window};
-    use crate::jab::Jab;
     use crate::jab::role::AccessibleRole;
+    use crate::jab::Jab;
+    use crate::JabLib::{
+        packages::{AccessibleActionsToDo, AccessibleContext},
+        JabLib,
+    };
+    use win_wrap::common::{find_window, get_desktop_window};
 
     #[test]
     fn main() {

@@ -191,7 +191,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getVisibleChildren,
-            extern "cdecl" fn(i32, AccessibleContext,i32,*mut VisibleChildrenInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, i32, *mut VisibleChildrenInfo) -> BOOL,
             $vm_id,
             $ac,
             $start,
@@ -199,13 +199,13 @@ macro_rules! jab {
         )
     };
     ($module:expr,get_events_waiting) => {
-        call_proc!($module,getEventsWaiting,extern "cdecl" fn() -> i32,)
+        call_proc!($module, getEventsWaiting, extern "cdecl" fn() -> i32,)
     };
     ($module:expr,get_accessible_actions,$vm_id:expr,$ac:expr,$actions:expr) => {
         call_proc!(
             $module,
             getAccessibleActions,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleActions) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleActions) -> BOOL,
             $vm_id,
             $ac,
             $actions
@@ -215,7 +215,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getCaretLocation,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTextRectInfo,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleTextRectInfo, JInt) -> BOOL,
             $vm_id,
             $ac,
             $info,
@@ -226,7 +226,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             setCaretPosition,
-            extern "cdecl" fn(i32, AccessibleContext,i32) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, i32) -> BOOL,
             $vm_id,
             $ac,
             $position
@@ -236,7 +236,14 @@ macro_rules! jab {
         call_proc!(
             $module,
             getTextAttributesInRange,
-            extern "cdecl" fn(i32, AccessibleContext,i32,i32,*mut AccessibleTextAttributesInfo,*mut i16) -> BOOL,
+            extern "cdecl" fn(
+                i32,
+                AccessibleContext,
+                i32,
+                i32,
+                *mut AccessibleTextAttributesInfo,
+                *mut i16,
+            ) -> BOOL,
             $vm_id,
             $ac,
             $start_index,
@@ -249,7 +256,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleRelationSet,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleRelationSetInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleRelationSetInfo) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -259,7 +266,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleKeyBindings,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleKeyBindings) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleKeyBindings) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -269,7 +276,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleIcons,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleIcons) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleIcons) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -279,7 +286,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableRowHeader,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleTableInfo) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -289,7 +296,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableColumnHeader,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleTableInfo) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -299,7 +306,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableColumnDescription,
-            extern "cdecl" fn(i32, AccessibleContext,JInt) -> AccessibleContext,
+            extern "cdecl" fn(i32, AccessibleContext, JInt) -> AccessibleContext,
             $vm_id,
             $ac,
             $column
@@ -309,7 +316,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableRowDescription,
-            extern "cdecl" fn(i32, AccessibleContext,JInt) -> AccessibleContext,
+            extern "cdecl" fn(i32, AccessibleContext, JInt) -> AccessibleContext,
             $vm_id,
             $ac,
             $row
@@ -319,7 +326,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             selectTextRange,
-            extern "cdecl" fn(i32, AccessibleContext,JInt, JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, JInt, JInt) -> BOOL,
             $vm_id,
             $ac,
             $start_index,
@@ -330,7 +337,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableInfo,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleTableInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleTableInfo) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -340,7 +347,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getVirtualAccessibleName,
-            extern "cdecl" fn(i32, AccessibleContext,*mut u16,i32) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut u16, i32) -> BOOL,
             $vm_id,
             $ac,
             $name,
@@ -351,7 +358,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleHypertext,
-            extern "cdecl" fn(i32, AccessibleContext,*mut AccessibleHypertextInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *mut AccessibleHypertextInfo) -> BOOL,
             $vm_id,
             $ac,
             $info
@@ -361,7 +368,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleHypertextExt,
-            extern "cdecl" fn(i32, AccessibleContext,JInt,*mut AccessibleHypertextInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, JInt, *mut AccessibleHypertextInfo) -> BOOL,
             $vm_id,
             $ac,
             $start_index,
@@ -372,7 +379,12 @@ macro_rules! jab {
         call_proc!(
             $module,
             doAccessibleActions,
-            extern "cdecl" fn(i32, AccessibleContext,*const AccessibleActionsToDo,*mut JInt) -> BOOL,
+            extern "cdecl" fn(
+                i32,
+                AccessibleContext,
+                *const AccessibleActionsToDo,
+                *mut JInt,
+            ) -> BOOL,
             $vm_id,
             $ac,
             $actions_to_do,
@@ -383,7 +395,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             setTextContents,
-            extern "cdecl" fn(i32, AccessibleContext,*const u16) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, *const u16) -> BOOL,
             $vm_id,
             $ac,
             $text
@@ -609,7 +621,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             activateAccessibleHyperlink,
-            extern "cdecl" fn(i32,AccessibleContext,AccessibleHyperlink) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleContext, AccessibleHyperlink) -> BOOL,
             $vm_id,
             $ac,
             $link
@@ -619,7 +631,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             addAccessibleSelectionFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection,i32),
+            extern "cdecl" fn(i32, AccessibleSelection, i32),
             $vm_id,
             $as,
             $index
@@ -629,7 +641,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             removeAccessibleSelectionFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection,i32),
+            extern "cdecl" fn(i32, AccessibleSelection, i32),
             $vm_id,
             $as,
             $index
@@ -639,7 +651,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             clearAccessibleSelectionFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection),
+            extern "cdecl" fn(i32, AccessibleSelection),
             $vm_id,
             $as
         )
@@ -648,7 +660,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             selectAllAccessibleSelectionFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection),
+            extern "cdecl" fn(i32, AccessibleSelection),
             $vm_id,
             $as
         )
@@ -657,7 +669,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleHyperlink,
-            extern "cdecl" fn(i32,AccessibleHypertext,JInt,*mut AccessibleHypertextInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleHypertext, JInt, *mut AccessibleHypertextInfo) -> BOOL,
             $vm_id,
             $ah,
             $index,
@@ -668,7 +680,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleHyperlinkCount,
-            extern "cdecl" fn(i32,AccessibleHypertext) -> JInt,
+            extern "cdecl" fn(i32, AccessibleHypertext) -> JInt,
             $vm_id,
             $ah
         )
@@ -677,7 +689,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleHypertextLinkIndex,
-            extern "cdecl" fn(i32,AccessibleHypertext,JInt) -> JInt,
+            extern "cdecl" fn(i32, AccessibleHypertext, JInt) -> JInt,
             $vm_id,
             $ah,
             $index
@@ -687,7 +699,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleSelectionCountFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection) -> i32,
+            extern "cdecl" fn(i32, AccessibleSelection) -> i32,
             $vm_id,
             $as
         )
@@ -696,7 +708,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleSelectionFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection,i32) -> JObject,
+            extern "cdecl" fn(i32, AccessibleSelection, i32) -> JObject,
             $vm_id,
             $as,
             $index
@@ -706,7 +718,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             isAccessibleChildSelectedFromContext,
-            extern "cdecl" fn(i32,AccessibleSelection,i32) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleSelection, i32) -> BOOL,
             $vm_id,
             $as,
             $index
@@ -716,7 +728,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             isAccessibleTableRowSelected,
-            extern "cdecl" fn(i32,AccessibleTable,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleTable, JInt) -> BOOL,
             $vm_id,
             $at,
             $row
@@ -726,7 +738,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             isAccessibleTableColumnSelected,
-            extern "cdecl" fn(i32,AccessibleTable,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleTable, JInt) -> BOOL,
             $vm_id,
             $at,
             $column
@@ -736,7 +748,13 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableCellInfo,
-            extern "cdecl" fn(i32,AccessibleTable,JInt,JInt,*mut AccessibleTableCellInfo) -> BOOL,
+            extern "cdecl" fn(
+                i32,
+                AccessibleTable,
+                JInt,
+                JInt,
+                *mut AccessibleTableCellInfo,
+            ) -> BOOL,
             $vm_id,
             $at,
             $row,
@@ -748,7 +766,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableColumn,
-            extern "cdecl" fn(i32,AccessibleTable,JInt) -> JInt,
+            extern "cdecl" fn(i32, AccessibleTable, JInt) -> JInt,
             $vm_id,
             $at,
             $index
@@ -758,7 +776,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableRow,
-            extern "cdecl" fn(i32,AccessibleTable,JInt) -> JInt,
+            extern "cdecl" fn(i32, AccessibleTable, JInt) -> JInt,
             $vm_id,
             $at,
             $index
@@ -768,7 +786,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableColumnSelectionCount,
-            extern "cdecl" fn(i32,AccessibleTable) -> JInt,
+            extern "cdecl" fn(i32, AccessibleTable) -> JInt,
             $vm_id,
             $at
         )
@@ -777,7 +795,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableRowSelectionCount,
-            extern "cdecl" fn(i32,AccessibleTable) -> JInt,
+            extern "cdecl" fn(i32, AccessibleTable) -> JInt,
             $vm_id,
             $at
         )
@@ -786,7 +804,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableIndex,
-            extern "cdecl" fn(i32,AccessibleTable,JInt,JInt) -> JInt,
+            extern "cdecl" fn(i32, AccessibleTable, JInt, JInt) -> JInt,
             $vm_id,
             $at,
             $row,
@@ -797,7 +815,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableColumnSelections,
-            extern "cdecl" fn(i32,AccessibleTable,JInt,*mut JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleTable, JInt, *mut JInt) -> BOOL,
             $vm_id,
             $at,
             $count,
@@ -808,7 +826,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTableRowSelections,
-            extern "cdecl" fn(i32,AccessibleTable,JInt,*mut JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleTable, JInt, *mut JInt) -> BOOL,
             $vm_id,
             $at,
             $count,
@@ -819,7 +837,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextSelectionInfo,
-            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextSelectionInfo) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, *mut AccessibleTextSelectionInfo) -> BOOL,
             $vm_id,
             $at,
             $info
@@ -829,7 +847,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextInfo,
-            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextInfo,JInt,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, *mut AccessibleTextInfo, JInt, JInt) -> BOOL,
             $vm_id,
             $at,
             $info,
@@ -841,7 +859,12 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextAttributes,
-            extern "cdecl" fn(i32,AccessibleText,JInt,*mut AccessibleTextAttributesInfo) -> *const u8,
+            extern "cdecl" fn(
+                i32,
+                AccessibleText,
+                JInt,
+                *mut AccessibleTextAttributesInfo,
+            ) -> *const u8,
             $vm_id,
             $at,
             $index,
@@ -852,7 +875,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextItems,
-            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextItemsInfo,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, *mut AccessibleTextItemsInfo, JInt) -> BOOL,
             $vm_id,
             $at,
             $info,
@@ -863,7 +886,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextLineBounds,
-            extern "cdecl" fn(i32,AccessibleText,JInt,*mut JInt,*mut JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, JInt, *mut JInt, *mut JInt) -> BOOL,
             $vm_id,
             $at,
             $index,
@@ -875,7 +898,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextRange,
-            extern "cdecl" fn(i32,AccessibleText,JInt,JInt,*mut u16,i16) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, JInt, JInt, *mut u16, i16) -> BOOL,
             $vm_id,
             $at,
             $start_index,
@@ -888,7 +911,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getAccessibleTextRect,
-            extern "cdecl" fn(i32,AccessibleText,*mut AccessibleTextRectInfo,JInt) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleText, *mut AccessibleTextRectInfo, JInt) -> BOOL,
             $vm_id,
             $at,
             $info,
@@ -899,7 +922,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getCurrentAccessibleValueFromContext,
-            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleValue, *mut u16, i16) -> BOOL,
             $vm_id,
             $av,
             $value,
@@ -910,7 +933,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getMaximumAccessibleValueFromContext,
-            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleValue, *mut u16, i16) -> BOOL,
             $vm_id,
             $av,
             $value,
@@ -921,7 +944,7 @@ macro_rules! jab {
         call_proc!(
             $module,
             getMinimumAccessibleValueFromContext,
-            extern "cdecl" fn(i32,AccessibleValue,*mut u16,i16) -> BOOL,
+            extern "cdecl" fn(i32, AccessibleValue, *mut u16, i16) -> BOOL,
             $vm_id,
             $av,
             $value,

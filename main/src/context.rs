@@ -23,7 +23,7 @@ use crate::{
 use a11y::ia2::Ia2;
 use log::info;
 use peeper::server::PeeperServer;
-use rigela_utils::get_program_directory;
+use rigela_utils::fs::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};

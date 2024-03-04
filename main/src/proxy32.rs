@@ -54,18 +54,22 @@ impl Proxy32 {
     #[cfg(target_arch = "x86_64")]
     pub(crate) async fn spawn(&self) -> &Self {
         use log::{error, info};
-        use rigela_utils::{get_file_modified_duration, get_program_directory, write_file};
+        use rigela_utils::fs::{get_file_modified_duration, get_program_directory, write_file};
         use std::time::Duration;
         use tokio::{process::Command, time::sleep};
 
         // 获取proxy32.exe的二进制数据并写入到用户目录中，原理是在编译时把proxy32的数据使用include_bytes!内嵌到64位的主程序内部，在运行时释放到磁盘。
         // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
         #[cfg(not(debug_assertions))]
-            let (proxy32_bin, is_debug) =
-            (include_bytes!("../../target/i686-pc-windows-msvc/release/rigela-proxy32.exe"), false);
+            let (proxy32_bin, is_debug) = (
+            include_bytes!("../../target/i686-pc-windows-msvc/release/rigela-proxy32.exe"),
+            false,
+        );
         #[cfg(debug_assertions)]
-            let (proxy32_bin, is_debug) =
-            (include_bytes!("../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe"), true);
+            let (proxy32_bin, is_debug) = (
+            include_bytes!("../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe"),
+            true,
+        );
         let proxy32_path = get_program_directory().join("libs/proxy32.exe");
         if is_debug || get_file_modified_duration(&proxy32_path).await > 3600 * 6 {
             // 如果文件修改时间超出6个小时才重新写文件，加快启动速度

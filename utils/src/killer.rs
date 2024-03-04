@@ -12,10 +12,13 @@
  */
 
 use crate::pipe::{server_run, PipeStream};
+use log::error;
 use serde::{Deserialize, Serialize};
 use std::future::Future;
-use log::error;
-use tokio::{net::windows::named_pipe::ClientOptions, time::{sleep, Duration}};
+use tokio::{
+    net::windows::named_pipe::ClientOptions,
+    time::{sleep, Duration},
+};
 use win_wrap::{
     common::{close_handle, FALSE},
     threading::{
@@ -32,8 +35,8 @@ enum KillSignal {
 }
 
 pub fn listen_to_killing<T>(cb: T)
-    where
-        T: Future + Send + 'static,
+where
+    T: Future + Send + 'static,
 {
     tokio::spawn(async move {
         let mut stream = server_run::<KillSignal>(PIPE_NAME).await;

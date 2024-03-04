@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::get_program_directory;
+use crate::fs::get_program_directory;
 use log::LevelFilter;
 use log4rs::{
     append::{

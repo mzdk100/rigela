@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows::core::interface;
 
 /**
  * grpRelations Relations
@@ -191,18 +191,18 @@ const IA2_RELATION_ERROR_FOR: &str = "errorFor";
 #[interface("7CDF86EE-C3DA-496a-BDA4-281B336E1FDC")]
 pub(crate) unsafe trait IAccessibleRelation: IUnknown {
     /** Returns the type of the relation.
-       `relationType` The strings returned are defined @ref grpRelations "in this section of the documentation".
-     */
+      `relationType` The strings returned are defined @ref grpRelations "in this section of the documentation".
+    */
 
     fn relationType(&self, relationType: *mut BSTR) -> HRESULT;
 
     /** Returns a localized version of the relation type.
-       `localizedRelationType` */
+    `localizedRelationType` */
 
     fn localizedRelationType(&self, localizedRelationType: *mut BSTR) -> HRESULT;
 
     /** Returns the number of targets for this relation.
-       `nTargets` */
+    `nTargets` */
 
     fn nTargets(&self, nTargets: *mut i32) -> HRESULT;
 

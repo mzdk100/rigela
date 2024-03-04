@@ -12,10 +12,10 @@
  */
 
 use super::IA2CommonTypes::{IA2CoordinateType, IA2ScrollType};
+use windows::core::interface;
 use windows::core::BSTR;
 use windows::core::HRESULT;
 use windows::core::{IUnknown, IUnknown_Vtbl};
-use windows::core::interface;
 
 /**
  * A structure containing a substring and the start and end offsets in the enclosing string.

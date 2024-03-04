@@ -15,7 +15,11 @@ use crate::model::IbmeciVoiceParams;
 use encoding_rs::GBK;
 use log::{error, info};
 use rigela_resources::clone_resource;
-use rigela_utils::{call_proc, get_file_modified_duration, get_program_directory, SERVER_HOME_URI};
+use rigela_utils::{
+    call_proc,
+    fs::{get_file_modified_duration, get_program_directory},
+    SERVER_HOME_URI,
+};
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
     borrow::Cow,
@@ -435,7 +439,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-                .unwrap_or(0),
+            .unwrap_or(0),
             pitch_fluctuation: eci!(
                 self.h_module,
                 get_voice_param,
@@ -443,7 +447,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-                .unwrap_or(0),
+            .unwrap_or(0),
             roughness: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_ROUGHNESS)
                 .unwrap_or(0),
             breathiness: eci!(
@@ -453,7 +457,7 @@ impl Ibmeci {
                 0,
                 VP_BREATHINESS
             )
-                .unwrap_or(0),
+            .unwrap_or(0),
             speed: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_SPEED).unwrap_or(0),
             volume: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_VOLUME).unwrap_or(0),
         }
@@ -473,9 +477,9 @@ impl Ibmeci {
             (7, "Elderly Female 1"),
             (8, "Elderly Male 1"),
         ]
-            .iter()
-            .map(|i| (i.0, i.1.to_string()))
-            .collect()
+        .iter()
+        .map(|i| (i.0, i.1.to_string()))
+        .collect()
     }
 
     /**

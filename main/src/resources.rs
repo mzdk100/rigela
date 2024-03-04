@@ -12,7 +12,10 @@
  */
 
 use rigela_resources::clone_resource;
-use rigela_utils::{get_file_modified_duration, get_program_directory, SERVER_HOME_URI};
+use rigela_utils::{
+    fs::{get_file_modified_duration, get_program_directory},
+    SERVER_HOME_URI,
+};
 use std::{io::Error, path::PathBuf};
 use tokio::fs::File;
 

@@ -15,8 +15,8 @@ use super::{
     AccessibleHyperlink::IAccessibleHyperlink,
     AccessibleText::{IAccessibleText, IAccessibleText_Impl, IAccessibleText_Vtbl},
 };
-use windows::core::HRESULT;
 use windows::core::interface;
+use windows::core::HRESULT;
 
 /**
  * This interface exposes information about hypertext in a document.

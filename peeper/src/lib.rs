@@ -11,48 +11,39 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[cfg(feature = "client")]
 mod client;
+#[cfg(feature = "dll")]
+mod dll;
+#[cfg(feature = "handler")]
 mod handler;
+#[cfg(feature = "model")]
 pub mod model;
+#[cfg(feature = "server")]
 pub mod server;
+#[cfg(feature = "utils")]
 mod utils;
 
-use crate::{
-    client::PeeperClient,
-    handler::{on_ime, on_input_char},
-};
 use log::{debug, error};
-use rigela_utils::get_program_directory;
+use rigela_utils::fs::get_program_directory;
 use std::{
-    ffi::c_void,
-    sync::{OnceLock, RwLock},
+    sync::OnceLock,
     thread::{self, sleep},
     time::Duration,
 };
 use win_wrap::{
     common::{
-        call_next_hook_ex, get_module_file_name, get_proc_address, load_library,
-        set_windows_hook_ex, unhook_windows_hook_ex, BOOL, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH,
-        DLL_THREAD_ATTACH, DLL_THREAD_DETACH, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM,
+        get_proc_address, load_library, set_windows_hook_ex, unhook_windows_hook_ex, LPARAM, WPARAM,
     },
-    ext::{FarProcExt, LParamExt},
-    hook::{CwpStruct, HOOK_TYPE_CALL_WND_PROC, HOOK_TYPE_GET_MESSAGE},
-    input::{WM_CHAR, WM_IME_NOTIFY},
+    ext::FarProcExt,
+    hook::{HOOK_TYPE_CALL_WND_PROC, HOOK_TYPE_GET_MESSAGE},
     message::{
-        message_loop, register_window_message, send_message_timeout, HWND_BROADCAST, MSG,
+        message_loop, register_window_message, send_message_timeout, HWND_BROADCAST,
         SMTO_ABORTIFHUNG, SMTO_BLOCK,
     },
     threading::{get_current_thread_id, ThreadNotify},
     wm,
 };
-
-macro_rules! handle_event {
-    ($name:ident, $($arg:expr),*) => {{
-        activate_transaction();
-        let lock = CLIENT.read().unwrap();
-        $name(lock.as_ref().unwrap(), $($arg),*);
-    }};
-}
 
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
 static HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
@@ -63,86 +54,6 @@ static HOOK_INIT: OnceLock<u32> = OnceLock::new();
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子将要被卸载，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
 static HOOK_UNINIT: OnceLock<u32> = OnceLock::new();
 
-// peeper的client实例。
-static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
-
-fn activate_transaction() {
-    let mut lock = CLIENT.write().unwrap();
-    if let None = lock.as_ref() {
-        let module = get_module_file_name(HMODULE::default());
-        debug!("Injected into {}.", module.as_str());
-        let client = PeeperClient::new(module);
-        debug!("Hooked.");
-        *lock = Some(client);
-    };
-}
-
-fn deactivate_transaction() {
-    let mut lock = CLIENT.write().unwrap();
-    if let Some(c) = lock.as_mut() {
-        c.quit();
-        debug!("Unhooked.");
-    }
-    *lock = None;
-    drop(lock);
-}
-
-/**
- * 窗口过程钩子，在此钩子中可以处理来自send_message的消息。
- * `code` 钩子代码，用于call_next_hook_ex函数。
- * `w_param` 钩子参数，取决于钩子类型。
- * `l_param` 钩子参数，取决于钩子类型。
- * */
-#[no_mangle]
-unsafe extern "system" fn hook_proc_call_wnd_proc(
-    code: i32,
-    w_param: WPARAM,
-    l_param: LPARAM,
-) -> LRESULT {
-    if code < 0 {
-        return call_next_hook_ex(code, w_param, l_param);
-    }
-    let msg: &CwpStruct = l_param.to();
-    if wm!(HOOK_INIT) == msg.message {
-        // 主进程发来的初始化命令
-        activate_transaction();
-    } else if wm!(HOOK_UNINIT) == msg.message {
-        // 主进程发来的卸载命令
-        deactivate_transaction();
-    } else {
-        match msg.message {
-            WM_IME_NOTIFY => handle_event!(on_ime, msg.hwnd, msg.wParam, msg.lParam),
-            _ => {}
-        }
-    }
-    call_next_hook_ex(code, w_param, l_param)
-}
-
-/**
- * 消息队列钩子，在此钩子中可以处理来自get_message/post_message/peek_message的消息。
- * `code` 钩子代码，用于call_next_hook_ex函数。
- * `w_param` 钩子参数，取决于钩子类型。
- * `l_param` 钩子参数，取决于钩子类型。
- * */
-#[no_mangle]
-unsafe extern "system" fn hook_proc_get_message(
-    code: i32,
-    w_param: WPARAM,
-    l_param: LPARAM,
-) -> LRESULT {
-    if code < 0 {
-        return call_next_hook_ex(code, w_param, l_param);
-    }
-    let msg: &MSG = l_param.to();
-    match msg.message {
-        WM_CHAR => handle_event!(on_input_char, msg.wParam),
-        WM_IME_NOTIFY => handle_event!(on_ime, msg.hwnd, msg.wParam, msg.lParam),
-        _ => {}
-    }
-
-    call_next_hook_ex(code, w_param, l_param)
-}
-
 /**
  * 启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
  * 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
@@ -152,9 +63,9 @@ pub fn mount() {
     debug!("mounted.");
     thread::spawn(move || {
         #[cfg(target_arch = "x86_64")]
-        let dll_path = get_program_directory().join(format!("libs/{}.dll", module_path!()));
+            let dll_path = get_program_directory().join(format!("libs/{}.dll", module_path!()));
         #[cfg(target_arch = "x86")]
-        let dll_path = get_program_directory().join(format!("libs/{}32.dll", module_path!()));
+            let dll_path = get_program_directory().join(format!("libs/{}32.dll", module_path!()));
 
         debug!("Module path: {}", dll_path.display());
         let handle = match load_library(dll_path.to_str().unwrap()) {
@@ -250,16 +161,4 @@ pub fn unmount() {
         }
     }
     debug!("unmounted.")
-}
-
-#[no_mangle]
-extern "system" fn DllMain(_: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
-    match dw_reason {
-        DLL_PROCESS_ATTACH => {}
-        DLL_PROCESS_DETACH => {}
-        DLL_THREAD_ATTACH => {}
-        DLL_THREAD_DETACH => {}
-        _ => return FALSE,
-    }
-    TRUE
 }

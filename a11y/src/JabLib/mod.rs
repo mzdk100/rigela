@@ -16,75 +16,38 @@ pub(crate) mod calls;
 pub(crate) mod packages;
 
 use crate::{
+    jab,
     JabLib::{
-        packages::{
-            AccessibleActions,
-            AccessibleContextInfo,
-            JObject64,
-            JInt,
-            AccessBridgeVersionInfo,
-            AccessibleContext,
-            AccessibleTextRectInfo,
-            AccessibleTextAttributesInfo,
-            JavaObject,
-            VisibleChildrenInfo,
-            AccessibleIcons,
-            AccessibleKeyBindings,
-            AccessibleRelationSetInfo,
-            AccessibleTableInfo,
-            AccessibleHypertextInfo,
-            AccessibleActionsToDo,
-            AccessibleHyperlink,
-            AccessibleSelection,
-            AccessibleHypertext,
-            AccessibleTable,
-            AccessibleTableCellInfo,
-            AccessibleText,
-            AccessibleTextInfo,
-            AccessibleTextSelectionInfo,
-            JObject,
-            AccessibleTextItemsInfo,
-            AccessibleValue,
-        },
         callbacks::{
-            AccessBridgeCaretUpdateFp,
-            AccessBridgeFocusGainedFp,
-            AccessBridgeFocusLostFp,
-            AccessBridgeMenuCanceledFp,
-            AccessBridgeMouseClickedFp,
-            AccessBridgeMouseReleasedFp,
-            AccessBridgePopupMenuCanceledFp,
-            AccessBridgePopupMenuWillBecomeInvisibleFp,
-            AccessBridgePopupMenuWillBecomeVisibleFp,
-            AccessBridgePropertyActiveDescendentChangeFp,
-            AccessBridgePropertyTextChangeFp,
-            AccessBridgePropertyValueChangeFp,
-            AccessBridgeJavaShutdownFp,
-            AccessBridgeMenuDeselectedFp,
-            AccessBridgeMenuSelectedFp,
-            AccessBridgeMouseEnteredFp,
-            AccessBridgeMouseExitedFp,
-            AccessBridgeMousePressedFp,
-            AccessBridgePropertyCaretChangeFp,
-            AccessBridgePropertyChangeFp,
-            AccessBridgePropertyChildChangeFp,
-            AccessBridgePropertyDescriptionChangeFp,
-            AccessBridgePropertyNameChangeFp,
-            AccessBridgePropertySelectionChangeFp,
-            AccessBridgePropertyStateChangeFp,
-            AccessBridgePropertyTableModelChangeFp,
+            AccessBridgeCaretUpdateFp, AccessBridgeFocusGainedFp, AccessBridgeFocusLostFp,
+            AccessBridgeJavaShutdownFp, AccessBridgeMenuCanceledFp, AccessBridgeMenuDeselectedFp,
+            AccessBridgeMenuSelectedFp, AccessBridgeMouseClickedFp, AccessBridgeMouseEnteredFp,
+            AccessBridgeMouseExitedFp, AccessBridgeMousePressedFp, AccessBridgeMouseReleasedFp,
+            AccessBridgePopupMenuCanceledFp, AccessBridgePopupMenuWillBecomeInvisibleFp,
+            AccessBridgePopupMenuWillBecomeVisibleFp, AccessBridgePropertyActiveDescendentChangeFp,
+            AccessBridgePropertyCaretChangeFp, AccessBridgePropertyChangeFp,
+            AccessBridgePropertyChildChangeFp, AccessBridgePropertyDescriptionChangeFp,
+            AccessBridgePropertyNameChangeFp, AccessBridgePropertySelectionChangeFp,
+            AccessBridgePropertyStateChangeFp, AccessBridgePropertyTableModelChangeFp,
+            AccessBridgePropertyTextChangeFp, AccessBridgePropertyValueChangeFp,
             AccessBridgePropertyVisibleDataChangeFp,
         },
+        packages::{
+            AccessBridgeVersionInfo, AccessibleActions, AccessibleActionsToDo, AccessibleContext,
+            AccessibleContextInfo, AccessibleHyperlink, AccessibleHypertext,
+            AccessibleHypertextInfo, AccessibleIcons, AccessibleKeyBindings,
+            AccessibleRelationSetInfo, AccessibleSelection, AccessibleTable,
+            AccessibleTableCellInfo, AccessibleTableInfo, AccessibleText,
+            AccessibleTextAttributesInfo, AccessibleTextInfo, AccessibleTextItemsInfo,
+            AccessibleTextRectInfo, AccessibleTextSelectionInfo, AccessibleValue, JInt, JObject,
+            JObject64, JavaObject, VisibleChildrenInfo,
+        },
     },
-    jab,
 };
 use rigela_utils::call_proc;
 use std::{
     env::var,
-    path::{
-        PathBuf,
-        Path,
-    },
+    path::{Path, PathBuf},
 };
 use win_wrap::{
     common::{
@@ -93,10 +56,7 @@ use win_wrap::{
     message::pump_waiting_messages,
 };
 use windows::{
-    core::{
-        Error,
-        HSTRING,
-    },
+    core::{Error, HSTRING},
     Win32::Foundation::S_FALSE,
 };
 
@@ -132,10 +92,7 @@ impl JabLib {
         };
         let res = jab!(h_module, windows_run);
         if res.is_none() {
-            return Err(Error::new(
-                S_FALSE,
-                "Can't load the jab library.",
-            ));
+            return Err(Error::new(S_FALSE, "Can't load the jab library."));
         }
         Ok(Self { h_module })
     }
@@ -167,8 +124,8 @@ impl JabLib {
             &mut vm_id,
             &mut context
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+        .unwrap_or(FALSE)
+        .as_bool()
         {
             return None;
         }
@@ -239,8 +196,8 @@ impl JabLib {
             y,
             &mut ac
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+        .unwrap_or(FALSE)
+        .as_bool()
         {
             return None;
         }
@@ -265,8 +222,8 @@ impl JabLib {
             &mut vm_id,
             &mut ac
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+        .unwrap_or(FALSE)
+        .as_bool()
         {
             return None;
         }
@@ -292,8 +249,8 @@ impl JabLib {
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+        .unwrap_or(FALSE)
+        .as_bool()
         {
             return None;
         }
@@ -460,10 +417,25 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_visible_children(&self, vm_id: i32, ac: AccessibleContext, start_index: i32) -> Option<VisibleChildrenInfo> {
+    pub(crate) fn get_visible_children(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        start_index: i32,
+    ) -> Option<VisibleChildrenInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_visible_children, vm_id, ac,start_index,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_visible_children,
+            vm_id,
+            ac,
+            start_index,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -474,7 +446,7 @@ impl JabLib {
      * */
     pub(crate) fn get_events_waiting(&self) -> i32 {
         pump_waiting_messages();
-        jab!(self.h_module,get_events_waiting).unwrap_or(0)
+        jab!(self.h_module, get_events_waiting).unwrap_or(0)
     }
 
     /**
@@ -482,10 +454,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_actions(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleActions> {
+    pub(crate) fn get_accessible_actions(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleActions> {
         pump_waiting_messages();
         let mut actions = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_actions, vm_id, ac,&mut actions).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_actions,
+            vm_id,
+            ac,
+            &mut actions
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(actions)
@@ -497,10 +482,25 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `index`
      * */
-    pub(crate) fn get_caret_location(&self, vm_id: i32, ac: AccessibleContext, index: JInt) -> Option<AccessibleTextRectInfo> {
+    pub(crate) fn get_caret_location(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        index: JInt,
+    ) -> Option<AccessibleTextRectInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_caret_location, vm_id, ac,&mut info,index).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_caret_location,
+            vm_id,
+            ac,
+            &mut info,
+            index
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -512,9 +512,16 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `position` 文本位置。
      * */
-    pub(crate) fn set_caret_position(&self, vm_id: i32, ac: AccessibleContext, position: i32) -> bool {
+    pub(crate) fn set_caret_position(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        position: i32,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module, set_caret_position, vm_id, ac,position).unwrap_or(FALSE).as_bool()
+        jab!(self.h_module, set_caret_position, vm_id, ac, position)
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -524,10 +531,28 @@ impl JabLib {
      * `start_index` 开始位置。
      * `end_index` 结束位置。
      * */
-    pub(crate) fn get_text_attributes_in_range(&self, vm_id: i32, ac: AccessibleContext, start_index: i32, end_index: i32) -> Option<(AccessibleTextAttributesInfo, i16)> {
+    pub(crate) fn get_text_attributes_in_range(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        start_index: i32,
+        end_index: i32,
+    ) -> Option<(AccessibleTextAttributesInfo, i16)> {
         pump_waiting_messages();
         let (mut info, mut len) = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_text_attributes_in_range, vm_id, ac,start_index,end_index,&mut info,&mut len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_text_attributes_in_range,
+            vm_id,
+            ac,
+            start_index,
+            end_index,
+            &mut info,
+            &mut len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some((info, len))
@@ -538,10 +563,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_relation_set(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleRelationSetInfo> {
+    pub(crate) fn get_accessible_relation_set(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleRelationSetInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_relation_set, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_relation_set,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -552,10 +590,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_key_bindings(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleKeyBindings> {
+    pub(crate) fn get_accessible_key_bindings(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleKeyBindings> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_key_bindings, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_key_bindings,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -566,10 +617,17 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_icons(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleIcons> {
+    pub(crate) fn get_accessible_icons(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleIcons> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_icons, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(self.h_module, get_accessible_icons, vm_id, ac, &mut info)
+            .unwrap_or(FALSE)
+            .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -580,10 +638,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_table_row_header(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+    pub(crate) fn get_accessible_table_row_header(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleTableInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_table_row_header, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_row_header,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -594,10 +665,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_table_column_header(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+    pub(crate) fn get_accessible_table_column_header(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleTableInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_table_column_header, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_column_header,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -609,9 +693,20 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `column` 列索引。
      * */
-    pub(crate) fn get_accessible_table_column_description(&self, vm_id: i32, ac: AccessibleContext, column: JInt) -> Option<AccessibleContext> {
+    pub(crate) fn get_accessible_table_column_description(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        column: JInt,
+    ) -> Option<AccessibleContext> {
         pump_waiting_messages();
-        jab!(self.h_module, get_accessible_table_column_description, vm_id, ac,column)
+        jab!(
+            self.h_module,
+            get_accessible_table_column_description,
+            vm_id,
+            ac,
+            column
+        )
     }
 
     /**
@@ -620,9 +715,20 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `row` 行索引。
      * */
-    pub(crate) fn get_accessible_table_row_description(&self, vm_id: i32, ac: AccessibleContext, row: JInt) -> Option<AccessibleContext> {
+    pub(crate) fn get_accessible_table_row_description(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        row: JInt,
+    ) -> Option<AccessibleContext> {
         pump_waiting_messages();
-        jab!(self.h_module, get_accessible_table_row_description, vm_id, ac,row)
+        jab!(
+            self.h_module,
+            get_accessible_table_row_description,
+            vm_id,
+            ac,
+            row
+        )
     }
 
     /**
@@ -632,9 +738,24 @@ impl JabLib {
      * `start_index` 开始索引。
      * `end_index` 结束索引。
      * */
-    pub(crate) fn select_text_range(&self, vm_id: i32, ac: AccessibleContext, start_index: JInt, end_index: JInt) -> bool {
+    pub(crate) fn select_text_range(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        start_index: JInt,
+        end_index: JInt,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module, select_text_range, vm_id, ac,start_index,end_index).unwrap_or(FALSE).as_bool()
+        jab!(
+            self.h_module,
+            select_text_range,
+            vm_id,
+            ac,
+            start_index,
+            end_index
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
     }
 
     /**
@@ -642,10 +763,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_table_info(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleTableInfo> {
+    pub(crate) fn get_accessible_table_info(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleTableInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_table_info, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_info,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -658,13 +792,28 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `len` 名称长度。
      * */
-    pub(crate) fn get_virtual_accessible_name(&self, vm_id: i32, ac: AccessibleContext, len: i32) -> Option<Vec<u16>> {
+    pub(crate) fn get_virtual_accessible_name(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        len: i32,
+    ) -> Option<Vec<u16>> {
         pump_waiting_messages();
         let mut name = Vec::new();
         for _ in 0..len {
             name.push(0);
         }
-        if !jab!(self.h_module, get_virtual_accessible_name, vm_id, ac,name.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_virtual_accessible_name,
+            vm_id,
+            ac,
+            name.as_mut_ptr(),
+            len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(name)
@@ -675,10 +824,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
-    pub(crate) fn get_accessible_hypertext(&self, vm_id: i32, ac: AccessibleContext) -> Option<AccessibleHypertextInfo> {
+    pub(crate) fn get_accessible_hypertext(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+    ) -> Option<AccessibleHypertextInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_hypertext, vm_id, ac,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_hypertext,
+            vm_id,
+            ac,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -690,10 +852,25 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `start_index` 开始索引。
      * */
-    pub(crate) fn get_accessible_hypertext_ext(&self, vm_id: i32, ac: AccessibleContext, start_index: JInt) -> Option<AccessibleHypertextInfo> {
+    pub(crate) fn get_accessible_hypertext_ext(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        start_index: JInt,
+    ) -> Option<AccessibleHypertextInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_hypertext_ext, vm_id, ac,start_index,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_hypertext_ext,
+            vm_id,
+            ac,
+            start_index,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -705,10 +882,27 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `actions_to_do` 要执行的动作列表。
      * */
-    pub(crate) fn do_accessible_actions(&self, vm_id: i32, ac: AccessibleContext, actions_to_do: *const AccessibleActionsToDo) -> (bool, JInt) {
+    pub(crate) fn do_accessible_actions(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        actions_to_do: *const AccessibleActionsToDo,
+    ) -> (bool, JInt) {
         pump_waiting_messages();
         let mut failure = unsafe { std::mem::zeroed() };
-        (jab!(self.h_module, do_accessible_actions, vm_id, ac,actions_to_do,&mut failure).unwrap_or(FALSE).as_bool(), failure)
+        (
+            jab!(
+                self.h_module,
+                do_accessible_actions,
+                vm_id,
+                ac,
+                actions_to_do,
+                &mut failure
+            )
+            .unwrap_or(FALSE)
+            .as_bool(),
+            failure,
+        )
     }
 
     /**
@@ -717,9 +911,16 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `text` 文字内容。
      * */
-    pub(crate) fn set_text_contents(&self, vm_id: i32, ac: AccessibleContext, text: *const u16) -> bool {
+    pub(crate) fn set_text_contents(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        text: *const u16,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module,set_text_contents,vm_id,ac,text).unwrap_or(FALSE).as_bool()
+        jab!(self.h_module, set_text_contents, vm_id, ac, text)
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -728,7 +929,7 @@ impl JabLib {
      * */
     pub(crate) fn set_caret_update_fp(&self, cb: AccessBridgeCaretUpdateFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_caret_update_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_caret_update_fp, cb).unwrap_or(())
     }
 
     /**
@@ -737,7 +938,7 @@ impl JabLib {
      * */
     pub(crate) fn set_focus_gained_fp(&self, cb: AccessBridgeFocusGainedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_focus_gained_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_focus_gained_fp, cb).unwrap_or(())
     }
 
     /**
@@ -746,7 +947,7 @@ impl JabLib {
      * */
     pub(crate) fn set_focus_lost_fp(&self, cb: AccessBridgeFocusLostFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_focus_lost_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_focus_lost_fp, cb).unwrap_or(())
     }
 
     /**
@@ -755,7 +956,7 @@ impl JabLib {
      * */
     pub(crate) fn set_java_shutdown_fp(&self, cb: AccessBridgeJavaShutdownFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_java_shutdown_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_java_shutdown_fp, cb).unwrap_or(())
     }
 
     /**
@@ -764,7 +965,7 @@ impl JabLib {
      * */
     pub(crate) fn set_menu_canceled_fp(&self, cb: AccessBridgeMenuCanceledFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_menu_canceled_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_menu_canceled_fp, cb).unwrap_or(())
     }
 
     /**
@@ -773,7 +974,7 @@ impl JabLib {
      * */
     pub(crate) fn set_menu_deselected_fp(&self, cb: AccessBridgeMenuDeselectedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_menu_deselected_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_menu_deselected_fp, cb).unwrap_or(())
     }
 
     /**
@@ -782,7 +983,7 @@ impl JabLib {
      * */
     pub(crate) fn set_menu_selected_fp(&self, cb: AccessBridgeMenuSelectedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_menu_selected_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_menu_selected_fp, cb).unwrap_or(())
     }
 
     /**
@@ -791,7 +992,7 @@ impl JabLib {
      * */
     pub(crate) fn set_mouse_clicked_fp(&self, cb: AccessBridgeMouseClickedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_mouse_clicked_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_mouse_clicked_fp, cb).unwrap_or(())
     }
 
     /**
@@ -800,7 +1001,7 @@ impl JabLib {
      * */
     pub(crate) fn set_mouse_entered_fp(&self, cb: AccessBridgeMouseEnteredFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_mouse_entered_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_mouse_entered_fp, cb).unwrap_or(())
     }
 
     /**
@@ -809,7 +1010,7 @@ impl JabLib {
      * */
     pub(crate) fn set_mouse_exited_fp(&self, cb: AccessBridgeMouseExitedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_mouse_exited_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_mouse_exited_fp, cb).unwrap_or(())
     }
 
     /**
@@ -818,7 +1019,7 @@ impl JabLib {
      * */
     pub(crate) fn set_mouse_pressed_fp(&self, cb: AccessBridgeMousePressedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_mouse_pressed_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_mouse_pressed_fp, cb).unwrap_or(())
     }
 
     /**
@@ -827,7 +1028,7 @@ impl JabLib {
      * */
     pub(crate) fn set_mouse_released_fp(&self, cb: AccessBridgeMouseReleasedFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_mouse_released_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_mouse_released_fp, cb).unwrap_or(())
     }
 
     /**
@@ -836,34 +1037,43 @@ impl JabLib {
      * */
     pub(crate) fn set_popup_menu_canceled_fp(&self, cb: AccessBridgePopupMenuCanceledFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_popup_menu_canceled_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_popup_menu_canceled_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置弹出菜单将要隐藏时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_popup_menu_will_become_invisible_fp(&self, cb: AccessBridgePopupMenuWillBecomeInvisibleFp) {
+    pub(crate) fn set_popup_menu_will_become_invisible_fp(
+        &self,
+        cb: AccessBridgePopupMenuWillBecomeInvisibleFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_popup_menu_will_become_invisible_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_popup_menu_will_become_invisible_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置弹出菜单将要显示时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_popup_menu_will_become_visible_fp(&self, cb: AccessBridgePopupMenuWillBecomeVisibleFp) {
+    pub(crate) fn set_popup_menu_will_become_visible_fp(
+        &self,
+        cb: AccessBridgePopupMenuWillBecomeVisibleFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_popup_menu_will_become_visible_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_popup_menu_will_become_visible_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置属性激活、取消激活时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_property_active_descendent_change_fp(&self, cb: AccessBridgePropertyActiveDescendentChangeFp) {
+    pub(crate) fn set_property_active_descendent_change_fp(
+        &self,
+        cb: AccessBridgePropertyActiveDescendentChangeFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_active_descendent_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_active_descendent_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -872,7 +1082,7 @@ impl JabLib {
      * */
     pub(crate) fn set_property_caret_change_fp(&self, cb: AccessBridgePropertyCaretChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_caret_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_caret_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -881,7 +1091,7 @@ impl JabLib {
      * */
     pub(crate) fn set_property_change_fp(&self, cb: AccessBridgePropertyChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -890,16 +1100,19 @@ impl JabLib {
      * */
     pub(crate) fn set_property_child_change_fp(&self, cb: AccessBridgePropertyChildChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_child_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_child_change_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置属性描述改变时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_property_description_change_fp(&self, cb: AccessBridgePropertyDescriptionChangeFp) {
+    pub(crate) fn set_property_description_change_fp(
+        &self,
+        cb: AccessBridgePropertyDescriptionChangeFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_description_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_description_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -908,16 +1121,19 @@ impl JabLib {
      * */
     pub(crate) fn set_property_name_change_fp(&self, cb: AccessBridgePropertyNameChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_name_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_name_change_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置属性选择改变时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_property_selection_change_fp(&self, cb: AccessBridgePropertySelectionChangeFp) {
+    pub(crate) fn set_property_selection_change_fp(
+        &self,
+        cb: AccessBridgePropertySelectionChangeFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_selection_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_selection_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -926,16 +1142,19 @@ impl JabLib {
      * */
     pub(crate) fn set_property_state_change_fp(&self, cb: AccessBridgePropertyStateChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_state_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_state_change_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置属性表格模式改变时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_property_table_model_change_fp(&self, cb: AccessBridgePropertyTableModelChangeFp) {
+    pub(crate) fn set_property_table_model_change_fp(
+        &self,
+        cb: AccessBridgePropertyTableModelChangeFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_table_model_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_table_model_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -944,7 +1163,7 @@ impl JabLib {
      * */
     pub(crate) fn set_property_text_change_fp(&self, cb: AccessBridgePropertyTextChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_text_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_text_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -953,16 +1172,19 @@ impl JabLib {
      * */
     pub(crate) fn set_property_value_change_fp(&self, cb: AccessBridgePropertyValueChangeFp) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_value_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_value_change_fp, cb).unwrap_or(())
     }
 
     /**
      * 设置属性可见数据改变时的处理函数。
      * `cb` 接收事件的函数。
      * */
-    pub(crate) fn set_property_visible_data_change_fp(&self, cb: AccessBridgePropertyVisibleDataChangeFp) {
+    pub(crate) fn set_property_visible_data_change_fp(
+        &self,
+        cb: AccessBridgePropertyVisibleDataChangeFp,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,set_property_visible_data_change_fp,cb).unwrap_or(())
+        jab!(self.h_module, set_property_visible_data_change_fp, cb).unwrap_or(())
     }
 
     /**
@@ -971,9 +1193,22 @@ impl JabLib {
      * `ac` 可访问上下文。
      * `link` 超链接对象。
      * */
-    pub(crate) fn activate_accessible_hyperlink(&self, vm_id: i32, ac: AccessibleContext, link: AccessibleHyperlink) -> bool {
+    pub(crate) fn activate_accessible_hyperlink(
+        &self,
+        vm_id: i32,
+        ac: AccessibleContext,
+        link: AccessibleHyperlink,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module,activate_accessible_hyperlink,vm_id,ac,link).unwrap_or(FALSE).as_bool()
+        jab!(
+            self.h_module,
+            activate_accessible_hyperlink,
+            vm_id,
+            ac,
+            link
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
     }
 
     /**
@@ -987,9 +1222,21 @@ impl JabLib {
      * `as` 可访问上下文。
      * `index` 索引。
      * */
-    pub(crate) fn add_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) {
+    pub(crate) fn add_accessible_selection_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+        index: i32,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,add_accessible_selection_from_context,vm_id,r#as,index).unwrap_or(())
+        jab!(
+            self.h_module,
+            add_accessible_selection_from_context,
+            vm_id,
+            r#as,
+            index
+        )
+        .unwrap_or(())
     }
 
     /**
@@ -1003,9 +1250,21 @@ impl JabLib {
      * `as` 可访问上下文。
      * `index` 索引。
      * */
-    pub(crate) fn remove_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) {
+    pub(crate) fn remove_accessible_selection_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+        index: i32,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,remove_accessible_selection_from_context,vm_id,r#as,index).unwrap_or(())
+        jab!(
+            self.h_module,
+            remove_accessible_selection_from_context,
+            vm_id,
+            r#as,
+            index
+        )
+        .unwrap_or(())
     }
 
     /**
@@ -1018,9 +1277,19 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `as` 可访问上下文。
      * */
-    pub(crate) fn clear_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection) {
+    pub(crate) fn clear_accessible_selection_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,clear_accessible_selection_from_context,vm_id,r#as).unwrap_or(())
+        jab!(
+            self.h_module,
+            clear_accessible_selection_from_context,
+            vm_id,
+            r#as
+        )
+        .unwrap_or(())
     }
 
     /**
@@ -1033,9 +1302,19 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `as` 可访问上下文。
      * */
-    pub(crate) fn select_all_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection) {
+    pub(crate) fn select_all_accessible_selection_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+    ) {
         pump_waiting_messages();
-        jab!(self.h_module,select_all_accessible_selection_from_context,vm_id,r#as).unwrap_or(())
+        jab!(
+            self.h_module,
+            select_all_accessible_selection_from_context,
+            vm_id,
+            r#as
+        )
+        .unwrap_or(())
     }
 
     /**
@@ -1044,10 +1323,25 @@ impl JabLib {
      * `ah` 可访问超文本。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_hyperlink(&self, vm_id: i32, ah: AccessibleContext, index: JInt) -> Option<AccessibleHypertextInfo> {
+    pub(crate) fn get_accessible_hyperlink(
+        &self,
+        vm_id: i32,
+        ah: AccessibleContext,
+        index: JInt,
+    ) -> Option<AccessibleHypertextInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_hyperlink,vm_id,ah,index,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_hyperlink,
+            vm_id,
+            ah,
+            index,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1058,9 +1352,13 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `ah` 可访问超文本。
      * */
-    pub(crate) fn get_accessible_hyperlink_count(&self, vm_id: i32, ah: AccessibleHypertext) -> JInt {
+    pub(crate) fn get_accessible_hyperlink_count(
+        &self,
+        vm_id: i32,
+        ah: AccessibleHypertext,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_hyperlink_count,vm_id,ah).unwrap_or(-1)
+        jab!(self.h_module, get_accessible_hyperlink_count, vm_id, ah).unwrap_or(-1)
     }
 
     /**
@@ -1069,9 +1367,21 @@ impl JabLib {
      * `ah` 可访问超文本。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_hypertext_link_index(&self, vm_id: i32, ah: AccessibleHypertext, index: JInt) -> JInt {
+    pub(crate) fn get_accessible_hypertext_link_index(
+        &self,
+        vm_id: i32,
+        ah: AccessibleHypertext,
+        index: JInt,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_hypertext_link_index,vm_id,ah,index).unwrap_or(-1)
+        jab!(
+            self.h_module,
+            get_accessible_hypertext_link_index,
+            vm_id,
+            ah,
+            index
+        )
+        .unwrap_or(-1)
     }
 
     /**
@@ -1079,9 +1389,19 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `as` 可访问选择上下文。
      * */
-    pub(crate) fn get_accessible_selection_count_from_context(&self, vm_id: i32, r#as: AccessibleSelection) -> i32 {
+    pub(crate) fn get_accessible_selection_count_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+    ) -> i32 {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_selection_count_from_context,vm_id,r#as).unwrap_or(-1)
+        jab!(
+            self.h_module,
+            get_accessible_selection_count_from_context,
+            vm_id,
+            r#as
+        )
+        .unwrap_or(-1)
     }
 
     /**
@@ -1089,9 +1409,20 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `as` 可访问选择上下文。
      * */
-    pub(crate) fn get_accessible_selection_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) -> Option<JObject> {
+    pub(crate) fn get_accessible_selection_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+        index: i32,
+    ) -> Option<JObject> {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_selection_from_context,vm_id,r#as,index)
+        jab!(
+            self.h_module,
+            get_accessible_selection_from_context,
+            vm_id,
+            r#as,
+            index
+        )
     }
 
     /**
@@ -1099,9 +1430,22 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `as` 可访问选择上下文。
      * */
-    pub(crate) fn is_accessible_child_selected_from_context(&self, vm_id: i32, r#as: AccessibleSelection, index: i32) -> bool {
+    pub(crate) fn is_accessible_child_selected_from_context(
+        &self,
+        vm_id: i32,
+        r#as: AccessibleSelection,
+        index: i32,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module,is_accessible_child_selected_from_context,vm_id,r#as,index).unwrap_or(FALSE).as_bool()
+        jab!(
+            self.h_module,
+            is_accessible_child_selected_from_context,
+            vm_id,
+            r#as,
+            index
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
     }
 
     /**
@@ -1110,9 +1454,22 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `row` 行索引。
      * */
-    pub(crate) fn is_accessible_table_row_selected(&self, vm_id: i32, at: AccessibleTable, row: JInt) -> bool {
+    pub(crate) fn is_accessible_table_row_selected(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        row: JInt,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module,is_accessible_table_row_selected,vm_id,at,row).unwrap_or(FALSE).as_bool()
+        jab!(
+            self.h_module,
+            is_accessible_table_row_selected,
+            vm_id,
+            at,
+            row
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
     }
 
     /**
@@ -1121,9 +1478,22 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `column` 列索引。
      * */
-    pub(crate) fn is_accessible_table_column_selected(&self, vm_id: i32, at: AccessibleTable, column: JInt) -> bool {
+    pub(crate) fn is_accessible_table_column_selected(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        column: JInt,
+    ) -> bool {
         pump_waiting_messages();
-        jab!(self.h_module,is_accessible_table_column_selected,vm_id,at,column).unwrap_or(FALSE).as_bool()
+        jab!(
+            self.h_module,
+            is_accessible_table_column_selected,
+            vm_id,
+            at,
+            column
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
     }
 
     /**
@@ -1133,10 +1503,27 @@ impl JabLib {
      * `row` 行索引。
      * `column` 列索引。
      * */
-    pub(crate) fn get_accessible_table_cell_info(&self, vm_id: i32, at: AccessibleTable, row: JInt, column: JInt) -> Option<AccessibleTableCellInfo> {
+    pub(crate) fn get_accessible_table_cell_info(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        row: JInt,
+        column: JInt,
+    ) -> Option<AccessibleTableCellInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_table_cell_info,vm_id,at,row,column,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_cell_info,
+            vm_id,
+            at,
+            row,
+            column,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1148,9 +1535,14 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_table_column(&self, vm_id: i32, at: AccessibleTable, index: JInt) -> JInt {
+    pub(crate) fn get_accessible_table_column(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        index: JInt,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_table_column,vm_id,at,index).unwrap_or(0)
+        jab!(self.h_module, get_accessible_table_column, vm_id, at, index).unwrap_or(0)
     }
 
     /**
@@ -1159,9 +1551,14 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_table_row(&self, vm_id: i32, at: AccessibleTable, index: JInt) -> JInt {
+    pub(crate) fn get_accessible_table_row(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        index: JInt,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_table_row,vm_id,at,index).unwrap_or(0)
+        jab!(self.h_module, get_accessible_table_row, vm_id, at, index).unwrap_or(0)
     }
 
     /**
@@ -1169,9 +1566,19 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `at` 可访问表格上下文。
      * */
-    pub(crate) fn get_accessible_table_column_selection_count(&self, vm_id: i32, at: AccessibleTable) -> JInt {
+    pub(crate) fn get_accessible_table_column_selection_count(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_table_column_selection_count,vm_id,at).unwrap_or(0)
+        jab!(
+            self.h_module,
+            get_accessible_table_column_selection_count,
+            vm_id,
+            at
+        )
+        .unwrap_or(0)
     }
 
     /**
@@ -1179,9 +1586,19 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `at` 可访问表格上下文。
      * */
-    pub(crate) fn get_accessible_table_row_selection_count(&self, vm_id: i32, at: AccessibleTable) -> JInt {
+    pub(crate) fn get_accessible_table_row_selection_count(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_table_row_selection_count,vm_id,at).unwrap_or(0)
+        jab!(
+            self.h_module,
+            get_accessible_table_row_selection_count,
+            vm_id,
+            at
+        )
+        .unwrap_or(0)
     }
 
     /**
@@ -1191,9 +1608,23 @@ impl JabLib {
      * `row` 行索引。
      * `column` 列索引。
      * */
-    pub(crate) fn get_accessible_table_index(&self, vm_id: i32, at: AccessibleTable, row: JInt, column: JInt) -> JInt {
+    pub(crate) fn get_accessible_table_index(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        row: JInt,
+        column: JInt,
+    ) -> JInt {
         pump_waiting_messages();
-        jab!(self.h_module,get_accessible_table_index,vm_id,at,row,column).unwrap_or(0)
+        jab!(
+            self.h_module,
+            get_accessible_table_index,
+            vm_id,
+            at,
+            row,
+            column
+        )
+        .unwrap_or(0)
     }
 
     /**
@@ -1202,13 +1633,28 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `count` 数组长度。
      * */
-    pub(crate) fn get_accessible_table_column_selections(&self, vm_id: i32, at: AccessibleTable, count: JInt) -> Option<Vec<JInt>> {
+    pub(crate) fn get_accessible_table_column_selections(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        count: JInt,
+    ) -> Option<Vec<JInt>> {
         pump_waiting_messages();
         let mut arr = Vec::new();
         for _ in 0..count {
             arr.push(0);
         }
-        if !jab!(self.h_module,get_accessible_table_column_selections,vm_id,at,count,arr.as_mut_ptr()).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_column_selections,
+            vm_id,
+            at,
+            count,
+            arr.as_mut_ptr()
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         return Some(arr);
@@ -1220,13 +1666,28 @@ impl JabLib {
      * `at` 可访问表格上下文。
      * `count` 数组长度。
      * */
-    pub(crate) fn get_accessible_table_row_selections(&self, vm_id: i32, at: AccessibleTable, count: JInt) -> Option<Vec<JInt>> {
+    pub(crate) fn get_accessible_table_row_selections(
+        &self,
+        vm_id: i32,
+        at: AccessibleTable,
+        count: JInt,
+    ) -> Option<Vec<JInt>> {
         pump_waiting_messages();
         let mut arr = Vec::new();
         for _ in 0..count {
             arr.push(0);
         }
-        if !jab!(self.h_module,get_accessible_table_row_selections,vm_id,at,count,arr.as_mut_ptr()).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_table_row_selections,
+            vm_id,
+            at,
+            count,
+            arr.as_mut_ptr()
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         return Some(arr);
@@ -1240,10 +1701,23 @@ impl JabLib {
      * `vm_id` 虚拟机ID。
      * `at` 可访问文字上下文。
      * */
-    pub(crate) fn get_accessible_text_selection_info(&self, vm_id: i32, at: AccessibleText) -> Option<AccessibleTextSelectionInfo> {
+    pub(crate) fn get_accessible_text_selection_info(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+    ) -> Option<AccessibleTextSelectionInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_text_selection_info,vm_id,at,&mut info).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_selection_info,
+            vm_id,
+            at,
+            &mut info
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1259,10 +1733,27 @@ impl JabLib {
      * `x` X坐标。
      * `y` Y坐标。
      * */
-    pub(crate) fn get_accessible_text_info(&self, vm_id: i32, at: AccessibleText, x: JInt, y: JInt) -> Option<AccessibleTextInfo> {
+    pub(crate) fn get_accessible_text_info(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        x: JInt,
+        y: JInt,
+    ) -> Option<AccessibleTextInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_text_info,vm_id,at,&mut info,x,y).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_info,
+            vm_id,
+            at,
+            &mut info,
+            x,
+            y
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1277,10 +1768,23 @@ impl JabLib {
      * `at` 可访问文字上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_text_attributes(&self, vm_id: i32, at: AccessibleText, index: JInt) -> (*const u8, AccessibleTextAttributesInfo) {
+    pub(crate) fn get_accessible_text_attributes(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        index: JInt,
+    ) -> (*const u8, AccessibleTextAttributesInfo) {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        let char = jab!(self.h_module,get_accessible_text_attributes,vm_id,at,index,&mut info).unwrap_or(std::ptr::null());
+        let char = jab!(
+            self.h_module,
+            get_accessible_text_attributes,
+            vm_id,
+            at,
+            index,
+            &mut info
+        )
+        .unwrap_or(std::ptr::null());
         (char, info)
     }
 
@@ -1293,10 +1797,25 @@ impl JabLib {
      * `at` 可访问文字上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_text_items(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<AccessibleTextItemsInfo> {
+    pub(crate) fn get_accessible_text_items(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        index: JInt,
+    ) -> Option<AccessibleTextItemsInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_text_items,vm_id,at,&mut info,index).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_items,
+            vm_id,
+            at,
+            &mut info,
+            index
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1311,10 +1830,26 @@ impl JabLib {
      * `at` 可访问文字上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_text_line_bounds(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<(JInt, JInt)> {
+    pub(crate) fn get_accessible_text_line_bounds(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        index: JInt,
+    ) -> Option<(JInt, JInt)> {
         pump_waiting_messages();
         let (mut start, mut end) = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_text_line_bounds,vm_id,at,index,&mut start,&mut end).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_line_bounds,
+            vm_id,
+            at,
+            index,
+            &mut start,
+            &mut end
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some((start, end))
@@ -1331,13 +1866,32 @@ impl JabLib {
      * `end_index` 结束索引。
      * `len` 长度。
      * */
-    pub(crate) fn get_accessible_text_range(&self, vm_id: i32, at: AccessibleText, start_index: JInt, end_index: JInt, len: i16) -> Option<Vec<u16>> {
+    pub(crate) fn get_accessible_text_range(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        start_index: JInt,
+        end_index: JInt,
+        len: i16,
+    ) -> Option<Vec<u16>> {
         pump_waiting_messages();
         let mut text = Vec::new();
         for _ in 0..len {
             text.push(0);
         }
-        if !jab!(self.h_module,get_accessible_text_range,vm_id,at,start_index,end_index,text.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_range,
+            vm_id,
+            at,
+            start_index,
+            end_index,
+            text.as_mut_ptr(),
+            len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(text)
@@ -1352,10 +1906,25 @@ impl JabLib {
      * `at` 可访问文字上下文。
      * `index` 索引。
      * */
-    pub(crate) fn get_accessible_text_rect(&self, vm_id: i32, at: AccessibleText, index: JInt) -> Option<AccessibleTextRectInfo> {
+    pub(crate) fn get_accessible_text_rect(
+        &self,
+        vm_id: i32,
+        at: AccessibleText,
+        index: JInt,
+    ) -> Option<AccessibleTextRectInfo> {
         pump_waiting_messages();
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module,get_accessible_text_rect,vm_id,at,&mut info,index).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_accessible_text_rect,
+            vm_id,
+            at,
+            &mut info,
+            index
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(info)
@@ -1369,13 +1938,28 @@ impl JabLib {
      * `av` 可访问值上下文。
      * `len` 接收文本的长度。
      * */
-    pub(crate) fn get_current_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+    pub(crate) fn get_current_accessible_value_from_context(
+        &self,
+        vm_id: i32,
+        av: AccessibleValue,
+        len: i16,
+    ) -> Option<Vec<u16>> {
         pump_waiting_messages();
         let mut value = Vec::new();
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(self.h_module,get_current_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_current_accessible_value_from_context,
+            vm_id,
+            av,
+            value.as_mut_ptr(),
+            len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(value)
@@ -1389,13 +1973,28 @@ impl JabLib {
      * `av` 可访问值上下文。
      * `len` 接收文本的长度。
      * */
-    pub(crate) fn get_maximum_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+    pub(crate) fn get_maximum_accessible_value_from_context(
+        &self,
+        vm_id: i32,
+        av: AccessibleValue,
+        len: i16,
+    ) -> Option<Vec<u16>> {
         pump_waiting_messages();
         let mut value = Vec::new();
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(self.h_module,get_maximum_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_maximum_accessible_value_from_context,
+            vm_id,
+            av,
+            value.as_mut_ptr(),
+            len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(value)
@@ -1409,13 +2008,28 @@ impl JabLib {
      * `av` 可访问值上下文。
      * `len` 接收文本的长度。
      * */
-    pub(crate) fn get_minimum_accessible_value_from_context(&self, vm_id: i32, av: AccessibleValue, len: i16) -> Option<Vec<u16>> {
+    pub(crate) fn get_minimum_accessible_value_from_context(
+        &self,
+        vm_id: i32,
+        av: AccessibleValue,
+        len: i16,
+    ) -> Option<Vec<u16>> {
         pump_waiting_messages();
         let mut value = Vec::new();
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(self.h_module,get_minimum_accessible_value_from_context,vm_id,av,value.as_mut_ptr(),len).unwrap_or(FALSE).as_bool() {
+        if !jab!(
+            self.h_module,
+            get_minimum_accessible_value_from_context,
+            vm_id,
+            av,
+            value.as_mut_ptr(),
+            len
+        )
+        .unwrap_or(FALSE)
+        .as_bool()
+        {
             return None;
         }
         Some(value)

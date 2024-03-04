@@ -28,10 +28,12 @@ path = "../a11y"
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
 path = "../peeper"
+features = ["server"]
 
 [dependencies.win-wrap]
 # Windows Api的安全封装
 path = "../win-wrap"
+features = ["uia", "registry", "tts", "pth"]
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
@@ -63,6 +65,7 @@ path = "../resources"
 
 [dependencies.rigela-utils]
 path = "../utils"
+features = ["bass", "killer", "logger", "clip"]
 
 [dependencies.serde]
 # 用于数据序列化和反序列化

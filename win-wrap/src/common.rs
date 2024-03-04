@@ -13,7 +13,7 @@
 
 use std::ffi::CString;
 pub use windows::{
-    core::{HRESULT, Result},
+    core::{Result, HRESULT},
     Win32::{
         Foundation::{
             BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
@@ -23,49 +23,34 @@ pub use windows::{
         System::SystemServices::{
             DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
         },
-        UI::{
-            Accessibility::{HWINEVENTHOOK, WINEVENTPROC},
-            WindowsAndMessaging::{
-                HHOOK, HOOKPROC, MB_ABORTRETRYIGNORE, MB_APPLMODAL, MB_CANCELTRYCONTINUE,
-                MB_DEFAULT_DESKTOP_ONLY, MB_DEFBUTTON1, MB_DEFBUTTON2, MB_DEFBUTTON3,
-                MB_DEFBUTTON4, MB_DEFMASK, MB_HELP, MB_ICONASTERISK, MB_ICONERROR,
-                MB_ICONEXCLAMATION, MB_ICONHAND, MB_ICONINFORMATION, MB_ICONMASK, MB_ICONQUESTION,
-                MB_ICONSTOP, MB_ICONWARNING, MB_MISCMASK, MB_MODEMASK, MB_NOFOCUS, MB_OK,
-                MB_OKCANCEL, MB_RETRYCANCEL, MB_RIGHT, MB_RTLREADING, MB_SERVICE_NOTIFICATION,
-                MB_SERVICE_NOTIFICATION_NT3X, MB_SETFOREGROUND, MB_SYSTEMMODAL, MB_TASKMODAL,
-                MB_TOPMOST, MB_TYPEMASK, MB_USERICON, MB_YESNO, MB_YESNOCANCEL, SHOW_WINDOW_CMD,
-                SW_FORCEMINIMIZE, SW_HIDE, SW_MAXIMIZE, SW_MINIMIZE, SW_NORMAL, SW_RESTORE,
-                SW_SHOW, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED, SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE,
-                SW_SHOWNA, SW_SHOWNOACTIVATE, SW_SHOWNORMAL, WINDOWS_HOOK_ID,
-            },
+        UI::WindowsAndMessaging::{
+            HHOOK, HOOKPROC, MB_ABORTRETRYIGNORE, MB_APPLMODAL, MB_CANCELTRYCONTINUE,
+            MB_DEFAULT_DESKTOP_ONLY, MB_DEFBUTTON1, MB_DEFBUTTON2, MB_DEFBUTTON3, MB_DEFBUTTON4,
+            MB_DEFMASK, MB_HELP, MB_ICONASTERISK, MB_ICONERROR, MB_ICONEXCLAMATION, MB_ICONHAND,
+            MB_ICONINFORMATION, MB_ICONMASK, MB_ICONQUESTION, MB_ICONSTOP, MB_ICONWARNING,
+            MB_MISCMASK, MB_MODEMASK, MB_NOFOCUS, MB_OK, MB_OKCANCEL, MB_RETRYCANCEL, MB_RIGHT,
+            MB_RTLREADING, MB_SERVICE_NOTIFICATION, MB_SERVICE_NOTIFICATION_NT3X, MB_SETFOREGROUND,
+            MB_SYSTEMMODAL, MB_TASKMODAL, MB_TOPMOST, MB_TYPEMASK, MB_USERICON, MB_YESNO,
+            MB_YESNOCANCEL, SHOW_WINDOW_CMD, SW_FORCEMINIMIZE, SW_HIDE, SW_MAXIMIZE, SW_MINIMIZE,
+            SW_NORMAL, SW_RESTORE, SW_SHOW, SW_SHOWDEFAULT, SW_SHOWMAXIMIZED, SW_SHOWMINIMIZED,
+            SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_SHOWNOACTIVATE, SW_SHOWNORMAL, WINDOWS_HOOK_ID,
         },
     },
 };
 use windows::{
     core::{HSTRING, PCSTR},
     Win32::{
-        Foundation::{
-            CloseHandle,
-            FreeLibrary,
-            GetLastError,
-            MAX_PATH,
-            WIN32_ERROR,
-        },
+        Foundation::{CloseHandle, FreeLibrary, GetLastError, MAX_PATH, WIN32_ERROR},
         Globalization::{GetUserDefaultLocaleName, MAX_LOCALE_NAME},
         System::{
             Diagnostics::Debug::Beep,
             LibraryLoader::{GetModuleFileNameW, GetModuleHandleW, GetProcAddress, LoadLibraryW},
             Threading::AttachThreadInput,
         },
-        UI::{
-            Accessibility::{SetWinEventHook, UnhookWinEvent},
-            Input::KeyboardAndMouse::SetActiveWindow,
-            WindowsAndMessaging::{
-                CallNextHookEx, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
-                GetWindowTextW, SetForegroundWindow, SetWindowsHookExW, ShowWindow,
-                UnhookWindowsHookEx,
-            },
-            WindowsAndMessaging::{FindWindowW, MessageBoxW, MESSAGEBOX_STYLE},
+        UI::WindowsAndMessaging::{
+            CallNextHookEx, FindWindowW, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
+            GetWindowTextW, MessageBoxW, SetForegroundWindow, SetWindowsHookExW, ShowWindow,
+            UnhookWindowsHookEx, MESSAGEBOX_STYLE,
         },
     },
 };
@@ -100,11 +85,6 @@ pub fn get_foreground_window() -> HWND {
  * */
 pub fn set_foreground_window(h_wnd: HWND) {
     unsafe { SetForegroundWindow(h_wnd) };
-}
-
-/** 激活指定窗口  **/
-pub fn set_active_window(h_wnd: HWND) {
-    unsafe { SetActiveWindow(h_wnd) };
 }
 
 /**
@@ -311,59 +291,6 @@ pub fn get_user_default_locale_name() -> String {
         let length = GetUserDefaultLocaleName(&mut name);
         String::from_utf16_lossy(&mut name[..(length - 1) as usize])
     }
-}
-
-//noinspection StructuralWrap
-//noinspection SpellCheckingInspection
-/**
- * 为一系列事件设置事件挂钩函数。
- * `event_min` 指定挂钩函数处理的事件范围中最低事件值的事件常量。此参数可以设置为EVENT_MIN，以指示可能的最低事件值。
- * `event_max` 指定由挂钩函数处理的事件范围中最高事件值的事件常量。此参数可以设置为EVENT_MAX，以指示可能的最高事件值。
- * `h_mod_win_event_proc` 如果在flags参数中指定了WINEVENT_INCONTEXT标志，则为包含fn_win_event_proc 中的挂钩函数的DLL的句柄。如果挂钩函数不位于DLL中，或者指定了WINEVENT_OUTOFCONTEXT标志，则此参数为NULL。
- * `fn_win_event_proc` 指向事件挂钩函数的指针。有关此函数的详细信息，请参阅WinEventProc。
- * `id_process` 指定挂钩函数从中接收事件的进程的ID。指定零 (0) 从当前桌面上的所有进程接收事件。
- * `id_thread` 指定挂钩函数从中接收事件的线程的ID。如果此参数为零，则挂钩函数与当前桌面上的所有现有线程相关联。
- * `flags` 标记值，用于指定要跳过的挂钩函数和事件的位置。
- * 以下标志有效：
- * - WINEVENT_INCONTEXT 包含回调函数的DLL映射到生成事件的进程的地址空间中。使用此标志，系统会在事件通知发生时向回调函数发送事件通知。指定此标志时，挂钩函数必须位于DLL中。当调用进程和生成进程都不是32位或64位进程，或者生成进程是控制台应用程序时，此标志不起作用。有关详细信息，请参阅上下文中挂钩函数。
- * - WINEVENT_OUTOFCONTEXT 回调函数不会映射到生成事件的进程的地址空间中。由于挂钩函数是跨进程边界调用的，因此系统必须对事件进行排队。虽然此方法是异步的，但事件保证按顺序排列。有关详细信息，请参阅上下文外挂钩函数。
- * - WINEVENT_SKIPOWNPROCESS 防止挂钩的此实例接收此进程中线程生成的事件。此标志不会阻止线程生成事件。
- * - WINEVENT_SKIPOWNTHREAD 防止此挂钩实例接收注册此挂钩的线程生成的事件。
- * 以下标志组合有效：
- * • WINEVENT_INCONTEXT |WINEVENT_SKIPOWNPROCESS
- * • WINEVENT_INCONTEXT |WINEVENT_SKIPOWNTHREAD
- * • WINEVENT_OUTOFCONTEXT |WINEVENT_SKIPOWNPROCESS
- * • WINEVENT_OUTOFCONTEXT |WINEVENT_SKIPOWNTHREAD
- * 此外，客户端应用程序可以指定WINEVENT_INCONTEXT或单独WINEVENT_OUTOFCONTEXT。
- * */
-pub fn set_win_event_hook(
-    event_min: u32,
-    event_max: u32,
-    h_mod_win_event_proc: HMODULE,
-    fn_win_event_proc: WINEVENTPROC,
-    id_process: u32,
-    id_thread: u32,
-    flags: u32,
-) -> HWINEVENTHOOK {
-    unsafe {
-        SetWinEventHook(
-            event_min,
-            event_max,
-            h_mod_win_event_proc,
-            fn_win_event_proc,
-            id_process,
-            id_thread,
-            flags,
-        )
-    }
-}
-
-/**
- * 删除由上一次调用 set_win_event_hook 创建的事件挂钩函数。
- * `h_win_event_hook` 在上一次调用 set_win_event_hook 时返回的事件挂钩的句柄。
- * */
-pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> BOOL {
-    unsafe { UnhookWinEvent(h_win_event_hook) }
 }
 
 /**

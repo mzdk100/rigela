@@ -11,9 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    sync::Arc,
-};
 use crate::{
     context::Context,
     ext::AccessibleObjectExt,
@@ -21,9 +18,14 @@ use crate::{
     terminator::{TerminationWaiter, Terminator},
 };
 use log::{error, info};
-use rigela_utils::{killer::{kill, listen_to_killing}, get_program_directory, SERVER_HOME_URI, write_file, get_file_modified_duration};
-use tokio::process::Command;
 use rigela_resources::clone_resource;
+use rigela_utils::{
+    fs::{get_file_modified_duration, get_program_directory, write_file},
+    killer::{kill, listen_to_killing},
+    SERVER_HOME_URI,
+};
+use std::sync::Arc;
+use tokio::process::Command;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -162,7 +164,7 @@ async fn register_service(dll_name: &str) {
         match clone_resource(format!("{}/{}", SERVER_HOME_URI, dll_name), &path).await {
             Ok(_) => {}
             Err(e) => {
-                error!("Can't register {}. {}", dll_name,e);
+                error!("Can't register {}. {}", dll_name, e);
                 return;
             }
         }
@@ -171,8 +173,8 @@ async fn register_service(dll_name: &str) {
     match Command::new("regsvr32").arg("/s").arg(path).spawn() {
         Ok(mut p) => match p.wait().await {
             Ok(_) => info!("Register {} is successfully.", dll_name),
-            Err(e) => error!("Can't register the dll server ({}). {}", dll_name,e)
+            Err(e) => error!("Can't register the dll server ({}). {}", dll_name, e),
         },
-        Err(e) => error!("Can't register the dll server ({}). {}", dll_name,e)
+        Err(e) => error!("Can't register the dll server ({}). {}", dll_name, e),
     }
 }

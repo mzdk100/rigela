@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    collections::HashMap,
-    sync::RwLock,
-};
+use std::{collections::HashMap, sync::RwLock};
 use tokio::task::JoinHandle;
 
 /// 任务管理器
@@ -28,7 +25,9 @@ impl TaskManager {
      * 创建一个实例。
      * */
     pub(crate) fn new() -> Self {
-        Self { tasks: Default::default() }
+        Self {
+            tasks: Default::default(),
+        }
     }
 
     /**

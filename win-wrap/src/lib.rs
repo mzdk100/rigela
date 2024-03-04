@@ -11,17 +11,31 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[cfg(feature = "audio")]
 pub mod audio;
+#[cfg(feature = "com")]
 pub mod com;
+#[cfg(feature = "common")]
 pub mod common;
+#[cfg(feature = "ext")]
 pub mod ext;
+#[cfg(feature = "hook")]
 pub mod hook;
+#[cfg(feature = "input")]
 pub mod input;
+#[cfg(feature = "message")]
 pub mod message;
+#[cfg(feature = "msaa")]
 pub mod msaa;
+#[cfg(feature = "pth")]
 pub mod pdh;
+#[cfg(feature = "registry")]
 pub mod registry;
+#[cfg(feature = "shell")]
 pub mod shell;
+#[cfg(feature = "threading")]
 pub mod threading;
+#[cfg(feature = "tts")]
 pub mod tts;
+#[cfg(feature = "uia")]
 pub mod uia;

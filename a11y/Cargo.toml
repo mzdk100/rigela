@@ -11,6 +11,7 @@ repository.workspace = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
+features = ["msaa"]
 
 [dependencies.rigela-utils]
 path = "../utils"
@@ -18,6 +19,7 @@ path = "../utils"
 [dependencies.windows]
 version = "0.54.0"
 features = [
+    "implement",
     "windows-interface",
     "Win32_System_Com",
     "Win32_System_Variant",

@@ -652,7 +652,6 @@ pub(crate) struct VisibleChildrenInfo {
     children: [AccessibleContext; MAX_VISIBLE_CHILDREN as usize],
 }
 
-
 /**
  ******************************************************
  *  AccessibleAction packages
@@ -728,7 +727,6 @@ pub(crate) struct DoAccessibleActionsPackage {
     pub(crate) failure: JInt,
 }
 
-
 /// AccessibleText packages
 #[derive(Debug)]
 #[repr(C)]
@@ -767,7 +765,6 @@ pub(crate) struct AccessibleTextRectInfo {
     pub(crate) height: JInt,
 }
 
-
 /// standard attributes for text; note: tabstops are not supported
 #[derive(Debug)]
 #[repr(C)]
@@ -796,7 +793,6 @@ pub(crate) struct AccessibleTextAttributesInfo {
 
     pub(crate) fullAttributesString: [u16; MAX_STRING_SIZE as usize],
 }
-
 
 /**
  ******************************************************
@@ -830,7 +826,6 @@ pub(crate) struct GetAccessibleRelationSetPackage {
     pub(crate) accessibleContext: JObject64,
     pub(crate) rAccessibleRelationSetInfo: AccessibleRelationSetInfo,
 }
-
 
 /**
  ******************************************************
@@ -927,7 +922,6 @@ pub(crate) struct GetAccessibleKeyBindingsPackage {
     rAccessibleKeyBindings: AccessibleKeyBindings,
 }
 
-
 /**
  ******************************************************
  *  AccessibleIcon packages
@@ -968,7 +962,6 @@ pub(crate) struct GetAccessibleIconsPackage {
     /// the icons
     pub(crate) rAccessibleIcons: AccessibleIcons,
 }
-
 
 /**
  ******************************************************
@@ -1109,7 +1102,6 @@ pub(crate) struct GetAccessibleTableColumnSelectionsPackage {
     pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
 }
 
-
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowPackage {
@@ -1137,7 +1129,6 @@ pub(crate) struct GetAccessibleTableIndexPackage {
     pub(crate) column: JInt,
     pub(crate) rIndex: JInt,
 }
-
 
 /**
  ******************************************************
@@ -1259,4 +1250,3 @@ pub(crate) struct GetAccessibleHypertextLinkIndexPackage {
     /// returned hyperlink index
     pub(crate) rLinkIndex: JInt,
 }
-

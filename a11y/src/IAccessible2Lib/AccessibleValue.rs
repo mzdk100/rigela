@@ -11,13 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::core::{
-    HRESULT,
-    IUnknown,
-    IUnknown_Vtbl,
-    VARIANT,
-};
 use windows::core::interface;
+use windows::core::{IUnknown, IUnknown_Vtbl, HRESULT, VARIANT};
 
 /**
  * This interface gives access to a single numerical value.

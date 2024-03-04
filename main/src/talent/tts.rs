@@ -20,7 +20,7 @@ use crate::{
 #[allow(unused_imports)]
 use async_trait::async_trait;
 use rigela_macros::talent;
-use rigela_utils::set_clipboard_text;
+use rigela_utils::clip::set_clipboard_text;
 #[allow(unused_imports)]
 use std::sync::Arc;
 

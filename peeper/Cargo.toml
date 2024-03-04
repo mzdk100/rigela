@@ -9,15 +9,28 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync"]
+dll = ["client", "handler"]
+handler = []
+model = []
+server = ["model", "utils", "tokio/rt-multi-thread"]
+utils = []
+
 [dependencies]
-retour = "0.3.1"
 log = "0.4.21"
+
+[dependencies.retour]
+version = "0.3.1"
+features = ["default"]
 
 [dependencies.win-wrap]
 path = "../win-wrap"
+features = ["input", "hook"]
 
 [dependencies.rigela-utils]
 path = "../utils"
+features = ["pipe", "fs"]
 
 [dependencies.windows]
 version = "0.54.0"
@@ -28,15 +41,5 @@ features = ["derive"]
 version = "1.0.197"
 
 [dependencies.tokio]
-features = [
-    "rt-multi-thread",
-    "fs",
-    "io-util",
-    "net",
-    "sync"
-]
 version = "1.36.0"
-
-[lib]
-name = "peeper"
-crate-type = ["rlib", "dylib"]
+optional = true

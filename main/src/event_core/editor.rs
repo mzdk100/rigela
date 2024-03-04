@@ -11,19 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    commander::keys::Keys,
-    context::Context,
-    performer::sound::SoundArgument::Single,
-};
+use crate::{commander::keys::Keys, context::Context, performer::sound::SoundArgument::Single};
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
     WinEventSourceExt,
 };
 use log::error;
-use std::{
-    sync::{Arc, Mutex, OnceLock}
-};
+use std::sync::{Arc, Mutex, OnceLock};
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
 
 //noinspection SpellCheckingInspection

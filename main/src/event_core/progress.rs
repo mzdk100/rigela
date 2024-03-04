@@ -38,9 +38,9 @@ pub(crate) async fn subscribe_progress_events(context: Arc<Context>) {
                 .get_value(child)
                 .trim_matches(|c| c == '%' || c == ' ')
                 .parse::<u32>()
-                else {
-                    return;
-                };
+            else {
+                return;
+            };
             let performer = performer.clone();
 
             main_handler.spawn(async move {

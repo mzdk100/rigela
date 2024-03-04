@@ -92,7 +92,7 @@ pub fn reg_set_value_ex(
             Some(name) => RegSetValueExW(h_key, &HSTRING::from(name), reserved, r#type, data),
         }
     }
-        .ok()
+    .ok()
 }
 
 /**
@@ -112,7 +112,7 @@ pub fn reg_delete_value(h_key: HKEY, value_name: Option<&str>) -> Result<()> {
             Some(name) => RegDeleteValueW(h_key, &HSTRING::from(name)),
         }
     }
-        .ok()
+    .ok()
 }
 
 /**

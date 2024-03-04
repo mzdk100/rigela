@@ -100,11 +100,15 @@ impl Speakable for UiAutomationElement {
 
         let toggle = UiAutomationTogglePattern::obtain(self);
         if toggle.is_ok() {
-            text += format!(", {}", match toggle.unwrap().get_toggle_state() {
-                ToggleState::On => t!("uia.toggle_on"),
-                ToggleState::Off => t!("uia.toggle_off"),
-                ToggleState::Indeterminate => t!("uia.toggle_indeterminate")
-            }).as_str();
+            text += format!(
+                ", {}",
+                match toggle.unwrap().get_toggle_state() {
+                    ToggleState::On => t!("uia.toggle_on"),
+                    ToggleState::Off => t!("uia.toggle_off"),
+                    ToggleState::Indeterminate => t!("uia.toggle_indeterminate"),
+                }
+            )
+            .as_str();
         }
 
         text
