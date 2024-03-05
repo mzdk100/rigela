@@ -588,6 +588,7 @@ pub(crate) const ACCESSIBLE_EDITBAR: &str = "editbar";
 #[allow(unused)]
 pub(crate) const PROGRESS_MONITOR: &str = "progress monitor";
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessBridgeVersionInfo {
@@ -601,6 +602,7 @@ pub(crate) struct AccessBridgeVersionInfo {
     pub(crate) bridgeWinDLLVersion: [u16; SHORT_STRING_SIZE as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleContextInfo {
@@ -643,6 +645,7 @@ pub(crate) struct AccessibleContextInfo {
 pub(crate) const MAX_VISIBLE_CHILDREN: u32 = 256;
 
 /// visible children information
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct VisibleChildrenInfo {
@@ -670,6 +673,7 @@ pub(crate) struct AccessibleActionInfo {
 }
 
 /// all the actions associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleActions {
@@ -680,6 +684,7 @@ pub(crate) struct AccessibleActions {
 }
 
 /// struct for requesting the actions associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleActionsPackage {
@@ -691,6 +696,7 @@ pub(crate) struct GetAccessibleActionsPackage {
 }
 
 /// list of AccessibleActions to do
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleActionsToDo {
@@ -712,6 +718,7 @@ impl AccessibleActionsToDo {
 }
 
 /// struct for sending a message to do one or more actions
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct DoAccessibleActionsPackage {
@@ -728,6 +735,7 @@ pub(crate) struct DoAccessibleActionsPackage {
 }
 
 /// AccessibleText packages
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTextInfo {
@@ -747,6 +755,7 @@ pub(crate) struct AccessibleTextItemsInfo {
     pub(crate) sentence: [u16; MAX_STRING_SIZE as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTextSelectionInfo {
@@ -766,6 +775,7 @@ pub(crate) struct AccessibleTextRectInfo {
 }
 
 /// standard attributes for text; note: tabstops are not supported
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTextAttributesInfo {
@@ -803,6 +813,7 @@ pub(crate) struct AccessibleTextAttributesInfo {
 const MAX_RELATION_TARGETS: u32 = 25;
 const MAX_RELATIONS: u32 = 5;
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleRelationInfo {
@@ -812,6 +823,7 @@ pub(crate) struct AccessibleRelationInfo {
     pub(crate) targets: [JObject64; MAX_RELATION_TARGETS as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleRelationSetInfo {
@@ -819,6 +831,7 @@ pub(crate) struct AccessibleRelationSetInfo {
     pub(crate) relations: [AccessibleRelationInfo; MAX_RELATIONS as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleRelationSetPackage {
@@ -837,80 +850,82 @@ const MAX_KEY_BINDINGS: u32 = 10;
 
 // keyboard character modifiers
 #[allow(unused)]
-const ACCESSIBLE_SHIFT_KEYSTROKE: u32 = 1;
+pub(crate) const ACCESSIBLE_SHIFT_KEYSTROKE: i32 = 1;
 #[allow(unused)]
-const ACCESSIBLE_CONTROL_KEYSTROKE: u32 = 2;
+pub(crate) const ACCESSIBLE_CONTROL_KEYSTROKE: i32 = 2;
 #[allow(unused)]
-const ACCESSIBLE_META_KEYSTROKE: u32 = 4;
+pub(crate) const ACCESSIBLE_META_KEYSTROKE: i32 = 4;
 #[allow(unused)]
-const ACCESSIBLE_ALT_KEYSTROKE: u32 = 8;
+pub(crate) const ACCESSIBLE_ALT_KEYSTROKE: i32 = 8;
 #[allow(unused)]
-const ACCESSIBLE_ALT_GRAPH_KEYSTROKE: u32 = 16;
+pub(crate) const ACCESSIBLE_ALT_GRAPH_KEYSTROKE: i32 = 16;
 #[allow(unused)]
-const ACCESSIBLE_BUTTON1_KEYSTROKE: u32 = 32;
+pub(crate) const ACCESSIBLE_BUTTON1_KEYSTROKE: i32 = 32;
 #[allow(unused)]
-const ACCESSIBLE_BUTTON2_KEYSTROKE: u32 = 64;
+pub(crate) const ACCESSIBLE_BUTTON2_KEYSTROKE: i32 = 64;
 #[allow(unused)]
-const ACCESSIBLE_BUTTON3_KEYSTROKE: u32 = 128;
+pub(crate) const ACCESSIBLE_BUTTON3_KEYSTROKE: i32 = 128;
 /// F key pressed, character contains 1-24
 #[allow(unused)]
-const ACCESSIBLE_FKEY_KEYSTROKE: u32 = 256;
+pub(crate) const ACCESSIBLE_FKEY_KEYSTROKE: i32 = 256;
 /// Control code key pressed, character contains control code.
 #[allow(unused)]
-const ACCESSIBLE_CONTROLCODE_KEYSTROKE: u32 = 512;
+pub(crate) const ACCESSIBLE_CONTROLCODE_KEYSTROKE: i32 = 512;
 
 // The supported control code keys are:
 #[allow(unused)]
-const ACCESSIBLE_VK_BACK_SPACE: u32 = 8;
+pub(crate) const ACCESSIBLE_VK_BACK_SPACE: JChar = 8;
 #[allow(unused)]
-const ACCESSIBLE_VK_DELETE: u32 = 127;
+pub(crate) const ACCESSIBLE_VK_DELETE: JChar = 127;
 #[allow(unused)]
-const ACCESSIBLE_VK_DOWN: u32 = 40;
+pub(crate) const ACCESSIBLE_VK_DOWN: JChar = 40;
 #[allow(unused)]
-const ACCESSIBLE_VK_END: u32 = 35;
+pub(crate) const ACCESSIBLE_VK_END: JChar = 35;
 #[allow(unused)]
-const ACCESSIBLE_VK_HOME: u32 = 36;
+pub(crate) const ACCESSIBLE_VK_HOME: JChar = 36;
 #[allow(unused)]
-const ACCESSIBLE_VK_INSERT: u32 = 155;
+pub(crate) const ACCESSIBLE_VK_INSERT: JChar = 155;
 #[allow(unused)]
-const ACCESSIBLE_VK_KP_DOWN: u32 = 225;
+pub(crate) const ACCESSIBLE_VK_KP_DOWN: JChar = 225;
 #[allow(unused)]
-const ACCESSIBLE_VK_KP_LEFT: u32 = 226;
+pub(crate) const ACCESSIBLE_VK_KP_LEFT: JChar = 226;
 #[allow(unused)]
-const ACCESSIBLE_VK_KP_RIGHT: u32 = 227;
+pub(crate) const ACCESSIBLE_VK_KP_RIGHT: JChar = 227;
 #[allow(unused)]
-const ACCESSIBLE_VK_KP_UP: u32 = 224;
+pub(crate) const ACCESSIBLE_VK_KP_UP: JChar = 224;
 #[allow(unused)]
-const ACCESSIBLE_VK_LEFT: u32 = 37;
+pub(crate) const ACCESSIBLE_VK_LEFT: JChar = 37;
 #[allow(unused)]
-const ACCESSIBLE_VK_PAGE_DOWN: u32 = 34;
+pub(crate) const ACCESSIBLE_VK_PAGE_DOWN: JChar = 34;
 #[allow(unused)]
-const ACCESSIBLE_VK_PAGE_UP: u32 = 33;
+pub(crate) const ACCESSIBLE_VK_PAGE_UP: JChar = 33;
 #[allow(unused)]
-const ACCESSIBLE_VK_RIGHT: u32 = 39;
+pub(crate) const ACCESSIBLE_VK_RIGHT: JChar = 39;
 #[allow(unused)]
-const ACCESSIBLE_VK_UP: u32 = 38;
+pub(crate) const ACCESSIBLE_VK_UP: JChar = 38;
 
 // a key binding associates with a component
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleKeyBindingInfo {
     /// the key character
-    character: JChar,
+    pub(crate) character: JChar,
     /// the key modifiers
-    modifiers: JInt,
+    pub(crate) modifiers: JInt,
 }
 
 // all the key bindings associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleKeyBindings {
     /// number of key bindings
-    keyBindingsCount: i32,
-    keyBindingInfo: [AccessibleKeyBindingInfo; MAX_KEY_BINDINGS as usize],
+    pub(crate) keyBindingsCount: i32,
+    pub(crate) keyBindingInfo: [AccessibleKeyBindingInfo; MAX_KEY_BINDINGS as usize],
 }
 
 // struct to get the key bindings associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleKeyBindingsPackage {
@@ -942,6 +957,7 @@ pub(crate) struct AccessibleIconInfo {
 }
 
 /// all the icons associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleIcons {
@@ -952,6 +968,7 @@ pub(crate) struct AccessibleIcons {
 }
 
 /// struct to get the icons associated with a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleIconsPackage {
@@ -972,6 +989,7 @@ pub(crate) struct GetAccessibleIconsPackage {
 const MAX_TABLE_SELECTIONS: u32 = 64;
 
 /// table information
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTableInfo {
@@ -985,6 +1003,7 @@ pub(crate) struct AccessibleTableInfo {
     pub(crate) accessibleTable: JObject64,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableInfoPackage {
@@ -994,6 +1013,7 @@ pub(crate) struct GetAccessibleTableInfoPackage {
 }
 
 /// table cell information
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTableCellInfo {
@@ -1006,6 +1026,7 @@ pub(crate) struct AccessibleTableCellInfo {
     pub(crate) isSelected: JBoolean,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableCellInfoPackage {
@@ -1016,6 +1037,7 @@ pub(crate) struct GetAccessibleTableCellInfoPackage {
     pub(crate) rTableCellInfo: AccessibleTableCellInfo,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowHeaderPackage {
@@ -1024,6 +1046,7 @@ pub(crate) struct GetAccessibleTableRowHeaderPackage {
     pub(crate) rTableInfo: AccessibleTableInfo,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableColumnHeaderPackage {
@@ -1032,6 +1055,7 @@ pub(crate) struct GetAccessibleTableColumnHeaderPackage {
     pub(crate) rTableInfo: AccessibleTableInfo,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowDescriptionPackage {
@@ -1041,6 +1065,7 @@ pub(crate) struct GetAccessibleTableRowDescriptionPackage {
     pub(crate) rAccessibleContext: JObject64,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableColumnDescriptionPackage {
@@ -1050,6 +1075,7 @@ pub(crate) struct GetAccessibleTableColumnDescriptionPackage {
     pub(crate) rAccessibleContext: JObject64,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowSelectionCountPackage {
@@ -1058,6 +1084,7 @@ pub(crate) struct GetAccessibleTableRowSelectionCountPackage {
     pub(crate) rCount: JInt,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct IsAccessibleTableRowSelectedPackage {
@@ -1067,6 +1094,7 @@ pub(crate) struct IsAccessibleTableRowSelectedPackage {
     pub(crate) rResult: JBoolean,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowSelectionsPackage {
@@ -1076,6 +1104,7 @@ pub(crate) struct GetAccessibleTableRowSelectionsPackage {
     pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableColumnSelectionCountPackage {
@@ -1084,6 +1113,7 @@ pub(crate) struct GetAccessibleTableColumnSelectionCountPackage {
     pub(crate) rCount: JInt,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct IsAccessibleTableColumnSelectedPackage {
@@ -1093,6 +1123,7 @@ pub(crate) struct IsAccessibleTableColumnSelectedPackage {
     pub(crate) rResult: JBoolean,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableColumnSelectionsPackage {
@@ -1102,6 +1133,7 @@ pub(crate) struct GetAccessibleTableColumnSelectionsPackage {
     pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableRowPackage {
@@ -1111,6 +1143,7 @@ pub(crate) struct GetAccessibleTableRowPackage {
     pub(crate) rRow: JInt,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableColumnPackage {
@@ -1120,6 +1153,7 @@ pub(crate) struct GetAccessibleTableColumnPackage {
     pub(crate) rColumn: JInt,
 }
 
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleTableIndexPackage {
@@ -1140,6 +1174,7 @@ pub(crate) struct GetAccessibleTableIndexPackage {
 const MAX_HYPERLINKS: u32 = 64;
 
 /// hyperlink information
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleHyperlinkInfo {
@@ -1154,6 +1189,7 @@ pub(crate) struct AccessibleHyperlinkInfo {
 }
 
 /// hypertext information
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleHypertextInfo {
@@ -1166,6 +1202,7 @@ pub(crate) struct AccessibleHypertextInfo {
 }
 
 /// struct for sending a message to get the hypertext for an AccessibleContext
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleHypertextPackage {
@@ -1178,6 +1215,7 @@ pub(crate) struct GetAccessibleHypertextPackage {
 }
 
 /// struct for sending a message to activate a hyperlink
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct ActivateAccessibleHyperlinkPackage {
@@ -1192,6 +1230,7 @@ pub(crate) struct ActivateAccessibleHyperlinkPackage {
 }
 
 /// struct for sending a message to get the number of hyperlinks in a component
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleHyperlinkCountPackage {
@@ -1205,6 +1244,7 @@ pub(crate) struct GetAccessibleHyperlinkCountPackage {
 
 /// struct for sending a message to get the hypertext for an AccessibleContext
 /// starting at a specified index in the document
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleHypertextExtPackage {
@@ -1222,6 +1262,7 @@ pub(crate) struct GetAccessibleHypertextExtPackage {
 
 /// struct for sending a message to get the nth hyperlink in a document;
 /// maps to AccessibleHypertext.getLink
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleHyperlinkPackage {
@@ -1238,6 +1279,7 @@ pub(crate) struct GetAccessibleHyperlinkPackage {
 /// struct for sending a message to get the index into an array
 /// of hyperlinks that is associated with a character index in a
 /// document; maps to AccessibleHypertext.getLinkIndex
+#[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
 pub(crate) struct GetAccessibleHypertextLinkIndexPackage {

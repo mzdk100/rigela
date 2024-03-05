@@ -11,11 +11,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::jab::version::AccessBridgeVersionInfo;
-use crate::JabLib::packages::AccessibleContextInfo;
 use crate::{
-    jab::role::AccessibleRole,
-    JabLib::{packages::AccessibleContext as AC, JabLib},
+    jab::{
+        version::AccessBridgeVersionInfo,
+        role::AccessibleRole,
+        key_binding::AccessibleKeyBinding,
+        relation::AccessibleRelation,
+    },
+    JabLib::{
+        packages::{
+            AccessibleContextInfo,
+            AccessibleContext as AC,
+        },
+        JabLib,
+    },
 };
 use std::fmt::{Debug, Formatter};
 use win_wrap::common::HWND;
@@ -222,6 +231,224 @@ impl<'lib> AccessibleContext<'lib> {
                 .to_string(),
         )
     }
+
+    /**
+     * 获取对象描述。
+     * */
+    pub fn get_description(&self) -> Option<String> {
+        let Some(ref info) = self._info else {
+            return None;
+        };
+        Some(
+            String::from_utf16_lossy(&info.description)
+                .trim_matches('\0')
+                .to_string(),
+        )
+    }
+
+    /**
+     * 获取对象角色。
+     * */
+    pub fn get_role(&self) -> AccessibleRole {
+        let Some(ref info) = self._info else {
+            return AccessibleRole::Unknown;
+        };
+        AccessibleRole::from_str(
+            String::from_utf16_lossy(&info.role)
+                .trim_matches('\0')
+        )
+    }
+
+    /**
+     * 获取对象状态。
+     * */
+    pub fn get_states(&self) -> Option<String> {
+        let Some(ref info) = self._info else {
+            return None;
+        };
+        Some(
+            String::from_utf16_lossy(&info.states)
+                .trim_matches('\0')
+                .to_string(),
+        )
+    }
+
+    /**
+     * 获取对象状态(英文描述）。
+     * */
+    pub fn get_states_en_us(&self) -> Option<String> {
+        let Some(ref info) = self._info else {
+            return None;
+        };
+        Some(
+            String::from_utf16_lossy(&info.states_en_US)
+                .trim_matches('\0')
+                .to_string(),
+        )
+    }
+
+    /**
+     * 获取对象在父对象中的索引。
+     * */
+    pub fn get_index_in_parent(&self) -> i32 {
+        let Some(ref info) = self._info else {
+            return -1;
+        };
+        info.indexInParent
+    }
+
+    /**
+     * 获取子对象数量。
+     * */
+    pub fn get_child_count(&self) -> i32 {
+        let Some(ref info) = self._info else {
+            return -1;
+        };
+        info.childrenCount
+    }
+
+    /**
+     * 获取对象矩形边框（左边、顶部、宽度、高度）。
+     * */
+    pub fn get_bound_rectangle(&self) -> Option<(i32, i32, i32, i32)> {
+        let Some(ref info) = self._info else {
+            return None;
+        };
+        Some((info.x, info.y, info.width, info.height))
+    }
+
+    /**
+     * 将插入符号设置为文本位置。返回是否成功。
+     * `position` 文本位置。
+     * */
+    pub fn set_caret_position(&self, position: i32) -> bool {
+        self._lib.set_caret_position(self._vm_id, self._ac, position)
+    }
+
+    /**
+     * 返回组件可以执行的操作列表。
+     * */
+    pub fn get_actions(&self) -> Vec<String> {
+        if let Some(actions) = self._lib.get_accessible_actions(self._vm_id, self._ac) {
+            let mut names = vec![];
+            for i in 0..actions.actionsCount {
+                names.push(String::from_utf16_lossy(&actions.actionInfo[i as usize].name).trim_matches('\0').to_string())
+            }
+            return names;
+        }
+        return vec![];
+    }
+    pub fn get_relations(&self) -> Vec<AccessibleRelation> {
+        if let Some(r) = self._lib.get_accessible_relation_set(self._vm_id, self._ac) {
+            let mut relations = vec![];
+            for i in 0..r.relationCount {
+                let item = &r.relations[i as usize];
+                let mut targets = vec![];
+                for j in 0..item.targetCount {
+                    let c = AccessibleContext {
+                        _lib: &self._lib,
+                        _ac: item.targets[j as usize],
+                        _vm_id: self._vm_id,
+                        _info: self._lib.get_accessible_context_info(self._vm_id, item.targets[j as usize]),
+                    };
+                    targets.push(c)
+                }
+                relations.push(AccessibleRelation {
+                    key: String::from_utf16_lossy(&item.key).trim_matches('\0').to_string(),
+                    targets,
+                });
+            }
+            return relations;
+        }
+        vec![]
+    }
+
+    /**
+     * 返回与组件关联的键绑定的列表。
+     * */
+    pub fn get_key_bindings(&self) -> Vec<AccessibleKeyBinding> {
+        if let Some(key) = self._lib.get_accessible_key_bindings(self._vm_id, self._ac) {
+            let mut keys = vec![];
+            for i in 0..key.keyBindingsCount {
+                keys.push(AccessibleKeyBinding::from(&key.keyBindingInfo[i as usize]));
+            }
+            return keys;
+        }
+        vec![]
+    }
+
+    /**
+     * 返回与组件关联的图标列表。
+     * 每一个图标包含描述、宽度和高度信息。
+     * */
+    pub fn get_icons(&self) -> Vec<(String, i32, i32)> {
+        if let Some(icons) = self._lib.get_accessible_icons(self._vm_id, self._ac) {
+            let mut ret = vec![];
+            for i in 0..icons.iconsCount {
+                let item = &icons.iconInfo[i as usize];
+                ret.push((String::from_utf16_lossy(&item.description).trim_matches('\0').to_string(), item.width, item.height));
+            }
+            return ret;
+        }
+        vec![]
+    }
+
+    /**
+     * 获取基于JAWS算法的组件的AccessibleName。返回是否成功。
+     * Bug ID 4916682-实现JAWS AccessibleName策略
+     * `len` 名称长度。
+     * */
+    pub fn get_virtual_name(&self, len: i32) -> Option<String> {
+        let Some(name) = self._lib.get_virtual_accessible_name(self._vm_id, self._ac, len) else {
+            return None;
+        };
+        Some(String::from_utf16_lossy(&name).trim_matches('\0').to_string())
+    }
+
+    /**
+     * 获取当前值。
+     * `len` 存放值的字符串长度。
+     * */
+    pub fn get_current_value(&self, len: i32) -> Option<String> {
+        let Some(v) = self._lib.get_current_accessible_value_from_context(self._vm_id, self._ac, len as i16) else {
+            return None;
+        };
+        let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
+        if val.is_empty() {
+            return None;
+        }
+        Some(val)
+    }
+
+    /**
+     * 获取最大值。
+     * `len` 存放值的字符串长度。
+     * */
+    pub fn get_maximum_value(&self, len: i32) -> Option<String> {
+        let Some(v) = self._lib.get_maximum_accessible_value_from_context(self._vm_id, self._ac, len as i16) else {
+            return None;
+        };
+        let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
+        if val.is_empty() {
+            return None;
+        }
+        Some(val)
+    }
+
+    /**
+     * 获取最小值。
+     * `len` 存放值的字符串长度。
+     * */
+    pub fn get_minimum_value(&self, len: i32) -> Option<String> {
+        let Some(v) = self._lib.get_minimum_accessible_value_from_context(self._vm_id, self._ac, len as i16) else {
+            return None;
+        };
+        let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
+        if val.is_empty() {
+            return None;
+        }
+        Some(val)
+    }
 }
 
 impl<'lib> PartialEq for AccessibleContext<'lib> {
@@ -241,6 +468,14 @@ impl<'lib> Debug for AccessibleContext<'lib> {
         let mut info = String::new();
         if let Some(name) = self.get_name() {
             info += format!("name:{},", name).as_str();
+        }
+        if let Some(description) = self.get_description() {
+            info += format!("description:{},", description).as_str();
+        }
+        let role = self.get_role();
+        info += format!("role:{},", role.to_str()).as_str();
+        if let Some(states) = self.get_states() {
+            info += format!("states:{},", states).as_str();
         }
         write!(f, "AccessibleContext({})", info)
     }

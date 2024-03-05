@@ -124,8 +124,8 @@ impl JabLib {
             &mut vm_id,
             &mut context
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -196,8 +196,8 @@ impl JabLib {
             y,
             &mut ac
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -222,8 +222,8 @@ impl JabLib {
             &mut vm_id,
             &mut ac
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -249,8 +249,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -433,8 +433,8 @@ impl JabLib {
             start_index,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -468,8 +468,8 @@ impl JabLib {
             ac,
             &mut actions
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -498,8 +498,8 @@ impl JabLib {
             &mut info,
             index
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -550,8 +550,8 @@ impl JabLib {
             &mut info,
             &mut len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -559,7 +559,7 @@ impl JabLib {
     }
 
     /**
-     * 返回有关对象的相关对象的信息。
+     * 返回有关对象的关系对象的信息。
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * */
@@ -577,8 +577,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -604,8 +604,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -652,8 +652,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -679,8 +679,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -754,8 +754,8 @@ impl JabLib {
             start_index,
             end_index
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -777,8 +777,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -811,8 +811,8 @@ impl JabLib {
             name.as_mut_ptr(),
             len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -838,8 +838,8 @@ impl JabLib {
             ac,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -868,8 +868,8 @@ impl JabLib {
             start_index,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -899,8 +899,8 @@ impl JabLib {
                 actions_to_do,
                 &mut failure
             )
-            .unwrap_or(FALSE)
-            .as_bool(),
+                .unwrap_or(FALSE)
+                .as_bool(),
             failure,
         )
     }
@@ -1207,8 +1207,8 @@ impl JabLib {
             ac,
             link
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -1236,7 +1236,7 @@ impl JabLib {
             r#as,
             index
         )
-        .unwrap_or(())
+            .unwrap_or(())
     }
 
     /**
@@ -1264,7 +1264,7 @@ impl JabLib {
             r#as,
             index
         )
-        .unwrap_or(())
+            .unwrap_or(())
     }
 
     /**
@@ -1289,7 +1289,7 @@ impl JabLib {
             vm_id,
             r#as
         )
-        .unwrap_or(())
+            .unwrap_or(())
     }
 
     /**
@@ -1314,7 +1314,7 @@ impl JabLib {
             vm_id,
             r#as
         )
-        .unwrap_or(())
+            .unwrap_or(())
     }
 
     /**
@@ -1339,8 +1339,8 @@ impl JabLib {
             index,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1381,7 +1381,7 @@ impl JabLib {
             ah,
             index
         )
-        .unwrap_or(-1)
+            .unwrap_or(-1)
     }
 
     /**
@@ -1401,7 +1401,7 @@ impl JabLib {
             vm_id,
             r#as
         )
-        .unwrap_or(-1)
+            .unwrap_or(-1)
     }
 
     /**
@@ -1444,8 +1444,8 @@ impl JabLib {
             r#as,
             index
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -1468,8 +1468,8 @@ impl JabLib {
             at,
             row
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -1492,8 +1492,8 @@ impl JabLib {
             at,
             column
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
     }
 
     /**
@@ -1521,8 +1521,8 @@ impl JabLib {
             column,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1578,7 +1578,7 @@ impl JabLib {
             vm_id,
             at
         )
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     /**
@@ -1598,7 +1598,7 @@ impl JabLib {
             vm_id,
             at
         )
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     /**
@@ -1624,7 +1624,7 @@ impl JabLib {
             row,
             column
         )
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     /**
@@ -1652,8 +1652,8 @@ impl JabLib {
             count,
             arr.as_mut_ptr()
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1685,8 +1685,8 @@ impl JabLib {
             count,
             arr.as_mut_ptr()
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1715,8 +1715,8 @@ impl JabLib {
             at,
             &mut info
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1751,8 +1751,8 @@ impl JabLib {
             x,
             y
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1784,7 +1784,7 @@ impl JabLib {
             index,
             &mut info
         )
-        .unwrap_or(std::ptr::null());
+            .unwrap_or(std::ptr::null());
         (char, info)
     }
 
@@ -1813,8 +1813,8 @@ impl JabLib {
             &mut info,
             index
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1847,8 +1847,8 @@ impl JabLib {
             &mut start,
             &mut end
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1889,8 +1889,8 @@ impl JabLib {
             text.as_mut_ptr(),
             len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1922,8 +1922,8 @@ impl JabLib {
             &mut info,
             index
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1957,8 +1957,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -1992,8 +1992,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }
@@ -2027,8 +2027,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-        .unwrap_or(FALSE)
-        .as_bool()
+            .unwrap_or(FALSE)
+            .as_bool()
         {
             return None;
         }

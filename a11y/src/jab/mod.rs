@@ -12,6 +12,8 @@
  */
 
 pub mod context;
+pub mod key_binding;
+pub mod relation;
 pub mod role;
 pub mod version;
 
@@ -89,19 +91,20 @@ mod test_jab {
         dbg!(context.get_active_descendent());
         dbg!(context.get_depth());
         dbg!(context.get_version());
+        dbg!(context.get_states_en_us());
+        dbg!(context.get_bound_rectangle());
+        dbg!(context.get_index_in_parent());
+        dbg!(context.get_child_count());
+        dbg!(context.set_caret_position(2));
+        dbg!(context.get_actions());
+        dbg!(context.get_relations());
+        dbg!(context.get_key_bindings());
+        dbg!(context.get_icons());
+        dbg!(context.get_virtual_name(10));
+        dbg!(context.get_current_value(10));
+        dbg!(context.get_maximum_value(10));
+        dbg!(context.get_minimum_value(10));
         dbg!(&jab);
-    }
-
-    fn test1(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.set_caret_position(vm_id, ac, 2));
-        dbg!(jab.get_accessible_actions(vm_id, ac));
-        dbg!(jab.get_accessible_relation_set(vm_id, ac));
-        dbg!(jab.get_accessible_key_bindings(vm_id, ac));
-        dbg!(jab.get_accessible_icons(vm_id, ac));
-        dbg!(jab.get_virtual_accessible_name(vm_id, ac, 10));
-        dbg!(jab.get_current_accessible_value_from_context(vm_id, ac, 10));
-        dbg!(jab.get_maximum_accessible_value_from_context(vm_id, ac, 10));
-        dbg!(jab.get_minimum_accessible_value_from_context(vm_id, ac, 10));
     }
 
     fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
