@@ -8,10 +8,10 @@ edition.workspace = true
 
 
 [features]
-msaa = []
+msaa = ["common", "message"]
 uia = ["com"]
 audio = []
-com = ["common", "windows/Win32_System_Ole"]
+com = ["common", "ext", "windows/Win32_System_Ole"]
 common = ["windows/Win32_Globalization", "windows/Win32_System_Diagnostics_Debug", "windows/Win32_System_SystemServices", "windows/Win32_UI_WindowsAndMessaging", "windows/Win32_UI_Input", "windows/Win32_System_LibraryLoader", "windows/Win32_System_Threading"]
 ext = ["common"]
 hook = ["message", "threading"]

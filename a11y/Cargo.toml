@@ -11,7 +11,7 @@ repository.workspace = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
-features = ["msaa"]
+features = ["msaa", "com"]
 
 [dependencies.rigela-utils]
 path = "../utils"

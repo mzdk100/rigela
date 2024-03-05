@@ -14,7 +14,7 @@ bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
 fs = ["home", "tokio/fs", "tokio/io-util"]
 killer = []
-library = []
+library = ["fs"]
 logger = ["log4rs"]
 pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/time"]
 
