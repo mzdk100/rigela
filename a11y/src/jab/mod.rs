@@ -15,6 +15,7 @@ pub mod context;
 pub mod key_binding;
 pub mod relation;
 pub mod role;
+pub mod table;
 pub mod version;
 
 use crate::{jab::context::AccessibleContext, JabLib::JabLib};
@@ -104,27 +105,24 @@ mod test_jab {
         dbg!(context.get_current_value(10));
         dbg!(context.get_maximum_value(10));
         dbg!(context.get_minimum_value(10));
-        dbg!(&jab);
-    }
-
-    fn test2(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {
-        dbg!(jab.get_accessible_table_column_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_row_description(vm_id, ac, 0));
-        dbg!(jab.get_accessible_table_row_header(vm_id, ac));
-        dbg!(jab.get_accessible_table_column_header(vm_id, ac));
-        if let Some(info) = jab.get_accessible_table_info(vm_id, ac) {
-            dbg!(&info);
-            dbg!(jab.is_accessible_table_row_selected(vm_id, info.accessibleTable, 0));
-            dbg!(jab.is_accessible_table_column_selected(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_cell_info(vm_id, info.accessibleTable, 0, 0));
-            dbg!(jab.get_accessible_table_column(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_row(vm_id, info.accessibleTable, 0));
-            dbg!(jab.get_accessible_table_column_selection_count(vm_id, info.accessibleTable));
-            dbg!(jab.get_accessible_table_row_selection_count(vm_id, info.accessibleTable));
-            dbg!(jab.get_accessible_table_index(vm_id, info.accessibleTable, 0, 0));
-            dbg!(jab.get_accessible_table_column_selections(vm_id, info.accessibleTable, 1));
-            dbg!(jab.get_accessible_table_row_selections(vm_id, info.accessibleTable, 1));
+        if let Some(table) = context.get_table() {
+            dbg!(&table);
+            dbg!(table.get_column_description(0));
+            dbg!(table.get_row_description(0));
+            dbg!(table.get_row_header());
+            dbg!(table.get_column_header());
+            dbg!(table.is_row_selected(0));
+            dbg!(table.is_column_selected(0));
+            dbg!(table.get_cell(0, 0));
+            dbg!(table.get_column(0));
+            dbg!(table.get_row(0));
+            dbg!(table.get_column_selection_count());
+            dbg!(table.get_row_selection_count());
+            dbg!(table.get_index(0, 0));
+            dbg!(table.get_column_selections(1));
+            dbg!(table.get_row_selections(1));
         }
+        dbg!(&jab);
     }
 
     fn test3(jab: &JabLib, vm_id: i32, ac: AccessibleContext) {

@@ -990,7 +990,7 @@ const MAX_TABLE_SELECTIONS: u32 = 64;
 
 /// table information
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleTableInfo {
     /// AccesibleContext

@@ -28,6 +28,7 @@ use crate::{
 };
 use std::fmt::{Debug, Formatter};
 use win_wrap::common::HWND;
+use crate::jab::table::AccessibleTable;
 
 pub struct AccessibleContext<'lib> {
     _lib: &'lib JabLib,
@@ -37,26 +38,30 @@ pub struct AccessibleContext<'lib> {
 }
 
 impl<'lib> AccessibleContext<'lib> {
+    /**
+     * 创建一个实例。
+     * `lib` 库引用。
+     * `vm_id` 虚拟机ID。
+     * `ac` 原始上下文对象。
+     * */
+    pub(crate) fn new(lib: &'lib JabLib, vm_id: i32, ac: AC) -> Self {
+        Self {
+            _lib: &lib,
+            _vm_id: vm_id,
+            _ac: ac,
+            _info: lib.get_accessible_context_info(vm_id, ac),
+        }
+    }
     pub(crate) fn from_hwnd(lib: &'lib JabLib, h_wnd: HWND) -> Option<Self> {
         if let Some((vm_id, ac)) = lib.get_accessible_context_from_hwnd(h_wnd) {
-            return Some(Self {
-                _lib: lib,
-                _ac: ac,
-                _vm_id: vm_id,
-                _info: lib.get_accessible_context_info(vm_id, ac),
-            });
+            return Some(Self::new(&lib, vm_id, ac));
         }
         None
     }
 
     pub(crate) fn from_focus(lib: &'lib JabLib, h_wnd: HWND) -> Option<AccessibleContext<'lib>> {
         if let Some((vm_id, ac)) = lib.get_accessible_context_with_focus(h_wnd) {
-            return Some(Self {
-                _lib: lib,
-                _ac: ac,
-                _vm_id: vm_id,
-                _info: lib.get_accessible_context_info(vm_id, ac),
-            });
+            return Some(Self::new(&lib, vm_id, ac));
         }
         None
     }
@@ -79,12 +84,7 @@ impl<'lib> AccessibleContext<'lib> {
             ._lib
             .get_accessible_context_at(self._vm_id, self._ac, x, y)
         {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: ac,
-                _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, ac),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, ac));
         }
         None
     }
@@ -98,12 +98,7 @@ impl<'lib> AccessibleContext<'lib> {
             self._lib
                 .get_accessible_child_from_context(self._vm_id, self._ac, index)
         {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: child,
-                _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, child),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, child));
         }
         None
     }
@@ -116,12 +111,7 @@ impl<'lib> AccessibleContext<'lib> {
             ._lib
             .get_accessible_parent_from_context(self._vm_id, self._ac)
         {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: parent,
-                _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, parent),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, parent));
         }
         None
     }
@@ -135,12 +125,7 @@ impl<'lib> AccessibleContext<'lib> {
             ._lib
             .get_parent_with_role(self._vm_id, self._ac, role.to_str())
         {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: parent,
-                _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, parent),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, parent));
         }
         None
     }
@@ -157,14 +142,7 @@ impl<'lib> AccessibleContext<'lib> {
             self._lib
                 .get_parent_with_role_else_root(self._vm_id, self._ac, role.to_str())
         {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: parent_or_root,
-                _vm_id: self._vm_id,
-                _info: self
-                    ._lib
-                    .get_accessible_context_info(self._vm_id, parent_or_root),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, parent_or_root));
         }
         None
     }
@@ -174,12 +152,7 @@ impl<'lib> AccessibleContext<'lib> {
      * */
     pub fn get_top_level(&self) -> Option<AccessibleContext<'lib>> {
         if let Some(top) = self._lib.get_top_level_object(self._vm_id, self._ac) {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: top,
-                _vm_id: self._vm_id,
-                _info: self._lib.get_accessible_context_info(self._vm_id, top),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, top));
         }
         None
     }
@@ -189,14 +162,7 @@ impl<'lib> AccessibleContext<'lib> {
      * */
     pub fn get_active_descendent(&self) -> Option<AccessibleContext<'lib>> {
         if let Some(descendent) = self._lib.get_active_descendent(self._vm_id, self._ac) {
-            return Some(Self {
-                _lib: self._lib,
-                _ac: descendent,
-                _vm_id: self._vm_id,
-                _info: self
-                    ._lib
-                    .get_accessible_context_info(self._vm_id, descendent),
-            });
+            return Some(Self::new(&self._lib, self._vm_id, descendent));
         }
         None
     }
@@ -338,6 +304,10 @@ impl<'lib> AccessibleContext<'lib> {
         }
         return vec![];
     }
+
+    /**
+     * 返回有关对象的关系对象的信息。
+     * */
     pub fn get_relations(&self) -> Vec<AccessibleRelation> {
         if let Some(r) = self._lib.get_accessible_relation_set(self._vm_id, self._ac) {
             let mut relations = vec![];
@@ -345,13 +315,7 @@ impl<'lib> AccessibleContext<'lib> {
                 let item = &r.relations[i as usize];
                 let mut targets = vec![];
                 for j in 0..item.targetCount {
-                    let c = AccessibleContext {
-                        _lib: &self._lib,
-                        _ac: item.targets[j as usize],
-                        _vm_id: self._vm_id,
-                        _info: self._lib.get_accessible_context_info(self._vm_id, item.targets[j as usize]),
-                    };
-                    targets.push(c)
+                    targets.push(Self::new(&self._lib, self._vm_id, item.targets[j as usize]))
                 }
                 relations.push(AccessibleRelation {
                     key: String::from_utf16_lossy(&item.key).trim_matches('\0').to_string(),
@@ -448,6 +412,13 @@ impl<'lib> AccessibleContext<'lib> {
             return None;
         }
         Some(val)
+    }
+
+    /**
+     * 获取表格对象。
+     * */
+    pub fn get_table(&self) -> Option<AccessibleTable> {
+        AccessibleTable::new(&self._lib, self._vm_id, self._ac)
     }
 }
 
