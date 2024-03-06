@@ -1,0 +1,251 @@
+/*
+ * Copyright (c) 2024. The RigelA open source project team and
+ * its contributors reserve all rights.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
+use crate::jab::context::AccessibleContext;
+
+pub(crate) enum AccessibleCallback {
+    CaretUpdate(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    FocusGained(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MouseClicked(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MouseEntered(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MouseExited(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MousePressed(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MouseReleased(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MenuCanceled(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MenuDeselected(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    MenuSelected(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PopupMenuCanceled(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PopupMenuWillBecomeInvisible(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PopupMenuWillBecomeVisible(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PropertySelectionChange(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PropertyTextChange(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PropertyVisibleDataChange(Box<dyn Fn(&AccessibleContext) + Sync + Send>),
+    PropertyChange(Box<dyn Fn(&AccessibleContext, String, String, String) + Sync + Send>),
+    PropertyNameChange(Box<dyn Fn(&AccessibleContext, String, String) + Sync + Send>),
+    PropertyDescriptionChange(Box<dyn Fn(&AccessibleContext, String, String) + Sync + Send>),
+    PropertyStateChange(Box<dyn Fn(&AccessibleContext, String, String) + Sync + Send>),
+    PropertyValueChange(Box<dyn Fn(&AccessibleContext, String, String) + Sync + Send>),
+    PropertyCaretChange(Box<dyn Fn(&AccessibleContext, i32, i32) + Sync + Send>),
+    PropertyChildChange(Box<dyn Fn(&AccessibleContext, &AccessibleContext, &AccessibleContext) + Sync + Send>),
+    PropertyActiveDescendentChange(Box<dyn Fn(&AccessibleContext, &AccessibleContext, &AccessibleContext) + Sync + Send>),
+    PropertyTableModelChange(Box<dyn Fn(&AccessibleContext, String, String) + Sync + Send>),
+    JavaShutdown(Box<dyn Fn(i32) + Sync + Send>),
+}
+
+#[macro_export]
+macro_rules! add_event_fp {
+    (general,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
+        extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64) {
+            let source = unsafe {
+                let Some(lib) = $lib.get() else {
+                    return;
+                };
+                let source = AccessibleContext::new(lib, vm_id, source);
+                lib.release_java_object(vm_id, event);
+                source
+            };
+
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let $type(f) = cb {
+                    f(&source);
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn $func_name(&self, func: impl Fn(&AccessibleContext) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.$origin_name($cb_name);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push($type(Box::new(func)));
+            }
+        }
+    };
+
+        (property_change,$lib:expr,$store:expr,$doc:literal) => {
+        extern "cdecl" fn cb_property_change(vm_id: i32, event: JObject64, source: JObject64,property:*const u16,old_value:*const u16,new_value: *const u16) {
+            let (source,property,old_value,new_value) = unsafe {
+                let Some(lib) = $lib.get() else {
+                    return;
+                };
+                let source = AccessibleContext::new(lib, vm_id, source);
+                let property2 = property.to_string_utf16();
+                let old_value2 = old_value.to_string_utf16();
+                let new_value2 = new_value.to_string_utf16();
+                lib.release_java_object(vm_id, property as JObject64);
+                lib.release_java_object(vm_id, old_value as JObject64);
+                lib.release_java_object(vm_id, new_value as JObject64);
+
+                lib.release_java_object(vm_id, event);
+                (source,property2,old_value2,new_value2)
+            };
+
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let AccessibleCallback::PropertyChange(f) = cb {
+                    f(&source, property.clone(),old_value.clone(),new_value.clone());
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn add_on_property_change_listener(&self, func: impl Fn(&AccessibleContext, String,String,String) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.set_property_change_fp(cb_property_change);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push(AccessibleCallback::PropertyChange(Box::new(func)));
+            }
+        }
+    };
+
+        (property_x_change,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
+        extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64,old_value:*const u16,new_value: *const u16) {
+            let (source,old_value,new_value) = unsafe {
+                let Some(lib) = $lib.get() else {
+                    return;
+                };
+                let source = AccessibleContext::new(lib, vm_id, source);
+                let old_value2 = old_value.to_string_utf16();
+                let new_value2 = new_value.to_string_utf16();
+                lib.release_java_object(vm_id, old_value as JObject64);
+                lib.release_java_object(vm_id, new_value as JObject64);
+
+                lib.release_java_object(vm_id, event);
+                (source,old_value2,new_value2)
+            };
+
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let $type(f) = cb {
+                    f(&source, old_value.clone(),new_value.clone());
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn $func_name(&self, func: impl Fn(&AccessibleContext, String,String) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.$origin_name($cb_name);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push($type(Box::new(func)));
+            }
+        }
+    };
+
+        (property_caret_change,$lib:expr,$store:expr,$doc:literal) => {
+        extern "cdecl" fn cb_property_caret_change(vm_id: i32, event: JObject64, source: JObject64,old_value:i32,new_value: i32) {
+            let source = unsafe {
+                let Some(lib) = $lib.get() else {
+                    return;
+                };
+                let source = AccessibleContext::new(lib, vm_id, source);
+
+                lib.release_java_object(vm_id, event);
+                source
+            };
+
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let AccessibleCallback::PropertyCaretChange(f) = cb {
+                    f(&source, old_value,new_value);
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn add_on_property_caret_change_listener(&self, func: impl Fn(&AccessibleContext, i32,i32) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.set_property_caret_change_fp(cb_property_caret_change);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push(AccessibleCallback::PropertyCaretChange(Box::new(func)));
+            }
+        }
+    };
+
+        (property_y_change,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
+        extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64,old_value:JObject64,new_value: JObject64) {
+            let (source,old_value,new_value) = unsafe {
+                let Some(lib) = $lib.get() else {
+                    return;
+                };
+                let source = AccessibleContext::new(lib, vm_id, source);
+                let old_value = AccessibleContext::new(lib,vm_id,old_value);
+                let new_value = AccessibleContext::new(lib,vm_id,new_value);
+
+                lib.release_java_object(vm_id, event);
+                (source,old_value,new_value)
+            };
+
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let $type(f) = cb {
+                    f(&source, &old_value,&new_value);
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn $func_name(&self, func: impl Fn(&AccessibleContext, &AccessibleContext,&AccessibleContext) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.$origin_name($cb_name);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push($type(Box::new(func)));
+            }
+        }
+    };
+
+        (java_shutdown,$lib:expr,$store:expr,$doc:literal) => {
+        extern "cdecl" fn cb_java_shutdown(vm_id: i32) {
+            let lock = $store.get().unwrap().lock().unwrap();
+            lock.iter().for_each(move |cb| {
+                if let AccessibleCallback::JavaShutdown(f) = cb {
+                    f(vm_id);
+                }
+            });
+        }
+        impl Jab {
+            #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
+            pub fn add_on_java_shutdown_listener(&self, func: impl Fn(i32) + Sync + Send + 'static) {
+                let mut lock = $store
+                    .get_or_init(|| {
+                        self._lib.set_java_shutdown_fp(cb_java_shutdown);
+                        vec![].into()
+                    })
+                    .lock()
+                    .unwrap();
+                lock.push(AccessibleCallback::JavaShutdown(Box::new(func)));
+            }
+        }
+    };
+}

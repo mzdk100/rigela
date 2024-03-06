@@ -11,9 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::jab::context::AccessibleContext;
-use crate::JabLib::JabLib;
-use crate::JabLib::packages::{AccessibleContext as AC, AccessibleTableCellInfo, AccessibleTableInfo};
+use crate::{
+    jab::context::AccessibleContext,
+    JabLib::{
+        JabLib,
+        packages::{AccessibleContext as AC, AccessibleTableCellInfo, AccessibleTableInfo},
+    },
+};
 
 #[derive(Debug)]
 pub struct AccessibleTable<'lib> {

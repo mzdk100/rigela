@@ -416,6 +416,7 @@ impl JabLib {
      * 获取 AccessibleContext 的可见子级。
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
+     * `start_index` 起始索引。
      * */
     pub(crate) fn get_visible_children(
         &self,
@@ -1408,6 +1409,7 @@ impl JabLib {
      * 获取选区中的对象。
      * `vm_id` 虚拟机ID。
      * `as` 可访问选择上下文。
+     * `index` 索引。
      * */
     pub(crate) fn get_accessible_selection_from_context(
         &self,
@@ -1429,6 +1431,7 @@ impl JabLib {
      * 判断对象是否被选中。
      * `vm_id` 虚拟机ID。
      * `as` 可访问选择上下文。
+     * `index` 子对象索引。
      * */
     pub(crate) fn is_accessible_child_selected_from_context(
         &self,

@@ -15,9 +15,9 @@ use std::cmp::min;
 use win_wrap::common::BOOL;
 
 #[allow(unused)]
-const MAX_STRING_SIZE: u32 = 1024;
+pub(crate) const MAX_STRING_SIZE: u32 = 1024;
 #[allow(unused)]
-const SHORT_STRING_SIZE: u32 = 256;
+pub(crate) const SHORT_STRING_SIZE: u32 = 256;
 
 pub(crate) type JBoolean = u8;
 pub(crate) type JChar = u16;
@@ -650,9 +650,9 @@ pub(crate) const MAX_VISIBLE_CHILDREN: u32 = 256;
 #[repr(C)]
 pub(crate) struct VisibleChildrenInfo {
     /// number of children returned
-    returnedChildrenCount: i32,
+    pub(crate) returnedChildrenCount: i32,
     /// the visible children
-    children: [AccessibleContext; MAX_VISIBLE_CHILDREN as usize],
+    pub(crate) children: [AccessibleContext; MAX_VISIBLE_CHILDREN as usize],
 }
 
 /**
@@ -660,7 +660,7 @@ pub(crate) struct VisibleChildrenInfo {
  *  AccessibleAction packages
  ******************************************************
  * */
-const MAX_ACTION_INFO: u32 = 256;
+pub(crate) const MAX_ACTION_INFO: u32 = 256;
 #[allow(unused)]
 const MAX_ACTIONS_TO_DO: u32 = 32;
 
@@ -1175,7 +1175,7 @@ const MAX_HYPERLINKS: u32 = 64;
 
 /// hyperlink information
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleHyperlinkInfo {
     /// the hyperlink text
