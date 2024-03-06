@@ -834,3 +834,7 @@ impl<'lib> Debug for AccessibleContext<'lib> {
         write!(f, "AccessibleContext({})", info)
     }
 }
+
+unsafe impl<'lib> Send for AccessibleContext<'lib> {}
+
+unsafe impl<'lib> Sync for AccessibleContext<'lib> {}

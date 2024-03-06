@@ -22,12 +22,12 @@ pub mod table;
 pub mod text;
 pub mod version;
 
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use crate::{
     add_event_fp,
     jab::{
         context::AccessibleContext,
-        callback::AccessibleCallback,
+        callback::{AccessibleCallback, AccessibleContextType},
     },
     JabLib::{
         JabLib,
