@@ -11,28 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+
+use std::sync::Arc;
+use a11y::jab::context::AccessibleContext;
 use crate::performer::Speakable;
-use std::borrow::Cow;
 
-mod jab;
-mod msaa;
-mod peeper;
-mod uia;
 
-impl Speakable for u16 {
+/// 给JAB对象实现朗读接口
+impl Speakable for Arc<AccessibleContext<'_>> {
     fn get_sentence(&self) -> String {
-        String::from_utf16_lossy(&[*self])
-    }
-}
-
-impl Speakable for String {
-    fn get_sentence(&self) -> String {
-        self.to_string()
-    }
-}
-
-impl Speakable for Cow<'_, str> {
-    fn get_sentence(&self) -> String {
-        self.to_string()
+        format!("{}, {}", self.get_name().unwrap(), self.get_role().to_str())
     }
 }

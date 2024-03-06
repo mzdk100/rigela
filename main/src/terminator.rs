@@ -11,33 +11,33 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
-use tokio::sync::mpsc::{channel, Receiver, Sender};
-use tokio::sync::Mutex;
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+    time::Duration,
+};
+use tokio::{
+    sync::{
+        Mutex,
+        RwLock,
+    },
+    time::sleep,
+};
+use win_wrap::message::pump_waiting_messages;
 
 #[derive(Clone)]
 pub(crate) struct Terminator(
-    Sender<()>,
     Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>,
-);
-
-pub(crate) struct TerminationWaiter(
-    Receiver<()>,
-    Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>,
+    Arc<RwLock<bool>>,
 );
 
 impl Terminator {
     /**
      * 创建终结者对象，可以异步等待退出信号。
      * */
-    pub(crate) fn new() -> (Self, TerminationWaiter) {
-        let (tx, rx) = channel(1);
+    pub(crate) fn new() -> Self {
         let listeners = Arc::new(Mutex::new(vec![]));
-        (
-            Self(tx, listeners.clone()),
-            TerminationWaiter(rx, listeners),
-        )
+        Self(listeners, RwLock::new(false).into())
     }
 
     /**
@@ -45,25 +45,28 @@ impl Terminator {
      * `func` 一个监听函数。
      * */
     pub(crate) async fn add_exiting_listener(&self, func: impl Fn() + Sync + Send + 'static) {
-        self.1.lock().await.push(Box::new(func))
+        self.0.lock().await.push(Box::new(func))
     }
 
-    /* 发送退出信号。 */
-    pub(crate) async fn exit(&self) {
-        self.0.send(()).await.unwrap();
-    }
-}
-
-impl TerminationWaiter {
     /**
-     * 等待退出信号。
+     * 发送退出信号。
      * */
-    pub(crate) async fn wait(&mut self) {
-        self.0.recv().await;
-        let listeners = self.1.lock().await;
-        for i in listeners.iter() {
-            (&*i)()
+    pub(crate) async fn exit(&self) {
+        *self.1.write().await = true;
+    }
+
+    pub(crate) async fn wait(&self) {
+        loop {
+            pump_waiting_messages();
+            let lock = self.1.read().await;
+            if *lock {
+                break;
+            }
+            drop(lock);
+            sleep(Duration::from_millis(10)).await;
         }
+        let lock = self.0.lock().await;
+        lock.iter().for_each(|f| f());
     }
 }
 

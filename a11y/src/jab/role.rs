@@ -498,7 +498,7 @@ pub enum AccessibleRole {
 }
 
 impl AccessibleRole {
-    pub(crate) fn to_str(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Self::Alert => ACCESSIBLE_ALERT,
             Self::ColumnHeader => ACCESSIBLE_COLUMN_HEADER,
@@ -565,7 +565,7 @@ impl AccessibleRole {
         }
     }
 
-    pub(crate) fn from_str(role: &str) -> Self {
+    pub fn from_str(role: &str) -> Self {
         match role {
             ACCESSIBLE_ALERT => Self::Alert,
             ACCESSIBLE_COLUMN_HEADER => Self::ColumnHeader,

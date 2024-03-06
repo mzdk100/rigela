@@ -132,5 +132,16 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
             performer.play_sound(Single("tip.wav")).await;
             performer.speak(obj).await;
         });
-    })
+    });
+
+    // 绑定JAB的焦点改变事件
+    let ctx = context.clone();
+    context.jab.add_on_focus_gained_listener(move |src| {
+        let src = src.clone();
+        let performer = ctx.performer.clone();
+
+        ctx.main_handler.spawn(async move {
+            performer.speak(src).await;
+        });
+    });
 }

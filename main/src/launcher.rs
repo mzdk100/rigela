@@ -12,11 +12,10 @@
  */
 
 use crate::{
-    context::Context,
-    ext::AccessibleObjectExt,
-    performer::sound::SoundArgument::Single,
-    terminator::{TerminationWaiter, Terminator},
+    context::Context, ext::AccessibleObjectExt, performer::sound::SoundArgument::Single,
+    terminator::Terminator,
 };
+use a11y::{get_ia2_lib_path, setup};
 use log::{error, info};
 use rigela_utils::{
     killer::{kill, listen_to_killing},
@@ -24,13 +23,11 @@ use rigela_utils::{
 };
 use std::sync::Arc;
 use tokio::process::Command;
-use a11y::{get_ia2_lib_path, setup};
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
 pub(crate) struct Launcher {
     context: Arc<Context>,
-    waiter: Option<Box<TerminationWaiter>>,
 }
 
 impl Launcher {
@@ -47,7 +44,7 @@ impl Launcher {
         setup();
 
         // 创建一个终结者对象，main方法将使用他异步等待程序退出
-        let (terminator, waiter) = Terminator::new();
+        let terminator = Terminator::new();
 
         // 上下文对象的创建，需要传入终结器，上下文对象通过终结器对象响应终结消息
         let ctx = Context::new(terminator);
@@ -58,7 +55,6 @@ impl Launcher {
 
         Self {
             context: ctx_ref,
-            waiter: Some(waiter.into()),
         }
     }
 
@@ -121,7 +117,7 @@ impl Launcher {
         self.context.event_core.run(self.context.clone()).await;
 
         // 等待程序退出的信号
-        self.waiter.as_deref_mut().unwrap().wait().await;
+        self.context.terminator.wait().await;
         self.context.dispose();
 
         // 杀死32位代理模块

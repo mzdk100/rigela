@@ -11,6 +11,5 @@
       <option name="processLiterals" value="true" />
       <option name="processComments" value="true" />
     </inspection_tool>
-    <inspection_tool class="StructuralWrap" enabled="true" level="INFORMATION" enabled_by_default="true" />
   </profile>
 </component>
