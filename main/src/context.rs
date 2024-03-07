@@ -172,6 +172,7 @@ impl Context {
     pub(crate) fn dispose(&self) {
         self.commander.dispose();
         self.event_core.shutdown();
+        self.jab.remove_all_listeners();
         self.msaa.remove_all_listeners();
         self.ia2.remove_all_listeners();
         self.ui_automation.remove_all_event_listeners();

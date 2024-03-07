@@ -14,12 +14,15 @@
 
 use std::sync::Arc;
 use a11y::jab::context::AccessibleContext;
-use crate::performer::Speakable;
+use crate::{
+    ext::role::AccessibleRoleExt,
+    performer::Speakable,
+};
 
 
 /// 给JAB对象实现朗读接口
 impl Speakable for Arc<AccessibleContext<'_>> {
     fn get_sentence(&self) -> String {
-        format!("{}, {}", self.get_name().unwrap(), self.get_role().to_str())
+        format!("{}, {}", self.get_name().unwrap(), self.get_role_name())
     }
 }

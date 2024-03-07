@@ -11,17 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::performer::Speakable;
-use win_wrap::msaa::object::AccessibleObject;
-use crate::ext::role::AccessibleRoleExt;
 
-impl Speakable for (AccessibleObject, i32) {
-    fn get_sentence(&self) -> String {
-        format!(
-            "{}: {}, {}",
-            self.0.get_name(self.1),
-            self.0.get_description(self.1),
-            self.get_role_name()
-        )
+use win_wrap::{
+    common::{get_foreground_window, Result},
+    msaa::object::AccessibleObject,
+};
+
+pub(crate) trait AccessibleWindowExt {
+    type Output;
+
+    /**
+     * 从前景窗口创建对象。
+     * */
+    fn from_foreground_window() -> Result<Self::Output>;
+}
+
+impl AccessibleWindowExt for AccessibleObject {
+    type Output = Self;
+
+    fn from_foreground_window() -> Result<Self::Output> {
+        AccessibleObject::from_window(get_foreground_window())
     }
 }

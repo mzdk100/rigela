@@ -11,28 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use win_wrap::{
-    common::{get_foreground_window, Result},
-    msaa::object::{AccessibleObject, ROLE_SYSTEM_DIALOG},
-};
+use win_wrap::msaa::object::{AccessibleObject, ROLE_SYSTEM_DIALOG};
 
-pub(crate) trait AccessibleObjectExt {
-    type Output;
-
-    /**
-     * 获取对话框内容。
-     * */
-    fn get_dialog_content(&self) -> String;
-
-    /**
-     * 从前景窗口创建对象。
-     * */
-    fn from_foreground_window() -> Result<Self::Output>;
-}
-
-impl AccessibleObjectExt for AccessibleObject {
-    type Output = Self;
-
+impl AccessibleDialogExt for AccessibleObject {
     fn get_dialog_content(&self) -> String {
         let mut content = String::new();
         for i in self.children(0, self.child_count()).unwrap() {
@@ -45,8 +26,11 @@ impl AccessibleObjectExt for AccessibleObject {
         }
         content
     }
+}
 
-    fn from_foreground_window() -> Result<Self::Output> {
-        AccessibleObject::from_window(get_foreground_window())
-    }
+pub(crate) trait AccessibleDialogExt {
+    /**
+     * 获取对话框内容。
+     * */
+    fn get_dialog_content(&self) -> String;
 }

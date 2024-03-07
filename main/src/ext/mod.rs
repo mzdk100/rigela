@@ -11,17 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::performer::Speakable;
-use win_wrap::msaa::object::AccessibleObject;
-use crate::ext::role::AccessibleRoleExt;
-
-impl Speakable for (AccessibleObject, i32) {
-    fn get_sentence(&self) -> String {
-        format!(
-            "{}: {}, {}",
-            self.0.get_name(self.1),
-            self.0.get_description(self.1),
-            self.get_role_name()
-        )
-    }
-}
+pub(crate) mod dialog;
+pub(crate) mod role;
+pub(crate) mod window;

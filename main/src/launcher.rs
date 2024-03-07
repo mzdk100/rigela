@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    context::Context, ext::AccessibleObjectExt, performer::sound::SoundArgument::Single,
+    context::Context, ext::window::AccessibleWindowExt, performer::sound::SoundArgument::Single,
     terminator::Terminator,
 };
 use a11y::{get_ia2_lib_path, setup};

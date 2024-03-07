@@ -27,6 +27,7 @@ use win_wrap::{
         },
     },
 };
+use crate::ext::role::AccessibleRoleExt;
 
 trait ElementNameExt {
     fn get_name_better(&self) -> String;
@@ -59,7 +60,7 @@ impl Browsable for UiAutomationElement {
     }
 
     fn get_role(&self) -> String {
-        self.get_localized_control_type()
+        self.get_role_name()
     }
 
     fn get_child_count(&self) -> usize {
@@ -83,9 +84,9 @@ impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
         let mut text = self.get_name_better();
 
-        let control_type = self.get_localized_control_type();
-        if !control_type.is_empty() {
-            text += format!(", {}", control_type).as_str()
+        let role = self.get_role_name();
+        if !role.is_empty() {
+            text += format!(", {}", role).as_str()
         }
 
         let accelerator_key = self.get_accelerator_key();
@@ -108,7 +109,7 @@ impl Speakable for UiAutomationElement {
                     ToggleState::Indeterminate => t!("uia.toggle_indeterminate"),
                 }
             )
-            .as_str();
+                .as_str();
         }
 
         text

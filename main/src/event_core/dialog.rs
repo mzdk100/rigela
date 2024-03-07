@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{context::Context, ext::AccessibleObjectExt, performer::sound::SoundArgument::Single};
+use crate::{context::Context, ext::dialog::AccessibleDialogExt, performer::sound::SoundArgument::Single};
 use std::{sync::Arc, time::Duration};
 use tokio::time::sleep;
 use win_wrap::msaa::{event::WinEventSource, object::AccessibleObject};

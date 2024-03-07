@@ -1,0 +1,477 @@
+_version: 2
+
+role.alert:
+  en: Alert box
+  zh-CN: 警告框
+
+role.animation:
+  en: Animation
+  zh-CN: 动画
+
+role.app_bar:
+  en: App bar
+  zh-CN: 应用栏
+
+role.application:
+  en: Application
+  zh-CN: 应用程序
+
+role.awt_component:
+  en: Awt component
+  zh-CN: AWT组件
+
+role.border:
+  en: Border
+  zh-CN: 边框
+
+role.button:
+  en: Button
+  zh-CN: 按钮
+
+role.button_dropdown:
+  en: Button of dropdown
+  zh-CN: 下拉钮
+
+role.button_dropdown_grid:
+  en: Button of dropdown grid
+  zh-CN: 下拉网格钮
+
+role.button_menu:
+  en: Button of menu
+  zh-CN: 菜单按钮
+
+role.calendar:
+  en: Calendar
+  zh-CN: 日历
+
+role.canvas:
+  en: Canvas
+  zh-CN: 画布
+
+role.caret:
+  en: Caret
+  zh-CN: 拖字符
+
+role.cell:
+  en: Cell
+  zh-CN: 单元格
+
+role.character:
+  en: Character
+  zh-CN: 字符
+
+role.chart:
+  en: Chart
+  zh-CN: 图表
+
+role.check_box:
+  en: Check box
+  zh-CN: 复选框
+
+role.check_button:
+  en: Check button
+  zh-CN: 检查钮
+
+role.client:
+  en: Client
+  zh-CN: 客户端
+
+role.clock:
+  en: Clock
+  zh-CN: 时钟
+
+role.color_chooser:
+  en: Color chooser
+  zh-CN: 颜色选择器
+
+role.column:
+  en: Column
+  zh-CN: 列
+
+role.column_header:
+  en: Column header
+  zh-CN: 列标题
+
+role.combo_box:
+  en: Combo box
+  zh-CN: 组合框
+
+role.cursor:
+  en: Cursor
+  zh-CN: 光标
+
+role.custom:
+  en: Custom control
+  zh-CN: 定制控件
+
+role.data_grid:
+  en: Data grid
+  zh-CN: 数据网格
+
+role.data_item:
+  en: Data item
+  zh-CN: 数据项目
+
+role.date_editor:
+  en: Date editor
+  zh-CN: 日期编辑器
+
+role.desktop_icon:
+  en: Desktop icon
+  zh-CN: 桌面图标
+
+role.desktop_pane:
+  en: Desktop pane
+  zh-CN: 桌面窗格
+
+role.diagram:
+  en: Diagram
+  zh-CN: 图解表
+
+role.dial:
+  en: Dial
+  zh-CN: 拨号盘
+
+role.dialog:
+  en: Dialog box
+  zh-CN: 对话框
+
+role.directory_pane:
+  en: Directory pane
+  zh-CN: 目录窗格
+
+role.document:
+  en: Document
+  zh-CN: 文档
+
+role.drop_list:
+  en: Drop list
+  zh-CN: 下拉列表
+
+role.edit:
+  en: Edit box
+  zh-CN: 编辑框
+
+role.edit_bar:
+  en: Edit bar
+  zh-CN: 编辑栏
+
+role.equation:
+  en: Equation
+  zh-CN: 公式
+
+role.file_chooser:
+  en: File chooser
+  zh-CN: 文件选择器
+
+role.filler:
+  en: Filler
+  zh-CN: 填充物
+
+role.font_chooser:
+  en: Font chooser
+  zh-CN: 字体选择器
+
+role.footer:
+  en: Footer
+  zh-CN: 页脚
+
+role.frame:
+  en: Frame
+  zh-CN: 框架
+
+role.glass_pane:
+  en: Glass pane
+  zh-CN: 玻璃板
+
+role.graphic:
+  en: Graphic
+  zh-CN: 图表
+
+role.grip:
+  en: Grip
+  zh-CN: 手柄
+
+role.group:
+  en: Group
+  zh-CN: 分组
+
+role.grouping:
+  en: Grouping
+  zh-CN: 编组
+
+role.group_box:
+  en: Group box
+  zh-CN: 分组框
+
+role.header:
+  en: Header
+  zh-CN: 页眉
+
+role.header_item:
+  en: Header item
+  zh-CN: 页眉项目
+
+role.help_balloon:
+  en: Help balloon
+  zh-CN: 帮助球
+
+role.hotkey_field:
+  en: Hotkey field
+  zh-CN: 热键字段
+
+role.hyperlink:
+  en: Hyperlink
+  zh-CN: 超链接
+
+role.icon:
+  en: Icon
+  zh-CN: 图标
+
+role.image:
+  en: Image
+  zh-CN: 图形
+
+role.indicator:
+  en: Indicator
+  zh-CN: 指示器
+
+role.internal_frame:
+  en: Internal frame
+  zh-CN: 内部框架
+
+role.ip_address:
+  en: Ip address
+  zh-CN: IP地址
+
+role.label:
+  en: Label
+  zh-CN: 标签
+
+role.layered_pane:
+  en: Layered pane
+  zh-CN: 分层窗格
+
+role.link:
+  en: Link
+  zh-CN: 链接
+
+role.list:
+  en: List
+  zh-CN: 列表
+
+role.list_item:
+  en: List item
+  zh-CN: 列表项
+
+role.menu_bar:
+  en: Menu bar
+  zh-CN: 菜单栏
+
+role.menu:
+  en: Menu
+  zh-CN: 菜单
+
+role.menu_item:
+  en: Menu item
+  zh-CN: 菜单项
+
+role.menu_popup:
+  en: Menu popup
+  zh-CN: 弹出式菜单
+
+role.option_pane:
+  en: Option pane
+  zh-CN: 选项窗格
+
+role.outline:
+  en: Outline
+  zh-CN: 大纲
+
+role.outline_button:
+  en: Outline button
+  zh-CN: 轮廓钮
+
+role.outline_item:
+  en: Outline item
+  zh-CN: 大纲项
+
+role.page_tab:
+  en: Page tab
+  zh-CN: 页面选项卡
+
+role.page_tab_list:
+  en: Page tab list
+  zh-CN: 页面选项卡列表
+
+role.pane:
+  en: Pane
+  zh-CN: 窗格
+
+role.panel:
+  en: Panel
+  zh-CN: 面板
+
+role.paragraph:
+  en: Paragraph
+  zh-CN: 段落
+
+role.password_text:
+  en: Password text
+  zh-CN: 密码文字
+
+role.popup_menu:
+  en: Popup menu
+  zh-CN: 弹出菜单
+
+role.progress_bar:
+  en: Progress bar
+  zh-CN: 进度栏
+
+role.progress_monitor:
+  en: Progress monitor
+  zh-CN: 进度显示器
+
+role.property_page:
+  en: Property page
+  zh-CN: 属性页
+
+role.push_button:
+  en: Push button
+  zh-CN: 推钮
+
+role.radio_button:
+  en: Radio button
+  zh-CN: 单选钮
+
+role.root_pane:
+  en: Root pane
+  zh-CN: 根窗格
+
+role.row:
+  en: Row
+  zh-CN: 行
+
+role.row_header:
+  en: Row header
+  zh-CN: 行标题
+
+role.ruler:
+  en: Roler
+  zh-CN: 标尺
+
+role.scroll_bar:
+  en: Scroll bar
+  zh-CN: 滚动条
+
+role.scroll_pane:
+  en: Scroll pane
+  zh-CN: 滚动窗格
+
+role.semantic_zoom:
+  en: Semantic zoom
+  zh-CN: 语义变焦
+
+role.separator:
+  en: Separator
+  zh-CN: 分隔符
+
+role.slider:
+  en: Slider
+  zh-CN: 滑块
+
+role.sound:
+  en: Sound
+  zh-CN: 声音
+
+role.spinner:
+  en: Spinner
+  zh-CN: 转盘
+
+role.spin_box:
+  en: Spin box
+  zh-CN: 数字设定框
+
+role.spin_button:
+  en: Spin button
+  zh-CN: 旋转钮
+
+role.split_button:
+  en: Split button
+  zh-CN: 拆分钮
+
+role.split_pane:
+  en: Split pane
+  zh-CN: 拆分窗格
+
+role.static_text:
+  en: Static text
+  zh-CN: 静态文字
+
+role.status_bar:
+  en: Status bar
+  zh-CN: 状态栏
+
+role.swing_component:
+  en: Swing component
+  zh-CN: Swing组件
+
+role.tab:
+  en: Tab
+  zh-CN: 选项卡
+
+role.tab_item:
+  en: Tab item
+  zh-CN: 选项卡项
+
+role.table:
+  en: Table
+  zh-CN: 表格
+
+role.text:
+  en: Text
+  zh-CN: 文字
+
+role.thumb:
+  en: Thumb
+  zh-CN: 缩略图
+
+role.title_bar:
+  en: Title bar
+  zh-CN: 标题栏
+
+role.toggle_button:
+  en: Toggle button
+  zh-CN: 切换钮
+
+role.tool_bar:
+  en: Tool bar
+  zh-CN: 工具栏
+
+role.tool_tip:
+  en: Tool tip
+  zh-CN: 工具提示
+
+role.tree:
+  en: Tree control
+  zh-CN: 树控件
+
+role.tree_item:
+  en: Tree item
+  zh-CN: 树项
+
+role.unknown:
+  en: Unknown control
+  zh-CN: 未知控件
+
+role.viewport:
+  en: Viewport
+  zh-CN: 视口
+
+role.white_space:
+  en: White space
+  zh-CN: 留白
+
+role.window:
+  en: Window
+  zh-CN: 窗口
