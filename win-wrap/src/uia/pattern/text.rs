@@ -35,6 +35,7 @@ use windows::{
  * */
 pub struct UiAutomationTextPattern(IUIAutomationTextPattern);
 
+/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern
 impl UiAutomationTextPattern {
     /**
      * 从UI元素获取此模式。
@@ -126,9 +127,14 @@ impl UiAutomationTextPattern {
     }
 }
 
+/// 扩展 UiAutomationTextPattern。
 pub struct UiAutomationTextPattern2(IUIAutomationTextPattern2);
 
+/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern2
 impl UiAutomationTextPattern2 {
+    /**
+     * 从UI元素获取此模式。
+     * */
     pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
         let result = unsafe { value.get_raw().GetCurrentPattern(UIA_TextPattern2Id) };
 
@@ -137,20 +143,39 @@ impl UiAutomationTextPattern2 {
                 pattern.cast::<IUIAutomationTextPattern2>().unwrap(),
             )),
 
-            Err(e) => Err(format!("Can't get the TextPattern. ({})", e)),
+            Err(e) => Err(format!("Can't get the TextPattern2. ({})", e)),
         }
     }
 
-    // 获取插入符范围。
-    pub fn get_caret_range(&self) -> UiAutomationTextRange {
+    //noinspection StructuralWrap
+    /**
+     * 查询属于基于文本的控件的插入符号位置的零长度文本范围。
+     * 此方法检索一个文本区域，客户端可以使用该文本区域查找属于基于文本的控件的插入符号的边界矩形，或查找插入符号附近的文本。
+     * 返回(is_active,range)。
+     * `is_active` 如果包含插入符号的基于文本的控件具有键盘焦点，则为 true，否则为 false。如果 is_active 为 false，则属于基于文本的控件的插入符号可能与系统插入符号位于同一位置。
+     * `range` 接收一个文本范围，该范围表示属于基于文本的控件的插入符号的当前位置。
+     * */
+    pub fn get_caret_range(&self) -> (bool, UiAutomationTextRange) {
         let mut active = BOOL::default();
         let range = unsafe { self.0.GetCaretRange(&mut active).unwrap() };
+
+        (active.as_bool(), UiAutomationTextRange::obtain(&range))
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 查询包含文本的文本范围，该文本是与指定批注元素关联的批注的目标。
+     * `annotation` 要检索其目标文本的批注元素。此元素是实现文档的 UiAutomationTextPattern2 的元素的同级元素。
+     * */
+    pub fn range_from_annotation(&self, annotation: &UiAutomationElement) -> UiAutomationTextRange {
+        let range = unsafe { self.0.RangeFromAnnotation(annotation.get_raw()).unwrap() };
 
         UiAutomationTextRange::obtain(&range)
     }
 }
 
 unsafe impl Send for UiAutomationTextPattern2 {}
+
 unsafe impl Sync for UiAutomationTextPattern2 {}
 
 trait TextRangeArray {
@@ -228,7 +253,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
