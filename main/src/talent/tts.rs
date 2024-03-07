@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::event_core::editor::editor_key_handle;
 use crate::{
     commander::keys::Keys::*,
     context::Context,
@@ -27,6 +28,10 @@ use std::sync::Arc;
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音属性值增加", key = (VkRigelA, VkCtrl, VkUp))]
 async fn increase(context: Arc<Context>) {
+    {
+        *editor_key_handle().lock().unwrap() = true;
+    }
+
     let tts = context.performer.get_tts();
     tts.set_tts_prop_value(ValueChange::Increment).await;
     speak_tts_prop(context).await;
@@ -35,6 +40,10 @@ async fn increase(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音属性值降低", key = (VkRigelA, VkCtrl, VkDown))]
 async fn reduce(context: Arc<Context>) {
+    {
+        *editor_key_handle().lock().unwrap() = true;
+    }
+
     let tts = context.performer.get_tts();
     tts.set_tts_prop_value(ValueChange::Decrement).await;
     speak_tts_prop(context).await;
@@ -43,6 +52,10 @@ async fn reduce(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音下一属性", key = (VkRigelA, VkCtrl, VkRight))]
 async fn next_prop(context: Arc<Context>) {
+    {
+        *editor_key_handle().lock().unwrap() = true;
+    }
+
     let tts = context.performer.get_tts();
     tts.move_tts_prop(Direction::Next).await;
     speak_tts_prop(context).await;
@@ -51,6 +64,10 @@ async fn next_prop(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音上一属性", key = (VkRigelA, VkCtrl, VkLeft))]
 async fn prev_prop(context: Arc<Context>) {
+    {
+        *editor_key_handle().lock().unwrap() = true;
+    }
+
     let tts = context.performer.get_tts();
     tts.move_tts_prop(Direction::Prev).await;
     speak_tts_prop(context).await;
@@ -60,9 +77,7 @@ async fn prev_prop(context: Arc<Context>) {
 #[talent(doc = "缓冲区上一字符", key = (VkRigelA, VkLeft))]
 async fn prev_cache_char(context: Arc<Context>) {
     {
-        *crate::event_core::editor::editor_key_handle()
-            .lock()
-            .unwrap() = true;
+        *editor_key_handle().lock().unwrap() = true;
     }
 
     let cache = context.performer.get_cache();
@@ -76,9 +91,7 @@ async fn prev_cache_char(context: Arc<Context>) {
 #[talent(doc = "缓冲区下一字符", key = (VkRigelA, VkRight))]
 async fn next_cache_char(context: Arc<Context>) {
     {
-        *crate::event_core::editor::editor_key_handle()
-            .lock()
-            .unwrap() = true;
+        *editor_key_handle().lock().unwrap() = true;
     }
 
     let cache = context.performer.get_cache();
@@ -91,6 +104,10 @@ async fn next_cache_char(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "解释缓冲区当前字符", key = (VkRigelA, VkUp))]
 async fn trans_cache_char(context: Arc<Context>) {
+    {
+        *editor_key_handle().lock().unwrap() = true;
+    }
+
     let cache = context.performer.get_cache();
     let text = cache.get(CacheDirection::Current).await;
     // Todo: 查字典
@@ -104,9 +121,7 @@ async fn trans_cache_char(context: Arc<Context>) {
 #[talent(doc = "缓冲区当前字符组词", key = (VkRigelA, VkDown))]
 async fn make_word_cache_char(context: Arc<Context>) {
     {
-        *crate::event_core::editor::editor_key_handle()
-            .lock()
-            .unwrap() = true;
+        *editor_key_handle().lock().unwrap() = true;
     }
 
     let cache = context.performer.get_cache();
