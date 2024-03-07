@@ -13,12 +13,16 @@
 
 use crate::uia::element::UiAutomationElement;
 use std::fmt::{Debug, Formatter};
-use windows::core::{Interface, BSTR};
-use windows::Win32::UI::Accessibility::{IUIAutomationValuePattern, UIA_ValuePatternId};
+use windows::{
+    core::{Interface, BSTR},
+    Win32::UI::Accessibility::{IUIAutomationValuePattern, UIA_ValuePatternId},
+};
 
 /// ValuePattern
+/// 提供对控件的访问，该控件包含一个值，该值不跨越范围，并且可以表示为字符串。此字符串可能是可编辑的，也可能是不可编辑的，具体取决于控件及其设置。
 pub struct UiAutomationValuePattern(IUIAutomationValuePattern);
 
+/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationvaluepattern
 impl UiAutomationValuePattern {
     /// 从UI元素获取此模式。
     pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {
@@ -33,28 +37,37 @@ impl UiAutomationValuePattern {
         Ok(Self(pattern))
     }
 
+    /**
+     * 查询元素的值。
+     * */
     pub fn get_value(&self) -> Result<String, String> {
         let value = unsafe { self.0.CurrentValue() };
         match value {
             Ok(v) => Ok(v.to_string()),
-            Err(ee) => Err(format!("Can't get the ItemContainerPattern. ({})", ee)),
+            Err(ee) => Err(format!("Can't get the value. ({})", ee)),
         }
     }
 
+    /**
+     * 设置元素的值。
+     * */
     pub fn set_value(&self, value: &str) -> Result<(), String> {
         let value = BSTR::from(value);
         let value = unsafe { self.0.SetValue(&value) };
         if let Err(e) = value {
-            return Err(format!("Can't get the ItemContainerPattern. ({})", e));
+            return Err(format!("Can't set the value. ({})", e));
         }
         Ok(())
     }
 
+    /**
+     * 判断元素的值是否为只读。
+     * */
     pub fn is_readonly(&self) -> Result<bool, String> {
         let value = unsafe { self.0.CurrentIsReadOnly() };
         match value {
             Ok(v) => Ok(v.0 != 0),
-            Err(ee) => Err(format!("Can't get the ItemContainerPattern. ({})", ee)),
+            Err(ee) => Err(format!("Can't get the value. ({})", ee)),
         }
     }
 }
