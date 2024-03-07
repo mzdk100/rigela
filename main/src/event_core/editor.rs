@@ -13,12 +13,16 @@
 
 use crate::commander::keys::Keys::{VkDown, VkLeft, VkRight, VkUp};
 use crate::{commander::keys::Keys, context::Context, performer::sound::SoundArgument::Single};
+use a11y::ia2::object::Accessible2Object;
+use a11y::ia2::text::AccessibleText;
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
     WinEventSourceExt,
 };
 use log::error;
 use std::sync::{Arc, Mutex, OnceLock};
+use win_wrap::common::get_foreground_window;
+use win_wrap::msaa::object::AccessibleObject;
 use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
 
 //noinspection SpellCheckingInspection
@@ -92,6 +96,11 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
                 return;
             }
         };
+
+        {
+            *editor_key_handle().lock().unwrap() = true;
+        }
+
         let caret = text.caret_offset().unwrap_or(0);
         let (_, _, text) = match commander.get_last_pressed_key() {
             VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
@@ -112,8 +121,7 @@ pub(crate) fn editor_key_handle() -> &'static Mutex<bool> {
 /// 处理编辑框的光标键播报
 pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
     let ctx = context.clone();
-
-    let cb = move |key: Keys, pressed| {
+    let cb_uia = move |key: Keys, pressed| {
         let ctrl = ctx.ui_automation.get_focused_element();
         if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
             match pressed {
@@ -140,6 +148,38 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
         }
     };
 
+    let ctx = context.clone();
+    let cb_ia2 = move |key: Keys, pressed| {
+        if let Ok(acc_obj) = AccessibleObject::from_caret() {
+            // todo: 未获取到 acc_obj
+
+            // let acc2_obj = Accessible2Object::from_accessible_object(acc_obj).unwrap();
+            if let Ok(text) = AccessibleText::from_accessible_object(acc_obj) {
+                match pressed {
+                    true => {
+                        *editor_key_handle().lock().unwrap() = false;
+                    }
+                    false => {
+                        if !*editor_key_handle().lock().unwrap() {
+                            let caret = text.caret_offset().unwrap_or(0);
+                            let (_, _, text) = match key {
+                                VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+                                _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
+                            };
+
+                            let pf = ctx.performer.clone();
+                            ctx.main_handler.spawn(async move {
+                                pf.play_sound(Single("edge.wav")).await;
+                                pf.speak(text).await;
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     let keys = [VkUp, VkDown, VkLeft, VkRight];
-    context.commander.add_key_event_listener(&keys, cb);
+    context.commander.add_key_event_listener(&keys, cb_uia);
+    context.commander.add_key_event_listener(&keys, cb_ia2);
 }
