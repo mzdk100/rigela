@@ -48,6 +48,7 @@ use windows::{
     },
 };
 
+#[derive(Clone)]
 pub struct AccessibleObject(IAccessible, i32);
 
 impl AccessibleObject {
@@ -122,7 +123,7 @@ impl AccessibleObject {
                     return Err(Error::new(
                         S_FALSE,
                         &format!("Can't obtain the accessible object at ({}, {}).", x, y),
-                    ))
+                    ));
                 }
                 Some(r) => (r, i32::try_from(&var).unwrap_or(0)),
             }
