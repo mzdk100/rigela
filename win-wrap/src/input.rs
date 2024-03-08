@@ -86,9 +86,10 @@ use windows::{
                     ImmReleaseContext,
                 },
                 KeyboardAndMouse::{
-                    keybd_event, mouse_event, GetAsyncKeyState, GetKeyNameTextW, GetKeyState,
-                    SetActiveWindow, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, MOUSEEVENTF_LEFTDOWN,
-                    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, VIRTUAL_KEY,
+                    keybd_event, mouse_event, GetAsyncKeyState, GetFocus, GetKeyNameTextW,
+                    GetKeyState, SetActiveWindow, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP,
+                    MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_RIGHTDOWN,
+                    MOUSEEVENTF_RIGHTUP, VIRTUAL_KEY,
                 },
             },
             WindowsAndMessaging::{GetCursorPos, SetCursorPos},
@@ -108,6 +109,18 @@ pub type VirtualKey = VIRTUAL_KEY;
  * */
 pub fn set_active_window(h_wnd: HWND) {
     unsafe { SetActiveWindow(h_wnd) };
+}
+
+//noinspection StructuralWrap
+/**
+ * 如果窗口附加到调用线程的消息队列，则检索具有键盘焦点的窗口的句柄。
+ * 返回值是具有键盘焦点的窗口的句柄。 如果调用线程的消息队列没有与键盘焦点关联的窗口，则返回值为 NULL。
+ * get_focus 返回具有当前线程消息队列的键盘焦点的窗口。 如果 get_focus 返回 NULL，则另一个线程的队列可能会附加到具有键盘焦点的窗口。
+ * 使用 get_foreground_window 函数检索用户当前正在使用的窗口的句柄。 可以使用 attach_thread_input 函数将线程的消息队列与其他线程拥有的窗口相关联。
+ * 若要获取键盘焦点位于前台队列或其他线程队列上的窗口，请使用 get_gui_thread_info 函数。
+ * */
+pub fn get_focus() -> HWND {
+    unsafe { GetFocus() }
 }
 
 /**
@@ -201,7 +214,7 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<St
         for i in 0..list.dwCount {
             // 因为list.dwOffset在rust编译器处理后，数组大小固定为1，所以不可以访问数组中的其他元素，这里需通过裸指针实现
             let offset = *p1.wrapping_add(6 + i as usize); // 6表示dwOffset在CANDIDATELIST结构中的第六个元素
-                                                           // 获取候选字符串
+            // 获取候选字符串
             data.push(p2.wrapping_add(offset as usize).to_string_utf16());
         }
         heap_free(ptr);
