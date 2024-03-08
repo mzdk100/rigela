@@ -67,6 +67,26 @@ impl Accessible2Object {
         Err(Error::new(S_FALSE, "Not supported."))
     }
 
+    pub(crate) fn from_raw(obj: &IUnknown) -> Result<Self> {
+        let ia2 = match obj.cast::<IAccessible2>() {
+            Err(e) => return Err(e),
+            Ok(x) => x,
+        };
+        let ia2_3 = match obj.cast::<IAccessible2_3>() {
+            Err(_) => None,
+            Ok(x) => Some(x),
+        };
+        let ia2_2 = match obj.cast::<IAccessible2_2>() {
+            Err(_) => None,
+            Ok(x) => Some(x),
+        };
+        return Ok(Self {
+            _ia2: ia2,
+            _ia2_2: ia2_2,
+            _ia2_3: ia2_3,
+        });
+    }
+
     /**
      * 返回可访问的中的选择的范围数组。
      * */
@@ -230,7 +250,7 @@ impl Accessible2Object {
             let mut role = std::mem::zeroed();
             self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
         }
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     //noinspection StructuralWrap

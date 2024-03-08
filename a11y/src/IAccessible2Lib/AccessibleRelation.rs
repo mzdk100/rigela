@@ -190,21 +190,23 @@ const IA2_RELATION_ERROR_FOR: &str = "errorFor";
  * */
 #[interface("7CDF86EE-C3DA-496a-BDA4-281B336E1FDC")]
 pub(crate) unsafe trait IAccessibleRelation: IUnknown {
-    /** Returns the type of the relation.
-      `relationType` The strings returned are defined @ref grpRelations "in this section of the documentation".
-    */
+    /**
+     * Returns the type of the relation.
+     * `relationType` The strings returned are defined @ref grpRelations "in this section of the documentation".
+     * */
+    pub(crate) fn relationType(&self, relationType: *mut BSTR) -> HRESULT;
 
-    fn relationType(&self, relationType: *mut BSTR) -> HRESULT;
+    /**
+     * Returns a localized version of the relation type.
+     * `localizedRelationType`
+     * */
+    pub(crate) fn localizedRelationType(&self, localizedRelationType: *mut BSTR) -> HRESULT;
 
-    /** Returns a localized version of the relation type.
-    `localizedRelationType` */
-
-    fn localizedRelationType(&self, localizedRelationType: *mut BSTR) -> HRESULT;
-
-    /** Returns the number of targets for this relation.
-    `nTargets` */
-
-    fn nTargets(&self, nTargets: *mut i32) -> HRESULT;
+    /**
+     * Returns the number of targets for this relation.
+     * `nTargets`
+     * */
+    pub(crate) fn nTargets(&self, nTargets: *mut i32) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -213,7 +215,7 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
      * `target` retrieval E_INVALIDARG if bad [in] passed
      * @note Use QueryInterface to get IAccessible2.
      * */
-    fn target(&self, targetIndex: i32, target: *mut *mut IUnknown) -> HRESULT;
+    pub(crate) fn target(&self, targetIndex: i32, target: *mut *mut IUnknown) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
@@ -226,7 +228,7 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
      * `nTargets` actual number of targets in the returned array (not more than maxTargets)
      * retrieval E_INVALIDARG if bad [in] passed, e.g., a negative value
      * */
-    fn targets(&self, maxTargets: i32, targets: *mut *mut IUnknown, nTargets: *mut i32) -> HRESULT;
+    pub(crate) fn targets(&self, maxTargets: i32, targets: *mut *mut IUnknown, nTargets: *mut i32) -> HRESULT;
 }
 
 /**
