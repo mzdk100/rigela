@@ -41,27 +41,27 @@ pub struct HotKeysUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control( list_style: nwg::ListViewStyle::Detailed, ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
+    #[nwg_control(list_style: nwg::ListViewStyle::Detailed, ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 8)]
     pub(crate) data_view: nwg::ListView,
 
-    #[nwg_control(text: &t!("hotkeys.lb_custom"))]
+    #[nwg_control(text: & t ! ("hotkeys.lb_custom"))]
     #[nwg_layout_item(layout: layout, col: 0, row: 7)]
     lb_custom: nwg::Label,
 
-    #[nwg_control(readonly: true, text: &t!("hotkeys.tb_keys_info"), flags: "DISABLED|VISIBLE")]
+    #[nwg_control(readonly: true, text: & t ! ("hotkeys.tb_keys_info"), flags: "DISABLED|VISIBLE")]
     #[nwg_layout_item(layout: layout, col: 1, row: 8, col_span: 3)]
     tb_keys_info: nwg::TextInput,
 
-    #[nwg_control(text: &t!("hotkeys.btn_set"))]
+    #[nwg_control(text: & t ! ("hotkeys.btn_set"))]
     #[nwg_layout_item(layout: layout, col: 4, row: 8)]
     pub(crate) btn_set: nwg::Button,
 
-    #[nwg_control(text: &t!("hotkeys.btn_clear"))]
+    #[nwg_control(text: & t ! ("hotkeys.btn_clear"))]
     #[nwg_layout_item(layout: layout, col: 5, row: 8)]
     pub(crate) btn_clear: nwg::Button,
 
-    #[nwg_control(text: &t!("hotkeys.btn_close"))]
+    #[nwg_control(text: & t ! ("hotkeys.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     pub(crate) btn_close: nwg::Button,
 
@@ -275,7 +275,7 @@ impl SettingsForm {
         let context = self.context.get().unwrap().clone();
         let pf = context.performer.clone();
         context.main_handler.spawn(async move {
-            pf.speak(info).await;
+            pf.speak(&info).await;
         });
 
         *self.hook.borrow_mut() = Some(self.set_hook());

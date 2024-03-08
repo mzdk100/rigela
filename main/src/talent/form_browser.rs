@@ -24,7 +24,7 @@ const WAVE: &str = "boundary.wav";
 async fn prev_element(context: Arc<Context>) {
     match context.form_browser.prev().await.current().await {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => {
             context.performer.play_sound(Single(WAVE)).await;
@@ -37,7 +37,7 @@ async fn prev_element(context: Arc<Context>) {
 async fn next_element(context: Arc<Context>) {
     match context.form_browser.next().await.current().await {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => context.performer.play_sound(Single(WAVE)).await,
     };
@@ -48,7 +48,7 @@ async fn next_element(context: Arc<Context>) {
 async fn curr_element(context: Arc<Context>) {
     match context.form_browser.current().await {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => {
             context.performer.play_sound(Single(WAVE)).await;
@@ -67,7 +67,7 @@ async fn prev_child_element(context: Arc<Context>) {
         .await
     {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => {
             context.performer.play_sound(Single(WAVE)).await;
@@ -86,7 +86,7 @@ async fn next_child_element(context: Arc<Context>) {
         .await
     {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => {
             context.performer.play_sound(Single(WAVE)).await;
@@ -99,7 +99,7 @@ async fn next_child_element(context: Arc<Context>) {
 async fn curr_child_element(context: Arc<Context>) {
     match context.form_browser.current_child().await {
         Some(element) => {
-            context.performer.speak(element).await;
+            context.performer.speak(element.as_ref()).await;
         }
         None => {
             context.performer.play_sound(Single(WAVE)).await;

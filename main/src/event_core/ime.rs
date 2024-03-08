@@ -88,14 +88,14 @@ fn handle_ime_candidate(
             if candidate.is_empty() {
                 return;
             }
-            if !performer.speak(candidate_list.clone()).await {
+            if !performer.speak(&candidate_list.clone()).await {
                 // 如果语音被打断就不继续朗读候选的解释词
                 return;
             }
             if let Some(x) = words.get(&candidate) {
                 performer.play_sound(Single("tip.wav")).await;
                 // 朗读候选文字的解释词
-                performer.speak(x.clone()).await;
+                performer.speak(x).await;
             }
         }),
     );

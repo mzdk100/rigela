@@ -105,12 +105,12 @@ impl Launcher {
         // 朗读当前桌面
         self.context
             .performer
-            .speak(self.context.ui_automation.get_root_element())
+            .speak(&self.context.ui_automation.get_root_element())
             .await;
 
         // 朗读当前前景窗口
         if let Ok(o) = AccessibleObject::from_foreground_window() {
-            self.context.performer.speak((o, 0)).await;
+            self.context.performer.speak(&(o, 0)).await;
         }
 
         // 启动事件监听

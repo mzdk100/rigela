@@ -83,7 +83,7 @@ impl Performer {
      * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
      * `speakable` 实现了Speakable特征的对象。
      * */
-    pub(crate) async fn speak(&self, speakable: impl Speakable) -> bool {
+    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync + Send)) -> bool {
         let text = speakable.get_sentence().trim_end().to_string();
         if text.is_empty() {
             return false;

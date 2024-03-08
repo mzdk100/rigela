@@ -35,7 +35,7 @@ use win_wrap::{
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
 async fn exit(context: Arc<Context>) {
-    context.performer.speak(t!("program.exit")).await;
+    context.performer.speak(&t!("program.exit")).await;
     context.terminator.exit().await;
 }
 
@@ -48,7 +48,7 @@ impl Speakable for DateTime<Local> {
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
 async fn current_time(context: Arc<Context>) {
-    context.performer.speak(Local::now()).await;
+    context.performer.speak(&Local::now()).await;
 }
 
 impl Speakable for &PdhCounter {
@@ -76,7 +76,7 @@ async fn current_cpu_usage(context: Arc<Context>) {
         (counter, query)
     });
     query.collect_data();
-    context.performer.speak(counter).await;
+    context.performer.speak(&counter).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -96,7 +96,7 @@ async fn hotkeys(context: Arc<Context>) {
 async fn view_window_title(context: Arc<Context>) {
     match AccessibleObject::from_foreground_window() {
         Ok(o) => {
-            context.performer.speak((o, 0)).await;
+            context.performer.speak(&(o, 0)).await;
         }
         Err(e) => {
             error!(
@@ -112,7 +112,7 @@ async fn view_window_title(context: Arc<Context>) {
 #[talent(doc = "查看当前焦点", key = (VkRigelA, VkTab))]
 async fn view_focus(context: Arc<Context>) {
     let focused = context.ui_automation.get_focused_element();
-    context.performer.speak(focused).await;
+    context.performer.speak(&focused).await;
 }
 
 //noinspection RsUnresolvedReference

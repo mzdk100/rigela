@@ -184,7 +184,7 @@ fn capital_handle(context: Arc<Context>, state: bool, hook_toggle: &Mutex<bool>)
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         let info = if !state { "大写" } else { "小写" };
-        pf.speak(info.to_string()).await;
+        pf.speak(&info.to_string()).await;
     });
 }
 

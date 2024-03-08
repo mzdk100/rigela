@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::Browsable;
-use std::fmt::{Debug, Formatter};
+use std::{
+    fmt::{Debug, Formatter},
+};
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
+use crate::browser::BrowserElement;
 
-pub(crate) type BrowserElement = Arc<dyn Browsable + Sync + Send>;
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
 pub(crate) struct FormBrowser {
@@ -25,7 +26,7 @@ pub(crate) struct FormBrowser {
     // 子控件索引
     child_index: RwLock<i32>,
     // 窗口控件集合
-    container: RwLock<Vec<BrowserElement>>,
+    container: Mutex<Vec<Arc<BrowserElement<'static>>>>,
 }
 
 impl FormBrowser {
@@ -33,7 +34,7 @@ impl FormBrowser {
         Self {
             index: RwLock::new(0),
             child_index: RwLock::new(-1),
-            container: RwLock::new(Vec::new()),
+            container: Vec::new().into(),
         }
     }
 
@@ -41,7 +42,7 @@ impl FormBrowser {
      * 浏览器渲染操作，解析控件树。
      * `root` 根元素。
      * */
-    pub(crate) async fn render(&self, root: BrowserElement) {
+    pub(crate) async fn render(&self, root: BrowserElement<'static>) {
         {
             // 使用单独的块保证读写锁不会有过长的生命周期
             let mut index = self.index.write().await;
@@ -51,11 +52,11 @@ impl FormBrowser {
             let mut index = self.child_index.write().await;
             *index = 0;
         }
-        let mut container = self.container.write().await;
+        let mut container = self.container.lock().await;
         container.clear();
         for i in 0..root.get_child_count() {
             if let Some(c) = root.get_child(i) {
-                container.push(c);
+                container.push(c.into());
             }
         }
     }
@@ -81,19 +82,19 @@ impl FormBrowser {
     }
 
     /// 获取当前子控件
-    pub(crate) async fn current_child(&self) -> Option<BrowserElement> {
+    pub(crate) async fn current_child(&self) -> Option<Arc<BrowserElement<'_>>> {
         let cur_element = self.current().await;
         if cur_element.is_none() {
             return None;
         }
         let cur_element = cur_element.unwrap();
         let child_index = { *self.child_index.read().await };
-        cur_element.get_child(child_index as usize)
+        cur_element.get_child(child_index)
     }
 
     /// 移动当前索引
     async fn move_cur_index(&self, diff: i32) -> &Self {
-        let container = self.container.read().await;
+        let container = self.container.lock().await;
         let len = container.len() as i32;
         if len <= 1 {
             return self;
@@ -137,13 +138,16 @@ impl FormBrowser {
     }
 
     /// 获取当前焦点控件元素
-    pub(crate) async fn current(&self) -> Option<BrowserElement> {
-        let container = self.container.read().await;
+    pub(crate) async fn current(&self) -> Option<Arc<BrowserElement<'_>>> {
+        let container = self.container.lock().await;
         if container.is_empty() {
             return None;
         }
         let index = { *self.index.read().await };
-        Some(container[index as usize].clone())
+        if let Some(c) = container.get(index as usize) {
+            return Some(c.clone());
+        }
+        None
     }
 }
 

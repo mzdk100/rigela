@@ -12,5 +12,6 @@
  */
 
 pub(crate) mod dialog;
+pub(crate) mod element;
 pub(crate) mod role;
 pub(crate) mod window;

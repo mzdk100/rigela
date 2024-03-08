@@ -30,7 +30,7 @@ pub(crate) fn handle_dialog_events(context: Arc<Context>, src: WinEventSource) {
             Ok(o) => o.0,
         };
         performer.play_sound(Single("dialog.wav")).await;
-        performer.speak(obj.get_dialog_content()).await;
+        performer.speak(&obj.get_dialog_content()).await;
     });
 }
 

@@ -26,7 +26,7 @@ use win_wrap::input::{click, get_cur_mouse_point, right_click};
 async fn click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
-    context.performer.speak(t!("mouse.click")).await;
+    context.performer.speak(&t!("mouse.click")).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -34,7 +34,7 @@ async fn click(context: Arc<Context>) {
 async fn right_click(context: Arc<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
-    context.performer.speak(t!("mouse.right_click")).await;
+    context.performer.speak(&t!("mouse.right_click")).await;
 }
 
 //noinspection RsUnresolvedReference
@@ -46,7 +46,7 @@ async fn read_mouse(context: Arc<Context>) {
         true => t!("mouse.state_on"),
         false => t!("mouse.state_off"),
     };
-    context.performer.speak(state).await;
+    context.performer.speak(&state).await;
 }
 
 async fn get_point(context: Arc<Context>) -> (i32, i32) {
@@ -57,8 +57,11 @@ async fn get_point(context: Arc<Context>) -> (i32, i32) {
     match ele {
         None => get_cur_mouse_point(),
         Some(e) => {
-            let r = e.get_rect();
-            (r.left, r.top)
+            if let Some(r) = e.get_rect() {
+                (r.left, r.top)
+            } else {
+                get_cur_mouse_point()
+            }
         }
     }
 }
@@ -69,5 +72,5 @@ pub(crate) fn mouse_read(context: Arc<Context>, x: i32, y: i32) {
     let ele = uia.element_from_point(x, y).unwrap();
     let pf = context.performer.clone();
     let h = context.main_handler.clone();
-    h.spawn(async move { pf.speak(ele).await });
+    h.spawn(async move { pf.speak(&ele).await });
 }

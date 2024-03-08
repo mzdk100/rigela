@@ -17,7 +17,6 @@ use crate::{
     performer::sound::SoundArgument::Single,
 };
 use std::{sync::Arc, time::Duration};
-use win_wrap::uia::pattern::value::UiAutomationValuePattern;
 use win_wrap::{
     msaa::object::{ROLE_SYSTEM_ALERT, ROLE_SYSTEM_DIALOG, ROLE_SYSTEM_LIST, ROLE_SYSTEM_LISTITEM},
     uia::element::ControlType,
@@ -46,17 +45,10 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
                         return;
                     }
                 }
-                // 编辑框和组合框朗读
-                ControlType::ComboBox | ControlType::Edit => {
-                    let vp = UiAutomationValuePattern::obtain(&x).unwrap();
-                    let value = format!("{} {}", x.get_name(), vp.get_value().unwrap());
-                    performer.speak(value).await;
-                    return;
-                }
                 _ => {}
             }
 
-            performer.speak(x).await;
+            performer.speak(&x).await;
         });
     });
 
@@ -87,7 +79,7 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
                 // 过滤重复的事件，因为同时订阅了UIA和MSAA的focus事件，就会有事件的重复
                 return;
             }
-            performer.speak((obj, child)).await;
+            performer.speak(&(obj, child)).await;
         });
     });
 
@@ -114,7 +106,7 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
                 return;
             }
 
-            performer.speak((obj, child)).await;
+            performer.speak(&(obj, child)).await;
         });
     });
 
@@ -130,7 +122,7 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
         let performer = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
             performer.play_sound(Single("tip.wav")).await;
-            performer.speak(obj).await;
+            performer.speak(&obj).await;
         });
     });
 
@@ -141,7 +133,7 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
         let performer = ctx.performer.clone();
 
         ctx.main_handler.spawn(async move {
-            performer.speak(src).await;
+            performer.speak(&src).await;
         });
     });
 }

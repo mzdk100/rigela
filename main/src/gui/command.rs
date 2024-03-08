@@ -162,7 +162,7 @@ pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg).await;
+        pf.speak(&msg).await;
     });
 }
 
@@ -177,7 +177,7 @@ pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg).await;
+        pf.speak(&msg).await;
     });
 }
 
@@ -198,7 +198,7 @@ pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
     };
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
-        pf.speak(msg).await;
+        pf.speak(&msg).await;
     });
 }
 
@@ -224,7 +224,7 @@ pub(crate) fn set_voice_cmd(context: Arc<Context>, engine: String, name: String)
         ctx.config_manager.set_config(&root);
         tts.apply_config(&cfg.clone()).await;
         ctx.performer
-            .speak(t!("cmd.tts_role", value = info.name))
+            .speak(&t!("cmd.tts_role", value = info.name))
             .await;
     });
 }
@@ -245,7 +245,7 @@ pub(crate) fn set_speed_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(t!("cmd.tts_speed", value = speed)).await;
+        pf.speak(&t!("cmd.tts_speed", value = speed)).await;
     });
 }
 
@@ -265,7 +265,7 @@ pub(crate) fn set_pitch_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(t!("cmd.tts_pitch", value = pitch)).await;
+        pf.speak(&t!("cmd.tts_pitch", value = pitch)).await;
     });
 }
 
@@ -285,7 +285,7 @@ pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
     let pf = context.performer.clone();
     context.main_handler.spawn(async move {
         tts.apply_config(&cfg.clone()).await;
-        pf.speak(t!("cmd.tts_volume", value = volume)).await;
+        pf.speak(&t!("cmd.tts_volume", value = volume)).await;
     });
 }
 
@@ -299,7 +299,7 @@ pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
             true => t!("cmd.msg_mouse_read_on"),
             false => t!("cmd.msg_mouse_read_off"),
         };
-        pf.speak(state).await;
+        pf.speak(&state).await;
     });
 }
 
@@ -371,6 +371,6 @@ fn reapply_config(context: Arc<Context>) {
         // 重新显示设置界面，更新界面上的状态值
         ctx.gui_provider.show_settings_form();
 
-        pf.speak(t!("cmd.msg_reset_success")).await;
+        pf.speak(&t!("cmd.msg_reset_success")).await;
     });
 }

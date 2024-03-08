@@ -131,7 +131,7 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
         // form_browser需要异步操作
         ctx.main_handler.spawn(async move {
             if let Some(root) = ui_automation.element_from_handle(src.h_wnd) {
-                form_browser.render(Arc::new(root)).await
+                form_browser.render(root.into()).await
             }
         });
     });

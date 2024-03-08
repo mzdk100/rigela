@@ -137,5 +137,5 @@ async fn speak_tts_prop(context: Arc<Context>) {
         TtsProperty::Volume(v) => t!("tts.volume_info", value = v),
         TtsProperty::Voice(v) => t!("tts.role", value = format!("{}_{}", v.engine, v.name)),
     };
-    context.performer.speak(info).await;
+    context.performer.speak(&info).await;
 }

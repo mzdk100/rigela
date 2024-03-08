@@ -11,24 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::browser::form_browser::BrowserElement;
+
+use a11y::ia2::object::Accessible2Object;
 use crate::performer::Speakable;
-use std::sync::Arc;
-use win_wrap::common::RECT;
 
-/// 传递给窗口浏览器的控件接口
-pub(crate) trait Browsable {
-    fn get_name(&self) -> String;
-    fn get_role(&self) -> String;
-    fn get_child_count(&self) -> usize;
-    fn get_child(&self, index: usize) -> Option<BrowserElement>;
-
-    fn get_rect(&self) -> RECT;
-}
-
-/// 为浏览控件接口对象实现朗读接口
-impl Speakable for Arc<dyn Browsable + Send + Sync> {
+impl Speakable for Accessible2Object {
     fn get_sentence(&self) -> String {
-        format!("{}: {}", self.get_name(), self.get_role())
+        self.attributes()
     }
 }

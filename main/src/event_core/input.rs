@@ -33,7 +33,7 @@ pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
             let performer = ctx.performer.clone();
 
             ctx.main_handler.spawn(async move {
-                performer.speak(c).await;
+                performer.speak(&c).await;
             });
         })
         .await;
@@ -66,7 +66,7 @@ pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
         };
         let pf = ctx.performer.clone();
         ctx.main_handler.spawn(async move {
-            pf.speak(info.to_string()).await;
+            pf.speak(&info.to_string()).await;
         });
     };
     context

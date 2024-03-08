@@ -11,15 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys::{VkDown, VkLeft, VkRight, VkUp};
-use crate::{commander::keys::Keys, context::Context, performer::sound::SoundArgument::Single};
+use crate::{
+    commander::keys::Keys,
+    context::Context,
+    performer::sound::SoundArgument::Single,
+    ext::element::UiAutomationElementExt,
+};
 use a11y::ia2::{
     text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
     WinEventSourceExt,
 };
 use log::error;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::uia::pattern::text::{TextUnit, UiAutomationTextPattern2};
+use win_wrap::uia::pattern::text::{TextUnit};
 
 //noinspection SpellCheckingInspection
 /**
@@ -46,23 +50,20 @@ async fn subscribe_uia_events(context: Arc<Context>) {
     // group.add_changes_listener(|| {});
 
     group.add_text_selection_changed_listener(move |element| {
-        let pattern = match UiAutomationTextPattern2::obtain(&element) {
-            Ok(p) => p,
-            Err(_) => return,
-        };
-
         {
             *editor_key_handle().lock().unwrap() = true;
         }
 
-        let caret = pattern.get_caret_range();
+        let Some(caret) = element.get_caret() else {
+            return;
+        };
         match commander.get_last_pressed_key() {
-            VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+            Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
         let pf = performer.clone();
         main_handler.spawn(async move {
-            pf.speak(caret).await;
+            pf.speak(&caret).await;
         });
     });
 
@@ -94,12 +95,12 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         };
         let caret = text.caret_offset().unwrap_or(0);
         let (_, _, text) = match commander.get_last_pressed_key() {
-            VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+            Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
             _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
         };
         let performer = performer.clone();
         main_handler.spawn(async move {
-            performer.speak(text).await;
+            performer.speak(&text).await;
         });
     })
 }
@@ -115,31 +116,31 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
 
     let cb = move |key: Keys, pressed| {
         let ctrl = ctx.ui_automation.get_focused_element();
-        if let Ok(pattern) = UiAutomationTextPattern2::obtain(&ctrl) {
-            match pressed {
-                true => {
-                    *editor_key_handle().lock().unwrap() = false;
-                }
-                false => {
-                    if !*editor_key_handle().lock().unwrap() {
-                        let caret = pattern.get_caret_range();
-                        match key {
-                            VkLeft | VkRight => caret.expand_to_enclosing_unit(TextUnit::Character),
-                            VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
-                            _ => {}
-                        }
-
-                        let pf = ctx.performer.clone();
-                        ctx.main_handler.spawn(async move {
-                            pf.play_sound(Single("edge.wav")).await;
-                            pf.speak(caret).await;
-                        });
+        match pressed {
+            true => {
+                *editor_key_handle().lock().unwrap() = false;
+            }
+            false => {
+                if !*editor_key_handle().lock().unwrap() {
+                    let Some(caret) = ctrl.get_caret() else {
+                        return;
+                    };
+                    match key {
+                        Keys::VkLeft | Keys::VkRight => caret.expand_to_enclosing_unit(TextUnit::Character),
+                        Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                        _ => {}
                     }
+
+                    let pf = ctx.performer.clone();
+                    ctx.main_handler.spawn(async move {
+                        pf.play_sound(Single("edge.wav")).await;
+                        pf.speak(&caret).await;
+                    });
                 }
             }
         }
     };
 
-    let keys = [VkUp, VkDown, VkLeft, VkRight];
+    let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
     context.commander.add_key_event_listener(&keys, cb);
 }

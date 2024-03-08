@@ -14,6 +14,7 @@
 use crate::performer::Speakable;
 use std::borrow::Cow;
 
+mod ia2;
 mod jab;
 mod msaa;
 mod peeper;
