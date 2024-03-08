@@ -12,22 +12,19 @@
  */
 
 use crate::{
-    commander::keys::Keys,
-    context::Context,
+    commander::keys::Keys, context::Context, ext::element::UiAutomationElementExt,
     performer::sound::SoundArgument::Single,
-    ext::element::UiAutomationElementExt,
 };
-use a11y::ia2::object::Accessible2Object;
-use a11y::ia2::text::AccessibleText;
 use a11y::ia2::{
-    text::IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
+    text::{
+        AccessibleText,
+        IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
+    },
     WinEventSourceExt,
 };
 use log::error;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::common::get_foreground_window;
-use win_wrap::msaa::object::AccessibleObject;
-use win_wrap::uia::pattern::text::{TextUnit};
+use win_wrap::uia::pattern::text::TextUnit;
 
 //noinspection SpellCheckingInspection
 /**
@@ -134,7 +131,9 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
                         return;
                     };
                     match key {
-                        Keys::VkLeft | Keys::VkRight => caret.expand_to_enclosing_unit(TextUnit::Character),
+                        Keys::VkLeft | Keys::VkRight => {
+                            caret.expand_to_enclosing_unit(TextUnit::Character)
+                        }
                         Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
                         _ => {}
                     }
@@ -151,10 +150,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
 
     let ctx = context.clone();
     let cb_ia2 = move |key: Keys, pressed| {
-        if let Ok(acc_obj) = AccessibleObject::from_caret() {
-            // todo: 未获取到 acc_obj
-
-            // let acc2_obj = Accessible2Object::from_accessible_object(acc_obj).unwrap();
+        if let Ok(acc_obj) = ctx.msaa.get_focus_object() {
             if let Ok(text) = AccessibleText::from_accessible_object(acc_obj) {
                 match pressed {
                     true => {
@@ -164,14 +160,16 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
                         if !*editor_key_handle().lock().unwrap() {
                             let caret = text.caret_offset().unwrap_or(0);
                             let (_, _, text) = match key {
-                                VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+                                Keys::VkUp | Keys::VkDown => {
+                                    text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE)
+                                }
                                 _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
                             };
 
                             let pf = ctx.performer.clone();
                             ctx.main_handler.spawn(async move {
                                 pf.play_sound(Single("edge.wav")).await;
-                                pf.speak(text).await;
+                                pf.speak(&text).await;
                             });
                         }
                     }
