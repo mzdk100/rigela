@@ -15,11 +15,13 @@ pub mod event;
 pub mod object;
 
 use crate::{
-    common::{get_desktop_window, Result},
+    common::{attach_thread_input, get_desktop_window, get_foreground_window, Result, FALSE, TRUE},
+    input::get_focus,
     msaa::{
         event::{WinEventHook, WinEventSource},
         object::AccessibleObject,
     },
+    threading::{get_current_thread_id, get_window_thread_process_id},
 };
 use std::sync::RwLock;
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -66,6 +68,19 @@ impl Msaa {
      * */
     pub fn get_desktop_object(&self) -> Result<AccessibleObject> {
         AccessibleObject::from_window(get_desktop_window())
+    }
+
+    /**
+     * 获取输入焦点的可访问性对象。
+     * */
+    pub fn get_focus_object(&self) -> Result<AccessibleObject> {
+        let current_thread_id = get_current_thread_id();
+        let h_foreground = get_foreground_window();
+        let (remote_thread_id, _) = get_window_thread_process_id(h_foreground);
+        attach_thread_input(current_thread_id, remote_thread_id, TRUE);
+        let obj = AccessibleObject::from_window(get_focus());
+        attach_thread_input(current_thread_id, remote_thread_id, FALSE);
+        obj
     }
 
     /**
