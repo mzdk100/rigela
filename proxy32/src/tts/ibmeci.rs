@@ -78,23 +78,29 @@ macro_rules! eci {
         )
     };
     ($module:expr,add_text,$handle:expr,$text:expr) => {{
-        let p = CString::new($text).unwrap();
-        call_proc!(
-            $module,
-            eciAddText,
-            extern "system" fn(i32, *const c_char) -> bool,
-            $handle,
-            p.as_ptr()
-        )
+        if let Ok(p) = CString::new($text) {
+            call_proc!(
+                $module,
+                eciAddText,
+                extern "system" fn(i32, *const c_char) -> bool,
+                $handle,
+                p.as_ptr()
+            )
+        } else {
+            None
+        }
     }};
     ($module:expr,speak_text,$text:expr) => {{
-        let p = CString::new($text).unwrap();
-        call_proc!(
-            $module,
-            eciSpeakText,
-            extern "system" fn(*mut c_char),
-            p.as_ptr()
-        )
+        if let Ok(p) = CString::new($text) {
+            call_proc!(
+                $module,
+                eciSpeakText,
+                extern "system" fn(*mut c_char),
+                p.as_ptr()
+            )
+        } else {
+            None
+        }
     }};
     ($module:expr,synthesize,$handle:expr) => {
         call_proc!($module, eciSynthesize, extern "system" fn(i32), $handle)
@@ -439,7 +445,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             pitch_fluctuation: eci!(
                 self.h_module,
                 get_voice_param,
@@ -447,7 +453,7 @@ impl Ibmeci {
                 0,
                 VP_PITCH_BASELINE
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             roughness: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_ROUGHNESS)
                 .unwrap_or(0),
             breathiness: eci!(
@@ -457,7 +463,7 @@ impl Ibmeci {
                 0,
                 VP_BREATHINESS
             )
-            .unwrap_or(0),
+                .unwrap_or(0),
             speed: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_SPEED).unwrap_or(0),
             volume: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_VOLUME).unwrap_or(0),
         }
@@ -477,9 +483,9 @@ impl Ibmeci {
             (7, "Elderly Female 1"),
             (8, "Elderly Male 1"),
         ]
-        .iter()
-        .map(|i| (i.0, i.1.to_string()))
-        .collect()
+            .iter()
+            .map(|i| (i.0, i.1.to_string()))
+            .collect()
     }
 
     /**
