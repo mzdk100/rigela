@@ -69,6 +69,7 @@ async fn subscribe_jab_events(context: Arc<Context>) {
 
 #[allow(dead_code)]
 async fn subscribe_uia_events(context: Arc<Context>) {
+    let event_core = context.event_core.clone();
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
     let commander = context.commander.clone();
@@ -92,9 +93,15 @@ async fn subscribe_uia_events(context: Arc<Context>) {
             Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
-        let pf = performer.clone();
+
+        let event_core = event_core.clone();
+        let performer = performer.clone();
+
         main_handler.spawn(async move {
-            pf.speak(&caret).await;
+            if event_core.should_ignore(caret.get_text(-1), Duration::from_millis(50)).await {
+                return;
+            }
+            performer.speak(&caret).await;
         });
     });
 
@@ -113,6 +120,7 @@ async fn subscribe_uia_events(context: Arc<Context>) {
 
 async fn subscribe_ia2_events(context: Arc<Context>) {
     let commander = context.commander.clone();
+    let event_core = context.event_core.clone();
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
 
@@ -134,8 +142,14 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
             Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
             _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
         };
+
+        let event_core = event_core.clone();
         let performer = performer.clone();
+
         main_handler.spawn(async move {
+            if event_core.should_ignore(text.clone(), Duration::from_millis(50)).await {
+                return;
+            }
             performer.speak(&text).await;
         });
     })
