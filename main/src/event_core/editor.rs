@@ -24,6 +24,7 @@ use a11y::ia2::{
 };
 use log::error;
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
 use win_wrap::uia::pattern::text::TextUnit;
 
 //noinspection SpellCheckingInspection
@@ -34,7 +35,36 @@ use win_wrap::uia::pattern::text::TextUnit;
 pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_uia_events(context.clone()).await;
     subscribe_ia2_events(context.clone()).await;
+    subscribe_jab_events(context.clone()).await;
     subscribe_cusor_key_events(context.clone()).await;
+}
+
+#[allow(unused_variables)]
+async fn subscribe_jab_events(context: Arc<Context>) {
+    let commander = context.commander.clone();
+    let event_core = context.event_core.clone();
+    let main_handler = context.main_handler.clone();
+    let performer = context.performer.clone();
+
+    context.jab.add_on_property_caret_change_listener(move |src, old, new| {
+        let Some((char, word, line)) = src.get_text_items(new) else {
+            return;
+        };
+
+        let commander = commander.clone();
+        let event_core = event_core.clone();
+        let performer = performer.clone();
+
+        main_handler.spawn(async move {
+            if event_core.should_ignore(char.to_string(), Duration::from_millis(50)).await {
+                return;
+            }
+            match commander.get_last_pressed_key() {
+                Keys::VkUp | Keys::VkDown => performer.speak(&line).await,
+                _ => performer.speak(&char).await
+            };
+        });
+    });
 }
 
 #[allow(dead_code)]

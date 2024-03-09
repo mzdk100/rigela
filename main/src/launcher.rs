@@ -120,18 +120,18 @@ impl Launcher {
         self.context.terminator.wait().await;
         self.context.dispose();
 
+        // 退出Gui界面
+        self.context.gui_provider.uninit();
+
+        // 播放退出音效
+        self.context.performer.play_sound(Single("exit.wav")).await;
+
         // 杀死32位代理模块
         #[cfg(target_arch = "x86_64")]
         self.context.proxy32.kill().await.wait().await;
 
         // 解除远进程监控
         peeper::unmount();
-
-        // 退出Gui界面
-        self.context.gui_provider.uninit();
-
-        // 播放退出音效
-        self.context.performer.play_sound(Single("exit.wav")).await;
     }
 }
 
