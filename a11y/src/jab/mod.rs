@@ -34,7 +34,11 @@ use crate::{
 };
 use rigela_utils::library::get_library_path;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::{common::HWND, ext::StringExt};
+use win_wrap::{
+    common::HWND,
+    ext::StringExt,
+    message::pump_waiting_messages,
+};
 
 static mut LIB: OnceLock<JabLib> = OnceLock::new();
 static FUNCS: Mutex<Vec<AccessibleCallback>> = Mutex::new(vec![]);
@@ -52,6 +56,7 @@ impl Jab {
         let lib = unsafe {
             LIB.get_or_init(|| {
                 let path = get_library_path("windowsaccessbridge-64.dll");
+                pump_waiting_messages();
                 JabLib::new(Some(path)).unwrap()
             })
         };
@@ -79,6 +84,7 @@ impl Jab {
      * `h_wnd` 一个窗口句柄。
      * */
     pub fn is_java_window(&self, h_wnd: HWND) -> bool {
+        pump_waiting_messages();
         self._lib.is_java_window(h_wnd)
     }
 
