@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#![allow(non_upper_case_globals)]
+
 pub mod callback;
 pub mod context;
 pub mod hyperlink;
@@ -22,26 +24,20 @@ pub mod table;
 pub mod text;
 pub mod version;
 
-use std::sync::{Arc, Mutex, OnceLock};
 use crate::{
     add_event_fp,
     jab::{
-        context::AccessibleContext,
         callback::{AccessibleCallback, AccessibleContextType},
+        context::AccessibleContext,
     },
-    JabLib::{
-        JabLib,
-        packages::JObject64,
-    },
+    JabLib::{packages::JObject64, JabLib},
 };
 use rigela_utils::library::get_library_path;
-use win_wrap::{
-    common::HWND,
-    ext::StringExt,
-};
+use std::sync::{Arc, Mutex, OnceLock};
+use win_wrap::{common::HWND, ext::StringExt};
 
 static mut LIB: OnceLock<JabLib> = OnceLock::new();
-static FUNCS: OnceLock<Mutex<Vec<AccessibleCallback>>> = OnceLock::new();
+static FUNCS: Mutex<Vec<AccessibleCallback>> = Mutex::new(vec![]);
 
 #[derive(Debug)]
 pub struct Jab {
@@ -59,9 +55,7 @@ impl Jab {
                 JabLib::new(Some(path)).unwrap()
             })
         };
-        Self {
-            _lib: lib
-        }
+        Self { _lib: lib }
     }
 
     /**
@@ -99,48 +93,252 @@ impl Jab {
      * 移除所有监听器。
      * */
     pub fn remove_all_listeners(&self) {
-        let Some(lock) = FUNCS.get() else {
-            return;
-        };
-        let mut lock = lock.lock().unwrap();
+        let mut lock = FUNCS.lock().unwrap();
         lock.clear();
     }
 }
 
-add_event_fp!(general,LIB, FUNCS, cb_caret_update,add_on_caret_update_listener,AccessibleCallback::CaretUpdate,set_caret_update_fp, "插入点改变");
-add_event_fp!(general,LIB, FUNCS, cb_focus_gained,add_on_focus_gained_listener,AccessibleCallback::FocusGained,set_focus_gained_fp, "得到焦点");
-add_event_fp!(general,LIB, FUNCS, cb_mouse_clicked,add_on_mouse_clicked_listener,AccessibleCallback::MouseClicked,set_mouse_clicked_fp, "鼠标点击");
-add_event_fp!(general,LIB, FUNCS, cb_mouse_entered,add_on_mouse_entered_listener,AccessibleCallback::MouseEntered,set_mouse_entered_fp, "鼠标进入");
-add_event_fp!(general,LIB, FUNCS, cb_mouse_exited,add_on_mouse_exited_listener,AccessibleCallback::MouseExited,set_mouse_exited_fp, "鼠标离开");
-add_event_fp!(general,LIB, FUNCS, cb_mouse_pressed,add_on_mouse_pressed_listener,AccessibleCallback::MousePressed,set_mouse_pressed_fp, "鼠标被按下");
-add_event_fp!(general,LIB, FUNCS, cb_mouse_released,add_on_mouse_released_listener,AccessibleCallback::MouseReleased,set_mouse_released_fp, "鼠标被释放");
-add_event_fp!(general,LIB, FUNCS, cb_menu_canceled,add_on_menu_canceled_listener,AccessibleCallback::MenuCanceled,set_menu_canceled_fp, "菜单被取消");
-add_event_fp!(general,LIB, FUNCS, cb_menu_deselected,add_on_menu_deselected_listener,AccessibleCallback::MenuDeselected,set_menu_deselected_fp, "菜单被取消选择");
-add_event_fp!(general,LIB, FUNCS, cb_menu_selected,add_on_menu_selected_listener,AccessibleCallback::MenuSelected,set_menu_selected_fp, "菜单被选择");
-add_event_fp!(general,LIB, FUNCS, cb_popup_menu_canceled,add_on_popup_menu_canceled_listener,AccessibleCallback::PopupMenuCanceled,set_popup_menu_canceled_fp, "弹出菜单被取消");
-add_event_fp!(general,LIB, FUNCS, cb_popup_menu_will_become_invisible,add_on_popup_menu_will_become_invisible_listener,AccessibleCallback::PopupMenuWillBecomeInvisible,set_popup_menu_will_become_invisible_fp, "弹出菜单即将隐藏");
-add_event_fp!(general,LIB, FUNCS, cb_popup_menu_will_become_visible,add_on_popup_menu_will_become_visible_listener,AccessibleCallback::PopupMenuWillBecomeVisible,set_popup_menu_will_become_visible_fp, "弹出菜单即将显示");
-add_event_fp!(general,LIB, FUNCS, cb_property_selection_change,add_on_property_selection_change_listener,AccessibleCallback::PropertySelectionChange,set_property_selection_change_fp, "属性选择改变");
-add_event_fp!(general,LIB, FUNCS, cb_property_text_change,add_on_property_text_change_listener,AccessibleCallback::PropertyTextChange,set_property_text_change_fp, "属性文本改变");
-add_event_fp!(general,LIB, FUNCS, cb_property_visible_data_change,add_on_property_visible_data_change_listener,AccessibleCallback::PropertyVisibleDataChange,set_property_visible_data_change_fp, "属性可见数据改变");
-add_event_fp!(property_change,LIB, FUNCS, "属性改变");
-add_event_fp!(property_x_change,LIB, FUNCS, cb_property_name_change,add_on_property_name_change_listener,AccessibleCallback::PropertyNameChange,set_property_name_change_fp, "属性名称改变");
-add_event_fp!(property_x_change,LIB, FUNCS, cb_property_description_change,add_on_property_description_change_listener,AccessibleCallback::PropertyDescriptionChange,set_property_description_change_fp, "属性描述改变");
-add_event_fp!(property_x_change,LIB, FUNCS, cb_property_state_change,add_on_property_state_change_listener,AccessibleCallback::PropertyStateChange,set_property_state_change_fp, "属性状态改变");
-add_event_fp!(property_x_change,LIB, FUNCS, cb_property_value_change,add_on_property_value_change_listener,AccessibleCallback::PropertyValueChange,set_property_value_change_fp, "属性值改变");
-add_event_fp!(property_caret_change,LIB, FUNCS, "属性插入点改变");
-add_event_fp!(property_y_change,LIB, FUNCS, cb_property_child_change,add_on_property_child_change_listener,AccessibleCallback::PropertyChildChange,set_property_child_change_fp, "属性子对象改变");
-add_event_fp!(property_y_change,LIB, FUNCS, cb_property_active_descendent_change,add_on_property_active_descendent_change_listener,AccessibleCallback::PropertyActiveDescendentChange,set_property_active_descendent_change_fp, "属性激活、取消激活");
-add_event_fp!(property_x_change,LIB, FUNCS, cb_property_table_model_change,add_on_property_table_model_change_listener,AccessibleCallback::PropertyTableModelChange,set_property_table_model_change_fp, "属性表格模式改变");
-add_event_fp!(java_shutdown,LIB, FUNCS, "java关闭");
-
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_caret_update,
+    add_on_caret_update_listener,
+    AccessibleCallback::CaretUpdate,
+    set_caret_update_fp,
+    "插入点改变"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_focus_gained,
+    add_on_focus_gained_listener,
+    AccessibleCallback::FocusGained,
+    set_focus_gained_fp,
+    "得到焦点"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_mouse_clicked,
+    add_on_mouse_clicked_listener,
+    AccessibleCallback::MouseClicked,
+    set_mouse_clicked_fp,
+    "鼠标点击"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_mouse_entered,
+    add_on_mouse_entered_listener,
+    AccessibleCallback::MouseEntered,
+    set_mouse_entered_fp,
+    "鼠标进入"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_mouse_exited,
+    add_on_mouse_exited_listener,
+    AccessibleCallback::MouseExited,
+    set_mouse_exited_fp,
+    "鼠标离开"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_mouse_pressed,
+    add_on_mouse_pressed_listener,
+    AccessibleCallback::MousePressed,
+    set_mouse_pressed_fp,
+    "鼠标被按下"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_mouse_released,
+    add_on_mouse_released_listener,
+    AccessibleCallback::MouseReleased,
+    set_mouse_released_fp,
+    "鼠标被释放"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_menu_canceled,
+    add_on_menu_canceled_listener,
+    AccessibleCallback::MenuCanceled,
+    set_menu_canceled_fp,
+    "菜单被取消"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_menu_deselected,
+    add_on_menu_deselected_listener,
+    AccessibleCallback::MenuDeselected,
+    set_menu_deselected_fp,
+    "菜单被取消选择"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_menu_selected,
+    add_on_menu_selected_listener,
+    AccessibleCallback::MenuSelected,
+    set_menu_selected_fp,
+    "菜单被选择"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_popup_menu_canceled,
+    add_on_popup_menu_canceled_listener,
+    AccessibleCallback::PopupMenuCanceled,
+    set_popup_menu_canceled_fp,
+    "弹出菜单被取消"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_popup_menu_will_become_invisible,
+    add_on_popup_menu_will_become_invisible_listener,
+    AccessibleCallback::PopupMenuWillBecomeInvisible,
+    set_popup_menu_will_become_invisible_fp,
+    "弹出菜单即将隐藏"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_popup_menu_will_become_visible,
+    add_on_popup_menu_will_become_visible_listener,
+    AccessibleCallback::PopupMenuWillBecomeVisible,
+    set_popup_menu_will_become_visible_fp,
+    "弹出菜单即将显示"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_property_selection_change,
+    add_on_property_selection_change_listener,
+    AccessibleCallback::PropertySelectionChange,
+    set_property_selection_change_fp,
+    "属性选择改变"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_property_text_change,
+    add_on_property_text_change_listener,
+    AccessibleCallback::PropertyTextChange,
+    set_property_text_change_fp,
+    "属性文本改变"
+);
+add_event_fp!(
+    general,
+    LIB,
+    FUNCS,
+    cb_property_visible_data_change,
+    add_on_property_visible_data_change_listener,
+    AccessibleCallback::PropertyVisibleDataChange,
+    set_property_visible_data_change_fp,
+    "属性可见数据改变"
+);
+add_event_fp!(property_change, LIB, FUNCS, "属性改变");
+add_event_fp!(
+    property_x_change,
+    LIB,
+    FUNCS,
+    cb_property_name_change,
+    add_on_property_name_change_listener,
+    AccessibleCallback::PropertyNameChange,
+    set_property_name_change_fp,
+    "属性名称改变"
+);
+add_event_fp!(
+    property_x_change,
+    LIB,
+    FUNCS,
+    cb_property_description_change,
+    add_on_property_description_change_listener,
+    AccessibleCallback::PropertyDescriptionChange,
+    set_property_description_change_fp,
+    "属性描述改变"
+);
+add_event_fp!(
+    property_x_change,
+    LIB,
+    FUNCS,
+    cb_property_state_change,
+    add_on_property_state_change_listener,
+    AccessibleCallback::PropertyStateChange,
+    set_property_state_change_fp,
+    "属性状态改变"
+);
+add_event_fp!(
+    property_x_change,
+    LIB,
+    FUNCS,
+    cb_property_value_change,
+    add_on_property_value_change_listener,
+    AccessibleCallback::PropertyValueChange,
+    set_property_value_change_fp,
+    "属性值改变"
+);
+add_event_fp!(property_caret_change, LIB, FUNCS, "属性插入点改变");
+add_event_fp!(
+    property_y_change,
+    LIB,
+    FUNCS,
+    cb_property_child_change,
+    add_on_property_child_change_listener,
+    AccessibleCallback::PropertyChildChange,
+    set_property_child_change_fp,
+    "属性子对象改变"
+);
+add_event_fp!(
+    property_y_change,
+    LIB,
+    FUNCS,
+    cb_property_active_descendent_change,
+    add_on_property_active_descendent_change_listener,
+    AccessibleCallback::PropertyActiveDescendentChange,
+    set_property_active_descendent_change_fp,
+    "属性后代对象激活状态改变"
+);
+add_event_fp!(
+    property_x_change,
+    LIB,
+    FUNCS,
+    cb_property_table_model_change,
+    add_on_property_table_model_change_listener,
+    AccessibleCallback::PropertyTableModelChange,
+    set_property_table_model_change_fp,
+    "属性表格模式改变"
+);
+add_event_fp!(java_shutdown, LIB, FUNCS, "java关闭");
 
 impl Drop for Jab {
     fn drop(&mut self) {
-        unsafe { LIB.take(); }
+        unsafe {
+            LIB.take();
+        }
     }
 }
-
 
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
@@ -157,9 +355,13 @@ mod test_jab {
         let h_wnd = find_window(Some("SunAwtFrame"), None);
         assert!(jab.is_java_window(h_wnd));
         dbg!(jab.get_events_waiting());
-        jab.add_on_property_caret_change_listener(|src, old_value, new_value| {
+        jab.add_on_focus_gained_listener(|src| {
             dbg!(src);
-            println!("{},{}", old_value, new_value);
+        });
+        jab.add_on_property_active_descendent_change_listener(|src, old, new| {
+            dbg!(src);
+            dbg!(old);
+            dbg!(new);
         });
         let context = jab.get_context_from_hwnd(h_wnd).unwrap();
         dbg!(&context);

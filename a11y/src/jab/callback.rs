@@ -70,7 +70,7 @@ macro_rules! add_event_fp {
                 source
             };
 
-            let lock = $store.get().unwrap().lock().unwrap();
+            let lock = $store.lock().unwrap();
             lock.iter().for_each(move |cb| {
                 if let $type(f) = cb {
                     f(source.clone());
@@ -80,13 +80,10 @@ macro_rules! add_event_fp {
         impl Jab {
             #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
             pub fn $func_name(&self, func: impl Fn(AccessibleContextType) + Sync + Send + 'static) {
-                let mut lock = $store
-                    .get_or_init(|| {
-                        self._lib.$origin_name($cb_name);
-                        vec![].into()
-                    })
-                    .lock()
-                    .unwrap();
+                static $origin_name: OnceLock<()> = OnceLock::new();
+                $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+
+                let mut lock = $store.lock().unwrap();
                 lock.push($type(Box::new(func)));
             }
         }
@@ -110,7 +107,7 @@ macro_rules! add_event_fp {
                     (source,property2,old_value2,new_value2)
                 };
 
-                let lock = $store.get().unwrap().lock().unwrap();
+                let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let AccessibleCallback::PropertyChange(f) = cb {
                         f(source.clone(), property.clone(),old_value.clone(),new_value.clone());
@@ -120,13 +117,10 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_property_change_listener(&self, func: impl Fn(AccessibleContextType, String,String,String) + Sync + Send + 'static) {
-                    let mut lock = $store
-                        .get_or_init(|| {
-                            self._lib.set_property_change_fp(cb_property_change);
-                            vec![].into()
-                        })
-                        .lock()
-                        .unwrap();
+                    static set_property_change_fp: OnceLock<()> = OnceLock::new();
+                    set_property_change_fp.get_or_init(|| self._lib.set_property_change_fp(cb_property_change));
+
+                    let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::PropertyChange(Box::new(func)));
                 }
             }
@@ -148,7 +142,7 @@ macro_rules! add_event_fp {
                     (source,old_value2,new_value2)
                 };
 
-                let lock = $store.get().unwrap().lock().unwrap();
+                let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let $type(f) = cb {
                         f(source.clone(), old_value.clone(),new_value.clone());
@@ -158,13 +152,10 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn $func_name(&self, func: impl Fn(AccessibleContextType, String,String) + Sync + Send + 'static) {
-                    let mut lock = $store
-                        .get_or_init(|| {
-                            self._lib.$origin_name($cb_name);
-                            vec![].into()
-                        })
-                        .lock()
-                        .unwrap();
+                    static $origin_name: OnceLock<()> = OnceLock::new();
+                    $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+
+                    let mut lock = $store.lock().unwrap();
                     lock.push($type(Box::new(func)));
                 }
             }
@@ -182,7 +173,7 @@ macro_rules! add_event_fp {
                     source
                 };
 
-                let lock = $store.get().unwrap().lock().unwrap();
+                let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let AccessibleCallback::PropertyCaretChange(f) = cb {
                         f(source.clone(), old_value,new_value);
@@ -192,13 +183,10 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_property_caret_change_listener(&self, func: impl Fn(AccessibleContextType, i32,i32) + Sync + Send + 'static) {
-                    let mut lock = $store
-                        .get_or_init(|| {
-                            self._lib.set_property_caret_change_fp(cb_property_caret_change);
-                            vec![].into()
-                        })
-                        .lock()
-                        .unwrap();
+                    static set_property_caret_change_fp: OnceLock<()> = OnceLock::new();
+                    set_property_caret_change_fp.get_or_init(|| self._lib.set_property_caret_change_fp(cb_property_caret_change));
+
+                    let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::PropertyCaretChange(Box::new(func)));
                 }
             }
@@ -218,7 +206,7 @@ macro_rules! add_event_fp {
                     (source,old_value,new_value)
                 };
 
-                let lock = $store.get().unwrap().lock().unwrap();
+                let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let $type(f) = cb {
                         f(source.clone(), old_value.clone(),new_value.clone());
@@ -228,13 +216,10 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn $func_name(&self, func: impl Fn(AccessibleContextType, AccessibleContextType, AccessibleContextType) + Sync + Send + 'static) {
-                    let mut lock = $store
-                        .get_or_init(|| {
-                            self._lib.$origin_name($cb_name);
-                            vec![].into()
-                        })
-                        .lock()
-                        .unwrap();
+                    static $origin_name: OnceLock<()> = OnceLock::new();
+                    $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+
+                    let mut lock = $store.lock().unwrap();
                     lock.push($type(Box::new(func)));
                 }
             }
@@ -242,7 +227,7 @@ macro_rules! add_event_fp {
 
         (java_shutdown,$lib:expr,$store:expr,$doc:literal) => {
             extern "cdecl" fn cb_java_shutdown(vm_id: i32) {
-                let lock = $store.get().unwrap().lock().unwrap();
+                let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let AccessibleCallback::JavaShutdown(f) = cb {
                         f(vm_id);
@@ -252,13 +237,10 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_java_shutdown_listener(&self, func: impl Fn(i32) + Sync + Send + 'static) {
-                    let mut lock = $store
-                        .get_or_init(|| {
-                            self._lib.set_java_shutdown_fp(cb_java_shutdown);
-                            vec![].into()
-                        })
-                        .lock()
-                        .unwrap();
+                    static set_java_shutdown_fp: OnceLock<()> = OnceLock::new();
+                    set_java_shutdown_fp.get_or_init(|| self._lib.set_java_shutdown_fp(cb_java_shutdown));
+
+                    let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::JavaShutdown(Box::new(func)));
                 }
             }
