@@ -23,7 +23,7 @@ use tokio::{
     },
     time::sleep,
 };
-use win_wrap::message::pump_waiting_messages;
+use win_wrap::message::{change_window_message_filter, MSGFLT_ADD, pump_waiting_messages, WM_COPYDATA, WM_USER};
 
 #[derive(Clone)]
 pub(crate) struct Terminator(
@@ -56,6 +56,13 @@ impl Terminator {
     }
 
     pub(crate) async fn wait(&self) {
+        // 某些进程的WM_COPYDATA和大于WM_USER的消息可能会因为权限无法接收和处理，我们使用change_window_message_filter函数来改变这种行为
+        change_window_message_filter(WM_COPYDATA, MSGFLT_ADD);
+        for i in (WM_USER + 1)..0xffff {
+            change_window_message_filter(i, MSGFLT_ADD);
+        }
+
+        // 异步的线程循环
         loop {
             pump_waiting_messages();
             let lock = self.1.read().await;
