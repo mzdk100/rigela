@@ -12,17 +12,18 @@
  */
 
 use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
-use windows::Win32::UI::WindowsAndMessaging::{PeekMessageW, PEEK_MESSAGE_REMOVE_TYPE};
 pub use windows::Win32::UI::WindowsAndMessaging::{
-    HWND_BROADCAST, MSG, PM_NOREMOVE, PM_NOYIELD, PM_QS_INPUT, PM_QS_PAINT, PM_QS_SENDMESSAGE,
-    PM_REMOVE, SEND_MESSAGE_TIMEOUT_FLAGS, SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT,
-    SMTO_NORMAL, SMTO_NOTIMEOUTIFNOTHUNG, WM_QUIT,
+    CHANGE_WINDOW_MESSAGE_FILTER_FLAGS, HWND_BROADCAST, MSG, MSGFLT_ADD, MSGFLT_REMOVE,
+    PM_NOREMOVE, PM_NOYIELD, PM_QS_INPUT, PM_QS_PAINT, PM_QS_SENDMESSAGE, PM_REMOVE,
+    SEND_MESSAGE_TIMEOUT_FLAGS, SMTO_ABORTIFHUNG, SMTO_BLOCK, SMTO_ERRORONEXIT, SMTO_NORMAL,
+    SMTO_NOTIMEOUTIFNOTHUNG, WM_COPYDATA, WM_QUIT, WM_USER,
 };
 use windows::{
     core::HSTRING,
     Win32::UI::WindowsAndMessaging::{
-        DispatchMessageW, GetMessageW, PostThreadMessageW, RegisterWindowMessageW,
-        SendMessageTimeoutW, SendMessageW, TranslateMessage,
+        ChangeWindowMessageFilter, DispatchMessageW, GetMessageW, PeekMessageW, PostThreadMessageW,
+        RegisterWindowMessageW, SendMessageTimeoutW, SendMessageW, TranslateMessage,
+        PEEK_MESSAGE_REMOVE_TYPE,
     },
 };
 
@@ -31,9 +32,7 @@ macro_rules! wm {
     ($prefix:expr,$field:ident) => {
         $field
             .get_or_init(|| {
-                register_window_message(
-                    format!("{}_{}", $prefix, stringify!($field)).as_str(),
-                )
+                register_window_message(format!("{}_{}", $prefix, stringify!($field)).as_str())
             })
             .clone()
     };
@@ -172,6 +171,27 @@ pub fn translate_message(msg: &mut MSG) -> BOOL {
  * */
 pub fn register_window_message(string: &str) -> u32 {
     unsafe { RegisterWindowMessageW(&HSTRING::from(string)) }
+}
+
+//noinspection StructuralWrap
+/**
+ * [不建议使用 change_window_message_filter 函数，因为它具有进程范围的作用域。 请根据需要使用 change_window_message_filter_ex 函数来控制对特定窗口的访问。 将来版本的 Windows 可能不支持 change_window_message_filter。]
+ * 在用户界面特权隔离 (UIPI) 消息筛选器中添加或删除消息。
+ * 注意 可以从筛选器中成功删除消息，但不能保证消息会被阻止。
+ * UIPI 是一项安全功能，可防止从较低完整性级别的发件人接收消息。 默认情况下，将阻止值高于 WM_USER 的所有此类消息。 筛选器与直觉有些背道而驰，是允许通过的消息列表。 因此，将消息添加到筛选器允许从完整性较低地发件人接收该消息，同时删除阻止接收该消息的消息。
+ * 值小于 WM_USER 的某些消息需要通过筛选器，而不考虑筛选器设置。 可以调用此函数以从筛选器中删除其中一条消息，它将返回 TRUE。 但是，调用进程仍将接收消息。
+ * 不允许 SECURITY_MANDATORY_LOW_RID 或以下的进程更改筛选器。 如果这些进程调用此函数，它将失败。
+ * 有关完整性级别的详细信息，请参阅 了解和在受保护模式下工作 Internet Explorer。
+ * `message` 要向筛选器添加或从中删除的消息。
+ * `flag` 要执行的操作。 以下值之一。
+ * - MSGFLT_ADD 将 消息 添加到筛选器。 这具有允许接收消息的效果。
+ * - MSGFLT_REMOVE 从筛选器中删除 消息 。 这具有阻止消息的效果。
+ * */
+pub fn change_window_message_filter(
+    message: u32,
+    flag: CHANGE_WINDOW_MESSAGE_FILTER_FLAGS,
+) -> bool {
+    unsafe { ChangeWindowMessageFilter(message, flag) }.is_ok()
 }
 
 //noinspection StructuralWrap
