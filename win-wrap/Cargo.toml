@@ -8,7 +8,7 @@ edition.workspace = true
 
 
 [features]
-msaa = ["common", "message"]
+msaa = ["common", "message", "input", "threading"]
 uia = ["com"]
 audio = []
 com = ["common", "ext", "windows/Win32_System_Ole"]
