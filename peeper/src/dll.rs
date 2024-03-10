@@ -15,17 +15,11 @@ use crate::{client::PeeperClient, handler::{on_ime, on_input_char}, HOOK_INIT, H
 use log::debug;
 use std::{ffi::c_void, sync::RwLock};
 use win_wrap::{
-    common::{call_next_hook_ex, get_module_file_name},
+    common::{call_next_hook_ex, get_module_file_name, BOOL, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH},
     ext::LParamExt,
     hook::CwpStruct,
-    message::register_window_message,
-};
-use windows::Win32::{
-    Foundation::{BOOL, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM},
-    System::SystemServices::{
-        DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH,
-    },
-    UI::WindowsAndMessaging::{MSG, WM_CHAR, WM_IME_NOTIFY},
+    message::{MSG, register_window_message},
+    input::{WM_CHAR, WM_IME_NOTIFY},
 };
 
 macro_rules! handle_event {

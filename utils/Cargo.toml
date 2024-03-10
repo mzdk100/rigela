@@ -13,10 +13,10 @@ repository.workspace = true
 bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
 fs = ["home", "tokio/fs", "tokio/io-util"]
-killer = []
+killer = ["pipe"]
 library = ["fs"]
 logger = ["log4rs"]
-pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/time"]
+pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/io-util", "tokio/time"]
 
 [dependencies]
 # 输出日志

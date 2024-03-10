@@ -10,11 +10,12 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync"]
-dll = ["client", "handler"]
-handler = []
-model = []
-server = ["model", "utils", "tokio/rt-multi-thread"]
+default = ["win-wrap/common", "win-wrap/hook"]
+client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync", "rigela-utils/pipe"]
+dll = ["client", "handler", "win-wrap/common", "win-wrap/ext", "win-wrap/hook"]
+handler = ["win-wrap/input"]
+model = ["serde/derive"]
+server = ["model", "utils", "tokio/rt-multi-thread", "rigela-utils/pipe"]
 utils = []
 
 [dependencies]
@@ -22,24 +23,27 @@ log = "0.4.21"
 
 [dependencies.retour]
 version = "0.3.1"
-features = ["default"]
+optional = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
-features = ["input", "hook"]
+optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-features = ["pipe", "fs"]
+optional = true
 
 [dependencies.windows]
 version = "0.54.0"
-features = ["Win32_Foundation"]
+optional = true
 
 [dependencies.serde]
-features = ["derive"]
 version = "1.0.197"
+optional = true
 
 [dependencies.tokio]
 version = "1.36.0"
 optional = true
+
+[build-dependencies.cargo-rigela]
+path = "../build_helper"

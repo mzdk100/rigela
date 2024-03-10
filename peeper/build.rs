@@ -17,6 +17,8 @@ use std::{
     fs::{copy, read_dir},
     path::Path,
 };
+#[cfg(feature = "dll")]
+use cargo_rigela;
 
 fn copy_deps(target: &str) {
     let cargo = env::var("CARGO").unwrap();
@@ -53,6 +55,10 @@ fn copy_deps(target: &str) {
 fn main() {
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=build.rs");
+
+    #[cfg(feature = "dll")]
+    cargo_rigela::make_version();
+
     if env::var("DEBUG").unwrap_or("false".to_string()) != "true" {
         return;
     }

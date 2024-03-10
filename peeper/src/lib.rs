@@ -24,13 +24,17 @@ pub mod server;
 #[cfg(feature = "utils")]
 mod utils;
 
+#[cfg(not(feature = "dll"))]
 use log::{debug, error};
+#[cfg(not(feature = "dll"))]
 use rigela_utils::fs::get_program_directory;
+#[cfg(not(feature = "dll"))]
 use std::{
-    sync::OnceLock,
     thread::{self, sleep},
     time::Duration,
 };
+use std::sync::OnceLock;
+#[cfg(not(feature = "dll"))]
 use win_wrap::{
     common::{
         get_proc_address, load_library, set_windows_hook_ex, unhook_windows_hook_ex, LPARAM, WPARAM,
@@ -45,6 +49,7 @@ use win_wrap::{
 };
 
 // 此字段保存钩子的线程，在主进程中有效，所有远进程都不会被初始化
+#[cfg(not(feature = "dll"))]
 static HOOK_THREAD: OnceLock<ThreadNotify> = OnceLock::new();
 
 // 此字段保存一个自定义的窗口消息值并在所有进程中都需要使用，用于在主进程中通知所有远进程钩子需要初始化，这能确保所有远进程收到通知并处理后主进程才能进行下一步操作
@@ -58,6 +63,7 @@ static HOOK_UNINIT: OnceLock<u32> = OnceLock::new();
  * 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
  * 注意： 当main引用本模块并构建时，会自动生成此dll。
  * */
+#[cfg(not(feature = "dll"))]
 pub fn mount() {
     debug!("mounted.");
     thread::spawn(move || {
@@ -148,6 +154,7 @@ pub fn mount() {
 }
 
 /** 停止亏叹气。 */
+#[cfg(not(feature = "dll"))]
 pub fn unmount() {
     match HOOK_THREAD.get() {
         None => {
