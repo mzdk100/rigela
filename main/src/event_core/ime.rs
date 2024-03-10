@@ -11,12 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::event_core::editor::editor_key_handle;
-use crate::{context::Context, performer::sound::SoundArgument::Single};
+use crate::{
+    event_core::editor::editor_key_handle,
+    context::Context,
+    performer::sound::SoundArgument::Single,
+};
 use peeper::model::CandidateList;
-use std::ops::DerefMut;
 use std::{collections::HashMap, sync::Arc};
 use tokio::io::AsyncReadExt;
+use win_wrap::input::{IME_CMODE_ALPHANUMERIC, IME_CMODE_FULLSHAPE, IME_CMODE_NATIVE};
 
 pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 
@@ -36,7 +39,7 @@ pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
         Err(_) => Arc::new(HashMap::new()),
     };
 
-    // 订阅通用的输入法事件
+    // 订阅通用的输入法候选事件
     let ctx = context.clone();
     let words_map = words.clone();
     context
@@ -45,6 +48,24 @@ pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
             handle_ime_candidate(ctx.clone(), candidate_list, words_map.clone());
         })
         .await;
+    let ctx = context.clone();
+    context.peeper_server.add_on_ime_conversion_mode_listener(move |conversion_mode| {
+        // https://learn.microsoft.com/zh-cn/windows/win32/intl/ime-conversion-mode-values
+        let mode = if conversion_mode & IME_CMODE_NATIVE.0 == IME_CMODE_NATIVE.0 {
+            t!("ime.native_input")
+        } else if conversion_mode & IME_CMODE_ALPHANUMERIC.0 == IME_CMODE_ALPHANUMERIC.0 {
+            t!("ime.alpha_numeric_input")
+        } else if conversion_mode & IME_CMODE_FULLSHAPE.0 == IME_CMODE_FULLSHAPE.0 {
+            t!("ime.fullshape_input")
+        } else {
+            return;
+        };
+        let performer = ctx.performer.clone();
+
+        ctx.main_handler.spawn(async move {
+            performer.speak(&mode).await
+        });
+    }).await;
 
     // 订阅微软输入法的候选事件
     let ctx = context.clone();
@@ -75,7 +96,7 @@ fn handle_ime_candidate(
 
     {
         // 关闭编辑框键盘事件朗读
-        *editor_key_handle().lock().unwrap().deref_mut() = true;
+        *editor_key_handle().lock().unwrap() = true;
     }
 
     context.task_manager.push(

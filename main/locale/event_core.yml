@@ -1,0 +1,13 @@
+_version: 2
+
+ime.native_input:
+  en: Native input
+  zh-CN: 本地输入
+
+ime.fullshape_input:
+  en: Fullshape input
+  zh-CN: 全角输入
+
+ime.alpha_numeric_input:
+  en: Alpha and numeric input
+  zh-CN: 字母数字输入
