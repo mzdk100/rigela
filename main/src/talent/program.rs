@@ -72,7 +72,7 @@ async fn current_cpu_usage(context: Arc<Context>) {
             "_Total"
         ));
         query.collect_data();
-        thread::sleep(Duration::from_millis(500));
+        thread::sleep(Duration::from_millis(20));
         (counter, query)
     });
     query.collect_data();
