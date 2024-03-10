@@ -55,7 +55,11 @@ impl Jab {
     pub fn new() -> Self {
         let lib = unsafe {
             LIB.get_or_init(|| {
-                let path = get_library_path("windowsaccessbridge-64.dll");
+                #[cfg(target_arch = "x86_64")]
+                    let path = get_library_path("windowsaccessbridge-64.dll");
+                #[cfg(target_arch = "x86")]
+                    let path = get_library_path("windowsaccessbridge-32.dll");
+
                 pump_waiting_messages();
                 JabLib::new(Some(path)).unwrap()
             })

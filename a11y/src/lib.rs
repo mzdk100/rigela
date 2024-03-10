@@ -25,6 +25,10 @@ pub mod ia2;
 pub mod jab;
 
 const IA2_LIB_NAME: &str = "IAccessible2Proxy.dll";
+
+#[cfg(target_arch = "x86")]
+const JAB_LIB_NAME: &str = "windowsaccessbridge-32.dll";
+#[cfg(target_arch = "x86_64")]
 const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
 
 /**
@@ -34,7 +38,13 @@ pub fn setup() {
     // 注册IAccessible2Proxy.dll
     setup_library(IA2_LIB_NAME, include_bytes!("../lib/IAccessible2Proxy.dll"));
 
-    // 释放windowsaccessbridge-64.dll
+    // 释放windowsaccessbridge.dll
+    // 二进制提取自https://builds.openlogic.com/downloadJDK/openlogic-openjdk/8u402-b06/openlogic-openjdk-8u402-b06-windows-x32.zip
+    #[cfg(target_arch = "x86")]
+    setup_library(JAB_LIB_NAME, include_bytes!("../lib/WindowsAccessBridge-32.dll"));
+
+    // 二进制提取自https://corretto.aws/downloads/resources/17.0.8.7.1/amazon-corretto-17.0.8.7.1-windows-x64-jdk.zip
+    #[cfg(target_arch = "x86_64")]
     setup_library(JAB_LIB_NAME, include_bytes!("../lib/windowsaccessbridge-64.dll"));
 }
 
