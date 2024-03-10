@@ -18,9 +18,16 @@ use crate::{
 pub use windows::Win32::UI::{
     Input::{
         Ime::{
-            CANDIDATELIST, IMN_CHANGECANDIDATE, IMN_CLOSECANDIDATE, IMN_CLOSESTATUSWINDOW,
-            IMN_GUIDELINE, IMN_OPENCANDIDATE, IMN_OPENSTATUSWINDOW, IMN_PRIVATE,
-            IMN_SETCANDIDATEPOS, IMN_SETCOMPOSITIONFONT, IMN_SETCOMPOSITIONWINDOW,
+            CANDIDATELIST, IME_CMODE_ALPHANUMERIC, IME_CMODE_CHARCODE, IME_CMODE_CHINESE,
+            IME_CMODE_EUDC, IME_CMODE_FIXED, IME_CMODE_FULLSHAPE, IME_CMODE_HANGEUL,
+            IME_CMODE_HANGUL, IME_CMODE_HANJACONVERT, IME_CMODE_JAPANESE, IME_CMODE_KATAKANA,
+            IME_CMODE_LANGUAGE, IME_CMODE_NATIVE, IME_CMODE_NATIVESYMBOL, IME_CMODE_NOCONVERSION,
+            IME_CMODE_RESERVED, IME_CMODE_ROMAN, IME_CMODE_SOFTKBD, IME_CMODE_SYMBOL,
+            IME_CONVERSION_MODE, IME_SENTENCE_MODE, IME_SMODE_AUTOMATIC, IME_SMODE_CONVERSATION,
+            IME_SMODE_NONE, IME_SMODE_PHRASEPREDICT, IME_SMODE_PLAURALCLAUSE, IME_SMODE_RESERVED,
+            IME_SMODE_SINGLECONVERT, IMN_CHANGECANDIDATE, IMN_CLOSECANDIDATE,
+            IMN_CLOSESTATUSWINDOW, IMN_GUIDELINE, IMN_OPENCANDIDATE, IMN_OPENSTATUSWINDOW,
+            IMN_PRIVATE, IMN_SETCANDIDATEPOS, IMN_SETCOMPOSITIONFONT, IMN_SETCOMPOSITIONWINDOW,
             IMN_SETCONVERSIONMODE, IMN_SETOPENSTATUS, IMN_SETSENTENCEMODE, IMN_SETSTATUSWINDOWPOS,
             IMN_SOFTKBDDESTROYED,
         },
@@ -83,7 +90,7 @@ use windows::{
             Input::{
                 Ime::{
                     ImmGetCandidateListCountW, ImmGetCandidateListW, ImmGetContext,
-                    ImmReleaseContext,
+                    ImmGetConversionStatus, ImmReleaseContext,
                 },
                 KeyboardAndMouse::{
                     keybd_event, mouse_event, GetAsyncKeyState, GetFocus, GetKeyNameTextW,
@@ -222,6 +229,22 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> Option<(CANDIDATELIST,
         }
         heap_free(ptr);
         Some((list, data))
+    }
+}
+
+//noinspection StructuralWrap
+/**
+ * 查询当前转换状态（转换模式、句子模式）。
+ * 仅当 IME 支持这些模式时，才会设置转换和句子模式值。
+ * `h_imc` 输入上下文的句柄。
+ * */
+pub fn imm_get_conversion_status(h_imc: HIMC) -> Option<(IME_CONVERSION_MODE, IME_SENTENCE_MODE)> {
+    unsafe {
+        let (mut conversion, mut sentence) = std::mem::zeroed();
+        if !ImmGetConversionStatus(h_imc, Some(&mut conversion), Some(&mut sentence)).as_bool() {
+            return None;
+        }
+        Some((conversion, sentence))
     }
 }
 
