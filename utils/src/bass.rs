@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    call_proc,
-    library::setup_library,
-};
+use crate::{call_proc, library::setup_library};
 use log::{error, info};
 use std::{
     ffi::{c_void, CString},
@@ -173,7 +170,10 @@ macro_rules! bass {
     };
 }
 
-const LIB_NAME: &str = "bass.dll";
+#[cfg(target_arch = "x86_64")]
+const LIB_NAME: &str = "bass-64.dll";
+#[cfg(target_arch = "x86")]
+const LIB_NAME: &str = "bass-32.dll";
 
 //noinspection SpellCheckingInspection
 const STREAMPROC_PUSH: usize = usize::MAX;
@@ -311,7 +311,10 @@ pub struct BassChannelOutputStream {
 
 impl BassChannelOutputStream {
     fn create(slot: impl FnOnce(HMODULE) -> Option<i32>) -> Self {
-        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass.dll"));
+        #[cfg(target_arch = "x86_64")]
+            let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-64.dll"));
+        #[cfg(target_arch = "x86")]
+            let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-32.dll"));
         let h_module = match load_library(bass_path.to_str().unwrap()) {
             Ok(h) => h,
             Err(e) => {
