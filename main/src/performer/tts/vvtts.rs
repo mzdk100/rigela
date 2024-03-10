@@ -17,22 +17,30 @@ use crate::{
     performer::tts::{TtsEngine, TtsProperty},
 };
 use rigela_utils::bass::BassChannelOutputStream;
-use std::sync::Arc;
+#[cfg(target_arch = "x86")]
+use rigela_utils::ibmeci::Ibmeci;
+use std::{str::FromStr, sync::Arc};
 
 //noinspection SpellCheckingInspection
 /// VVTTS语音库封装
 pub(crate) struct VvttsEngine {
     #[cfg(target_arch = "x86_64")]
     context: Arc<Context>,
+    #[cfg(target_arch = "x86")]
+    eci: &'static Ibmeci,
     output_stream: BassChannelOutputStream,
 }
 
 impl VvttsEngine {
     #[allow(unused_variables)]
-    pub(crate) fn new(context: Arc<Context>) -> Self {
+    pub(crate) async fn new(context: Arc<Context>) -> Self {
+        #[cfg(target_arch = "x86")]
+            let eci = Ibmeci::get().await.unwrap();
         Self {
             #[cfg(target_arch = "x86_64")]
             context,
+            #[cfg(target_arch = "x86")]
+            eci,
             output_stream: BassChannelOutputStream::new(11025, 1),
         }
     }
@@ -47,14 +55,10 @@ impl VvttsEngine {
             .eci_get_voice_params()
             .await;
         match prop {
-            TtsProperty::Speed(v) => params.speed = (v as f32 * 2.5) as i32,
+            TtsProperty::Speed(v) => params.speed = Self::convert_speed_param(v),
             TtsProperty::Volume(v) => params.volume = v,
             TtsProperty::Pitch(v) => {
-                let pitch = if v > 50 {
-                    (69f32 + (v as f32 - 50f32) / 50f32 * 31f32) as i32
-                } else {
-                    ((v as f32) / 50f32 * 69f32) as i32
-                };
+                let pitch = Self::convert_pitch_param(v);
                 params.pitch_baseline = pitch;
                 params.pitch_fluctuation = pitch;
             }
@@ -68,6 +72,18 @@ impl VvttsEngine {
             .eci_set_voice_params(&params)
             .await;
     }
+
+    fn convert_speed_param(value: i32) -> i32 {
+        (value as f32 * 2.5) as i32
+    }
+
+    fn convert_pitch_param(value: i32) -> i32 {
+        if value > 50 {
+            (69f32 + (value as f32 - 50f32) / 50f32 * 31f32) as i32
+        } else {
+            ((value as f32) / 50f32 * 69f32) as i32
+        }
+    }
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -75,15 +91,7 @@ impl VvttsEngine {
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
         self.output_stream.start();
-
-        let text = text.to_string();
-        let data = self
-            .context
-            .proxy32
-            .as_ref()
-            .await
-            .eci_synth(text.as_str())
-            .await;
+        let data = self.context.proxy32.as_ref().await.eci_synth(text).await;
         self.output_stream.put_data(&data);
     }
 
@@ -125,8 +133,6 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn set_voice(&self, id: String) {
-        use std::str::FromStr;
-
         self.context
             .proxy32
             .as_ref()
@@ -141,7 +147,9 @@ impl TtsEngine for VvttsEngine {
 #[async_trait::async_trait]
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
-        todo!()
+        self.output_stream.start();
+        let data = self.eci.synth(text).await;
+        self.output_stream.put_data(&data);
     }
 
     async fn wait(&self) {
@@ -158,23 +166,33 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn get_all_voices(&self) -> Vec<(String, String)> {
-        todo!()
+        self.eci
+            .get_voices()
+            .iter()
+            .map(|i| (i.0.to_string(), i.1.clone()))
+            .collect()
     }
 
     async fn set_speed(&self, value: i32) {
-        todo!()
+        use rigela_utils::ibmeci::VP_SPEED;
+        self.eci
+            .set_voice_param(VP_SPEED, Self::convert_speed_param(value));
     }
 
     async fn set_volume(&self, value: i32) {
-        todo!()
+        use rigela_utils::ibmeci::VP_VOLUME;
+        self.eci.set_voice_param(VP_VOLUME, value);
     }
 
     async fn set_pitch(&self, value: i32) {
-        todo!()
+        use rigela_utils::ibmeci::{VP_PITCH_BASELINE, VP_PITCH_FLUCTUATION};
+        let pitch = Self::convert_pitch_param(value);
+        self.eci.set_voice_param(VP_PITCH_BASELINE, pitch);
+        self.eci.set_voice_param(VP_PITCH_FLUCTUATION, pitch);
     }
 
     async fn set_voice(&self, id: String) {
-        todo!()
+        self.eci.set_voice(u32::from_str(id.as_str()).unwrap_or(0))
     }
 }
 

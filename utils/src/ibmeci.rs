@@ -11,26 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::model::IbmeciVoiceParams;
-use encoding_rs::GBK;
-use log::{error, info};
-use rigela_resources::clone_resource;
-use rigela_utils::{
+use crate::{
     call_proc,
-    fs::{get_file_modified_duration, get_program_directory},
-    SERVER_HOME_URI,
+    library::setup_library,
 };
+use encoding_rs::GBK;
+use log::info;
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
     borrow::Cow,
     ffi::{c_char, CString},
     sync::OnceLock,
     thread,
-    time::Duration,
 };
 use tokio::{
     sync::oneshot::{self, channel, Sender},
-    time::sleep,
 };
 use win_wrap::{
     common::{free_library, get_proc_address, load_library, FARPROC, HMODULE, LPARAM, WPARAM},
@@ -157,23 +152,17 @@ const RETURN_DATA_NOT_PROCESSED: u32 = 0;
 const RETURN_DATA_PROCESSED: u32 = 1;
 #[allow(unused)]
 const RETURN_DATA_ABORT: u32 = 2;
-#[allow(unused)]
-const VP_GENDER: u32 = 0;
-#[allow(unused)]
-const VP_HEAD_SIZE: u32 = 1;
-#[allow(unused)]
-const VP_PITCH_BASELINE: u32 = 2;
-#[allow(unused)]
-const VP_PITCH_FLUCTUATION: u32 = 3;
-#[allow(unused)]
-const VP_ROUGHNESS: u32 = 4;
+
+// Voice params
+pub const VP_GENDER: u32 = 0;
+pub const VP_HEAD_SIZE: u32 = 1;
+pub const VP_PITCH_BASELINE: u32 = 2;
+pub const VP_PITCH_FLUCTUATION: u32 = 3;
+pub const VP_ROUGHNESS: u32 = 4;
 //noinspection SpellCheckingInspection
-#[allow(unused)]
-const VP_BREATHINESS: u32 = 5;
-#[allow(unused)]
-const VP_SPEED: u32 = 6;
-#[allow(unused)]
-const VP_VOLUME: u32 = 7;
+pub const VP_BREATHINESS: u32 = 5;
+pub const VP_SPEED: u32 = 6;
+pub const VP_VOLUME: u32 = 7;
 
 //noinspection SpellCheckingInspection
 static mut IBMECI: OnceLock<Ibmeci> = OnceLock::new();
@@ -206,7 +195,7 @@ extern "system" fn _callback_internal(
 
 //noinspection SpellCheckingInspection
 #[derive(Debug)]
-pub(crate) struct Ibmeci {
+pub struct Ibmeci {
     buffer_layout: Layout,
     buffer_ptr: *mut u8,
     data: Vec<u8>,
@@ -220,35 +209,19 @@ impl Ibmeci {
     /**
      * 获取一个实例。
      * */
-    pub async fn get<'a>() -> Option<&'a Self> {
+    pub async fn get<'a>() -> Result<&'a Self, String> {
         unsafe {
             // 单例模式
             if let Some(self_) = IBMECI.get() {
-                return Some(self_);
+                return Ok(self_);
             }
         }
         const LIB_NAME: &str = "ibmeci.dll";
-        let url = format!("{}/{}", SERVER_HOME_URI, LIB_NAME);
+        let eci_path = setup_library(LIB_NAME, include_bytes!("../lib/ibmeci.dll"));
 
-        let eci_path = get_program_directory().join("libs").join(LIB_NAME);
-        if get_file_modified_duration(&eci_path).await > 3600 * 6 {
-            // 资源修改时间超过6小时才重新从服务器上克隆，加快启动速度
-            let file = clone_resource(url, &eci_path).await;
-            if let Err(e) = file {
-                error!("{}", e);
-                return None;
-            }
-            drop(file);
-        }
-        let h_module = loop {
-            match load_library(eci_path.to_str().unwrap()) {
-                Ok(h) => break h,
-                Err(e) => {
-                    error!("Can't open the library ({}). {}", eci_path.display(), e);
-                    // 文件刚释放可能被安全软件锁定，推迟加载他
-                    sleep(Duration::from_millis(1000)).await;
-                }
-            }
+        let h_module = match load_library(eci_path.to_str().unwrap()) {
+            Ok(h) => h,
+            Err(e) => return Err(format!("Can't open the library ({}). {}", eci_path.display(), e))
         };
         info!("{} loaded.", eci_path.display());
         let (tx, rx) = oneshot::channel();
@@ -279,30 +252,27 @@ impl Ibmeci {
                 IBMECI.set(self_).unwrap();
                 tx.send(IBMECI.get().unwrap()).unwrap();
             }
-            message_loop(|m| unsafe {
+            message_loop(|m| {
                 if wm!(SYNTH_TASK) == m.message {
-                    let b = Box::from_raw(m.wParam.0 as *mut Cow<[u8]>);
+                    let b = unsafe { Box::from_raw(m.wParam.0 as *mut Cow<[u8]>) };
                     eci!(h_module, add_text, h_eci, *b);
                     eci!(h_module, synthesize, h_eci);
                     eci!(h_module, synchronize, h_eci);
-                    let b = Box::from_raw(m.lParam.0 as *mut Sender<()>);
+                    let b = unsafe { Box::from_raw(m.lParam.0 as *mut Sender<()>) };
                     b.send(()).unwrap_or(());
                 }
             });
         });
         match rx.await {
-            Err(e) => {
-                error!("{}", e);
-                None
-            }
-            Ok(x) => Some(x),
+            Err(e) => Err(format!("Can't get the instance. ({})", e)),
+            Ok(x) => Ok(x),
         }
     }
 
     /**
      * 合成语音。
      * */
-    pub(crate) async fn synth(&self, text: &str) -> Vec<u8> {
+    pub async fn synth(&self, text: &str) -> Vec<u8> {
         eci!(self.h_module, stop, self.h_eci);
         let (text, _, unmapped) = GBK.encode(text);
         let text = if unmapped {
@@ -363,116 +333,21 @@ impl Ibmeci {
      * 设置语音参数。
      * `params` 参数数据。
      * */
-    pub fn set_voice_params(&self, params: &IbmeciVoiceParams) {
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_BREATHINESS,
-            params.breathiness
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_HEAD_SIZE,
-            params.head_size
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_GENDER,
-            params.gender
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_ROUGHNESS,
-            params.roughness
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_SPEED,
-            params.speed
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_PITCH_BASELINE,
-            params.pitch_baseline
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_PITCH_FLUCTUATION,
-            params.pitch_fluctuation
-        );
-        eci!(
-            self.h_module,
-            set_voice_param,
-            self.h_eci,
-            0,
-            VP_VOLUME,
-            params.volume
-        );
+    pub fn set_voice_param(&self, vp: u32, value: i32) {
+        eci!(self.h_module, set_voice_param, self.h_eci, 0, vp, value);
     }
 
     /**
      * 获取语音参数。
      * */
-    pub fn get_voice_params(&self) -> IbmeciVoiceParams {
-        IbmeciVoiceParams {
-            gender: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_GENDER).unwrap_or(0),
-            head_size: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_HEAD_SIZE)
-                .unwrap_or(0),
-            pitch_baseline: eci!(
-                self.h_module,
-                get_voice_param,
-                self.h_eci,
-                0,
-                VP_PITCH_BASELINE
-            )
-                .unwrap_or(0),
-            pitch_fluctuation: eci!(
-                self.h_module,
-                get_voice_param,
-                self.h_eci,
-                0,
-                VP_PITCH_BASELINE
-            )
-                .unwrap_or(0),
-            roughness: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_ROUGHNESS)
-                .unwrap_or(0),
-            breathiness: eci!(
-                self.h_module,
-                get_voice_param,
-                self.h_eci,
-                0,
-                VP_BREATHINESS
-            )
-                .unwrap_or(0),
-            speed: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_SPEED).unwrap_or(0),
-            volume: eci!(self.h_module, get_voice_param, self.h_eci, 0, VP_VOLUME).unwrap_or(0),
-        }
+    pub fn get_voice_param(&self, vp: u32) -> i32 {
+        eci!(self.h_module, get_voice_param, self.h_eci, 0, vp).unwrap_or(0)
     }
 
     /**
      * 获取发音人列表。
      * */
-    pub(crate) fn get_voices(&self) -> Vec<(u32, String)> {
+    pub fn get_voices(&self) -> Vec<(u32, String)> {
         vec![
             (1, "Adult Male 1"),
             (2, "Adult Female 1"),
@@ -492,7 +367,7 @@ impl Ibmeci {
      * 设置当前发音人。
      * `voice_id` 声音id。
      * */
-    pub(crate) fn set_voice(&self, voice_id: u32) {
+    pub fn set_voice(&self, voice_id: u32) {
         eci!(self.h_module, copy_voice, self.h_eci, voice_id, 0);
     }
 }

@@ -9,31 +9,30 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["server"]
+client = ["model", "rigela-utils/pipe", "tokio/net"]
+model = ["serde/derive"]
+server = ["model", "rigela-utils/ibmeci", "tokio/net", "peeper/default"]
+
 [dependencies.tokio]
-features = ["rt-multi-thread"]
 version = "1.36.0"
+optional = true
 
 [dependencies.log]
 version = "0.4.21"
 
 [dependencies.serde]
-# 用于数据序列化和反序列化
 version = "1.0.197"
-
-[target.'cfg(target_arch = "x86")'.dependencies.encoding_rs]
-version = "0.8.33"
+optional = true
 
 [target.'cfg(target_arch = "x86")'.dependencies.peeper]
 path = "../peeper"
-
-[target.'cfg(target_arch = "x86")'.dependencies.rigela-resources]
-path = "../resources"
+optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-
-[target.'cfg(target_arch = "x86")'.dependencies.win-wrap]
-path = "../win-wrap"
+optional = true
 
 [build-dependencies.cargo-rigela]
 path = "../build_helper"

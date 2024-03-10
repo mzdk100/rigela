@@ -11,5 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[cfg(feature = "client")]
 pub mod client;
+#[cfg(feature = "model")]
 pub mod model;

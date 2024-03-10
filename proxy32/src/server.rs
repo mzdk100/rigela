@@ -11,25 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[cfg(target_arch = "x86")]
-use crate::{
-    model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet},
-    tts::ibmeci::Ibmeci,
-};
-#[cfg(target_arch = "x86")]
+use crate::model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet};
 use log::error;
-#[cfg(target_arch = "x86")]
-use rigela_utils::pipe::{server_run, PipeStream, PipeStreamError};
-#[cfg(target_arch = "x86")]
+use rigela_utils::{
+    ibmeci::{
+        Ibmeci, VP_BREATHINESS, VP_GENDER, VP_HEAD_SIZE, VP_PITCH_BASELINE, VP_PITCH_FLUCTUATION,
+        VP_ROUGHNESS, VP_SPEED, VP_VOLUME,
+    },
+    pipe::{server_run, PipeStream, PipeStreamError},
+};
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
 //noinspection SpellCheckingInspection
-#[cfg(target_arch = "x86")]
 pub struct Proxy32Server {
     stream: PipeStream<Proxy32Packet, NamedPipeServer>,
 }
 
-#[cfg(target_arch = "x86")]
 impl Proxy32Server {
     /**
      * 创建一个proxy32的服务端实例。
@@ -84,31 +81,42 @@ impl Proxy32Server {
         }
     }
 
-    #[cfg(target_arch = "x86")]
     async fn eci_synth(&self, text: &str) -> Vec<u8> {
         let eci = Ibmeci::get().await.unwrap();
         eci.synth(text).await
     }
 
-    #[cfg(target_arch = "x86")]
     async fn eci_set_voice_params(&self, params: &IbmeciVoiceParams) {
         let eci = Ibmeci::get().await.unwrap();
-        eci.set_voice_params(params);
+        eci.set_voice_param(VP_GENDER, params.gender);
+        eci.set_voice_param(VP_VOLUME, params.volume);
+        eci.set_voice_param(VP_SPEED, params.speed);
+        eci.set_voice_param(VP_PITCH_FLUCTUATION, params.pitch_fluctuation);
+        eci.set_voice_param(VP_PITCH_BASELINE, params.pitch_baseline);
+        eci.set_voice_param(VP_BREATHINESS, params.breathiness);
+        eci.set_voice_param(VP_HEAD_SIZE, params.head_size);
+        eci.set_voice_param(VP_ROUGHNESS, params.roughness);
     }
 
-    #[cfg(target_arch = "x86")]
     async fn eci_get_voice_params(&self) -> IbmeciVoiceParams {
         let eci = Ibmeci::get().await.unwrap();
-        eci.get_voice_params()
+        IbmeciVoiceParams {
+            gender: eci.get_voice_param(VP_GENDER),
+            head_size: eci.get_voice_param(VP_HEAD_SIZE),
+            pitch_baseline: eci.get_voice_param(VP_PITCH_BASELINE),
+            pitch_fluctuation: eci.get_voice_param(VP_PITCH_FLUCTUATION),
+            roughness: eci.get_voice_param(VP_ROUGHNESS),
+            breathiness: eci.get_voice_param(VP_BREATHINESS),
+            speed: eci.get_voice_param(VP_SPEED),
+            volume: eci.get_voice_param(VP_VOLUME),
+        }
     }
 
-    #[cfg(target_arch = "x86")]
     async fn eci_get_voices(&self) -> Vec<(u32, String)> {
         let eci = Ibmeci::get().await.unwrap();
         eci.get_voices()
     }
 
-    #[cfg(target_arch = "x86")]
     async fn eci_set_voice(&self, voice_id: u32) {
         let eci = Ibmeci::get().await.unwrap();
         eci.set_voice(voice_id)

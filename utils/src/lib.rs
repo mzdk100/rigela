@@ -17,6 +17,9 @@ pub mod bass;
 pub mod clip;
 #[cfg(feature = "fs")]
 pub mod fs;
+//noinspection SpellCheckingInspection
+#[cfg(all(feature = "ibmeci", target_arch = "x86"))]
+pub mod ibmeci;
 #[cfg(feature = "killer")]
 pub mod killer;
 #[cfg(feature = "library")]

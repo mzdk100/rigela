@@ -63,7 +63,7 @@ impl Performer {
         self.tts.set(tts.clone()).unwrap_or(());
         tts.put_default_engine(Sapi5Engine::new())
             .await
-            .add_engine(VvttsEngine::new(context.clone()))
+            .add_engine(VvttsEngine::new(context.clone()).await)
             .await;
         self.cache
             .set(Arc::new(cache::Cache::build(context.clone()).await))

@@ -13,6 +13,7 @@ repository.workspace = true
 bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
 fs = ["home", "tokio/fs", "tokio/io-util"]
+ibmeci = ["encoding_rs/fast-gb-hanzi-encode"]
 killer = ["pipe"]
 library = ["fs"]
 logger = ["log4rs"]
@@ -28,6 +29,10 @@ optional = true
 
 [dependencies.clipboard]
 version = "0.5.0"
+optional = true
+
+[dependencies.encoding_rs]
+version = "0.8.33"
 optional = true
 
 [dependencies.log4rs]

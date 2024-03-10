@@ -13,11 +13,12 @@
 
 #![windows_subsystem = "windows"]
 
+#[cfg(all(feature = "model", target_arch = "x86"))]
 mod model;
+#[cfg(all(feature = "server", target_arch = "x86"))]
 mod server;
-mod tts;
 
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "server", target_arch = "x86"))]
 #[tokio::main]
 async fn main() {
     use crate::server::Proxy32Server;
@@ -34,7 +35,7 @@ async fn main() {
     peeper::unmount();
 }
 
-#[cfg(not(target_arch = "x86"))]
+#[cfg(not(all(feature = "server", target_arch = "x86")))]
 fn main() {
     panic!("X86 arch target only!");
 }
@@ -42,7 +43,7 @@ fn main() {
 /**
  * 安装peeper32.dll文件。
  * */
-#[cfg(target_arch = "x86")]
+#[cfg(all(feature = "server", target_arch = "x86"))]
 async fn put_peeper32() {
     use log::error;
     use rigela_utils::fs::{get_program_directory, write_file};
