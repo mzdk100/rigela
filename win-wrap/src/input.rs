@@ -198,12 +198,15 @@ pub fn imm_get_candidate_list_count(h_imc: HIMC) -> (u32, u32) {
  * `h_imc` 输入上下文的句柄。
  * `index` 候选列表的从零开始的索引。
  * */
-pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<String>) {
+pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> Option<(CANDIDATELIST, Vec<String>)> {
     unsafe {
         let len = ImmGetCandidateListW(h_imc, index, None, 0);
+        if len < 1 {
+            return None;
+        }
         let ptr = heap_alloc(len as usize).unwrap_or(std::ptr::null_mut());
         if ptr.is_null() {
-            return (CANDIDATELIST::default(), vec![]);
+            return None;
         }
         let p_list = ptr as *mut CANDIDATELIST;
         ImmGetCandidateListW(h_imc, index, Some(p_list), len);
@@ -218,7 +221,7 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> (CANDIDATELIST, Vec<St
             data.push(p2.wrapping_add(offset as usize).to_string_utf16());
         }
         heap_free(ptr);
-        (list, data)
+        Some((list, data))
     }
 }
 
