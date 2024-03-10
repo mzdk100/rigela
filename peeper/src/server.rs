@@ -26,9 +26,17 @@ use tokio::{
     sync::Mutex,
 };
 
+macro_rules! add_listener {
+    ($self:expr,$listener_type:path,$listener:expr) => {{
+        let mut listeners = $self.listeners.lock().await;
+        listeners.push($listener_type(Box::new($listener)));
+    }};
+}
+
 enum ListenerType {
     OnInputChar(Box<dyn Fn(u16) + Send + Sync>),
     OnImeCandidateList(Box<dyn Fn(CandidateList) + Send + Sync>),
+    OnImeConversionMode(Box<dyn Fn(u32) + Send + Sync>),
 }
 
 pub struct PeeperServer {
@@ -85,25 +93,31 @@ impl PeeperServer {
                 match packet.data {
                     PeeperData::Log(msg) => info!("{}: {}", packet.name, msg),
                     PeeperData::Quit => break,
-                    _ => Self::call(listeners.clone(), packet.data).await,
+                    _ => {
+                        let listeners = listeners.lock().await;
+                        for i in listeners.iter() {
+                            Self::call(i, &packet.data).await
+                        }
+                    }
                 };
             }
         });
     }
 
-    async fn call(listeners: Arc<Mutex<Vec<ListenerType>>>, data: PeeperData) {
-        let listeners = listeners.lock().await;
-        for i in listeners.iter() {
-            match i {
-                ListenerType::OnInputChar(f) => match data {
-                    PeeperData::InputChar(c) => (&*f)(c),
-                    _ => {}
-                },
-                ListenerType::OnImeCandidateList(f) => match &data {
-                    PeeperData::ImeCandidateList(c) => (&*f)(c.clone()),
-                    _ => {}
-                },
-            }
+    async fn call(listener: &ListenerType, data: &PeeperData) {
+        match listener {
+            ListenerType::OnInputChar(f) => match data {
+                PeeperData::InputChar(c) => (&*f)(c.clone()),
+                _ => {}
+            },
+            ListenerType::OnImeCandidateList(f) => match data {
+                PeeperData::ImeCandidateList(c) => (&*f)(c.clone()),
+                _ => {}
+            },
+            ListenerType::OnImeConversionMode(f) => match data {
+                PeeperData::ImeConversionMode(c) => (&*f)(c.clone()),
+                _ => {}
+            },
         }
     }
 
@@ -112,8 +126,7 @@ impl PeeperServer {
      * `listener` 一个监听函数。
      * */
     pub async fn add_on_input_char_listener(&self, listener: impl Fn(u16) + Send + Sync + 'static) {
-        let mut listeners = self.listeners.lock().await;
-        listeners.push(ListenerType::OnInputChar(Box::new(listener)));
+        add_listener!(self,ListenerType::OnInputChar, listener);
     }
 
     /**
@@ -124,8 +137,19 @@ impl PeeperServer {
         &self,
         listener: impl Fn(CandidateList) + Send + Sync + 'static,
     ) {
-        let mut listeners = self.listeners.lock().await;
-        listeners.push(ListenerType::OnImeCandidateList(Box::new(listener)));
+        add_listener!(self,ListenerType::OnImeCandidateList, listener);
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 添加一个监听器，当输入法模式转换发生时发出通知。
+     * `listener` 一个监听函数。
+     * */
+    pub async fn add_on_ime_conversion_mode_listener(
+        &self,
+        listener: impl Fn(u32) + Send + Sync + 'static,
+    ) {
+        add_listener!(self,ListenerType::OnImeConversionMode, listener)
     }
 }
 

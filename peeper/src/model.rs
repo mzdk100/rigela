@@ -32,4 +32,5 @@ pub(crate) enum PeeperData {
     Quit,
     InputChar(u16),
     ImeCandidateList(CandidateList),
+    ImeConversionMode(u32),
 }

@@ -13,11 +13,21 @@
 
 use crate::{
     client::PeeperClient,
-    model::{CandidateList, PeeperData},
+    model::{
+        CandidateList,
+        PeeperData,
+    },
 };
 use win_wrap::{
     common::{HWND, LPARAM, WPARAM},
-    input::{imm_get_candidate_list, imm_get_context, imm_release_context, IMN_CHANGECANDIDATE},
+    input::{
+        imm_get_candidate_list,
+        imm_get_context,
+        imm_release_context,
+        IMN_CHANGECANDIDATE,
+        IMN_SETCONVERSIONMODE,
+        imm_get_conversion_status,
+    },
 };
 
 //noinspection SpellCheckingInspection
@@ -38,13 +48,34 @@ pub(crate) fn on_ime(
         IMN_CHANGECANDIDATE => {
             // 当 IME 即将更改候选窗口的内容时，将发送此消息。然后，应用程序处理此消息以显示候选窗口本身。
             let h_imc = imm_get_context(h_wnd);
-            let (list, text_list) = imm_get_candidate_list(h_imc, 0);
+            if h_imc.is_invalid() {
+                return;
+            }
+            let Some((list, text_list)) = imm_get_candidate_list(h_imc, 0) else {
+                imm_release_context(h_wnd, h_imc);
+                return;
+            };
             let cand = CandidateList {
                 selection: list.dwSelection,
                 page_start: list.dwPageStart,
                 list: text_list,
             };
             client.push(PeeperData::ImeCandidateList(cand));
+            imm_release_context(h_wnd, h_imc);
+        }
+        IMN_SETCONVERSIONMODE => {
+            // 更新输入上下文的转换模式时，将发送此消息。
+            let h_imc = imm_get_context(h_wnd);
+            if h_imc.is_invalid() {
+                return;
+            }
+            if let Some((conversion_mode, _)) = imm_get_conversion_status(h_imc) {
+                static mut OLD_VALUE: u32 = 0;
+                if unsafe { OLD_VALUE != conversion_mode.0 } {
+                    unsafe { OLD_VALUE = conversion_mode.0 };
+                    client.push(PeeperData::ImeConversionMode(conversion_mode.0));
+                }
+            }
             imm_release_context(h_wnd, h_imc);
         }
         _ => {}
