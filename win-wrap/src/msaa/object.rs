@@ -321,18 +321,18 @@ impl AccessibleObject {
      * `nav_dir` 指定导航方向。此方向按空间顺序（如左或右）或逻辑顺序（例如下一个或上一个）。此值是导航常量之一。
      * `start` 起始子对象ID，0是对象本身。
      * */
-    pub fn navigate(&self, nav_dir: i32, start: i32) -> AccessibleResultType {
+    pub fn navigate(&self, nav_dir: i32, start: i32) -> Option<Self> {
         unsafe {
             let Ok(v) = self.0.accNavigate(nav_dir, &VARIANT::from(start)) else {
-                return AccessibleResultType::None;
+                return None;
             };
             let Ok(d) = IDispatch::try_from(&v) else {
-                return match u32::try_from(&v) {
-                    Ok(d) => AccessibleResultType::ChildId(d),
-                    Err(_) => AccessibleResultType::None,
+                return match i32::try_from(&v) {
+                    Ok(d) => Some(Self::from_raw(self.0.clone(), d)),
+                    Err(_) => None,
                 };
             };
-            AccessibleResultType::Object(d)
+            Some(Self::from_raw(d.cast().unwrap(), 0))
         }
     }
 
@@ -341,57 +341,66 @@ impl AccessibleObject {
      * `left` 指定命中测试点的屏幕坐标。x 坐标从左到右增加。请注意，使用屏幕坐标时，原点是屏幕的左上角。
      * `top` 指定命中测试点的屏幕坐标。y 坐标从上到下增加。请注意，使用屏幕坐标时，原点是屏幕的左上角。
      * */
-    pub fn hit_test(&self, left: i32, top: i32) -> AccessibleResultType {
+    pub fn hit_test(&self, left: i32, top: i32) -> Option<Self> {
         unsafe {
             let Ok(v) = self.0.accHitTest(left, top) else {
-                return AccessibleResultType::None;
+                return None;
             };
             if let Ok(d) = IDispatch::try_from(&v) {
-                return AccessibleResultType::Object(d);
+                return Some(Self::from_raw(d.cast().unwrap(), 0));
             }
-            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
+            Some(Self::from_raw(
+                self.0.clone(),
+                i32::try_from(&v).unwrap_or(0),
+            ))
         }
     }
 
     /**
      * 获取焦点对象。
      * */
-    pub fn focus(&self) -> AccessibleResultType {
+    pub fn focus(&self) -> Option<Self> {
         unsafe {
             let Ok(v) = self.0.accFocus() else {
-                return AccessibleResultType::None;
+                return None;
             };
             if let Ok(d) = IDispatch::try_from(&v) {
-                return AccessibleResultType::Object(d);
+                return Some(Self::from_raw(d.cast().unwrap(), 0));
             }
-            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
+            Some(Self::from_raw(
+                self.0.clone(),
+                i32::try_from(&v).unwrap_or(0),
+            ))
         }
     }
 
     /**
      * 获取选中对象。
      * */
-    pub fn selection(&self) -> AccessibleResultType {
+    pub fn selection(&self) -> Option<Self> {
         unsafe {
             let Ok(v) = self.0.accSelection() else {
-                return AccessibleResultType::None;
+                return None;
             };
             if let Ok(d) = IDispatch::try_from(&v) {
-                return AccessibleResultType::Object(d);
+                return Some(Self::from_raw(d.cast().unwrap(), 0));
             }
-            AccessibleResultType::ChildId(u32::try_from(&v).unwrap_or(0))
+            Some(Self::from_raw(
+                self.0.clone(),
+                i32::try_from(&v).unwrap_or(0),
+            ))
         }
     }
 
     /**
      * 获取父对象。
      * */
-    pub fn parent(&self) -> AccessibleResultType {
+    pub fn parent(&self) -> Option<Self> {
         unsafe {
             if let Ok(r) = self.0.accParent() {
-                AccessibleResultType::Object(r.cast().unwrap())
+                Some(Self::from_raw(r.cast().unwrap(), 0))
             } else {
-                AccessibleResultType::None
+                None
             }
         }
     }
@@ -412,11 +421,11 @@ impl AccessibleObject {
      * 获取子对象。
      * `child` 子对象ID，0是对象本身。
      * */
-    pub fn get_child(&self, child: i32) -> Result<AccessibleObject> {
+    pub fn get_child(&self, child: i32) -> Result<Self> {
         unsafe {
             match self.0.get_accChild(&VARIANT::from(child)) {
                 Err(e) => Err(e),
-                Ok(o) => Ok(AccessibleObject::from_raw(o.cast().unwrap(), 0)),
+                Ok(o) => Ok(Self::from_raw(o.cast().unwrap(), 0)),
             }
         }
     }
@@ -424,7 +433,7 @@ impl AccessibleObject {
     /**
      * 获取所有子对象。
      * */
-    pub fn children(&self, start: u32, count: u32) -> Result<Vec<AccessibleObject>> {
+    pub fn children(&self, start: u32, count: u32) -> Result<Vec<Self>> {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/oleacc/nf-oleacc-accessiblechildren
         unsafe {
             let mut arr = vec![];
@@ -438,10 +447,10 @@ impl AccessibleObject {
                     let mut v = vec![];
                     for i in 0..cnt {
                         if let Ok(d) = IDispatch::try_from(&arr[i as usize]) {
-                            v.push(AccessibleObject::from_raw(d.cast().unwrap(), 0));
+                            v.push(Self::from_raw(d.cast().unwrap(), 0));
                         }
                         if let Ok(d) = i32::try_from(&arr[i as usize]) {
-                            v.push(AccessibleObject::from_raw(self.0.clone(), d));
+                            v.push(Self::from_raw(self.0.clone(), d));
                         }
                     }
                     Ok(v)
@@ -500,12 +509,6 @@ impl AccessibleObject {
         }
         h_wnd
     }
-}
-
-pub enum AccessibleResultType {
-    None,
-    ChildId(u32),
-    Object(IDispatch),
 }
 
 impl Debug for AccessibleObject {
