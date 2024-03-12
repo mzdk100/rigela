@@ -111,7 +111,9 @@ async fn view_window_title(context: Arc<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看当前焦点", key = (VkRigelA, VkTab))]
 async fn view_focus(context: Arc<Context>) {
-    let focused = context.ui_automation.get_focused_element();
+    let Ok(focused) = context.ui_automation.get_focused_element() else {
+        return;
+    };
     context.performer.speak(&focused).await;
 }
 
