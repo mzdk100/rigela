@@ -13,6 +13,7 @@
 
 use crate::common::{FARPROC, HOOKPROC, LPARAM};
 use std::intrinsics::transmute;
+use windows::core::PCWSTR;
 
 /**
  * 对FARPROC类型的扩展操作。
@@ -59,29 +60,13 @@ pub trait StringExt {
 
 impl StringExt for *const u8 {
     fn to_string_utf16(self) -> String {
-        let mut r = self as *const u16;
-        let mut s = Vec::new();
-        unsafe {
-            while !r.is_null() && *r != 0 {
-                s.push(*r);
-                r = r.wrapping_add(1);
-            }
-        }
-        String::from_utf16_lossy(&s)
+        (self as *const u16).to_string_utf16()
     }
 }
 
 impl StringExt for *const u16 {
     fn to_string_utf16(self) -> String {
-        let mut r = self;
-        let mut s = Vec::new();
-        unsafe {
-            while !r.is_null() && *r != 0 {
-                s.push(*r);
-                r = r.wrapping_add(1);
-            }
-        }
-        String::from_utf16_lossy(&s)
+        unsafe { PCWSTR(self).to_hstring().unwrap().to_string_lossy() }
     }
 }
 
