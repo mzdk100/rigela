@@ -53,9 +53,12 @@ impl UiAutomation {
     /**
      * 获取UI焦点元素。
      * */
-    pub fn get_focused_element(&self) -> UiAutomationElement {
-        let el = unsafe { self.0.GetFocusedElement() }.expect("Can't get the root element.");
-        UiAutomationElement::obtain(self.0.clone(), el)
+    pub fn get_focused_element(&self) -> Result<UiAutomationElement> {
+        let el = match unsafe { self.0.GetFocusedElement() } {
+            Err(e) => return Err(e),
+            Ok(o) => o,
+        };
+        Ok(UiAutomationElement::obtain(self.0.clone(), el))
     }
 
     /// 根据窗口句柄获取ui元素
@@ -112,8 +115,8 @@ impl UiAutomation {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_focus_changed_listener<CB>(&self, func: CB)
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+        where
+            CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationFocusChangedEventHandler =
             OnFocusChangedCallback::new(func, self.0.clone()).into();
@@ -142,7 +145,7 @@ impl UiAutomation {
             self.0
                 .RemoveEventHandlerGroup(element.get_raw(), group.get_raw())
         }
-        .unwrap_or(())
+            .unwrap_or(())
     }
 }
 

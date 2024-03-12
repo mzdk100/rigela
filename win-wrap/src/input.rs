@@ -211,10 +211,11 @@ pub fn imm_get_candidate_list(h_imc: HIMC, index: u32) -> Option<(CANDIDATELIST,
         if len < 1 {
             return None;
         }
-        let ptr = heap_alloc(len as usize).unwrap_or(std::ptr::null_mut());
-        if ptr.is_null() {
+        let Ok(ptr) = heap_alloc((len + 1) as usize) else {
             return None;
-        }
+        };
+        // 初始化内存，防止内存异常
+        ptr.write_bytes(b'0', (len + 1) as usize);
         let p_list = ptr as *mut CANDIDATELIST;
         ImmGetCandidateListW(h_imc, index, Some(p_list), len);
         let list = *p_list;
