@@ -15,3 +15,5 @@
 pub mod client;
 #[cfg(feature = "model")]
 pub mod model;
+#[cfg(all(feature = "process", target_arch = "x86_64"))]
+pub mod process;

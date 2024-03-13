@@ -11,22 +11,32 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::general::Lang;
-#[cfg(target_arch = "x86_64")]
-use crate::proxy32::Proxy32;
 use crate::{
-    browser::form_browser::FormBrowser, commander::Commander,
-    configs::config_manager::ConfigManager, event_core, gui::GuiProvider, performer::Performer,
-    resources::ResourceProvider, talent::TalentProvider, tasks::TaskManager,
+    configs::{
+        general::Lang,
+        config_manager::ConfigManager,
+    },
+    browser::form_browser::FormBrowser,
+    commander::Commander,
+    event_core,
+    gui::GuiProvider,
+    performer::Performer,
+    resources::ResourceProvider,
+    talent::TalentProvider,
+    tasks::TaskManager,
     terminator::Terminator,
 };
-use a11y::ia2::Ia2;
+#[cfg(target_arch = "x86_64")]
+use rigela_proxy32::process::Proxy32Process;
+use a11y::{
+    ia2::Ia2,
+    jab::Jab,
+};
 use log::info;
 use peeper::server::PeeperServer;
 use rigela_utils::fs::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
-use a11y::jab::Jab;
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -48,7 +58,7 @@ pub(crate) struct Context {
     pub(crate) peeper_server: Arc<PeeperServer>,
     pub(crate) performer: Arc<Performer>,
     #[cfg(target_arch = "x86_64")]
-    pub(crate) proxy32: Arc<Proxy32>,
+    pub(crate) proxy32process: Arc<Proxy32Process>,
     pub(crate) talent_provider: Arc<TalentProvider>,
     pub(crate) task_manager: Arc<TaskManager>,
     pub(crate) terminator: Arc<Terminator>,
@@ -94,7 +104,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-            let proxy32 = Proxy32::new();
+            let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -127,7 +137,7 @@ impl Context {
             peeper_server: peeper_server.into(),
             performer: performer.into(),
             #[cfg(target_arch = "x86_64")]
-            proxy32: proxy32.into(),
+            proxy32process: proxy32process.into(),
             resource_provider: resource_provider.into(),
             talent_provider: talent_provider.into(),
             task_manager: task_manager.into(),
@@ -192,7 +202,7 @@ impl Clone for Context {
             peeper_server: self.peeper_server.clone(),
             performer: self.performer.clone(),
             #[cfg(target_arch = "x86_64")]
-            proxy32: self.proxy32.clone(),
+            proxy32process: self.proxy32process.clone(),
             resource_provider: self.resource_provider.clone(),
             talent_provider: self.talent_provider.clone(),
             task_manager: self.task_manager.clone(),

@@ -12,23 +12,30 @@
  */
 
 
+#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
 use std::path::PathBuf;
+#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
 use rigela_utils::library::{get_library_path, setup_library};
 
 //noinspection RsModuleNaming
+#[cfg(feature = "IAccessible2Lib")]
 pub(crate) mod IAccessible2Lib;
 //noinspection RsModuleNaming
+#[cfg(feature = "JabLib")]
 #[allow(non_snake_case)]
 pub(crate) mod JabLib;
 
+#[cfg(feature = "ia2")]
 pub mod ia2;
+#[cfg(feature = "jab")]
 pub mod jab;
 
+#[cfg(feature = "IAccessible2Lib")]
 const IA2_LIB_NAME: &str = "IAccessible2Proxy.dll";
 
-#[cfg(target_arch = "x86")]
+#[cfg(all(target_arch = "x86", feature = "JabLib"))]
 const JAB_LIB_NAME: &str = "windowsaccessbridge-32.dll";
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", feature = "JabLib"))]
 const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
 
 /**
@@ -36,21 +43,23 @@ const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
  * */
 pub fn setup() {
     // 注册IAccessible2Proxy.dll
+    #[cfg(feature = "IAccessible2Lib")]
     setup_library(IA2_LIB_NAME, include_bytes!("../lib/IAccessible2Proxy.dll"));
 
     // 释放windowsaccessbridge.dll
     // 二进制提取自https://builds.openlogic.com/downloadJDK/openlogic-openjdk/8u402-b06/openlogic-openjdk-8u402-b06-windows-x32.zip
-    #[cfg(target_arch = "x86")]
+    #[cfg(all(target_arch = "x86", feature = "JabLib"))]
     setup_library(JAB_LIB_NAME, include_bytes!("../lib/WindowsAccessBridge-32.dll"));
 
     // 二进制提取自https://corretto.aws/downloads/resources/17.0.8.7.1/amazon-corretto-17.0.8.7.1-windows-x64-jdk.zip
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(all(target_arch = "x86_64", feature = "JabLib"))]
     setup_library(JAB_LIB_NAME, include_bytes!("../lib/windowsaccessbridge-64.dll"));
 }
 
 /**
  * 获取IA2动态库的安装路径。
  * */
+#[cfg(feature = "IAccessible2Lib")]
 pub fn get_ia2_lib_path() -> PathBuf {
     get_library_path(IA2_LIB_NAME)
 }
@@ -58,6 +67,7 @@ pub fn get_ia2_lib_path() -> PathBuf {
 /**
  * 获取JAB动态库的安装路径。
  * */
+#[cfg(feature = "JabLib")]
 pub fn get_jab_lib_path() -> PathBuf {
     get_library_path(JAB_LIB_NAME)
 }

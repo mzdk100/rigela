@@ -93,9 +93,9 @@ impl Launcher {
         #[cfg(target_arch = "x86_64")]
         {
             // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-            let proxy32 = self.context.proxy32.clone();
+            let proxy32process = self.context.proxy32process.clone();
             self.context.work_runtime.spawn(async move {
-                proxy32.spawn().await;
+                proxy32process.spawn().await;
             });
         }
 
@@ -128,7 +128,7 @@ impl Launcher {
 
         // 杀死32位代理模块
         #[cfg(target_arch = "x86_64")]
-        self.context.proxy32.kill().await.wait().await;
+        self.context.proxy32process.kill().await.wait().await;
 
         // 解除远进程监控
         peeper::unmount();

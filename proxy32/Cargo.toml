@@ -13,6 +13,7 @@ repository.workspace = true
 default = ["server"]
 client = ["model", "rigela-utils/pipe", "tokio/net"]
 model = ["serde/derive"]
+process = ["client"]
 server = ["model", "rigela-utils/ibmeci", "tokio/net", "peeper/default"]
 
 [dependencies.tokio]

@@ -11,37 +11,31 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[cfg(target_arch = "x86_64")]
-use rigela_proxy32::client::Proxy32Client;
-#[cfg(target_arch = "x86_64")]
+use crate::client::Proxy32Client;
 use std::{
     future::Future,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
 };
-#[cfg(target_arch = "x86_64")]
 use tokio::{
     process::Child,
     sync::{OnceCell, RwLock},
 };
 
-#[cfg(target_arch = "x86_64")]
 const PIPE_NAME: &str = r"\\.\PIPE\RIGELA_PROXY32";
 
-#[cfg(target_arch = "x86_64")]
 #[derive(Debug)]
-pub(crate) struct Proxy32 {
+pub struct Proxy32Process {
     process: RwLock<Option<Child>>,
     client: OnceCell<Arc<Proxy32Client>>,
 }
 
-#[cfg(target_arch = "x86_64")]
-impl Proxy32 {
+impl Proxy32Process {
     /**
      * 创建一个proxy32模块实例。
      * */
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             process: None.into(),
             client: OnceCell::new(),
@@ -51,8 +45,7 @@ impl Proxy32 {
     /**
      * 创建进程。
      * */
-    #[cfg(target_arch = "x86_64")]
-    pub(crate) async fn spawn(&self) -> &Self {
+    pub async fn spawn(&self) -> &Self {
         use log::{error, info};
         use rigela_utils::fs::{get_file_modified_duration, get_program_directory, write_file};
         use std::time::Duration;
@@ -103,19 +96,9 @@ impl Proxy32 {
     }
 
     /**
-     * 创建进程。
-     * */
-    #[cfg(target_arch = "x86")]
-    pub(crate) async fn spawn(&self) -> &Self {
-        // 如果主程序本身就是32位，则无需执行此操作（proxy32模块没有用武之地）
-        info!("Loaded proxy32.");
-        self
-    }
-
-    /**
      * 杀死进程。
      * */
-    pub(crate) async fn kill(&self) -> &Self {
+    pub async fn kill(&self) -> &Self {
         use log::{error, info};
 
         if let Some(x) = self.client.get() {
@@ -141,7 +124,7 @@ impl Proxy32 {
     /**
      * 等待进程结束。
      * */
-    pub(crate) async fn wait(&self) {
+    pub async fn wait(&self) {
         let mut process = self.process.write().await;
         if let Some(x) = process.as_mut() {
             x.wait().await.unwrap();
@@ -149,8 +132,7 @@ impl Proxy32 {
     }
 }
 
-#[cfg(target_arch = "x86_64")]
-impl Future for &Proxy32 {
+impl Future for &Proxy32Process {
     type Output = Arc<Proxy32Client>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {

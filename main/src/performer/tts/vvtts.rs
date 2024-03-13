@@ -49,7 +49,7 @@ impl VvttsEngine {
     async fn set_value_by_prop(&self, prop: TtsProperty) {
         let mut params = self
             .context
-            .proxy32
+            .proxy32process
             .as_ref()
             .await
             .eci_get_voice_params()
@@ -66,7 +66,7 @@ impl VvttsEngine {
         };
 
         self.context
-            .proxy32
+            .proxy32process
             .as_ref()
             .await
             .eci_set_voice_params(&params)
@@ -91,7 +91,7 @@ impl VvttsEngine {
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
         self.output_stream.start();
-        let data = self.context.proxy32.as_ref().await.eci_synth(text).await;
+        let data = self.context.proxy32process.as_ref().await.eci_synth(text).await;
         self.output_stream.put_data(&data);
     }
 
@@ -110,7 +110,7 @@ impl TtsEngine for VvttsEngine {
 
     async fn get_all_voices(&self) -> Vec<(String, String)> {
         self.context
-            .proxy32
+            .proxy32process
             .as_ref()
             .await
             .eci_get_voices()
@@ -134,7 +134,7 @@ impl TtsEngine for VvttsEngine {
 
     async fn set_voice(&self, id: String) {
         self.context
-            .proxy32
+            .proxy32process
             .as_ref()
             .await
             .eci_set_voice(u32::from_str(id.as_str()).unwrap_or(0))

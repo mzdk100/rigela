@@ -9,20 +9,20 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+jab = ["JabLib"]
+ia2 = ["IAccessible2Lib", "win-wrap/msaa"]
+JabLib = ["rigela-utils/library"]
+IAccessible2Lib = ["rigela-utils/library", "windows/windows-interface"]
+
 [dependencies.win-wrap]
 path = "../win-wrap"
-features = ["msaa", "com"]
+optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-features = ["library"]
+optional = true
 
 [dependencies.windows]
 version = "0.54.0"
-features = [
-    "implement",
-    "windows-interface",
-    "Win32_System_Com",
-    "Win32_System_Variant",
-    "Win32_UI_Accessibility"
-]
+optional = true

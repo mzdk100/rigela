@@ -24,6 +24,7 @@ name = "updater"
 [dependencies.a11y]
 # 一个辅助功能API库，封装了非微软官方提供的无障碍技术
 path = "../a11y"
+features = ["ia2", "jab"]
 
 [dependencies.peeper]
 # 跨进程收集信息（例如输入法和GDI绘图接口信息）
@@ -39,7 +40,6 @@ features = ["uia", "registry", "tts", "pth", "control"]
 # 异步运行时（携程框架）
 version = "1.36.0"
 features = [
-    "rt",
     "rt-multi-thread",
     "sync",
     "macros",
@@ -56,7 +56,7 @@ path = "../build_helper"
 
 [target.'cfg(target_arch = "x86_64")'.dependencies.rigela-proxy32]
 path = "../proxy32"
-features = ["client"]
+features = ["process"]
 
 [dependencies.rigela-macros]
 path = "../macros"
@@ -74,7 +74,7 @@ version = "1.0.197"
 features = ["derive"]
 
 [dependencies.toml]
-version = "0.8.10"
+version = "0.8.11"
 
 [dependencies]
 # 查看日期和时间
@@ -97,7 +97,7 @@ zip = "0.6.6"
 
 [dependencies.reqwest]
 # 网络请求
-version = "0.11.25"
+version = "0.11.26"
 features = ["json"]
 
 [dependencies.nwd]

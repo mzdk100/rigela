@@ -29,6 +29,7 @@ use win_wrap::control::edit::Edit;
 use win_wrap::control::WindowControl;
 use win_wrap::msaa::object::OBJID_CARET;
 use win_wrap::uia::pattern::text::TextUnit;
+use crate::performer::sound::SoundArgument::WithFreq;
 
 //noinspection SpellCheckingInspection
 /**
@@ -43,8 +44,14 @@ pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_cusor_key_events(context.clone()).await;
 }
 
+#[allow(unused_variables)]
 async fn subscribe_msaa_events(context: Arc<Context>) {
-    context.msaa.add_on_object_location_change_listener(|src| {
+    let main_handler = context.main_handler.clone();
+    let performer = context.performer.clone();
+
+    context.msaa.add_on_object_location_change_listener(move |src| {
+        let performer = performer.clone();
+
         if OBJID_CARET.0 != src.id_object {
             return;
         }
@@ -54,9 +61,11 @@ async fn subscribe_msaa_events(context: Arc<Context>) {
         let Some(obj) = obj.parent() else {
             return;
         };
-        let control = WindowControl::from(obj.window());
-        dbg!(control.get_sel());
-        win_wrap::common::beep(400, 40);
+        main_handler.spawn(async move {
+            let control = WindowControl::from(obj.window());
+            let (start, end) = control.get_sel();
+            performer.play_sound(WithFreq("progress.wav", (start * 10 + 400) as f32)).await;
+        });
     });
 }
 

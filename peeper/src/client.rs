@@ -102,13 +102,17 @@ impl PeeperClient {
     }
 
     /**
-     * 退出客户端，这也会通知服务端退出。
+     * 退出客户端，同时会通知服务端退出监听当前客户端的所有请求。
      * */
     pub fn quit(&mut self) {
+        if self.rt.get().is_none() {
+            // 如果已经退出了就不要重复退出
+            return;
+        }
+        // 重要：push方法会在内部使用get_or_init检查rt字段是否被初始化，当已经退出后，rt是None，这时候会重新创建，导致类似于递归的行为，所以不要重复退出
         self.push(PeeperData::Quit);
-        self.rt
-            .take()
-            .unwrap()
-            .shutdown_timeout(Duration::from_millis(1000));
+        if let Some(rt) = self.rt.take() {
+            rt.shutdown_timeout(Duration::from_millis(1000));
+        }
     }
 }

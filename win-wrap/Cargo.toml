@@ -9,7 +9,7 @@ edition.workspace = true
 
 [features]
 audio = []
-com = ["common", "ext", "windows/Win32_System_Ole"]
+com = ["common", "ext", "windows/Win32_System_Com", "windows/Win32_System_Ole"]
 common = ["windows/Win32_Globalization", "windows/Win32_System_Diagnostics_Debug", "windows/Win32_System_SystemServices", "windows/Win32_UI_WindowsAndMessaging", "windows/Win32_UI_Input", "windows/Win32_System_LibraryLoader", "windows/Win32_System_Threading"]
 control = ["common", "ext", "graphic", "message", "windows/Win32_Foundation", "windows/Win32_UI_WindowsAndMessaging", "windows/Win32_UI_Controls", "windows/Win32_UI_Controls_RichEdit", "windows/Win32_UI_Controls_Dialogs"]
 ext = ["common"]
@@ -23,7 +23,7 @@ registry = ["windows/Win32_System_Registry"]
 shell = []
 threading = ["message", "windows/Win32_Security"]
 tts = ["windows/Media_SpeechSynthesis", "windows/Storage_Streams", "windows/Media_Core", "windows/Foundation_Collections"]
-uia = ["com"]
+uia = ["com", "msaa", "windows/Win32_UI_Accessibility", "windows/implement"]
 
 [dependencies.windows]
 # windows的所有API
