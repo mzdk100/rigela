@@ -17,8 +17,12 @@ pub mod audio;
 pub mod com;
 #[cfg(feature = "common")]
 pub mod common;
+#[cfg(feature = "control")]
+pub mod control;
 #[cfg(feature = "ext")]
 pub mod ext;
+#[cfg(feature = "graphic")]
+pub mod graphic;
 #[cfg(feature = "hook")]
 pub mod hook;
 #[cfg(feature = "input")]

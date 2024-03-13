@@ -74,7 +74,7 @@ next section.
     - [Reference document for implementing internationalization support](I18N.md)
     - [Proxy module reference document for 32-bit applications](proxy32/README.md)
     - [RigelA resource incremental update reference document](resources/README.md)
-    - [The table of windows messages constants](WM_REFERENCE.md)
+    - [Implementation Reference Document for Windows API Advanced Wrapping](win-wrap/README.md)
 2. If you are new to programming, you also need to learn the Rust language and understand the common libraries of Rust:
     - [Rust programming language Simplified Chinese version](https://kaisery.github.io/trpl-zh-cn)
     - [Rust Language Bible](https://course.rs/about-book.html)

@@ -66,7 +66,7 @@
     - [用于实现国际化支持的参考文档](I18N.md)
     - [用于32位应用的代理模块参考文档](proxy32/README.md)
     - [RigelA资源增量更新参考文档](resources/README.md)
-    - [Windows消息常亮表](WM_REFERENCE.md)
+    - [Windows API高级封装的实现参考文档](win-wrap/README.md)
 2. 如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
     - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
     - [Rust语言圣经](https://course.rs/about-book.html)
