@@ -17,7 +17,6 @@ mod text_processing;
 pub(crate) mod tts;
 
 use crate::performer::sound::SoundArgument;
-use crate::performer::text_processing::transform_single_char;
 use crate::{
     context::Context,
     performer::{
@@ -86,9 +85,14 @@ impl Performer {
      * `speakable` 实现了Speakable特征的对象。
      * */
     pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync + Send)) -> bool {
-        let mut text = speakable.get_sentence();
+        let text = speakable.get_sentence();
         if text.is_empty() {
             return false;
+        }
+
+        // 更新缓存
+        if let Some(cache) = self.cache.get() {
+            cache.update(text.clone()).await;
         }
 
         let tts = loop {
@@ -99,17 +103,6 @@ impl Performer {
                 sleep(Duration::from_millis(100)).await;
             }
         };
-
-        // 更新缓存
-        if let Some(cache) = self.cache.get() {
-            cache.update(text.clone()).await;
-        }
-
-        if text.len() == 1 {
-            if let Some((_, c)) = text.char_indices().next() {
-                text = transform_single_char(&c);
-            }
-        }
 
         tts.stop().await;
         return tts.speak(text).await;

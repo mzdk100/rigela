@@ -15,6 +15,7 @@ pub(crate) mod sapi5;
 //noinspection SpellCheckingInspection
 pub(crate) mod vvtts;
 
+use crate::performer::text_processing::transform_single_char;
 use crate::{
     configs::tts::{TtsConfig, TtsPropertyItem},
     context::Context,
@@ -99,6 +100,13 @@ impl Tts {
      * `text` 需要朗读的文本。
      * */
     pub(crate) async fn speak(&self, text: String) -> bool {
+        let mut text = text.clone();
+
+        // 单个字符的预处理，utf8的字节数一般在4个字节以内， 如果字节数小于5个字符，就进行预处理
+        if text.len() < 5 {
+            text = transform_single_char(&text);
+        }
+
         let engine = self
             .context
             .config_manager
