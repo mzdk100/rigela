@@ -25,6 +25,9 @@ use a11y::ia2::{
 use log::error;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
+use win_wrap::control::edit::Edit;
+use win_wrap::control::WindowControl;
+use win_wrap::msaa::object::OBJID_CARET;
 use win_wrap::uia::pattern::text::TextUnit;
 
 //noinspection SpellCheckingInspection
@@ -35,8 +38,26 @@ use win_wrap::uia::pattern::text::TextUnit;
 pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
     subscribe_uia_events(context.clone()).await;
     subscribe_ia2_events(context.clone()).await;
+    subscribe_msaa_events(context.clone()).await;
     subscribe_jab_events(context.clone()).await;
     subscribe_cusor_key_events(context.clone()).await;
+}
+
+async fn subscribe_msaa_events(context: Arc<Context>) {
+    context.msaa.add_on_object_location_change_listener(|src| {
+        if OBJID_CARET.0 != src.id_object {
+            return;
+        }
+        let Ok((obj, _)) = src.get_object() else {
+            return;
+        };
+        let Some(obj) = obj.parent() else {
+            return;
+        };
+        let control = WindowControl::from(obj.window());
+        dbg!(control.get_sel());
+        win_wrap::common::beep(400, 40);
+    });
 }
 
 #[allow(unused_variables)]
@@ -164,7 +185,9 @@ pub(crate) fn editor_key_handle() -> &'static Mutex<bool> {
 pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
     let ctx = context.clone();
     let cb_uia = move |key: Keys, pressed| {
-        let ctrl = ctx.ui_automation.get_focused_element();
+        let Ok(ctrl) = ctx.ui_automation.get_focused_element() else {
+            return;
+        };
         match pressed {
             true => {
                 *editor_key_handle().lock().unwrap() = false;
