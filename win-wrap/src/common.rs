@@ -48,9 +48,9 @@ use windows::{
             Threading::AttachThreadInput,
         },
         UI::WindowsAndMessaging::{
-            CallNextHookEx, FindWindowW, GetClassNameW, GetDesktopWindow, GetForegroundWindow,
-            GetWindowTextW, MessageBoxW, SetForegroundWindow, SetWindowsHookExW, ShowWindow,
-            UnhookWindowsHookEx, MESSAGEBOX_STYLE,
+            CallNextHookEx, FindWindowExW, FindWindowW, GetClassNameW, GetDesktopWindow,
+            GetForegroundWindow, GetWindowTextW, MessageBoxW, SetForegroundWindow,
+            SetWindowsHookExW, ShowWindow, UnhookWindowsHookEx, MESSAGEBOX_STYLE,
         },
     },
 };
@@ -113,8 +113,8 @@ pub fn get_desktop_window() -> HWND {
 
 /**
  * 查询处理顶级窗口的类名和窗口名称匹配指定的字符串。这个函数不搜索子窗口。
- * `class_name` 指向一个以NULL字符结尾的、用来指定类名的字符串或一个可以确定类名字符串的原子。如果这个参数是一个原子，那么它必须是一个在调用此函数前已经通过GlobalAddAtom函数创建好的全局原子。这个原子（一个16bit的值），必须被放置在class_name的低位字节中，class_name的高位字节置零。如果该参数为null时，将会寻找任何与window_name参数匹配的窗口。
- * `window_name` 指向一个以NULL字符结尾的、用来指定窗口名（即窗口标题）的字符串。如果此参数为NULL，则匹配所有窗口名。
+ * `class_name` 用来指定类名的字符串或一个可以确定类名字符串的原子。如果这个参数是一个原子，那么它必须是一个在调用此函数前已经通过GlobalAddAtom函数创建好的全局原子。这个原子（一个16bit的值），必须被放置在class_name的低位字节中，class_name的高位字节置零。如果该参数为null时，将会寻找任何与window_name参数匹配的窗口。
+ * `window_name` 用来指定窗口名（即窗口标题）的字符串。如果此参数为NULL，则匹配所有窗口名。
  * */
 pub fn find_window(class_name: Option<&str>, window_name: Option<&str>) -> HWND {
     unsafe {
@@ -123,6 +123,41 @@ pub fn find_window(class_name: Option<&str>, window_name: Option<&str>) -> HWND 
             (Some(c), None) => FindWindowW(&HSTRING::from(c), None),
             (None, Some(w)) => FindWindowW(None, &HSTRING::from(w)),
             _ => FindWindowW(None, None),
+        }
+    }
+}
+
+/**
+ * 查询其类名和窗口名称与指定字符串匹配的窗口的句柄。 函数搜索子窗口，从指定子窗口后面的子窗口开始。 此函数不执行区分大小写的搜索。
+ * find_window_ex 函数仅搜索直接子窗口。 它不搜索其他后代。
+ * 如果 window_name 参数不为 NULL，find_window_ex 将调用 get_window_text 函数以检索窗口名称进行比较。 有关可能出现的潜在问题的说明，请参阅 get_window_text。
+ * `h_wnd_parent` 要搜索其子窗口的父窗口的句柄。如果 h_wnd_parent 为 NULL，则该函数使用桌面窗口作为父窗口。 函数在桌面子窗口的窗口之间搜索。如果 h_wnd_parent=HWND_MESSAGE，该函数将搜索所有 仅消息窗口。
+ * `h_wnd_child_after` 子窗口的句柄。搜索从Z顺序中的下一个子窗口开始。子窗口必须是h_wnd_parent的直接子窗口，而不仅仅是后代窗口。如果h_wnd_child_after为NULL，则搜索从h_wnd_parent的第一个子窗口开始。
+ * 请注意，如果 h_wnd_parent 和 h_wnd_child_after 均为 NULL，则该函数将搜索所有顶级窗口和仅消息窗口。
+ * `class_name` 上一次调用 register_class 或 register_class_ex 函数创建的类名或类原子。 原子必须放置在 class_name 的低序字中;高序字必须为零。如果 class_name 是字符串，则指定窗口类名称。 类名可以是使用 register_class 或 register_class_ex 注册的任何名称，也可以是任何预定义的控件类名称，也可以是 MAKEINTATOM(0x8000)。 在后一种情况下，0x8000是菜单类的原子。
+ * `window_name` (窗口名称窗口标题)。 如果此参数为 NULL，则所有窗口名称都匹配。
+ * */
+pub fn find_window_ex(
+    h_wnd_parent: HWND,
+    h_wnd_child_after: HWND,
+    class_name: Option<&str>,
+    window_name: Option<&str>,
+) -> HWND {
+    unsafe {
+        match (class_name, window_name) {
+            (Some(c), Some(w)) => FindWindowExW(
+                h_wnd_parent,
+                h_wnd_child_after,
+                &HSTRING::from(c),
+                &HSTRING::from(w),
+            ),
+            (Some(c), None) => {
+                FindWindowExW(h_wnd_parent, h_wnd_child_after, &HSTRING::from(c), None)
+            }
+            (None, Some(w)) => {
+                FindWindowExW(h_wnd_parent, h_wnd_child_after, None, &HSTRING::from(w))
+            }
+            _ => FindWindowExW(h_wnd_parent, h_wnd_child_after, None, None),
         }
     }
 }
