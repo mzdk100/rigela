@@ -100,49 +100,44 @@ impl Tts {
      * `text` 需要朗读的文本。
      * */
     pub(crate) async fn speak(&self, text: String) -> bool {
-        let mut text = text.clone();
+        assert!(text.len() > 0);
 
-        // 单个字符的预处理，utf8的字节数一般在4个字节以内， 如果字节数小于5个字符，就进行预处理
-        if text.len() < 5 {
-            text = transform_single_char(&text);
+        let engine = self.get_engine().await;
+
+        let mut chars = text.chars();
+        let first_char = chars.next().unwrap();
+        match chars.next() {
+            Some(_) => engine.speak(&text).await,
+            None => {
+                let text = transform_single_char(&first_char);
+                engine.speak(&text).await;
+            }
         }
 
-        let engine = self
-            .context
-            .config_manager
-            .get_config()
-            .tts_config
-            .voice
-            .0
-            .clone();
-        let lock = self.all_engines.lock().await;
-        if let Some(x) = lock.get(&engine) {
-            let engine = x.clone();
-            drop(lock);
-            engine.speak(text.as_str()).await;
-            {
-                *self.is_cancelled.lock().await = false;
-            }
-            engine.wait().await;
-            return !*self.is_cancelled.lock().await;
-        };
-        drop(lock);
-        loop {
-            if let Some(default_engine) = { self.default_engine.lock().await.clone() } {
-                let lock = self.all_engines.lock().await;
-                if let Some(x) = lock.get(&default_engine) {
-                    let engine = x.clone();
-                    drop(lock);
-                    engine.speak(text.as_str()).await;
-                    {
-                        *self.is_cancelled.lock().await = false;
+        {
+            *self.is_cancelled.lock().await = false;
+        }
+        engine.wait().await;
+
+        return !*self.is_cancelled.lock().await;
+    }
+
+    async fn get_engine(&self) -> Arc<dyn TtsEngine + Sync + Send> {
+        let ttc_cfg = self.context.config_manager.get_config().tts_config;
+        let engine_name = ttc_cfg.voice.0.clone();
+
+        match { self.all_engines.lock().await.get(&engine_name) } {
+            Some(x) => x.clone(),
+
+            None => loop {
+                let engine_name = self.default_engine.lock().await.clone().unwrap();
+                match { self.all_engines.lock().await.get(&engine_name) } {
+                    Some(x) => break x.clone(),
+                    None => {
+                        sleep(Duration::from_millis(100)).await;
                     }
-                    engine.wait().await;
-                    return !*self.is_cancelled.lock().await;
-                };
-                drop(lock);
-            }
-            sleep(Duration::from_millis(100)).await;
+                }
+            },
         }
     }
 

@@ -15,18 +15,11 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 /// 单个字符的预处理
-pub(crate) fn transform_single_char(text: &str) -> String {
-    let mut result = String::new();
-    let mut chars = text.chars();
-    match get_single_char_transform_map().get(&chars.next().unwrap()) {
-        Some(v) => {
-            result.push_str(v);
-            result.push_str(chars.as_str());
-        }
-        None => result.push_str(text),
+pub(crate) fn transform_single_char(ch: &char) -> String {
+    match get_single_char_transform_map().get(&ch) {
+        Some(v) => v.to_string(),
+        None => String::from(*ch),
     }
-
-    result
 }
 
 fn get_single_char_transform_map() -> HashMap<char, &'static str> {
@@ -42,6 +35,9 @@ fn get_single_char_transform_map() -> HashMap<char, &'static str> {
 }
 
 const SINGLE_CHAR_TRANSFORM_DATA: &[(char, &str)] = &[
+    (' ', "空格"),
+    ('\t', "制表符"),
+    ('\n', "换行"),
     ('!', "叹号"),
     ('！', "叹号"),
     ('"', "双引号"),
