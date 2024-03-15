@@ -15,7 +15,11 @@ use crate::context::Context;
 use rigela_utils::bass::BassChannelOutputStream;
 use std::{
     collections::HashMap,
-    sync::{Arc, OnceLock},
+    sync::{
+        Arc,
+        OnceLock,
+        Weak,
+    },
     time::Duration,
 };
 use tokio::{sync::Mutex, time::sleep};
@@ -29,7 +33,7 @@ pub(crate) enum SoundArgument {
 /// 音效播放器
 #[derive(Debug)]
 pub(crate) struct Sound {
-    context: OnceLock<Arc<Context>>,
+    context: OnceLock<Weak<Context>>,
     sound_streams: Mutex<HashMap<String, Arc<BassChannelOutputStream>>>,
 }
 
@@ -41,8 +45,8 @@ impl Sound {
         }
     }
 
-    pub(crate) fn apply(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap_or(());
+    pub(crate) fn apply(&self, context: Weak<Context>) {
+        self.context.set(context).unwrap_or(());
     }
 
     //noinspection StructuralWrap
@@ -53,7 +57,7 @@ impl Sound {
     pub(crate) async fn play(&self, arg: SoundArgument) {
         let context = loop {
             if let Some(x) = self.context.get() {
-                break x;
+                break unsafe { &*x.as_ptr() };
             }
             sleep(Duration::from_millis(100)).await;
         };

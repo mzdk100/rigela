@@ -11,21 +11,26 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::{
+    str::FromStr,
+    sync::Weak,
+};
+
+use rigela_utils::bass::BassChannelOutputStream;
+#[cfg(target_arch = "x86")]
+use rigela_utils::ibmeci::Ibmeci;
+
 #[allow(unused)]
 use crate::{
     context::Context,
     performer::tts::{TtsEngine, TtsProperty},
 };
-use rigela_utils::bass::BassChannelOutputStream;
-#[cfg(target_arch = "x86")]
-use rigela_utils::ibmeci::Ibmeci;
-use std::{str::FromStr, sync::Arc};
 
 //noinspection SpellCheckingInspection
 /// VVTTS语音库封装
 pub(crate) struct VvttsEngine {
     #[cfg(target_arch = "x86_64")]
-    context: Arc<Context>,
+    context: Weak<Context>,
     #[cfg(target_arch = "x86")]
     eci: &'static Ibmeci,
     output_stream: BassChannelOutputStream,
@@ -33,7 +38,7 @@ pub(crate) struct VvttsEngine {
 
 impl VvttsEngine {
     #[allow(unused_variables)]
-    pub(crate) async fn new(context: Arc<Context>) -> Self {
+    pub(crate) async fn new(context: Weak<Context>) -> Self {
         #[cfg(target_arch = "x86")]
             let eci = Ibmeci::get().await.unwrap();
         Self {
@@ -47,8 +52,10 @@ impl VvttsEngine {
 
     #[cfg(target_arch = "x86_64")]
     async fn set_value_by_prop(&self, prop: TtsProperty) {
-        let mut params = self
-            .context
+        let mut params = unsafe {
+            &*self
+                .context.as_ptr()
+        }
             .proxy32process
             .as_ref()
             .await
@@ -65,7 +72,7 @@ impl VvttsEngine {
             _ => return,
         };
 
-        self.context
+        unsafe { &*self.context.as_ptr() }
             .proxy32process
             .as_ref()
             .await
@@ -91,7 +98,7 @@ impl VvttsEngine {
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
         self.output_stream.start();
-        let data = self.context.proxy32process.as_ref().await.eci_synth(text).await;
+        let data = unsafe { &*self.context.as_ptr() }.proxy32process.as_ref().await.eci_synth(text).await;
         self.output_stream.put_data(&data);
     }
 
@@ -109,7 +116,7 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn get_all_voices(&self) -> Vec<(String, String)> {
-        self.context
+        unsafe { &*self.context.as_ptr() }
             .proxy32process
             .as_ref()
             .await
@@ -133,7 +140,7 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn set_voice(&self, id: String) {
-        self.context
+        unsafe { &*self.context.as_ptr() }
             .proxy32process
             .as_ref()
             .await

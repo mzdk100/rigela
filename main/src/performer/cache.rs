@@ -13,7 +13,7 @@
 
 use crate::context::Context;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use tokio::io::AsyncReadExt;
 use tokio::sync::Mutex;
 
@@ -29,8 +29,8 @@ pub(crate) struct Cache {
 impl Cache {
     //noinspection DuplicatedCode
     /// 创建缓存对象
-    pub(crate) async fn build(context: Arc<Context>) -> Self {
-        let words = match context.resource_provider.open("words.txt").await {
+    pub(crate) async fn build(context: Weak<Context>) -> Self {
+        let words = match unsafe { &*context.as_ptr() }.resource_provider.open("words.txt").await {
             Ok(mut f) => {
                 let mut s = String::new();
                 f.read_to_string(&mut s).await.unwrap_or(0);

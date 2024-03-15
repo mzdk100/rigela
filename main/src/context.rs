@@ -171,7 +171,7 @@ impl Context {
         // 启动表演者
         let performer = self.performer.clone();
         self.work_runtime.spawn(async move {
-            performer.apply(ctx).await;
+            performer.apply(Arc::downgrade(&ctx)).await;
             info!("The performer is ready.");
         });
     }

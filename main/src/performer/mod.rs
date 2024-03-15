@@ -25,6 +25,7 @@ use crate::{
     },
 };
 use std::{sync::Arc, time::Duration};
+use std::sync::Weak;
 use tokio::{sync::OnceCell, time::sleep};
 
 /// 表演者语音信息收集接口。 实现此接口的对象可以调用表演者的speak方法进行输出。
@@ -55,7 +56,7 @@ impl Performer {
      * 配置表演者。
      * `context` 读屏框架的上下文环境。
      * */
-    pub(crate) async fn apply(&self, context: Arc<Context>) {
+    pub(crate) async fn apply(&self, context: Weak<Context>) {
         self.sound.apply(context.clone());
 
         let tts = Arc::new(Tts::new(context.clone()));
