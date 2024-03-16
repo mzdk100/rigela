@@ -34,7 +34,7 @@ features = ["server"]
 [dependencies.win-wrap]
 # Windows Api的安全封装
 path = "../win-wrap"
-features = ["uia", "registry", "tts", "pth", "control"]
+features = ["uia", "registry", "tts", "pth", "control", "shell"]
 
 [dependencies.tokio]
 # 异步运行时（携程框架）

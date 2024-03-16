@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use log::error;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
@@ -22,9 +23,14 @@ use std::{
     io::{copy, Read, Write},
     path::{Path, PathBuf},
 };
-use win_wrap::registry::{
-    reg_close_key, reg_delete_value, reg_open_key_ex, reg_set_value_ex, HKEY_CURRENT_USER,
-    KEY_WRITE, REG_SZ,
+use win_wrap::input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT};
+use win_wrap::{
+    common::SW_SHOWNORMAL,
+    registry::{
+        reg_close_key, reg_delete_value, reg_open_key_ex, reg_set_value_ex, HKEY_CURRENT_USER,
+        KEY_WRITE, REG_SZ,
+    },
+    shell::ShellLink,
 };
 use zip::{write::FileOptions, CompressionMethod, ZipArchive, ZipWriter};
 
@@ -235,6 +241,51 @@ pub(crate) fn restore_data(source: &PathBuf) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+/**
+ * 创建读屏程序的快捷方式。
+ * `link_path` 快捷方式的路径（扩展名是.lnk）。
+ * `hotkey` 快捷方式的热键。
+ * */
+pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
+    let mut modifier = 0;
+    if hotkey.contains(&Keys::VkControl) {
+        modifier |= HOTKEYF_CONTROL;
+    }
+    if hotkey.contains(&Keys::VkAlt) {
+        modifier |= HOTKEYF_ALT;
+    }
+    if hotkey.contains(&Keys::VkShift) {
+        modifier |= HOTKEYF_SHIFT;
+    }
+    if hotkey.contains(&Keys::VkWin) {
+        modifier |= HOTKEYF_EXT;
+    }
+    let Some(key) = hotkey
+        .iter()
+        .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkControl, Keys::VkWin].contains(k))
+        else {
+            return false;
+        };
+    let Some(key) = key.get_code() else {
+        return false;
+    };
+    let link = ShellLink::new();
+    link.set_description(env!("CARGO_PKG_DESCRIPTION").to_string())
+        .set_path(args().nth(0).unwrap())
+        .set_relative_path(link_path.clone())
+        .set_arguments("--shortcut-link".to_string())
+        .set_hotkey(modifier, key)
+        .set_show_cmd(SW_SHOWNORMAL);
+    dbg!(link
+        .set_working_directory("D:\\".to_string())
+        .get_working_directory());
+    if let Some(file) = link.open_file() {
+        file.save(Some(link_path), true);
+        return true;
+    }
+    false
 }
 
 //noinspection DuplicatedCode
