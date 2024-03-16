@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::fmt::{Debug, Formatter};
 use crate::{
     common::{HWND, SHOW_WINDOW_CMD},
     input::VIRTUAL_KEY,
+    com::persist::PersistFile,
 };
 pub use windows::Win32::UI::Shell::{
     Common::ITEMIDLIST, SLGP_FLAGS, SLGP_RAWPATH, SLGP_RELATIVEPRIORITY, SLGP_SHORTPATH,
@@ -23,7 +25,10 @@ pub use windows::Win32::UI::Shell::{
     SLR_UPDATE, SLR_UPDATE_MACHINE_AND_SID,
 };
 use windows::{
-    core::HSTRING,
+    core::{
+        HSTRING,
+        Interface,
+    },
     Win32::{
         Foundation::MAX_PATH,
         Storage::FileSystem::WIN32_FIND_DATAW,
@@ -33,7 +38,6 @@ use windows::{
 };
 
 /// 公开用于创建、修改和解析 Shell 链接的方法。
-#[derive(Debug)]
 pub struct ShellLink(IShellLinkW);
 
 /// https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ishelllinkw
@@ -315,7 +319,24 @@ impl ShellLink {
         unsafe { self.0.Resolve(h_wnd, flags.0 as u32) }.unwrap_or(());
         self
     }
+
+    /**
+     * 打开对象文件。
+     * */
+    pub fn open_file(&self) -> Option<PersistFile> {
+        if let Ok(f) = self.0.cast() {
+            return Some(PersistFile::from_raw(f));
+        }
+        None
+    }
 }
+
+impl Debug for ShellLink {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ShellLink()")
+    }
+}
+
 
 #[cfg(test)]
 mod test_shell {
@@ -346,6 +367,9 @@ mod test_shell {
             .set_working_directory("D:\\".to_string())
             .get_working_directory());
         link.resolve(HWND::default(), SLR_NOSEARCH);
+        if let Some(file) = link.open_file() {
+            file.save(Some("D:\\rigela.lnk".to_string()), true);
+        }
 
         dbg!(link);
     }

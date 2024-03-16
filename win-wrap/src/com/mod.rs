@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod persist;
+
 use crate::{common::HRESULT, ext::VecExt};
 use std::ffi::c_void;
 use windows::Win32::System::{
