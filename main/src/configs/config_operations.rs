@@ -46,6 +46,22 @@ pub(crate) fn save_hotkeys(context: Arc<Context>, hotkeys: HashMap<String, Vec<K
 
 // ------  常规配置  -------
 
+/// 获取是否显示桌面快捷方式
+pub(crate) fn get_is_display_shortcut(context: Arc<Context>) -> bool {
+    let root = context.config_manager.get_config();
+    root.general_config.desktop_shortcut
+}
+
+/// 保存是否显示桌面快捷方式
+pub(crate) fn save_is_display_shortcut(context: Arc<Context>, desktop_shortcut: bool) {
+    let mut root = context.config_manager.get_config();
+    root.general_config = GeneralConfig {
+        desktop_shortcut,
+        ..root.general_config
+    };
+    context.config_manager.set_config(&root);
+}
+
 /// 获取是否开机自启
 pub(crate) fn get_run_on_startup(context: Arc<Context>) -> bool {
     let root = context.config_manager.get_config();
