@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 /// 常规配置项
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct GeneralConfig {
+    pub(crate) desktop_shortcut: bool,
     pub(crate) run_on_startup: bool,
     pub(crate) auto_check_update: bool,
     pub(crate) lang: Lang,
@@ -24,6 +25,7 @@ pub(crate) struct GeneralConfig {
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
+            desktop_shortcut: false,
             run_on_startup: false,
             auto_check_update: true,
             lang: Lang::Zh,

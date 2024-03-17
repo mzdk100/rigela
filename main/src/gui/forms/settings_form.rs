@@ -13,14 +13,15 @@
 
 use crate::commander::keys::Keys;
 use crate::configs::config_operations::{
-    get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
+    get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,
+    get_run_on_startup,
 };
 use crate::configs::general::Lang;
 use crate::configs::tts::TtsPropertyItem;
 use crate::gui::command::{
-    check_update_cmd, export_config_cmd, import_config_cmd, reset_config_cmd,
-    set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd, set_pitch_cmd,
-    set_speed_cmd, set_voice_cmd, set_volume_cmd,
+    add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd, import_config_cmd,
+    reset_config_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
+    set_mouse_read_cmd, set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
 use crate::gui::forms::hotkeys::HotKeysUi;
 use crate::performer::tts::{TtsProperty, VoiceInfo};
@@ -95,6 +96,7 @@ pub struct SettingsForm {
 
     #[nwg_partial(parent: general_frame)]
     #[nwg_events(
+    (ck_add_desktop_shortcut, OnButtonClick): [SettingsForm::on_add_desktop_shortcut(SELF, CTRL)],
     (ck_run_on_startup, OnButtonClick): [SettingsForm::on_run_on_startup(SELF, CTRL)],
     (ck_auot_update, OnButtonClick): [SettingsForm::on_auto_check_update(SELF, CTRL)],
     (btn_check_update, OnButtonClick): [SettingsForm::on_check_update],
@@ -206,6 +208,11 @@ impl SettingsForm {
         self.window.set_visible(false);
     }
 
+    fn on_add_desktop_shortcut(&self, ctrl: &GeneralUi) {
+        let toggle = ctrl.ck_add_desktop_shortcut.check_state() == CheckBoxState::Checked;
+        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), toggle);
+    }
+
     fn on_run_on_startup(&self, ctrl: &GeneralUi) {
         let toggle = ctrl.ck_run_on_startup.check_state() == CheckBoxState::Checked;
         set_auto_start_cmd(self.context.get().unwrap().clone(), toggle);
@@ -282,6 +289,15 @@ impl SettingsForm {
 
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
+
+        // 更新桌面快捷显示
+        let state = match get_is_display_shortcut(self.context.get().unwrap().clone()) {
+            true => CheckBoxState::Checked,
+            false => CheckBoxState::Unchecked,
+        };
+        self.general_ui
+            .ck_add_desktop_shortcut
+            .set_check_state(state);
 
         // 更新开机自启显示
         let state = match get_run_on_startup(self.context.get().unwrap().clone()) {
@@ -395,27 +411,31 @@ pub struct GeneralUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: &t!("settings.run_on_startup"))]
+    #[nwg_control(text: "添加桌面快捷方式 (& L)")]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
+    ck_add_desktop_shortcut: CheckBox,
+
+    #[nwg_control(text: &t!("settings.run_on_startup"))]
+    #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     ck_run_on_startup: CheckBox,
 
     #[nwg_control(text: &t!("settings.auto_check_update"))]
-    #[nwg_layout_item(layout: layout, col: 1, row: 2)]
+    #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     ck_auot_update: CheckBox,
 
     #[nwg_control(text: &t!("settings.check_update"))]
-    #[nwg_layout_item(layout: layout, col: 1, row: 3)]
+    #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     btn_check_update: nwg::Button,
 
     #[nwg_control(text: &t!("settings.lang"))]
-    #[nwg_layout_item(layout: layout, col: 1, row: 5)]
+    #[nwg_layout_item(layout: layout, col: 1, row: 6)]
     lb_lang: nwg::Label,
 
     #[nwg_control(collection: vec ! [
     t!("settings.lang_zh_item").to_string(), 
     t!("settings.lang_en_item").to_string(),
     ])]
-    #[nwg_layout_item(layout: layout, col: 2, row: 5)]
+    #[nwg_layout_item(layout: layout, col: 2, row: 6)]
     cb_lang: nwg::ComboBox<String>,
 
     #[nwg_control(text: &t!("settings.btn_close"))]

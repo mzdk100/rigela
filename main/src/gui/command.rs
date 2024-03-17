@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::config_operations::save_is_display_shortcut;
 use crate::{
     configs::{
         config_manager::ConfigRoot,
@@ -372,5 +373,26 @@ fn reapply_config(context: Arc<Context>) {
         ctx.gui_provider.show_settings_form();
 
         pf.speak(&t!("cmd.msg_reset_success")).await;
+    });
+}
+
+/// 添加桌面快捷方式
+pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool) {
+    match toggle {
+        true => {
+            // todo
+        }
+        false => {
+            // todo
+        }
+    }
+
+    save_is_display_shortcut(context.clone(), toggle);
+
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        let state = if toggle { "添加" } else { "删除" };
+        let info = format!("已{}桌面快捷方式", state);
+        pf.speak(&info).await;
     });
 }
