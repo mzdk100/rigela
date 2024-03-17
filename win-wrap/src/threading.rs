@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    common::{close_handle, BOOL, FALSE, HANDLE, HWND, LPARAM, TRUE, WAIT_EVENT, WPARAM},
+    common::{close_handle, HANDLE, HWND, LPARAM, WAIT_EVENT, WPARAM},
     message::post_thread_message,
 };
 pub use windows::Win32::{
@@ -73,8 +73,8 @@ pub fn get_window_thread_process_id(h_wnd: HWND) -> (u32, u32) {
  * */
 pub fn create_event(
     event_attributes: Option<*const SECURITY_ATTRIBUTES>,
-    manual_reset: BOOL,
-    initial_state: BOOL,
+    manual_reset: bool,
+    initial_state: bool,
     name: Option<&str>,
 ) -> HANDLE {
     unsafe {
@@ -88,7 +88,7 @@ pub fn create_event(
             ),
         }
     }
-    .expect("Can't create the event.")
+        .expect("Can't create the event.")
 }
 
 /**
@@ -111,13 +111,14 @@ pub fn wait_for_single_object(h_handle: HANDLE, milliseconds: u32) -> WAIT_EVENT
 /* 在线程之间发送通知事件。 */
 #[derive(Clone)]
 pub struct ThreadNotify(u32, HANDLE);
+
 impl ThreadNotify {
     /**
      * 创建一个通知对象。
      * `thread_id` 一个线程ID，此线程必须有一个消息循环。
      * */
     pub fn new(thread_id: u32) -> Self {
-        let event = create_event(None, TRUE, FALSE, None);
+        let event = create_event(None, true, false, None);
         Self(thread_id, event)
     }
 
@@ -153,7 +154,7 @@ impl ThreadNotify {
  * */
 pub fn open_process(
     desired_access: PROCESS_ACCESS_RIGHTS,
-    inherit_handle: BOOL,
+    inherit_handle: bool,
     process_id: u32,
 ) -> crate::common::Result<HANDLE> {
     unsafe { OpenProcess(desired_access, inherit_handle, process_id) }

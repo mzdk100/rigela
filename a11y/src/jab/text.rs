@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 use crate::JabLib::packages::AccessibleTextAttributesInfo;
 
 #[derive(Debug)]
@@ -47,15 +46,21 @@ impl AccessibleTextAttributes {
      * */
     pub(crate) fn new(info: AccessibleTextAttributesInfo) -> Self {
         Self {
-            bold: info.bold.as_bool(),
-            italic: info.italic.as_bool(),
-            underline: info.underline.as_bool(),
-            strikethrough: info.strikethrough.as_bool(),
-            superscript: info.superscript.as_bool(),
-            subscript: info.subscript.as_bool(),
-            background_color: String::from_utf16_lossy(&info.backgroundColor).trim_matches('\0').to_string(),
-            foreground_color: String::from_utf16_lossy(&info.foregroundColor).trim_matches('\0').to_string(),
-            font_family: String::from_utf16_lossy(&info.fontFamily).trim_matches('\0').to_string(),
+            bold: info.bold != 0,
+            italic: info.italic != 0,
+            underline: info.underline != 0,
+            strikethrough: info.strikethrough != 0,
+            superscript: info.superscript != 0,
+            subscript: info.subscript != 0,
+            background_color: String::from_utf16_lossy(&info.backgroundColor)
+                .trim_matches('\0')
+                .to_string(),
+            foreground_color: String::from_utf16_lossy(&info.foregroundColor)
+                .trim_matches('\0')
+                .to_string(),
+            font_family: String::from_utf16_lossy(&info.fontFamily)
+                .trim_matches('\0')
+                .to_string(),
             font_size: info.fontSize,
             alignment: info.alignment,
             bidi_level: info.bidiLevel,
@@ -65,7 +70,9 @@ impl AccessibleTextAttributes {
             line_spacing: info.lineSpacing,
             space_above: info.spaceAbove,
             space_below: info.spaceBelow,
-            full_attributes_string: String::from_utf16_lossy(&info.fullAttributesString).trim_matches('\0').to_string(),
+            full_attributes_string: String::from_utf16_lossy(&info.fullAttributesString)
+                .trim_matches('\0')
+                .to_string(),
         }
     }
 }

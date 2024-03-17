@@ -16,8 +16,7 @@ pub use windows::{
     core::{Result, HRESULT},
     Win32::{
         Foundation::{
-            BOOL, FALSE, FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, TRUE,
-            WAIT_EVENT, WPARAM,
+            FARPROC, HANDLE, HINSTANCE, HMODULE, HWND, LPARAM, LRESULT, RECT, WAIT_EVENT, WPARAM,
         },
         Globalization::HIMC,
         System::SystemServices::{
@@ -98,8 +97,8 @@ pub fn set_foreground_window(h_wnd: HWND) {
  * `id_attach_to` 将附加到的线程的标识符。此线程不能是系统线程。线程无法附加到自身。因此， id_attach_to 不能等于 id_attach。
  * `attach` 如果此参数为 TRUE，则附加两个线程。如果参数为 FALSE，则分离线程。
  * */
-pub fn attach_thread_input(id_attach: u32, id_attach_to: u32, attach: BOOL) -> BOOL {
-    unsafe { AttachThreadInput(id_attach, id_attach_to, attach) }
+pub fn attach_thread_input(id_attach: u32, id_attach_to: u32, attach: bool) -> bool {
+    unsafe { AttachThreadInput(id_attach, id_attach_to, attach) }.as_bool()
 }
 
 /**
@@ -206,8 +205,8 @@ pub fn get_class_name(h_wnd: HWND) -> String {
  * - SW_SHOWDEFAULT，根据启动应用程序的程序传递给 CreateProcess 函数的 STARTUPINFO 结构中指定的SW_值设置显示状态。
  * - SW_FORCEMINIMIZE，最小化窗口，即使拥有窗口的线程没有响应。 仅当最小化不同线程的窗口时，才应使用此标志。
  * */
-pub fn show_window(h_wnd: HWND, cmd_show: SHOW_WINDOW_CMD) -> BOOL {
-    unsafe { ShowWindow(h_wnd, cmd_show) }
+pub fn show_window(h_wnd: HWND, cmd_show: SHOW_WINDOW_CMD) -> bool {
+    unsafe { ShowWindow(h_wnd, cmd_show) }.as_bool()
 }
 
 /**

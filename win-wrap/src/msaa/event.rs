@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    common::{get_class_name, Result, BOOL, HMODULE, HWND},
+    common::{get_class_name, Result, HMODULE, HWND},
     message::message_loop,
     msaa::object::AccessibleObject,
 };
@@ -77,8 +77,8 @@ pub fn set_win_event_hook(
  * 删除由上一次调用 set_win_event_hook 创建的事件挂钩函数。
  * `h_win_event_hook` 在上一次调用 set_win_event_hook 时返回的事件挂钩的句柄。
  * */
-pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> BOOL {
-    unsafe { UnhookWinEvent(h_win_event_hook) }
+pub fn unhook_win_event(h_win_event_hook: HWINEVENTHOOK) -> bool {
+    unsafe { UnhookWinEvent(h_win_event_hook) }.as_bool()
 }
 
 static H_WIN_EVENT: RwLock<HWINEVENTHOOK> = RwLock::new(HWINEVENTHOOK(0));

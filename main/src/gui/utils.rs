@@ -23,9 +23,9 @@ use std::{
     io::{copy, Read, Write},
     path::{Path, PathBuf},
 };
-use win_wrap::input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT};
 use win_wrap::{
     common::SW_SHOWNORMAL,
+    input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT},
     registry::{
         reg_close_key, reg_delete_value, reg_open_key_ex, reg_set_value_ex, HKEY_CURRENT_USER,
         KEY_WRITE, REG_SZ,
@@ -271,16 +271,16 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = key.get_code() else {
         return false;
     };
+    let exe_path = args().nth(0).unwrap();
+    let directory = Path::new(&exe_path).parent().unwrap().to_str();
     let link = ShellLink::new();
     link.set_description(env!("CARGO_PKG_DESCRIPTION").to_string())
-        .set_path(args().nth(0).unwrap())
+        .set_path(exe_path.clone())
         .set_relative_path(link_path.clone())
         .set_arguments("--shortcut-link".to_string())
         .set_hotkey(modifier, key)
-        .set_show_cmd(SW_SHOWNORMAL);
-    dbg!(link
-        .set_working_directory("D:\\".to_string())
-        .get_working_directory());
+        .set_show_cmd(SW_SHOWNORMAL)
+        .set_working_directory(directory.unwrap().to_string());
     if let Some(file) = link.open_file() {
         file.save(Some(link_path), true);
         return true;

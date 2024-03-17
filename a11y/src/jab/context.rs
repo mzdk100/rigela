@@ -619,7 +619,7 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(ref info) = self._info else {
             return false;
         };
-        info.accessibleSelection.as_bool()
+        info.accessibleSelection != 0
     }
 
     /**
@@ -655,7 +655,7 @@ impl<'lib> AccessibleContext<'lib> {
      * 获取文本选区信息（开始索引、结束索引和选中文字）。
      * */
     pub fn get_text_selection(&self) -> Option<(i32, i32, String)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let Some(info) = self
@@ -679,7 +679,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `y` Y坐标。
      * */
     pub fn get_text_info(&self, x: i32, y: i32) -> Option<(i32, i32, i32)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let Some(info) = self
@@ -696,7 +696,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `index` 索引。
      * */
     pub fn get_text_attributes(&self, index: i32) -> Option<(AccessibleTextAttributes, String)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let (text, info) = self
@@ -717,7 +717,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `index` 索引。
      * */
     pub fn get_text_items(&self, index: i32) -> Option<(u16, String, String)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let Some(info) = self
@@ -741,7 +741,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `end_index` 结束索引。
      * */
     pub fn get_text_range(&self, start_index: i32, end_index: i32) -> Option<String> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let Some(info) = self._lib.get_accessible_text_range(
@@ -765,7 +765,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `index` 索引。
      * */
     pub fn get_text_line_bounds(&self, index: i32) -> Option<(i32, i32)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         self._lib
@@ -777,7 +777,7 @@ impl<'lib> AccessibleContext<'lib> {
      * `index` 索引。
      * */
     pub fn get_text_rect(&self, index: i32) -> Option<(i32, i32, i32, i32)> {
-        if self._info.is_none() || !self._info.as_ref().unwrap().accessibleText.as_bool() {
+        if self._info.is_none() || self._info.as_ref().unwrap().accessibleText == 0 {
             return None;
         }
         let Some(info) = self

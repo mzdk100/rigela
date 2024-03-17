@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::common::{BOOL, FALSE, HWND, LPARAM, LRESULT, WPARAM};
+use crate::common::{HWND, LPARAM, LRESULT, WPARAM};
 pub use windows::Win32::UI::WindowsAndMessaging::{
     CHANGE_WINDOW_MESSAGE_FILTER_FLAGS, HWND_BROADCAST, MSG, MSGFLT_ADD, MSGFLT_REMOVE,
     PM_NOREMOVE, PM_NOYIELD, PM_QS_INPUT, PM_QS_PAINT, PM_QS_SENDMESSAGE, PM_REMOVE,
@@ -57,8 +57,8 @@ pub fn dispatch_message(msg: &mut MSG) -> LRESULT {
  * `msg_filter_min` 要检索的最低消息值的整数值。使用 WM_KEYFIRST (0x0100) 指定第一条键盘消息， 或使用WM_MOUSEFIRST (0x0200) 指定第一条鼠标消息。在此处和 msg_filter_max 中使用WM_INPUT仅指定WM_INPUT消息。如果 msg_filter_min 和 msg_filter_max 均为零， 则 get_message 将返回所有可用消息 (即不) 执行范围筛选。
  * `msg_filter_max` 要检索的最高消息值的整数值。使用 WM_KEYLAST 指定最后一条键盘消息， WM_MOUSELAST 指定最后一条鼠标消息。在此处和 msg_filter_min 中使用WM_INPUT，仅指定WM_INPUT消息。如果 msg_filter_min 和 msg_filter_max 均为零， 则 get_message 将返回所有可用消息 (即不) 执行范围筛选。
  * */
-pub fn get_message(msg: &mut MSG, h_wnd: HWND, msg_filter_min: u32, msg_filter_max: u32) -> BOOL {
-    unsafe { GetMessageW(msg, h_wnd, msg_filter_min, msg_filter_max) }
+pub fn get_message(msg: &mut MSG, h_wnd: HWND, msg_filter_min: u32, msg_filter_max: u32) -> bool {
+    unsafe { GetMessageW(msg, h_wnd, msg_filter_min, msg_filter_max) }.as_bool()
 }
 
 //noinspection SpellCheckingInspection
@@ -84,8 +84,8 @@ pub fn peek_message(
     msg_filter_min: u32,
     msg_filter_max: u32,
     remove_msg: PEEK_MESSAGE_REMOVE_TYPE,
-) -> BOOL {
-    unsafe { PeekMessageW(msg, h_wnd, msg_filter_min, msg_filter_max, remove_msg) }
+) -> bool {
+    unsafe { PeekMessageW(msg, h_wnd, msg_filter_min, msg_filter_max, remove_msg) }.as_bool()
 }
 
 /**
@@ -157,8 +157,8 @@ pub fn send_message_timeout(
  * 将虚拟密钥信息转换为字符信息。字符信息会张贴至调用程序的消息队列，下次程序调用 get_message 或 peek_message 函数时要读取。
  * `msg` MSG结构，其中包含使用get_message或peek_message函数从调用程序消息队列撷取的信息。
  */
-pub fn translate_message(msg: &mut MSG) -> BOOL {
-    unsafe { TranslateMessage(msg) }
+pub fn translate_message(msg: &mut MSG) -> bool {
+    unsafe { TranslateMessage(msg) }.as_bool()
 }
 
 /**
@@ -201,7 +201,7 @@ pub fn change_window_message_filter(
  * */
 pub fn message_loop(slot: impl Fn(&MSG)) {
     let mut msg = MSG::default();
-    while get_message(&mut msg, HWND::default(), 0, 0) != FALSE {
+    while get_message(&mut msg, HWND::default(), 0, 0) != false {
         if msg.message == WM_QUIT {
             break;
         }
@@ -216,7 +216,7 @@ pub fn message_loop(slot: impl Fn(&MSG)) {
  * */
 pub fn pump_waiting_messages() {
     let mut msg = MSG::default();
-    while peek_message(&mut msg, HWND::default(), 0, 0, PM_REMOVE).as_bool() {
+    while peek_message(&mut msg, HWND::default(), 0, 0, PM_REMOVE) {
         dispatch_message(&mut msg);
         translate_message(&mut msg);
     }

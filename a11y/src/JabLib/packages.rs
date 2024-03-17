@@ -12,13 +12,13 @@
  */
 
 use std::cmp::min;
-use win_wrap::common::BOOL;
 
 #[allow(unused)]
 pub(crate) const MAX_STRING_SIZE: u32 = 1024;
 #[allow(unused)]
 pub(crate) const SHORT_STRING_SIZE: u32 = 256;
 
+pub(crate) type BOOL = i32;
 pub(crate) type JBoolean = u8;
 pub(crate) type JChar = u16;
 pub(crate) type JInt = i32;

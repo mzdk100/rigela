@@ -40,7 +40,7 @@ use crate::{
             AccessibleTableCellInfo, AccessibleTableInfo, AccessibleText,
             AccessibleTextAttributesInfo, AccessibleTextInfo, AccessibleTextItemsInfo,
             AccessibleTextRectInfo, AccessibleTextSelectionInfo, AccessibleValue, JInt, JObject,
-            JObject64, JavaObject, VisibleChildrenInfo,
+            JObject64, JavaObject, VisibleChildrenInfo, BOOL,
         },
     },
 };
@@ -50,7 +50,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use win_wrap::common::{
-    free_library, get_proc_address, load_library, Result, BOOL, FALSE, FARPROC, HMODULE, HWND,
+    free_library, get_proc_address, load_library, Result, FARPROC, HMODULE, HWND,
 };
 use windows::{
     core::{Error, HSTRING},
@@ -65,6 +65,7 @@ pub(crate) struct JabLib {
 
 #[allow(dead_code)]
 impl JabLib {
+    //noinspection RsUnresolvedPath
     //noinspection SpellCheckingInspection
     pub(crate) fn new(path: Option<PathBuf>) -> Result<Self> {
         #[cfg(target_arch = "x86_64")]
@@ -98,9 +99,7 @@ impl JabLib {
      * 检查给定窗口是否实现了 Java 辅助功能 API。
      * */
     pub(crate) fn is_java_window(&self, h_wnd: HWND) -> bool {
-        jab!(self.h_module, is_java_window, h_wnd)
-            .unwrap_or(BOOL::from(false))
-            .as_bool()
+        jab!(self.h_module, is_java_window, h_wnd).unwrap_or(0) != 0
     }
 
     /**
@@ -112,15 +111,15 @@ impl JabLib {
         target: HWND,
     ) -> Option<(i32, AccessibleContext)> {
         let (mut context, mut vm_id) = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_context_from_hwnd,
             target,
             &mut vm_id,
             &mut context
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -155,10 +154,7 @@ impl JabLib {
      * */
     pub(crate) fn get_version_info(&self, vm_id: i32) -> Option<AccessBridgeVersionInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_version_info, vm_id, &mut info)
-            .unwrap_or(FALSE)
-            .as_bool()
-        {
+        if jab!(self.h_module, get_version_info, vm_id, &mut info).unwrap_or(0) == 0 {
             return None;
         }
         Some(info)
@@ -178,7 +174,7 @@ impl JabLib {
         y: JInt,
     ) -> Option<AccessibleContext> {
         let mut ac = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_context_at,
             vm_id,
@@ -187,8 +183,8 @@ impl JabLib {
             y,
             &mut ac
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -205,15 +201,15 @@ impl JabLib {
         window: HWND,
     ) -> Option<(i32, AccessibleContext)> {
         let (mut vm_id, mut ac) = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_context_with_focus,
             window,
             &mut vm_id,
             &mut ac
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -231,15 +227,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleContextInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_context_info,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -287,9 +283,7 @@ impl JabLib {
      * `obj2` 对象2.
      * */
     pub(crate) fn is_same_object(&self, vm_id: i32, obj1: JObject64, obj2: JObject64) -> bool {
-        jab!(self.h_module, is_same_object, vm_id, obj1, obj2)
-            .unwrap_or(FALSE)
-            .as_bool()
+        jab!(self.h_module, is_same_object, vm_id, obj1, obj2).unwrap_or(0) != 0
     }
 
     /**
@@ -376,9 +370,7 @@ impl JabLib {
      * `ac` 可访问上下文。
      * */
     pub(crate) fn request_focus(&self, vm_id: i32, ac: AccessibleContext) -> bool {
-        jab!(self.h_module, request_focus, vm_id, ac)
-            .unwrap_or(FALSE)
-            .as_bool()
+        jab!(self.h_module, request_focus, vm_id, ac).unwrap_or(0) != 0
     }
 
     //noinspection StructuralWrap
@@ -404,7 +396,7 @@ impl JabLib {
         start_index: i32,
     ) -> Option<VisibleChildrenInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_visible_children,
             vm_id,
@@ -412,8 +404,8 @@ impl JabLib {
             start_index,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -438,15 +430,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleActions> {
         let mut actions = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_actions,
             vm_id,
             ac,
             &mut actions
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -466,7 +458,7 @@ impl JabLib {
         index: JInt,
     ) -> Option<AccessibleTextRectInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_caret_location,
             vm_id,
@@ -474,8 +466,8 @@ impl JabLib {
             &mut info,
             index
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -494,9 +486,7 @@ impl JabLib {
         ac: AccessibleContext,
         position: i32,
     ) -> bool {
-        jab!(self.h_module, set_caret_position, vm_id, ac, position)
-            .unwrap_or(FALSE)
-            .as_bool()
+        jab!(self.h_module, set_caret_position, vm_id, ac, position).unwrap_or(0) != 0
     }
 
     /**
@@ -514,7 +504,7 @@ impl JabLib {
         end_index: i32,
     ) -> Option<(AccessibleTextAttributesInfo, i16)> {
         let (mut info, mut len) = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_text_attributes_in_range,
             vm_id,
@@ -524,8 +514,8 @@ impl JabLib {
             &mut info,
             &mut len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -543,15 +533,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleRelationSetInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_relation_set,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -569,15 +559,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleKeyBindings> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_key_bindings,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -595,10 +585,7 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleIcons> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(self.h_module, get_accessible_icons, vm_id, ac, &mut info)
-            .unwrap_or(FALSE)
-            .as_bool()
-        {
+        if jab!(self.h_module, get_accessible_icons, vm_id, ac, &mut info).unwrap_or(0) == 0 {
             return None;
         }
         Some(info)
@@ -615,15 +602,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleTableInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_row_header,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -641,15 +628,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleTableInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_column_header,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -720,8 +707,8 @@ impl JabLib {
             start_index,
             end_index
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            != 0
     }
 
     /**
@@ -735,15 +722,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleTableInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_info,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -767,7 +754,7 @@ impl JabLib {
         for _ in 0..len {
             name.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_virtual_accessible_name,
             vm_id,
@@ -775,8 +762,8 @@ impl JabLib {
             name.as_mut_ptr(),
             len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -794,15 +781,15 @@ impl JabLib {
         ac: AccessibleContext,
     ) -> Option<AccessibleHypertextInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_hypertext,
             vm_id,
             ac,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -822,7 +809,7 @@ impl JabLib {
         start_index: JInt,
     ) -> Option<AccessibleHypertextInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_hypertext_ext,
             vm_id,
@@ -830,8 +817,8 @@ impl JabLib {
             start_index,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -839,7 +826,7 @@ impl JabLib {
     }
 
     /**
-     * 请求组件执行可访问操作的列表。如果执行了所有操作，则返回TRUE。当第一个请求的操作失败时返回FALSE，在这种情况下，“failure”包含失败操作的索引。
+     * 请求组件执行可访问操作的列表。如果执行了所有操作，则返回true。当第一个请求的操作失败时返回false，在这种情况下，“failure”包含失败操作的索引。
      * `vm_id` 虚拟机ID。
      * `ac` 可访问上下文。
      * `actions_to_do` 要执行的动作列表。
@@ -860,8 +847,8 @@ impl JabLib {
                 actions_to_do,
                 &mut failure
             )
-                .unwrap_or(FALSE)
-                .as_bool(),
+                .unwrap_or(0)
+                != 0,
             failure,
         )
     }
@@ -878,9 +865,7 @@ impl JabLib {
         ac: AccessibleContext,
         text: *const u16,
     ) -> bool {
-        jab!(self.h_module, set_text_contents, vm_id, ac, text)
-            .unwrap_or(FALSE)
-            .as_bool()
+        jab!(self.h_module, set_text_contents, vm_id, ac, text).unwrap_or(0) != 0
     }
 
     /**
@@ -1139,8 +1124,8 @@ impl JabLib {
             ac,
             link
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            != 0
     }
 
     /**
@@ -1258,7 +1243,7 @@ impl JabLib {
         index: JInt,
     ) -> Option<AccessibleHypertextInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_hyperlink,
             vm_id,
@@ -1266,8 +1251,8 @@ impl JabLib {
             index,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1368,8 +1353,8 @@ impl JabLib {
             r#as,
             index
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            != 0
     }
 
     /**
@@ -1391,8 +1376,8 @@ impl JabLib {
             at,
             row
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            != 0
     }
 
     /**
@@ -1414,8 +1399,8 @@ impl JabLib {
             at,
             column
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            != 0
     }
 
     /**
@@ -1433,7 +1418,7 @@ impl JabLib {
         column: JInt,
     ) -> Option<AccessibleTableCellInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_cell_info,
             vm_id,
@@ -1442,8 +1427,8 @@ impl JabLib {
             column,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1559,7 +1544,7 @@ impl JabLib {
         for _ in 0..count {
             arr.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_column_selections,
             vm_id,
@@ -1567,8 +1552,8 @@ impl JabLib {
             count,
             arr.as_mut_ptr()
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1591,7 +1576,7 @@ impl JabLib {
         for _ in 0..count {
             arr.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_table_row_selections,
             vm_id,
@@ -1599,8 +1584,8 @@ impl JabLib {
             count,
             arr.as_mut_ptr()
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1621,15 +1606,15 @@ impl JabLib {
         at: AccessibleText,
     ) -> Option<AccessibleTextSelectionInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_selection_info,
             vm_id,
             at,
             &mut info
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1654,7 +1639,7 @@ impl JabLib {
         y: JInt,
     ) -> Option<AccessibleTextInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_info,
             vm_id,
@@ -1663,8 +1648,8 @@ impl JabLib {
             x,
             y
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1715,7 +1700,7 @@ impl JabLib {
         index: JInt,
     ) -> Option<AccessibleTextItemsInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_items,
             vm_id,
@@ -1723,8 +1708,8 @@ impl JabLib {
             &mut info,
             index
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1747,7 +1732,7 @@ impl JabLib {
         index: JInt,
     ) -> Option<(JInt, JInt)> {
         let (mut start, mut end) = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_line_bounds,
             vm_id,
@@ -1756,8 +1741,8 @@ impl JabLib {
             &mut start,
             &mut end
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1787,7 +1772,7 @@ impl JabLib {
         for _ in 0..len {
             text.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_range,
             vm_id,
@@ -1797,8 +1782,8 @@ impl JabLib {
             text.as_mut_ptr(),
             len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1821,7 +1806,7 @@ impl JabLib {
         index: JInt,
     ) -> Option<AccessibleTextRectInfo> {
         let mut info = unsafe { std::mem::zeroed() };
-        if !jab!(
+        if jab!(
             self.h_module,
             get_accessible_text_rect,
             vm_id,
@@ -1829,8 +1814,8 @@ impl JabLib {
             &mut info,
             index
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1855,7 +1840,7 @@ impl JabLib {
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_current_accessible_value_from_context,
             vm_id,
@@ -1863,8 +1848,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1889,7 +1874,7 @@ impl JabLib {
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_maximum_accessible_value_from_context,
             vm_id,
@@ -1897,8 +1882,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }
@@ -1923,7 +1908,7 @@ impl JabLib {
         for _ in 0..len {
             value.push(0);
         }
-        if !jab!(
+        if jab!(
             self.h_module,
             get_minimum_accessible_value_from_context,
             vm_id,
@@ -1931,8 +1916,8 @@ impl JabLib {
             value.as_mut_ptr(),
             len
         )
-            .unwrap_or(FALSE)
-            .as_bool()
+            .unwrap_or(0)
+            == 0
         {
             return None;
         }

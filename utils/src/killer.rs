@@ -20,7 +20,7 @@ use tokio::{
     time::{sleep, Duration},
 };
 use win_wrap::{
-    common::{close_handle, FALSE},
+    common::close_handle,
     threading::{
         get_current_process_id, open_process, wait_for_single_object, PROCESS_SYNCHRONIZE,
     },
@@ -35,8 +35,8 @@ enum KillSignal {
 }
 
 pub fn listen_to_killing<T>(cb: T)
-where
-    T: Future + Send + 'static,
+    where
+        T: Future + Send + 'static,
 {
     tokio::spawn(async move {
         let mut stream = server_run::<KillSignal>(PIPE_NAME).await;
@@ -61,7 +61,7 @@ pub async fn kill() {
         error!("{}", e);
     }
     if let Ok(KillSignal::Response(pid)) = stream.recv().await {
-        if let Ok(handle) = open_process(PROCESS_SYNCHRONIZE, FALSE, pid) {
+        if let Ok(handle) = open_process(PROCESS_SYNCHRONIZE, false, pid) {
             wait_for_single_object(handle, 5000);
             close_handle(handle);
         }

@@ -15,7 +15,7 @@ use crate::{client::PeeperClient, handler::{on_ime, on_input_char}, HOOK_INIT, H
 use log::debug;
 use std::{ffi::c_void, sync::RwLock};
 use win_wrap::{
-    common::{call_next_hook_ex, get_module_file_name, BOOL, FALSE, HMODULE, LPARAM, LRESULT, TRUE, WPARAM, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH},
+    common::{call_next_hook_ex, get_module_file_name, HMODULE, LPARAM, LRESULT, WPARAM, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH},
     ext::LParamExt,
     hook::CwpStruct,
     message::{MSG, register_window_message},
@@ -111,13 +111,13 @@ unsafe extern "system" fn hook_proc_get_message(
 }
 
 #[no_mangle]
-extern "system" fn DllMain(_: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> BOOL {
+extern "system" fn DllMain(_: HMODULE, dw_reason: u32, _lp_reserved: *const c_void) -> i32 {
     match dw_reason {
         DLL_PROCESS_ATTACH => {}
         DLL_PROCESS_DETACH => {}
         DLL_THREAD_ATTACH => {}
         DLL_THREAD_DETACH => {}
-        _ => return FALSE,
+        _ => return 0,
     }
-    TRUE
+    1
 }

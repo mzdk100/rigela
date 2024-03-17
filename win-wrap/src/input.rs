@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    common::{BOOL, HIMC, HWND, LPARAM},
+    common::{HIMC, HWND, LPARAM},
     ext::StringExt,
 };
 pub use windows::Win32::UI::{
@@ -183,8 +183,8 @@ pub fn imm_get_context(h_wnd: HWND) -> HIMC {
  * `h_wnd` 先前查询其输入上下文的窗口的句柄。
  * `h_imc` 输入上下文的句柄。
  * */
-pub fn imm_release_context(h_wnd: HWND, h_imc: HIMC) -> BOOL {
-    unsafe { ImmReleaseContext(h_wnd, h_imc) }
+pub fn imm_release_context(h_wnd: HWND, h_imc: HIMC) -> bool {
+    unsafe { ImmReleaseContext(h_wnd, h_imc) }.as_bool()
 }
 
 /**

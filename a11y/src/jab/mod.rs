@@ -34,11 +34,7 @@ use crate::{
 };
 use rigela_utils::library::get_library_path;
 use std::sync::{Arc, Mutex, OnceLock};
-use win_wrap::{
-    common::HWND,
-    ext::StringExt,
-    message::pump_waiting_messages,
-};
+use win_wrap::{common::HWND, ext::StringExt, message::pump_waiting_messages};
 
 static mut LIB: OnceLock<JabLib> = OnceLock::new();
 static FUNCS: Mutex<Vec<AccessibleCallback>> = Mutex::new(vec![]);

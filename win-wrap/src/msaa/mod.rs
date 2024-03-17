@@ -15,7 +15,7 @@ pub mod event;
 pub mod object;
 
 use crate::{
-    common::{attach_thread_input, get_desktop_window, get_foreground_window, Result, FALSE, TRUE},
+    common::{attach_thread_input, get_desktop_window, get_foreground_window, Result},
     input::get_focus,
     msaa::{
         event::{WinEventHook, WinEventSource},
@@ -77,9 +77,9 @@ impl Msaa {
         let current_thread_id = get_current_thread_id();
         let h_foreground = get_foreground_window();
         let (remote_thread_id, _) = get_window_thread_process_id(h_foreground);
-        attach_thread_input(current_thread_id, remote_thread_id, TRUE);
+        attach_thread_input(current_thread_id, remote_thread_id, true);
         let obj = AccessibleObject::from_window(get_focus());
-        attach_thread_input(current_thread_id, remote_thread_id, FALSE);
+        attach_thread_input(current_thread_id, remote_thread_id, false);
         obj
     }
 

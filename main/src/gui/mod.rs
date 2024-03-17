@@ -23,9 +23,11 @@ use crate::{
     },
 };
 use nwg::{NativeUi, NoticeSender};
-use std::fmt::{Debug, Formatter};
-use std::sync::{mpsc, Arc, Mutex, OnceLock};
-use std::thread;
+use std::{
+    fmt::{Debug, Formatter},
+    sync::{mpsc, Arc, Mutex, OnceLock},
+    thread,
+};
 use win_wrap::com::co_uninitialize;
 
 /**
@@ -153,11 +155,7 @@ macro_rules! bring_window_front {
             let (remote_thread_id, _) =
                 win_wrap::threading::get_window_thread_process_id(h_foreground);
 
-            win_wrap::common::attach_thread_input(
-                current_thread_id,
-                remote_thread_id,
-                win_wrap::common::TRUE,
-            );
+            win_wrap::common::attach_thread_input(current_thread_id, remote_thread_id, true);
 
             win_wrap::common::show_window(
                 win_wrap::common::HWND(h as isize),
@@ -170,11 +168,7 @@ macro_rules! bring_window_front {
             win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
             win_wrap::input::set_active_window(win_wrap::common::HWND(h as isize));
 
-            win_wrap::common::attach_thread_input(
-                current_thread_id,
-                remote_thread_id,
-                win_wrap::common::FALSE,
-            );
+            win_wrap::common::attach_thread_input(current_thread_id, remote_thread_id, false);
         };
     };
 }

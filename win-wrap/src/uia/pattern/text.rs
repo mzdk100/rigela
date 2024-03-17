@@ -11,21 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    common::{BOOL, FALSE},
-    uia::element::UiAutomationElement,
-};
-use windows::core::BSTR;
-use windows::Win32::UI::Accessibility::{IUIAutomationTextPattern2, UIA_TextPattern2Id};
+use crate::uia::element::UiAutomationElement;
 use windows::{
-    core::Interface,
+    core::{Interface, BSTR},
     Win32::{
         Foundation::POINT,
         UI::Accessibility::{
-            IUIAutomationTextPattern, IUIAutomationTextRange, IUIAutomationTextRangeArray,
-            TextPatternRangeEndpoint_End, TextPatternRangeEndpoint_Start, TextUnit_Character,
-            TextUnit_Document, TextUnit_Format, TextUnit_Line, TextUnit_Page, TextUnit_Paragraph,
-            TextUnit_Word, UIA_TextPatternId,
+            IUIAutomationTextPattern, IUIAutomationTextPattern2, IUIAutomationTextRange,
+            IUIAutomationTextRangeArray, TextPatternRangeEndpoint_End,
+            TextPatternRangeEndpoint_Start, TextUnit_Character, TextUnit_Document, TextUnit_Format,
+            TextUnit_Line, TextUnit_Page, TextUnit_Paragraph, TextUnit_Word, UIA_TextPattern2Id,
+            UIA_TextPatternId,
         },
     },
 };
@@ -156,10 +152,11 @@ impl UiAutomationTextPattern2 {
      * `range` 接收一个文本范围，该范围表示属于基于文本的控件的插入符号的当前位置。
      * */
     pub fn get_caret_range(&self) -> (bool, UiAutomationTextRange) {
-        let mut active = BOOL::default();
-        let range = unsafe { self.0.GetCaretRange(&mut active).unwrap() };
-
-        (active.as_bool(), UiAutomationTextRange::obtain(&range))
+        unsafe {
+            let mut active = std::mem::zeroed();
+            let range = self.0.GetCaretRange(&mut active).unwrap();
+            (active.as_bool(), UiAutomationTextRange::obtain(&range))
+        }
     }
 
     //noinspection StructuralWrap
@@ -216,8 +213,8 @@ impl UiAutomationTextRange {
      * 查询一个值，该值指定此文本区域是否与另一个文本区域具有相同的端点。
      * `range` 指向要与此范围进行比较的文本范围。
      * */
-    pub fn compare(&self, range: &UiAutomationTextRange) -> BOOL {
-        unsafe { self.0.Compare(&range.0) }.unwrap_or(FALSE)
+    pub fn compare(&self, range: &UiAutomationTextRange) -> bool {
+        unsafe { self.0.Compare(&range.0) }.unwrap_or(false.into()).as_bool()
     }
 
     /**

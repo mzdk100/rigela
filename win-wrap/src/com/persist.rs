@@ -17,7 +17,6 @@ use windows::{
     core::HSTRING,
     Win32::System::Com::IPersistFile,
 };
-use crate::common::{FALSE, TRUE};
 pub use windows::Win32::System::Com::{STGM, STGM_CONVERT, STGM_CREATE, STGM_DELETEONRELEASE, STGM_DIRECT, STGM_DIRECT_SWMR, STGM_FAILIFTHERE, STGM_NOSCRATCH, STGM_NOSNAPSHOT, STGM_PRIORITY, STGM_READ, STGM_READWRITE, STGM_SHARE_DENY_NONE, STGM_SHARE_DENY_READ, STGM_SHARE_DENY_WRITE, STGM_SHARE_EXCLUSIVE, STGM_TRANSACTED, STGM_WRITE};
 
 /// 允许从磁盘文件加载对象或将其保存到磁盘文件，而不是存储对象或流。由于打开文件所需的信息因应用程序而异，因此对象上的 load 实现还必须打开其磁盘文件。
@@ -79,11 +78,6 @@ impl PersistFile {
      * `remember` 指示是否将filename参数用作当前工作文件。如果为true，则filename将成为当前文件，并且对象应在保存后清除其脏标志。如果为false，则此保存操作是“将副本另存为...”操作。在这种情况下，当前文件保持不变，对象不应清除其脏标志。如果filename为NULL，则实现应忽略remember标志。
      * */
     pub fn save(&self, filename: Option<String>, remember: bool) {
-        let remember = if remember {
-            TRUE
-        } else {
-            FALSE
-        };
         unsafe {
             match filename {
                 None => self.0.Save(None, remember),
