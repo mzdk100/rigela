@@ -12,10 +12,14 @@
  */
 
 use crate::commander::keys::Keys;
+use crate::commander::keys::Keys::{VkCapital, VkInsert, VkNumPad0, VkRigelA};
 use log::error;
+use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::{
     env::args,
     error::Error,
@@ -23,6 +27,10 @@ use std::{
     io::{copy, Read, Write},
     path::{Path, PathBuf},
 };
+use win_wrap::common::LRESULT;
+use win_wrap::ext::LParamExt;
+use win_wrap::hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED};
+use win_wrap::input::{WM_KEYDOWN, WM_SYSKEYDOWN};
 use win_wrap::{
     common::SW_SHOWNORMAL,
     input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT},
@@ -265,9 +273,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkControl, Keys::VkWin].contains(k))
-        else {
-            return false;
-        };
+    else {
+        return false;
+    };
     let Some(key) = key.get_code() else {
         return false;
     };
@@ -365,4 +373,59 @@ pub fn set_startup_registry(
     reg_close_key(hkey);
 
     Ok(())
+}
+
+/// 设置键盘钩子
+/// @param keys 产生好的键位列表
+/// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
+pub(crate) fn set_hook(keys: Arc<Mutex<Vec<Keys>>>, senders: &[NoticeSender; 2]) -> WindowsHook {
+    let hotkeys = keys.clone();
+    let finish_sender = senders[0];
+    let cancel_sender = senders[1];
+
+    let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
+    WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
+        let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+        let info: &KbdLlHookStruct = l_param.to();
+        let is_extended = info.flags.contains(LLKHF_EXTENDED);
+        let key = (info.vkCode, is_extended).into();
+
+        // 转换RigelA键
+        let cur_key = match key {
+            VkNumPad0 | VkCapital | VkInsert => VkRigelA,
+            _ => key,
+        };
+
+        {
+            key_track.lock().unwrap().insert(cur_key, pressed);
+        }
+
+        // 当前已经按下的键位
+        let keys = key_track
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(k, p)| **k == cur_key || **p)
+            .map(|(x, _)| *x)
+            .collect::<Vec<Keys>>();
+
+        // 有一个键位松开，完成读取
+        let cancel_keys = [Keys::VkEscape, Keys::VkReturn];
+        if !pressed {
+            match keys.len() {
+                1 if cancel_keys.contains(&keys[0]) => cancel_sender.notice(),
+
+                _ => {
+                    // 读取已经按下键位到存储缓冲
+                    let mut hotkeys = hotkeys.lock().unwrap();
+                    hotkeys.clear();
+                    hotkeys.extend(keys);
+
+                    finish_sender.notice();
+                }
+            }
+        }
+
+        LRESULT(1)
+    })
 }

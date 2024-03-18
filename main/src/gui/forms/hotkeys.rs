@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys::{VkCapital, VkInsert, VkNumPad0, VkRigelA};
 use crate::gui::forms::settings_form::SettingsForm;
+use crate::gui::utils::set_hook;
 use crate::{
     commander::{keys::Keys, CommandType::Key},
     configs::config_operations::{get_hotkeys, save_hotkeys},
@@ -20,16 +20,7 @@ use crate::{
 };
 use nwd::NwgPartial;
 use nwg::{modal_message, InsertListViewItem, MessageParams};
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
-use win_wrap::{
-    common::LRESULT,
-    ext::LParamExt,
-    hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
-    input::{WM_KEYDOWN, WM_SYSKEYDOWN},
-};
+use std::sync::Arc;
 
 pub type Talent = Arc<dyn Talented + Send + Sync>;
 
@@ -270,66 +261,19 @@ impl SettingsForm {
 
     // 开始自定义热键
     fn start_custom_hotkey(&self) {
-        let info = t!("hotkeys.please_input_info").to_string();
-
         let context = self.context.get().unwrap().clone();
+
         let pf = context.performer.clone();
         context.main_handler.spawn(async move {
+            let info = t!("hotkeys.please_input_info").to_string();
             pf.speak(&info).await;
         });
 
-        *self.hook.borrow_mut() = Some(self.set_hook());
-    }
-
-    // 设置钩子
-    fn set_hook(&self) -> WindowsHook {
-        let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
-        let hotkeys = Arc::clone(&self.hotkeys);
-        let finish_custom_sender = self.hotkeys_ui.finish_custom.sender();
-        let cancel_custom_sender = self.hotkeys_ui.cancel_custom.sender();
-
-        WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
-            let info: &KbdLlHookStruct = l_param.to();
-            let is_extended = info.flags.contains(LLKHF_EXTENDED);
-            let key = (info.vkCode, is_extended).into();
-            let cur_key = match key {
-                VkNumPad0 | VkCapital | VkInsert => VkRigelA,
-                _ => key,
-            };
-
-            let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
-            {
-                key_track.lock().unwrap().insert(cur_key, pressed);
-            }
-
-            // 当前已经按下的键位
-            let keys: Vec<_> = key_track
-                .lock()
-                .unwrap()
-                .iter()
-                .filter(|(k, p)| **k == cur_key || **p)
-                .map(|(x, _)| *x)
-                .collect();
-
-            // 有一个键位松开，完成读取
-            if !pressed {
-                match keys.len() {
-                    1 if cur_key == Keys::VkEscape || cur_key == Keys::VkReturn => {
-                        cancel_custom_sender.notice()
-                    }
-                    _ => {
-                        // 读取已经按下键位到存储缓冲
-                        let mut hotkeys = hotkeys.lock().unwrap();
-                        hotkeys.clear();
-                        hotkeys.extend(keys);
-
-                        finish_custom_sender.notice();
-                    }
-                }
-            }
-
-            LRESULT(1)
-        })
+        let senders = [
+            self.hotkeys_ui.finish_custom.sender(),
+            self.hotkeys_ui.cancel_custom.sender(),
+        ];
+        *self.hook.borrow_mut() = Some(set_hook(self.hotkeys.clone(), &senders));
     }
 
     // 获取当前列表项选中索引
