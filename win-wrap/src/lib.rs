@@ -27,6 +27,8 @@ pub mod graphic;
 pub mod hook;
 #[cfg(feature = "input")]
 pub mod input;
+#[cfg(feature = "memory")]
+pub mod memory;
 #[cfg(feature = "message")]
 pub mod message;
 #[cfg(feature = "msaa")]
