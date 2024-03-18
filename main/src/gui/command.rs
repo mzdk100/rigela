@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keys::Keys;
 use crate::configs::config_operations::save_is_display_shortcut;
 use crate::{
     configs::{
@@ -29,7 +30,7 @@ use crate::{
     talent::Talented,
 };
 use log::error;
-use nwg::{message, MessageParams};
+use nwg::{message, simple_message, MessageParams};
 use rigela_utils::fs::get_program_directory;
 use std::{env::args, path::PathBuf, process::Command, sync::Arc};
 use win_wrap::common::{message_box, HWND, MB_OK};
@@ -377,10 +378,11 @@ fn reapply_config(context: Arc<Context>) {
 }
 
 /// 添加桌面快捷方式
-pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool) {
+pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool, _keys: &[Keys]) {
     match toggle {
         true => {
             // todo
+            simple_message("info", format!("{:?}", _keys).as_str());
         }
         false => {
             // todo

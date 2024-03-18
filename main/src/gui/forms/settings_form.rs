@@ -24,6 +24,7 @@ use crate::gui::command::{
     set_mouse_read_cmd, set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
 };
 use crate::gui::forms::hotkeys::HotKeysUi;
+use crate::gui::utils::set_hook;
 use crate::performer::tts::{TtsProperty, VoiceInfo};
 use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
@@ -31,7 +32,7 @@ use nwg::stretch::{
     geometry::Size,
     style::{Dimension as D, Style},
 };
-use nwg::{CheckBox, CheckBoxState, NoticeSender};
+use nwg::{modal_message, CheckBox, CheckBoxState, MessageParams, NoticeSender};
 use rigela_macros::GuiFormImpl;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -102,6 +103,8 @@ pub struct SettingsForm {
     (btn_check_update, OnButtonClick): [SettingsForm::on_check_update],
     (cb_lang, OnComboxBoxSelection): [SettingsForm::on_lang_changed(SELF, CTRL)],
     (btn_close, OnButtonClick): [SettingsForm::on_save],
+    (finish_program_hotkeys_notice, OnNotice): [SettingsForm::on_finish_program_hotkeys_hook],
+    (cancel_program_hotkeys_notice, OnNotice): [SettingsForm::on_cancel_program_hotkeys_hook],
     )]
     general_ui: GeneralUi,
 
@@ -209,8 +212,67 @@ impl SettingsForm {
     }
 
     fn on_add_desktop_shortcut(&self, ctrl: &GeneralUi) {
-        let toggle = ctrl.ck_add_desktop_shortcut.check_state() == CheckBoxState::Checked;
-        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), toggle);
+        let context = self.context.get().unwrap().clone();
+
+        match ctrl.ck_add_desktop_shortcut.check_state() {
+            // 先取消掉选择，等热键确定好在勾选上
+            CheckBoxState::Checked => {
+                self.general_ui
+                    .ck_add_desktop_shortcut
+                    .set_check_state(CheckBoxState::Unchecked);
+
+                let keys = self.general_ui.program_hotkeys.clone();
+                let senders = [
+                    self.general_ui.finish_program_hotkeys_notice.sender(),
+                    self.general_ui.cancel_program_hotkeys_notice.sender(),
+                ];
+
+                let pf = context.performer.clone();
+                context.main_handler.spawn(async move {
+                    let info = "请输入要用做启动程序的快捷方式的热键!";
+                    pf.speak(&info.to_string()).await;
+                });
+
+                let mut hook = self.general_ui.hook.borrow_mut();
+                *hook = Some(set_hook(keys, &senders));
+            }
+            CheckBoxState::Unchecked => {
+                add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), false, &vec![])
+            }
+            _ => {}
+        };
+    }
+
+    fn on_finish_program_hotkeys_hook(&self) {
+        self.general_ui.hook.borrow_mut().take().unwrap().unhook();
+        let keys = self.general_ui.program_hotkeys.lock().unwrap().clone();
+
+        let keys_str = keys
+            .iter()
+            .map(|key| -> &str { (*key).into() })
+            .collect::<Vec<_>>()
+            .join("+ ");
+        let info = format!("您确定要将{keys_str}用作程序启动的热键吗？");
+
+        let msg_params = MessageParams {
+            title: "确认",
+            content: &info,
+            buttons: nwg::MessageButtons::OkCancel,
+            icons: nwg::MessageIcons::Question,
+        };
+        if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+            return;
+        }
+
+        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
+
+        self.general_ui
+            .ck_add_desktop_shortcut
+            .set_check_state(CheckBoxState::Checked);
+    }
+
+    fn on_cancel_program_hotkeys_hook(&self) {
+        self.general_ui.hook.borrow_mut().take().unwrap().unhook();
     }
 
     fn on_run_on_startup(&self, ctrl: &GeneralUi) {
@@ -406,6 +468,7 @@ impl SettingsForm {
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
     program_hotkeys: Arc<Mutex<Vec<Keys>>>,
+    hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
