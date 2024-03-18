@@ -405,6 +405,8 @@ impl SettingsForm {
 }
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
+    program_hotkeys: Arc<Mutex<Vec<Keys>>>,
+
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
     layout: nwg::GridLayout,
 
@@ -441,6 +443,12 @@ pub struct GeneralUi {
     #[nwg_control(text: &t!("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
+
+    #[nwg_control]
+    finish_program_hotkeys_notice: nwg::Notice,
+
+    #[nwg_control]
+    cancel_program_hotkeys_notice: nwg::Notice,
 }
 
 #[derive(Default, NwgPartial)]
