@@ -12,30 +12,95 @@
  */
 
 use std::fmt::{Debug, Formatter};
-use crate::{
-    common::{HWND, SHOW_WINDOW_CMD},
-    input::VIRTUAL_KEY,
-    com::persist::PersistFile,
-};
+
 pub use windows::Win32::UI::Shell::{
-    Common::ITEMIDLIST, SLGP_FLAGS, SLGP_RAWPATH, SLGP_RELATIVEPRIORITY, SLGP_SHORTPATH,
-    SLGP_UNCPRIORITY, SLR_ANY_MATCH, SLR_FLAGS, SLR_INVOKE_MSI, SLR_KNOWNFOLDER,
+    Common::ITEMIDLIST, FOLDERID_AccountPictures, FOLDERID_AddNewPrograms, FOLDERID_AdminTools,
+    FOLDERID_AllAppMods, FOLDERID_AppCaptures, FOLDERID_AppDataDesktop, FOLDERID_AppDataDocuments,
+    FOLDERID_AppDataFavorites, FOLDERID_AppDataProgramData, FOLDERID_AppUpdates,
+    FOLDERID_ApplicationShortcuts, FOLDERID_AppsFolder, FOLDERID_CDBurning, FOLDERID_CameraRoll,
+    FOLDERID_CameraRollLibrary, FOLDERID_ChangeRemovePrograms, FOLDERID_CommonAdminTools,
+    FOLDERID_CommonOEMLinks, FOLDERID_CommonPrograms, FOLDERID_CommonStartMenu,
+    FOLDERID_CommonStartMenuPlaces, FOLDERID_CommonStartup, FOLDERID_CommonTemplates,
+    FOLDERID_ComputerFolder, FOLDERID_ConflictFolder, FOLDERID_ConnectionsFolder,
+    FOLDERID_Contacts, FOLDERID_ControlPanelFolder, FOLDERID_Cookies, FOLDERID_CurrentAppMods,
+    FOLDERID_Desktop, FOLDERID_DevelopmentFiles, FOLDERID_Device, FOLDERID_DeviceMetadataStore,
+    FOLDERID_Documents, FOLDERID_DocumentsLibrary, FOLDERID_Downloads, FOLDERID_Favorites,
+    FOLDERID_Fonts, FOLDERID_GameTasks, FOLDERID_Games, FOLDERID_History, FOLDERID_HomeGroup,
+    FOLDERID_HomeGroupCurrentUser, FOLDERID_ImplicitAppShortcuts, FOLDERID_InternetCache,
+    FOLDERID_InternetFolder, FOLDERID_Libraries, FOLDERID_Links, FOLDERID_LocalAppData,
+    FOLDERID_LocalAppDataLow, FOLDERID_LocalDocuments, FOLDERID_LocalDownloads,
+    FOLDERID_LocalMusic, FOLDERID_LocalPictures, FOLDERID_LocalStorage, FOLDERID_LocalVideos,
+    FOLDERID_LocalizedResourcesDir, FOLDERID_Music, FOLDERID_MusicLibrary, FOLDERID_NetHood,
+    FOLDERID_NetworkFolder, FOLDERID_Objects3D, FOLDERID_OneDrive, FOLDERID_OriginalImages,
+    FOLDERID_PhotoAlbums, FOLDERID_Pictures, FOLDERID_PicturesLibrary, FOLDERID_Playlists,
+    FOLDERID_PrintHood, FOLDERID_PrintersFolder, FOLDERID_Profile, FOLDERID_ProgramData,
+    FOLDERID_ProgramFiles, FOLDERID_ProgramFilesCommon, FOLDERID_ProgramFilesCommonX64,
+    FOLDERID_ProgramFilesCommonX86, FOLDERID_ProgramFilesX64, FOLDERID_ProgramFilesX86,
+    FOLDERID_Programs, FOLDERID_Public, FOLDERID_PublicDesktop, FOLDERID_PublicDocuments,
+    FOLDERID_PublicDownloads, FOLDERID_PublicGameTasks, FOLDERID_PublicLibraries,
+    FOLDERID_PublicMusic, FOLDERID_PublicPictures, FOLDERID_PublicRingtones,
+    FOLDERID_PublicUserTiles, FOLDERID_PublicVideos, FOLDERID_QuickLaunch, FOLDERID_Recent,
+    FOLDERID_RecordedCalls, FOLDERID_RecordedTVLibrary, FOLDERID_RecycleBinFolder,
+    FOLDERID_ResourceDir, FOLDERID_RetailDemo, FOLDERID_Ringtones, FOLDERID_RoamedTileImages,
+    FOLDERID_RoamingAppData, FOLDERID_RoamingTiles, FOLDERID_SampleMusic, FOLDERID_SamplePictures,
+    FOLDERID_SamplePlaylists, FOLDERID_SampleVideos, FOLDERID_SavedGames, FOLDERID_SavedPictures,
+    FOLDERID_SavedPicturesLibrary, FOLDERID_SavedSearches, FOLDERID_Screenshots,
+    FOLDERID_SearchHistory, FOLDERID_SearchHome, FOLDERID_SearchTemplates, FOLDERID_SendTo,
+    FOLDERID_SidebarDefaultParts, FOLDERID_SidebarParts, FOLDERID_SkyDrive,
+    FOLDERID_SkyDriveCameraRoll, FOLDERID_SkyDriveDocuments, FOLDERID_SkyDriveMusic,
+    FOLDERID_SkyDrivePictures, FOLDERID_StartMenu, FOLDERID_StartMenuAllPrograms, FOLDERID_Startup,
+    FOLDERID_SyncManagerFolder, FOLDERID_SyncResultsFolder, FOLDERID_SyncSetupFolder,
+    FOLDERID_System, FOLDERID_SystemX86, FOLDERID_Templates, FOLDERID_UserPinned,
+    FOLDERID_UserProfiles, FOLDERID_UserProgramFiles, FOLDERID_UserProgramFilesCommon,
+    FOLDERID_UsersFiles, FOLDERID_UsersLibraries, FOLDERID_Videos, FOLDERID_VideosLibrary,
+    FOLDERID_Windows, FOLDERID_SEARCH_CSC, FOLDERID_SEARCH_MAPI, KF_FLAG_ALIAS_ONLY,
+    KF_FLAG_CREATE, KF_FLAG_DEFAULT, KF_FLAG_DEFAULT_PATH, KF_FLAG_DONT_UNEXPAND,
+    KF_FLAG_DONT_VERIFY, KF_FLAG_FORCE_APPCONTAINER_REDIRECTION,
+    KF_FLAG_FORCE_APP_DATA_REDIRECTION, KF_FLAG_FORCE_PACKAGE_REDIRECTION, KF_FLAG_INIT,
+    KF_FLAG_NOT_PARENT_RELATIVE, KF_FLAG_NO_ALIAS, KF_FLAG_NO_APPCONTAINER_REDIRECTION,
+    KF_FLAG_NO_PACKAGE_REDIRECTION, KF_FLAG_RETURN_FILTER_REDIRECTION_TARGET,
+    KF_FLAG_SIMPLE_IDLIST, KNOWN_FOLDER_FLAG, SLGP_FLAGS, SLGP_RAWPATH, SLGP_RELATIVEPRIORITY,
+    SLGP_SHORTPATH, SLGP_UNCPRIORITY, SLR_ANY_MATCH, SLR_FLAGS, SLR_INVOKE_MSI, SLR_KNOWNFOLDER,
     SLR_MACHINE_IN_LOCAL_TARGET, SLR_NOLINKINFO, SLR_NONE, SLR_NOSEARCH, SLR_NOTRACK, SLR_NOUPDATE,
     SLR_NO_OBJECT_ID, SLR_NO_UI, SLR_NO_UI_WITH_MSG_PUMP, SLR_OFFER_DELETE_WITHOUT_FILE,
     SLR_UPDATE, SLR_UPDATE_MACHINE_AND_SID,
 };
 use windows::{
-    core::{
-        HSTRING,
-        Interface,
-    },
+    core::{Interface, GUID, HSTRING},
     Win32::{
         Foundation::MAX_PATH,
         Storage::FileSystem::WIN32_FIND_DATAW,
         System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
-        UI::Shell::{IShellLinkW, ShellLink as SL},
+        UI::Shell::{IShellLinkW, SHGetKnownFolderPath, ShellLink as SL},
     },
 };
+
+use crate::{
+    com::persist::PersistFile,
+    common::{HANDLE, HWND, SHOW_WINDOW_CMD},
+    input::VIRTUAL_KEY,
+};
+
+/**
+ * 查询由文件夹的 KNOWNFOLDERID 标识的已知文件夹的完整路径。
+ * 此函数替换 get_folder_path。 该旧函数现在只是 get_known_folder_path 的包装器。
+ * `rfid` 对标识文件夹的 KNOWNFOLDERID 的引用。
+ * `flags` 指定特殊检索选项的标志。 此值可以为 0;否则，一个或多个 KNOWN_FOLDER_FLAG 值。
+ * `h_token` 表示特定用户的访问令牌。如果此参数为NULL（这是最常见的用法），则该函数会请求当前用户的已知文件夹。通过传递该用户的h_token请求特定用户的文件夹。这通常在具有足够权限检索给定用户的令牌的服务上下文中完成。必须使用TOKEN_QUERY和TOKEN_IMPERSONATE权限打开该令牌。在某些情况下，还需要包含TOKEN_DUPLICATE。除了传递用户的h_token外还必须装载该特定用户的注册表配置单元。有关访问控制问题的进一步讨论，请参阅访问控制。为h_token 参数分配值 -1 表示默认用户。 这允许 get_known_folder_path 的客户端查找文件夹位置 (，例如默认用户的 桌面 文件夹) 。 创建任何新用户帐户时，默认用户用户配置文件将重复，并包含文档和桌面等特殊文件夹。 添加到“默认用户”文件夹的任何项目也会显示在任何新用户帐户中。 请注意，访问“默认用户”文件夹需要管理员权限。
+ * */
+pub fn get_known_folder_path(
+    rfid: &GUID,
+    flags: KNOWN_FOLDER_FLAG,
+    h_token: Option<HANDLE>,
+) -> Option<String> {
+    match unsafe { SHGetKnownFolderPath(rfid, flags, h_token.unwrap_or(HANDLE::default())) } {
+        Ok(p) => match unsafe { p.to_string() } {
+            Ok(s) => Some(s),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    }
+}
 
 /// 公开用于创建、修改和解析 Shell 链接的方法。
 pub struct ShellLink(IShellLinkW);
@@ -337,14 +402,16 @@ impl Debug for ShellLink {
     }
 }
 
-
 #[cfg(test)]
 mod test_shell {
     use crate::{
         com::co_initialize_multi_thread,
         common::{HWND, SW_RESTORE},
         input::VK_A,
-        shell::{ShellLink, SLGP_SHORTPATH, SLR_NOSEARCH},
+        shell::{
+            get_known_folder_path, FOLDERID_Desktop, FOLDERID_Profile, ShellLink, KF_FLAG_DEFAULT,
+            SLGP_SHORTPATH, SLR_NOSEARCH,
+        },
     };
 
     #[test]
@@ -370,6 +437,16 @@ mod test_shell {
         if let Some(file) = link.open_file() {
             file.save(Some("D:\\rigela.lnk".to_string()), true);
         }
+        dbg!(get_known_folder_path(
+            &FOLDERID_Desktop,
+            KF_FLAG_DEFAULT,
+            None,
+        ));
+        dbg!(get_known_folder_path(
+            &FOLDERID_Profile,
+            KF_FLAG_DEFAULT,
+            None,
+        ));
 
         dbg!(link);
     }
