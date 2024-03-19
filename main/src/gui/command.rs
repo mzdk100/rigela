@@ -11,29 +11,38 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::configs::config_operations::save_is_display_shortcut;
 use crate::{
+    commander::keys::Keys,
     configs::{
         config_manager::ConfigRoot,
         config_operations::{
-            apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
+            apply_mouse_config, save_auto_check_update, save_is_display_shortcut, save_lang,
+            save_run_on_startup,
         },
         general::Lang,
         tts::TtsConfig,
     },
     context::Context,
     gui::utils::{
-        backup_data, check_update, confirm_update_exists, restore_data, set_startup_registry,
-        UpdateState, HELP_DIR,
+        backup_data, check_update, confirm_update_exists, create_shortcut_link, restore_data,
+        set_startup_registry, UpdateState, HELP_DIR,
     },
     talent::Talented,
 };
 use log::error;
-use nwg::{message, simple_message, MessageParams};
+use nwg::{message, MessageParams};
 use rigela_utils::fs::get_program_directory;
-use std::{env::args, path::PathBuf, process::Command, sync::Arc};
-use win_wrap::common::{message_box, HWND, MB_OK};
+use std::{
+    env::current_exe,
+    fs::remove_file,
+    path::{Path, PathBuf},
+    process::Command,
+    sync::Arc,
+};
+use win_wrap::{
+    common::{message_box, HWND, MB_OK},
+    shell::{get_known_folder_path, FOLDERID_Desktop, KF_FLAG_DEFAULT},
+};
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Arc<Context>) {
@@ -101,7 +110,7 @@ pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
                 .arg("/c")
                 .arg("start")
                 .arg(get_program_directory().join("libs/update.exe"))
-                .arg(args().nth(0).unwrap())
+                .arg(current_exe().unwrap().to_str().unwrap())
                 .spawn(),
             Err(_) => {
                 message_box(
@@ -151,8 +160,7 @@ pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
 
 /// 设置开机自动启动
 pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
-    let path = args().nth(0).unwrap();
-    if set_startup_registry("RigelA", &PathBuf::from(path), toggle).is_err() {
+    if set_startup_registry(toggle).is_err() {
         error!("registry operation failed! ");
     }
     save_run_on_startup(context.clone(), toggle);
@@ -356,9 +364,8 @@ pub(crate) fn reset_config_cmd(context: Arc<Context>) {
 fn reapply_config(context: Arc<Context>) {
     let config = context.config_manager.get_config();
 
-    let path = args().nth(0).unwrap();
     let enable = config.general_config.run_on_startup.clone();
-    if set_startup_registry("RigelA", &PathBuf::from(path), enable).is_err() {
+    if set_startup_registry(enable).is_err() {
         error!("关闭开机自动启动失败");
     }
 
@@ -378,15 +385,15 @@ fn reapply_config(context: Arc<Context>) {
 }
 
 /// 添加桌面快捷方式
-pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool, _keys: &[Keys]) {
+pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool, keys: &[Keys]) {
+    let path = get_known_folder_path(&FOLDERID_Desktop, KF_FLAG_DEFAULT, None).unwrap();
+    let path = Path::new(&path).join(t!("command.program_name").to_string() + ".lnk");
+
     match toggle {
         true => {
-            // todo
-            simple_message("info", format!("{:?}", _keys).as_str());
+            create_shortcut_link(path.to_str().unwrap().to_string(), keys);
         }
-        false => {
-            // todo
-        }
+        false => remove_file(&path).unwrap_or(()),
     }
 
     save_is_display_shortcut(context.clone(), toggle);

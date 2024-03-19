@@ -12,28 +12,25 @@
  */
 
 use crate::commander::keys::Keys;
-use crate::commander::keys::Keys::{VkCapital, VkInsert, VkNumPad0, VkRigelA};
 use log::error;
 use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::{
-    env::args,
+    collections::HashMap,
+    env::{args, current_exe},
     error::Error,
     fs::File,
     io::{copy, Read, Write},
     path::{Path, PathBuf},
+    sync::{Arc, Mutex},
 };
-use win_wrap::common::LRESULT;
-use win_wrap::ext::LParamExt;
-use win_wrap::hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED};
-use win_wrap::input::{WM_KEYDOWN, WM_SYSKEYDOWN};
 use win_wrap::{
-    common::SW_SHOWNORMAL,
-    input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT},
+    common::{LRESULT, SW_SHOWNORMAL},
+    ext::LParamExt,
+    hook::{KbdLlHookStruct, WindowsHook, HOOK_TYPE_KEYBOARD_LL, LLKHF_EXTENDED},
+    input::{HOTKEYF_ALT, HOTKEYF_CONTROL, HOTKEYF_EXT, HOTKEYF_SHIFT, WM_KEYDOWN, WM_SYSKEYDOWN},
     registry::{
         reg_close_key, reg_delete_value, reg_open_key_ex, reg_set_value_ex, HKEY_CURRENT_USER,
         KEY_WRITE, REG_SZ,
@@ -258,7 +255,7 @@ pub(crate) fn restore_data(source: &PathBuf) -> Result<(), Box<dyn Error>> {
  * */
 pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let mut modifier = 0;
-    if hotkey.contains(&Keys::VkControl) {
+    if hotkey.contains(&Keys::VkCtrl) {
         modifier |= HOTKEYF_CONTROL;
     }
     if hotkey.contains(&Keys::VkAlt) {
@@ -272,18 +269,18 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     }
     let Some(key) = hotkey
         .iter()
-        .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkControl, Keys::VkWin].contains(k))
-    else {
-        return false;
-    };
+        .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
+        else {
+            return false;
+        };
     let Some(key) = key.get_code() else {
         return false;
     };
-    let exe_path = args().nth(0).unwrap();
-    let directory = Path::new(&exe_path).parent().unwrap().to_str();
+    let exe_path = current_exe().unwrap();
+    let directory = exe_path.parent().unwrap().to_str();
     let link = ShellLink::new();
     link.set_description(env!("CARGO_PKG_DESCRIPTION").to_string())
-        .set_path(exe_path.clone())
+        .set_path(exe_path.to_str().unwrap().to_string())
         .set_relative_path(link_path.clone())
         .set_arguments("--shortcut-link".to_string())
         .set_hotkey(modifier, key)
@@ -349,14 +346,19 @@ struct GitcodeFileData {
     raw_path: String,
 }
 
-/// 添加开机自启
-pub fn set_startup_registry(
-    program_name: &str,
-    program_path: &PathBuf,
-    enable: bool,
-) -> win_wrap::common::Result<()> {
-    let path = program_path.to_str().unwrap();
-    let path = path.encode_utf16().chain(Some(0)).collect::<Vec<_>>();
+/**
+ * 添加开机自启
+ * `enable` true添加,false删除。
+ * */
+pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
+    let program_name = env!("CARGO_PKG_NAME");
+    let path = current_exe().unwrap();
+    let path = path
+        .to_str()
+        .unwrap()
+        .encode_utf16()
+        .chain(Some(0))
+        .collect::<Vec<_>>();
     let path: Vec<u8> = path
         .iter()
         .flat_map(|&x| x.to_le_bytes().to_vec())
@@ -392,7 +394,7 @@ pub(crate) fn set_hook(keys: Arc<Mutex<Vec<Keys>>>, senders: &[NoticeSender; 2])
 
         // 转换RigelA键
         let cur_key = match key {
-            VkNumPad0 | VkCapital | VkInsert => VkRigelA,
+            Keys::VkNumPad0 | Keys::VkCapital | Keys::VkInsert => Keys::VkRigelA,
             _ => key,
         };
 

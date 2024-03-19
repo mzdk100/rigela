@@ -11,7 +11,7 @@ about.info:
 about.btn_ok:
   en: OK
   zh-CN: 确定
-  
+
 hotkeys.btn_clear:
   en: Clear (&L)
   zh-CN: 清除 (&L)
@@ -36,7 +36,7 @@ hotkeys.lb_custom:
 hotkeys.tb_keys_info:
   en: Please input new keys..
   zh-CN: 请输入新的热键..
-  
+
 hotkeys.confirm_clear:
   en: You confirm clear the keys of %{value}
   zh-CN: 您确定要删除 %{value} 的自定义热键?
@@ -81,13 +81,13 @@ popupmenu.setting_item:
   zh-CN: 设置 (&S)
 
 settings.auto_check_update:
-  en:  Auto Update (&A)
+  en: Auto Update (&A)
   zh-CN: 自动更新 (&A)
 settings.btn_close:
-  en:  Close (&C)
+  en: Close (&C)
   zh-CN: 关闭 (&C)
 settings.btn_export:
-  en:  Export Configuration... (&E)
+  en: Export Configuration... (&E)
   zh-CN: 导出配置... (&E)
 settings.btn_import:
   en: Import Configuration... (&I)
@@ -99,7 +99,7 @@ settings.check_update:
   en: Check Update (&C)
   zh-CN: 检查更新 (&C)
 settings.ck_mouse_read:
-  en:  Read Mouse (&R)
+  en: Read Mouse (&R)
   zh-CN: 朗读鼠标 (&R)
 settings.export_title:
   en: "Please select the folder to export the configuration file:"
@@ -108,7 +108,7 @@ settings.import_title:
   en: "Please select the file to import the configuration:"
   zh-CN: "请选择需要导入的文件:"
 settings.lang:
-  en:  Language(Need Restart) (&L)
+  en: Language(Need Restart) (&L)
   zh-CN: 语言(重启生效) (&L)
 settings.lang_en_item:
   en: English
@@ -117,7 +117,7 @@ settings.lang_zh_item:
   en: 中文
   zh-CN: 中文
 settings.lb_pitch:
-  en:  Pitch (&P)
+  en: Pitch (&P)
   zh-CN: 朗读语调 (&P)
 settings.lb_role:
   en: Role (&R)
@@ -252,3 +252,7 @@ cmd.tts_volume:
   en: "Volume: %{value}"
   zh-CN: "音量: %{value}"
 
+
+command.program_name:
+  en: RigelA Screen Reader
+  zh-CN: 雷革读屏

@@ -108,7 +108,6 @@ pub(crate) enum Keys {
     VkCancel,
     VkCapital,
     VkClear,
-    VkControl,
     VkConvert,
     VkCrsel,
     VkD,
@@ -361,7 +360,6 @@ impl Keys {
             Self::VkCancel => Some(VK_CANCEL),
             Self::VkCapital => Some(VK_CAPITAL),
             Self::VkClear => Some(VK_CLEAR),
-            Self::VkControl => Some(VK_CONTROL),
             Self::VkConvert => Some(VK_CONVERT),
             Self::VkCrsel => Some(VK_CRSEL),
             Self::VkD => Some(VK_D),
@@ -592,6 +590,7 @@ impl From<(u32, bool)> for Keys {
             // Ctrl键
             (VK_LCONTROL, false) => Self::VkCtrl,
             (VK_RCONTROL, true) => Self::VkCtrl,
+            (VK_CONTROL, false) => Self::VkCtrl,
 
             //Shift
             (VK_LSHIFT, false) => Self::VkShift,
@@ -634,7 +633,6 @@ impl From<(u32, bool)> for Keys {
             (VK_C, false) => Self::VkC,
             (VK_CANCEL, false) => Self::VkCancel,
             (VK_CLEAR, true) => Self::VkClear,
-            (VK_CONTROL, false) => Self::VkControl,
             (VK_CONVERT, false) => Self::VkConvert,
             (VK_CRSEL, false) => Self::VkCrsel,
             (VK_D, false) => Self::VkD,
