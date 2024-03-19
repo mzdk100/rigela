@@ -12,7 +12,7 @@ repository.workspace = true
 [features]
 bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
-fs = ["home", "tokio/fs", "tokio/io-util"]
+fs = ["win-wrap/shell", "tokio/fs", "tokio/io-util"]
 ibmeci = ["encoding_rs/fast-gb-hanzi-encode"]
 killer = ["pipe"]
 library = ["fs"]
@@ -22,10 +22,6 @@ pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/io-util", "tokio
 [dependencies]
 # 输出日志
 log = "0.4.21"
-
-[dependencies.home]
-version = "0.5.9"
-optional = true
 
 [dependencies.clipboard]
 version = "0.5.0"

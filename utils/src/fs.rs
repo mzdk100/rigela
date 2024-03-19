@@ -11,20 +11,23 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use home::home_dir;
-use std::{fs::create_dir, io::Error, path::PathBuf};
+use std::{
+    fs::create_dir,
+    io::Error,
+    path::{Path, PathBuf},
+};
 use tokio::{
     fs::{metadata, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
 };
+use win_wrap::shell::{get_known_folder_path, FOLDERID_Profile, KF_FLAG_DEFAULT};
 
 pub const DIR_NAME: &str = ".rigela";
 
 /// 获取程序存储目录
 pub fn get_program_directory() -> PathBuf {
-    let program_dir = home_dir()
-        .expect("Can't get the current user directory.")
-        .join(DIR_NAME);
+    let home_path = get_known_folder_path(&FOLDERID_Profile, KF_FLAG_DEFAULT, None).unwrap();
+    let program_dir = Path::new(&home_path).join(DIR_NAME);
 
     if !program_dir.exists() {
         create_dir(&program_dir).expect("Can't create the root directory.");
