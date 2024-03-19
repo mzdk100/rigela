@@ -24,8 +24,8 @@ use crate::{
         tts::{sapi5::Sapi5Engine, vvtts::VvttsEngine, Tts},
     },
 };
-use std::{sync::Arc, time::Duration};
 use std::sync::Weak;
+use std::{sync::Arc, time::Duration};
 use tokio::{sync::OnceCell, time::sleep};
 
 /// 表演者语音信息收集接口。 实现此接口的对象可以调用表演者的speak方法进行输出。
@@ -93,7 +93,7 @@ impl Performer {
 
         // 更新缓存
         if let Some(cache) = self.cache.get() {
-            cache.update(text.clone()).await;
+            cache.update(text.clone());
         }
 
         let tts = loop {

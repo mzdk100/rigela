@@ -81,7 +81,7 @@ async fn prev_cache_char(context: Arc<Context>) {
     }
 
     let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Backward).await;
+    let text = cache.get(CacheDirection::Backward);
     let tts = context.performer.get_tts();
     tts.stop().await;
     tts.speak(text).await;
@@ -95,7 +95,7 @@ async fn next_cache_char(context: Arc<Context>) {
     }
 
     let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Forward).await;
+    let text = cache.get(CacheDirection::Forward);
     let tts = context.performer.get_tts();
     tts.stop().await;
     tts.speak(text).await;
@@ -109,7 +109,7 @@ async fn trans_cache_char(context: Arc<Context>) {
     }
 
     let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Current).await;
+    let text = cache.get(CacheDirection::Current);
     // Todo: 查字典
 
     let tts = context.performer.get_tts();
@@ -124,21 +124,17 @@ async fn make_word_cache_char(context: Arc<Context>) {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let cache = context.performer.get_cache();
-    let words = context.performer.get_cache().get_words();
-    let text = cache.get(CacheDirection::Current).await;
-    let word = words.get(&text).unwrap_or(&text);
-
     let tts = context.performer.get_tts();
     tts.stop().await;
-    tts.speak(word.clone()).await;
+    let words = context.performer.get_cache().get_current_char_words();
+    tts.speak(words).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "拷贝缓冲区", key = (VkRigelA, VkC))]
 async fn cache_to_clipboard(context: Arc<Context>) {
     let cache = context.performer.get_cache();
-    let text = cache.get_data().await;
+    let text = cache.get_data();
     set_clipboard_text(text);
     // context.performer.play_sound("boundary.wav").await;
 }
