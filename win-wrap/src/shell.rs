@@ -213,7 +213,7 @@ impl ShellLink {
      * - HOTKEYF_SHIFT 换档键
      * */
     pub fn set_hotkey(&self, flags: u32, key: VIRTUAL_KEY) -> &ShellLink {
-        unsafe { self.0.SetHotkey((flags as u16) | key.0) }.unwrap_or(());
+        unsafe { self.0.SetHotkey((flags as u16) << 8 | key.0) }.unwrap_or(());
         self
     }
 
