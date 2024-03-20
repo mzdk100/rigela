@@ -70,11 +70,6 @@ pub(crate) fn settings_cmd(context: Arc<Context>) {
 /// 检查更新。
 #[allow(unused)]
 pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
-    // {
-    //     #[cfg(debug_assertions)]
-    //     return;
-    // }
-
     context.work_runtime.spawn(async move {
         match (auto, check_update().await) {
             (true, UpdateState::None) => {
@@ -170,10 +165,7 @@ pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     } else {
         t!("cmd.msg_auto_start_off").to_string()
     };
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
-        pf.speak(&msg).await;
-    });
+    speak(context.clone(), &msg);
 }
 
 /// 设置自动检测更新
@@ -185,10 +177,7 @@ pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
     } else {
         t!("cmd.msg_auto_check_off").to_string()
     };
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
-        pf.speak(&msg).await;
-    });
+    speak(context.clone(), &msg);
 }
 
 /// 设置语言
@@ -206,10 +195,7 @@ pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
     } else {
         t!("cmd.msg_switch_to_en").to_string()
     };
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
-        pf.speak(&msg).await;
-    });
+    speak(context.clone(), &msg);
 }
 
 /// 设置语音角色
@@ -303,14 +289,11 @@ pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
 pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
     apply_mouse_config(context.clone(), toggle);
 
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
-        let state = match toggle {
-            true => t!("cmd.msg_mouse_read_on"),
-            false => t!("cmd.msg_mouse_read_off"),
-        };
-        pf.speak(&state).await;
-    });
+    let state = match toggle {
+        true => t!("cmd.msg_mouse_read_on"),
+        false => t!("cmd.msg_mouse_read_off"),
+    };
+    speak(context.clone(), state);
 }
 
 /// 导出配置
@@ -398,10 +381,15 @@ pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool, keys
 
     save_is_display_shortcut(context.clone(), toggle);
 
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
-        let state = if toggle { "添加" } else { "删除" };
-        let info = format!("已{}桌面快捷方式", state);
-        pf.speak(&info).await;
+    let state = if toggle { "添加" } else { "删除" };
+    let msg = format!("已{}桌面快捷方式", state);
+    speak(context.clone(), &msg);
+}
+
+fn speak<S: Into<String>>(ctx: Arc<Context>, text: S) {
+    let text: String = text.into();
+    let pf = ctx.performer.clone();
+    ctx.main_handler.spawn(async move {
+        pf.speak(&text).await;
     });
 }
