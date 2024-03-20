@@ -11,19 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    configs::general::GeneralConfig, configs::hotkeys::HotKeysConfig, configs::mouse::MouseConfig,
-    configs::tts::TtsConfig,
+use crate::configs::{
+    general::GeneralConfig, hotkeys::HotKeysConfig, mouse::MouseConfig, tts::TtsConfig,
 };
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::fs::{read_to_string, File};
-use std::io::Write;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
-use std::thread::{sleep, spawn};
 use std::{
+    fs::{read_to_string, File},
+    io::Write,
     path::PathBuf,
+    sync::{Arc, Mutex},
+    thread::{sleep, spawn},
     time::{Duration, Instant},
 };
 
@@ -61,8 +59,11 @@ impl ConfigManager {
     }
 
     /// 初始化当前配置，从配置文件获取配置信息
-    pub(crate) fn init(&self) {
-        *self.config.lock().unwrap().deref_mut() = self.read();
+    pub(crate) fn apply(&self) {
+        *self.config.lock().unwrap() = self.read();
+        let lang = self.get_config().general_config.lang.clone();
+        rust_i18n::set_locale(&lang.to_string());
+        info!("The current locale of the user is {}.", lang);
     }
 
     /// 获取当前的配置
@@ -72,8 +73,8 @@ impl ConfigManager {
 
     /// 修改当前的配置，修改完写入配置文件
     pub(crate) fn set_config(&self, config: &ConfigRoot) {
-        *self.config.lock().unwrap().deref_mut() = config.clone();
-        *self.update_time.lock().unwrap().deref_mut() = Instant::now();
+        *self.config.lock().unwrap() = config.clone();
+        *self.update_time.lock().unwrap() = Instant::now();
         self.write();
     }
 
@@ -98,7 +99,7 @@ impl ConfigManager {
         if let Some(cfg) = config {
             cfg
         } else {
-            *self.config.lock().unwrap().deref_mut() = Default::default();
+            *self.config.lock().unwrap() = Default::default();
             self.write();
             Default::default()
         }
@@ -116,7 +117,7 @@ impl ConfigManager {
                 return;
             }
             {
-                *write_finished.lock().unwrap().deref_mut() = false;
+                *write_finished.lock().unwrap() = false;
             }
 
             loop {
@@ -126,7 +127,7 @@ impl ConfigManager {
                 sleep(Duration::from_secs(10));
             }
 
-            match toml::to_string(config.lock().unwrap().deref()) {
+            match toml::to_string(&*config.lock().unwrap()) {
                 Ok(content) => {
                     if let Ok(mut file) = File::create(&path) {
                         file.write_all(&content.into_bytes())
@@ -138,7 +139,7 @@ impl ConfigManager {
                 Err(e) => error!("{}", e),
             }
 
-            *write_finished.lock().unwrap().deref_mut() = true;
+            *write_finished.lock().unwrap() = true;
         });
     }
 
@@ -147,19 +148,17 @@ impl ConfigManager {
         let path = self.path.clone();
         let config = self.config.clone();
 
-        let _ = spawn(
-            move || match toml::to_string(config.lock().unwrap().deref()) {
-                Ok(content) => {
-                    if let Ok(mut file) = File::create(&path) {
-                        file.write_all(&content.into_bytes())
-                            .expect("write config file failed");
-                    } else {
-                        error!("create config file failed");
-                    }
+        let _ = spawn(move || match toml::to_string(&*config.lock().unwrap()) {
+            Ok(content) => {
+                if let Ok(mut file) = File::create(&path) {
+                    file.write_all(&content.into_bytes())
+                        .expect("write config file failed");
+                } else {
+                    error!("create config file failed");
                 }
-                Err(e) => error!("{}", e),
-            },
-        )
-        .join();
+            }
+            Err(e) => error!("{}", e),
+        })
+            .join();
     }
 }
