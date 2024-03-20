@@ -15,22 +15,23 @@ pub(crate) mod sapi5;
 //noinspection SpellCheckingInspection
 pub(crate) mod vvtts;
 
-use crate::performer::text_processing::transform_single_char;
 use crate::{
     configs::tts::{TtsConfig, TtsPropertyItem},
     context::Context,
+    performer::text_processing::transform_single_char,
 };
-use std::sync::Arc;
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
-    sync::Weak,
+    sync::{Arc, Mutex as StdMutex, Weak},
     time::Duration,
 };
-use tokio::sync::{OnceCell, RwLock};
-use tokio::{sync::Mutex, time::sleep};
+use tokio::{
+    sync::{Mutex, OnceCell, RwLock},
+    time::sleep,
+};
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Default)]
 pub(crate) struct VoiceInfo {
     pub(crate) engine: String,
     pub(crate) id: String,
@@ -77,7 +78,7 @@ pub(crate) enum ValueChange {
 ///  语音TTS的抽象实现
 pub(crate) struct Tts {
     default_engine: OnceCell<String>,
-    is_cancelled: Mutex<bool>,
+    is_cancelled: StdMutex<bool>,
     all_engines: RwLock<HashMap<String, Arc<dyn TtsEngine + Sync + Send>>>,
     all_voices: Mutex<Vec<VoiceInfo>>,
     context: Weak<Context>,
@@ -118,20 +119,18 @@ impl Tts {
             }
 
             {
-                *self.is_cancelled.lock().await = false;
+                *self.is_cancelled.lock().unwrap() = false;
             }
 
             engine.wait().await;
         }
 
-        return !*self.is_cancelled.lock().await;
+        return !*self.is_cancelled.lock().unwrap();
     }
 
     async fn get_engine(&self) -> Weak<dyn TtsEngine + Sync + Send> {
-        let ttc_cfg = unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .get_config()
-            .tts_config;
+        let ctx = self.context.upgrade().unwrap();
+        let ttc_cfg = ctx.config_manager.get_config().tts_config;
         let engine_name = ttc_cfg.voice.0.clone();
 
         match { self.all_engines.read().await.get(&engine_name) } {
@@ -155,15 +154,11 @@ impl Tts {
      * */
     pub(crate) async fn stop(&self) {
         {
-            *self.is_cancelled.lock().await = true;
+            *self.is_cancelled.lock().unwrap() = true;
         }
-        let engine = unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .get_config()
-            .tts_config
-            .voice
-            .0
-            .clone();
+        let ctx = self.context.upgrade().unwrap();
+        let engine = ctx.config_manager.get_config().tts_config.voice.0.clone();
+
         let lock = self.all_engines.read().await;
         if let Some(x) = lock.get(&engine) {
             x.stop();
@@ -181,78 +176,71 @@ impl Tts {
      * */
     pub(crate) async fn stop_all(&self) {
         {
-            *self.is_cancelled.lock().await = true;
+            *self.is_cancelled.lock().unwrap() = true;
         }
-        for x in { self.all_engines.read().await.clone() }.iter() {
-            x.1.stop();
-        }
+        self.all_engines
+            .read()
+            .await
+            .iter()
+            .for_each(|(_, engine)| {
+                engine.stop();
+            });
     }
 
     /// 设置当前TTS属性的值
     pub(crate) async fn set_tts_prop_value(&self, value_change: ValueChange) {
+        let ctx = self.context.upgrade().unwrap();
+
         let set_val = |x| match value_change {
-            ValueChange::Increment => {
-                if x < 99 {
-                    x + 1
-                } else {
-                    100
-                }
-            }
-            ValueChange::Decrement => {
-                if x > 2 {
-                    x - 1
-                } else {
-                    1
-                }
-            }
+            ValueChange::Increment if x < 99 => x + 1,
+            ValueChange::Increment => 100,
+            ValueChange::Decrement if x > 2 => x - 1,
+            ValueChange::Decrement => 1,
         };
 
-        let mut root = unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .get_config();
-        match root.tts_config.item {
-            TtsPropertyItem::Speed => root.tts_config.speed = set_val(root.tts_config.speed),
-            TtsPropertyItem::Pitch => root.tts_config.pitch = set_val(root.tts_config.pitch),
-            TtsPropertyItem::Volume => root.tts_config.volume = set_val(root.tts_config.volume),
+        let TtsConfig {
+            speed,
+            pitch,
+            volume,
+            voice: (engine, id),
+            item,
+        } = ctx.config_manager.get_config().tts_config.clone();
+
+        let mut cfg = ctx.config_manager.get_config().tts_config.clone();
+        match item {
+            TtsPropertyItem::Speed => cfg.speed = set_val(speed),
+            TtsPropertyItem::Pitch => cfg.pitch = set_val(pitch),
+            TtsPropertyItem::Volume => cfg.volume = set_val(volume),
             TtsPropertyItem::Voice => {
                 self.stop_all().await;
-                let voice = self
-                    .switch_voice(
-                        root.tts_config.voice.0,
-                        root.tts_config.voice.1,
-                        value_change,
-                    )
-                    .await;
-                root.tts_config.voice = (voice.engine, voice.id)
+                let voice = self.switch_voice(engine, id, value_change).await;
+                cfg.voice = (voice.engine, voice.id)
             }
         };
 
-        self.apply_config(&root.tts_config).await;
-        unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .set_config(&root);
+        self.apply_config(&cfg).await;
+
+        let mut root = ctx.config_manager.get_config();
+        root.tts_config = cfg;
+        ctx.config_manager.set_config(&root);
     }
 
     /// 获取当前TTS属性值
     pub(crate) async fn get_tts_prop_value(&self, item: Option<TtsPropertyItem>) -> TtsProperty {
-        let config = unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .get_config()
-            .tts_config
-            .clone();
+        let ctx = self.context.upgrade().unwrap();
+        let config = ctx.config_manager.get_config().tts_config.clone();
+
         match item.map(|x| x).unwrap_or(config.item) {
             TtsPropertyItem::Speed => TtsProperty::Speed(config.speed),
             TtsPropertyItem::Pitch => TtsProperty::Pitch(config.pitch),
             TtsPropertyItem::Volume => TtsProperty::Volume(config.volume),
+
             TtsPropertyItem::Voice => {
+                let (engine, id) = config.voice;
                 let lock = self.all_voices.lock().await;
-                if let Some(v) = lock
-                    .iter()
-                    .find(|i| i.engine == config.voice.0 && i.id == config.voice.1)
-                {
-                    TtsProperty::Voice(v.clone())
-                } else {
-                    TtsProperty::Voice(lock.first().unwrap().clone())
+                match lock.iter().find(|v| v.engine == engine && v.id == id) {
+                    Some(v) => TtsProperty::Voice(v.clone()),
+                    None => TtsProperty::Voice(lock.first().unwrap().clone()),
                 }
             }
         }
@@ -296,50 +284,51 @@ impl Tts {
                 .insert(engine.get_name(), Arc::new(engine));
         }
 
-        self.apply_config(
-            &unsafe { &*self.context.as_ptr() }
-                .config_manager
-                .get_config()
-                .tts_config,
-        )
-        .await;
+        let ctx = self.context.upgrade().unwrap();
+        let cfg = ctx.config_manager.get_config().tts_config.clone();
+        self.apply_config(&cfg).await;
+
         self
     }
 
     // 应用配置到TTS
     pub(crate) async fn apply_config(&self, config: &TtsConfig) {
-        for (_, tts) in { self.all_engines.read().await.clone() }.iter() {
-            if config.voice.0 == tts.get_name() {
-                tts.set_voice(config.voice.1.clone()).await;
+        for (_, engine) in { self.all_engines.read().await.clone() }.iter() {
+            let (engine_name, id) = config.voice.clone();
+            if engine.get_name() == engine_name {
+                engine.set_voice(id).await;
             }
-            tts.set_speed(config.speed).await;
-            tts.set_volume(config.volume).await;
-            tts.set_pitch(config.pitch).await;
+
+            engine.set_speed(config.speed).await;
+            engine.set_volume(config.volume).await;
+            engine.set_pitch(config.pitch).await;
         }
     }
 
     pub(crate) async fn move_tts_prop(&self, direction: Direction) {
-        let mut root = unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .get_config();
-        root.tts_config.item = match direction {
-            Direction::Next => match root.tts_config.item {
+        let ctx = self.context.upgrade().unwrap();
+
+        let mut cfg = ctx.config_manager.get_config().tts_config.clone();
+        cfg.item = match direction {
+            Direction::Next => match cfg.item {
                 TtsPropertyItem::Speed => TtsPropertyItem::Pitch,
                 TtsPropertyItem::Pitch => TtsPropertyItem::Volume,
                 TtsPropertyItem::Volume => TtsPropertyItem::Voice,
                 TtsPropertyItem::Voice => TtsPropertyItem::Speed,
             },
-            Direction::Prev => match root.tts_config.item {
+            Direction::Prev => match cfg.item {
                 TtsPropertyItem::Speed => TtsPropertyItem::Voice,
                 TtsPropertyItem::Pitch => TtsPropertyItem::Speed,
                 TtsPropertyItem::Volume => TtsPropertyItem::Pitch,
                 TtsPropertyItem::Voice => TtsPropertyItem::Volume,
             },
         };
-        self.apply_config(&root.tts_config).await;
-        unsafe { &*self.context.as_ptr() }
-            .config_manager
-            .set_config(&root);
+
+        self.apply_config(&cfg).await;
+
+        let mut root = ctx.config_manager.get_config();
+        root.tts_config = cfg;
+        ctx.config_manager.set_config(&root);
     }
 
     async fn switch_voice(
@@ -352,6 +341,7 @@ impl Tts {
         if let ValueChange::Decrement = &value_change {
             voices.reverse();
         }
+
         let mut iter = voices.iter();
         while let Some(i) = iter.next() {
             if i.engine == engine && i.id == id {
@@ -360,6 +350,7 @@ impl Tts {
                 }
             }
         }
+
         voices.first().unwrap().clone()
     }
 
@@ -375,5 +366,4 @@ impl Debug for Tts {
 }
 
 unsafe impl Send for Tts {}
-
 unsafe impl Sync for Tts {}
