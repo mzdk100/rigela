@@ -123,6 +123,14 @@ settings.import_title:
   en: "Please select the file to import the configuration:"
   zh-CN: "请选择需要导入的文件:"
 
+settings.def_shortcut_hotkey:
+  en: Please enter the hotkey you want to use as a shortcut to start the program!
+  zh-CN: 请输入要用做启动程序的快捷方式的热键！
+
+settings.ck_add_desktop_shortcut:
+  en: Add desktop shortcut (&L)
+  zh-CN: 添加桌面快捷方式 (&L)
+
 settings.lang:
   en: Language(Need Restart) (&L)
   zh-CN: 语言(重启生效) (&L)

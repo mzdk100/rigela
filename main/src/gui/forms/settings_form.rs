@@ -238,8 +238,7 @@ impl SettingsForm {
                 unsafe { &*context.as_ptr() }
                     .main_handler
                     .spawn(async move {
-                        let info = "请输入要用做启动程序的快捷方式的热键!";
-                        pf.speak(&info.to_string()).await;
+                        pf.speak(&t!("settings.def_shortcut_hotkey")).await;
                     });
 
                 let mut hook = self.general_ui.hook.borrow_mut();
@@ -487,7 +486,7 @@ pub struct GeneralUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: "添加桌面快捷方式 (& L)")]
+    #[nwg_control(text: & t ! ("settings.ck_add_desktop_shortcut"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_add_desktop_shortcut: CheckBox,
 

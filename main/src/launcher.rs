@@ -13,14 +13,11 @@
 
 use crate::{
     context::Context, ext::window::AccessibleWindowExt, performer::sound::SoundArgument::Single,
-    terminator::Terminator,
+    talent::Talented, terminator::Terminator,
 };
 use a11y::{get_ia2_lib_path, setup};
 use log::{error, info};
-use rigela_utils::{
-    killer::{kill, listen_to_killing},
-    library::setup_library,
-};
+use rigela_utils::{killer::listen_to_killing, library::setup_library};
 use std::sync::Arc;
 use tokio::process::Command;
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
@@ -47,28 +44,27 @@ impl Launcher {
         let terminator = Terminator::new();
 
         // 上下文对象的创建，需要传入终结器，上下文对象通过终结器对象响应终结消息
-        let ctx = Context::new(terminator);
-        let ctx_ref: Arc<Context> = ctx.into();
-
+        let context = Context::new(terminator);
+        let context = Arc::new(context);
         // 调用上下文对象的应用到每一个组件的方法
-        ctx_ref.apply();
+        context.apply();
 
-        Self {
-            context: ctx_ref,
-        }
+        Self { context }
     }
 
+    //noinspection RsUnresolvedPath
     /**
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
     pub(crate) async fn launch(&mut self) {
-        // 通知其他的读屏进程退出，防止多开
-        kill().await;
-
         // 监听外部进程请求主程序退出，这是一种安全杀死主进程的方案
-        let terminator = self.context.terminator.clone();
+        let ctx = Arc::downgrade(&self.context);
         listen_to_killing(async move {
-            terminator.exit().await;
+            unsafe { &*ctx.as_ptr() }
+                .talent_provider
+                .get_exit_talent()
+                .perform(ctx)
+                .await;
         });
 
         // 播放启动时的音效
@@ -98,9 +94,6 @@ impl Launcher {
                 proxy32process.spawn().await;
             });
         }
-
-        // 初始化GUI窗口界面
-        self.context.gui_provider.init(self.context.clone());
 
         // 朗读当前桌面
         self.context
