@@ -294,14 +294,14 @@ impl Tts {
     // 应用配置到TTS
     pub(crate) async fn apply_config(&self, config: &TtsConfig) {
         for (_, engine) in { self.all_engines.read().await.clone() }.iter() {
-            engine.set_speed(config.speed).await;
-            engine.set_volume(config.volume).await;
-            engine.set_pitch(config.pitch).await;
-
             let (engine_name, id) = config.voice.clone();
             if engine.get_name() == engine_name {
                 engine.set_voice(id).await;
             }
+
+            engine.set_speed(config.speed).await;
+            engine.set_volume(config.volume).await;
+            engine.set_pitch(config.pitch).await;
         }
     }
 

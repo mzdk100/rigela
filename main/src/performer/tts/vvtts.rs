@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    str::FromStr,
-    sync::Weak,
-};
+use std::{str::FromStr, sync::Weak};
 
 use rigela_utils::bass::BassChannelOutputStream;
 #[cfg(target_arch = "x86")]
@@ -40,7 +37,7 @@ impl VvttsEngine {
     #[allow(unused_variables)]
     pub(crate) async fn new(context: Weak<Context>) -> Self {
         #[cfg(target_arch = "x86")]
-            let eci = Ibmeci::get().await.unwrap();
+        let eci = Ibmeci::get().await.unwrap();
         Self {
             #[cfg(target_arch = "x86_64")]
             context,
@@ -52,15 +49,10 @@ impl VvttsEngine {
 
     #[cfg(target_arch = "x86_64")]
     async fn set_value_by_prop(&self, prop: TtsProperty) {
-        let mut params = unsafe {
-            &*self
-                .context.as_ptr()
-        }
-            .proxy32process
-            .as_ref()
-            .await
-            .eci_get_voice_params()
-            .await;
+        let ctx = self.context.upgrade().unwrap();
+        let proxy32 = ctx.proxy32process.as_ref().await;
+        let mut params = proxy32.eci_get_voice_params().await;
+
         match prop {
             TtsProperty::Speed(v) => params.speed = Self::convert_speed_param(v),
             TtsProperty::Volume(v) => params.volume = v,
@@ -72,12 +64,7 @@ impl VvttsEngine {
             _ => return,
         };
 
-        unsafe { &*self.context.as_ptr() }
-            .proxy32process
-            .as_ref()
-            .await
-            .eci_set_voice_params(&params)
-            .await;
+        proxy32.eci_set_voice_params(&params).await;
     }
 
     fn convert_speed_param(value: i32) -> i32 {
@@ -98,7 +85,12 @@ impl VvttsEngine {
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
         self.output_stream.start();
-        let data = unsafe { &*self.context.as_ptr() }.proxy32process.as_ref().await.eci_synth(text).await;
+        let data = unsafe { &*self.context.as_ptr() }
+            .proxy32process
+            .as_ref()
+            .await
+            .eci_synth(text)
+            .await;
         self.output_stream.put_data(&data);
     }
 
