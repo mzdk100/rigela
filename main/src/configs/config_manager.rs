@@ -11,15 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    configs::general::GeneralConfig, configs::hotkeys::HotKeysConfig, configs::mouse::MouseConfig,
-    configs::tts::TtsConfig,
+use crate::configs::{
+    general::GeneralConfig, hotkeys::HotKeysConfig, mouse::MouseConfig, tts::TtsConfig,
 };
-use log::{error, info};
+use log::error as err_log;
 use serde::{Deserialize, Serialize};
 use std::fs::{read_to_string, File};
 use std::io::Write;
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
 use std::{
@@ -43,7 +42,9 @@ pub(crate) struct ConfigManager {
     pub(crate) path: PathBuf,
     // 当前的配置
     config: Arc<Mutex<ConfigRoot>>,
+    // 更新配置的操作时间
     update_time: Arc<Mutex<Instant>>,
+    // 延时写入是否完成
     write_finished: Arc<Mutex<bool>>,
 }
 
@@ -77,41 +78,29 @@ impl ConfigManager {
         self.write();
     }
 
-    /*
-     * 读取配置数据。如果不存在配置文件，写入默认配置
-     * */
+    /// 读取配置数据。如果不存在配置文件，写入默认配置
     pub(crate) fn read(&self) -> ConfigRoot {
-        let config = match read_to_string(self.path.clone()) {
-            Ok(mut content) => match toml::from_str::<ConfigRoot>(content.as_mut_str()) {
-                Ok(c) => Some(c),
-                Err(_) => {
-                    info!("配置文件格式错误，将使用默认配置");
-                    None
-                }
-            },
-            _ => {
-                info!("配置文件不存在，将使用默认配置");
-                None
-            }
-        };
+        match _read_config(&self.path) {
+            Ok(cfg) => cfg,
+            Err(_) => {
+                err_log!("读取配置文件失败，写入默认配置");
+                if _write_config(&self.path, &ConfigRoot::default()).is_err() {}
 
-        if let Some(cfg) = config {
-            cfg
-        } else {
-            *self.config.lock().unwrap().deref_mut() = Default::default();
-            self.write();
-            Default::default()
+                Default::default()
+            }
         }
     }
 
-    // 写出配置数据。
+    // 延时写出配置数据。
     fn write(&self) {
         let path = self.path.clone();
         let config = self.config.clone();
         let update_time = self.update_time.clone();
         let write_finished = self.write_finished.clone();
 
+        // 写出操作再新的线程进行
         spawn(move || {
+            // 延时写入没有完成前，防止重复调用
             if !*write_finished.lock().unwrap() {
                 return;
             }
@@ -119,6 +108,7 @@ impl ConfigManager {
                 *write_finished.lock().unwrap().deref_mut() = false;
             }
 
+            // 延迟到当前配置更新时间的推后10秒钟
             loop {
                 if Instant::now() >= *update_time.lock().unwrap() + Duration::from_secs(10) {
                     break;
@@ -126,16 +116,10 @@ impl ConfigManager {
                 sleep(Duration::from_secs(10));
             }
 
-            match toml::to_string(config.lock().unwrap().deref()) {
-                Ok(content) => {
-                    if let Ok(mut file) = File::create(&path) {
-                        file.write_all(&content.into_bytes())
-                            .expect("write config file failed");
-                    } else {
-                        error!("create config file failed");
-                    }
-                }
-                Err(e) => error!("{}", e),
+            // 开始执行配置写入
+            let cfg = config.lock().unwrap().clone();
+            if _write_config(&path, &cfg).is_err() {
+                err_log!("write config file failed");
             }
 
             *write_finished.lock().unwrap().deref_mut() = true;
@@ -147,19 +131,29 @@ impl ConfigManager {
         let path = self.path.clone();
         let config = self.config.clone();
 
-        let _ = spawn(
-            move || match toml::to_string(config.lock().unwrap().deref()) {
-                Ok(content) => {
-                    if let Ok(mut file) = File::create(&path) {
-                        file.write_all(&content.into_bytes())
-                            .expect("write config file failed");
-                    } else {
-                        error!("create config file failed");
-                    }
-                }
-                Err(e) => error!("{}", e),
-            },
-        )
+        let _ = spawn(move || {
+            let cfg = config.lock().unwrap().clone();
+            if _write_config(&path, &cfg).is_err() {
+                err_log!("write config file failed");
+            }
+        })
         .join();
     }
+}
+
+// 写出配置到指定文件
+fn _write_config(path: &PathBuf, config: &ConfigRoot) -> Result<(), Box<dyn std::error::Error>> {
+    let cfg = toml::to_string(config)?;
+    let mut file = File::create(&path)?;
+    file.write_all(&cfg.into_bytes())?;
+
+    Ok(())
+}
+
+// 读取配置文件
+fn _read_config(path: &PathBuf) -> Result<ConfigRoot, Box<dyn std::error::Error>> {
+    let mut data = read_to_string(path.clone())?;
+    let cfg = toml::from_str::<ConfigRoot>(data.as_mut_str())?;
+
+    Ok(cfg)
 }
