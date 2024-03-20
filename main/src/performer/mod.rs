@@ -16,16 +16,17 @@ pub(crate) mod sound;
 mod text_processing;
 pub(crate) mod tts;
 
-use crate::performer::sound::SoundArgument;
 use crate::{
     context::Context,
     performer::{
-        sound::Sound,
+        sound::{Sound, SoundArgument},
         tts::{sapi5::Sapi5Engine, vvtts::VvttsEngine, Tts},
     },
 };
-use std::sync::Weak;
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{Arc, Weak},
+    time::Duration,
+};
 use tokio::{sync::OnceCell, time::sleep};
 
 /// 表演者语音信息收集接口。 实现此接口的对象可以调用表演者的speak方法进行输出。

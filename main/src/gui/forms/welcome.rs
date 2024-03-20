@@ -19,11 +19,11 @@ use crate::{
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
 use rigela_macros::GuiFormImpl;
-use std::sync::{Arc, OnceLock};
+use std::sync::{OnceLock, Weak};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct WelcomeForm {
-    context: OnceLock<Arc<Context>>,
+    context: OnceLock<Weak<Context>>,
 
     #[nwg_control(title: & t ! ("welcome.title"), size: (480, 320), position: (300, 300), flags: "WINDOW|VISIBLE")]
     #[nwg_events(OnWindowClose: [WelcomeForm::on_exit])]
@@ -32,7 +32,7 @@ pub struct WelcomeForm {
     #[nwg_layout(parent: window, spacing: 5)]
     layout: nwg::GridLayout,
 
-    #[nwg_control(text: &t!("welcome.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
+    #[nwg_control(text: & t ! ("welcome.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [WelcomeForm::on_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextBox,

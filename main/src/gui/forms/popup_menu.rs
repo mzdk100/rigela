@@ -22,11 +22,11 @@ use crate::{
 use nwd::NwgUi;
 use nwg::NoticeSender;
 use rigela_macros::GuiFormImpl;
-use std::sync::{Arc, OnceLock};
+use std::sync::{OnceLock, Weak};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct PopupMenuForm {
-    context: OnceLock<Arc<Context>>,
+    context: OnceLock<Weak<Context>>,
 
     #[nwg_control]
     window: nwg::MessageWindow,
@@ -34,7 +34,7 @@ pub struct PopupMenuForm {
     #[nwg_control(parent: window, popup: true)]
     tray_menu: nwg::Menu,
 
-    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.setting_item"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.setting_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_setting])]
     setting_item: nwg::MenuItem,
 
@@ -42,34 +42,34 @@ pub struct PopupMenuForm {
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_donate])]
     donate_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.welcome_item"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.welcome_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_welcome_form])]
     welcome_form_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.custom_hotkeys_item"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.custom_hotkeys_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_custom_hotkeys])]
     costom_hotkeys_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.help_item"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.help_item"))]
     out_help_item: nwg::Menu,
 
-    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.visit_host_item"))]
+    #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.visit_host_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_visit_host])]
     visit_host_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.help_item"))]
+    #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.help_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_help])]
     help_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.check_update_item"))]
+    #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.check_update_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_check_update])]
     check_update_item: nwg::MenuItem,
 
-    #[nwg_control(parent: out_help_item, text: &t!("popupmenu.about_item"))]
+    #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.about_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_about])]
     about_item: nwg::MenuItem,
 
-    #[nwg_control(parent: tray_menu, text: &t!("popupmenu.exit_item"))]
+    #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.exit_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_exit])]
     exit_item: nwg::MenuItem,
 

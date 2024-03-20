@@ -25,7 +25,7 @@ use crate::{
 use nwg::{NativeUi, NoticeSender};
 use std::{
     fmt::{Debug, Formatter},
-    sync::{mpsc, Arc, Mutex, OnceLock},
+    sync::{mpsc, Mutex, OnceLock, Weak},
     thread,
 };
 use win_wrap::com::co_uninitialize;
@@ -35,7 +35,7 @@ use win_wrap::com::co_uninitialize;
  * 可以使用rigela-macros中的GuiFormImpl派生宏标记在struct上自动实现。
  * */
 pub(crate) trait GuiForm {
-    fn set_context(&self, context: Arc<Context>);
+    fn set_context(&self, context: Weak<Context>);
     fn get_show_notice_sender(&self) -> NoticeSender;
     fn get_exit_notice_sender(&self) -> NoticeSender;
 }
@@ -70,11 +70,18 @@ macro_rules! build_form {
 }
 
 impl GuiProvider {
+    /**
+     * 创建一个实例。
+     * */
     pub(crate) fn new() -> Self {
         Default::default()
     }
 
-    pub(crate) fn init(&self, context: Arc<Context>) {
+    /**
+     * 初始化。
+     * `context` 读屏的上下文环境。
+     * */
+    pub(crate) fn apply(&self, context: Weak<Context>) {
         if already_init().lock().unwrap().clone() {
             return;
         }

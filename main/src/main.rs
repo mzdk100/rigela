@@ -51,19 +51,18 @@ mod terminator;
 
 use launcher::Launcher;
 use log::info;
-use rigela_utils::logger::init_logger;
-use win_wrap::common::get_user_default_locale_name;
+use rigela_utils::{
+    killer::kill,
+    logger::init_logger,
+};
 
 #[tokio::main]
 async fn main() {
+    // 通知其他的读屏进程退出，防止多开
+    kill().await;
+
     // 初始化日志库
     init_logger(None);
-
-    // 获取用户系统的默认语言设置
-    let locale = get_user_default_locale_name();
-    info!("The current locale of the user is {}.", locale);
-    // 让I18N国际化模块的语言跟随系统
-    rust_i18n::set_locale(locale.as_str());
 
     // 使用发射台启动主程序
     info!("Launching RigelA...");

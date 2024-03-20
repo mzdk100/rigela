@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use win_wrap::common::get_user_default_locale_name;
 
 /// 常规配置项
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -35,6 +37,42 @@ impl Default for GeneralConfig {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialOrd, PartialEq)]
 pub(crate) enum Lang {
+    FollowSystem,
     Zh,
     En,
+}
+
+impl Lang {
+    pub(crate) fn to_string(&self) -> String {
+        match self {
+            Self::Zh => "zh-CN".to_string(),
+            Self::En => "en".to_string(),
+            Self::FollowSystem => get_user_default_locale_name()
+        }
+    }
+}
+
+impl From<&str> for Lang {
+    fn from(value: &str) -> Self {
+        match value {
+            "zh-CN" => Self::Zh,
+            "en" => Self::En,
+            _ => Self::FollowSystem
+        }
+    }
+}
+
+impl Display for Lang {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::FollowSystem => write!(f, "Lang ([FollowSystem]{})", self.to_string()),
+            _ => write!(f, "Lang ({})", self.to_string()),
+        }
+    }
+}
+
+impl Default for Lang {
+    fn default() -> Self {
+        Self::FollowSystem
+    }
 }

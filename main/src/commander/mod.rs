@@ -22,7 +22,7 @@ use crate::{
 use keys::Keys;
 use std::{
     fmt::{Debug, Formatter},
-    sync::{Arc, Mutex, OnceLock},
+    sync::{Arc, Mutex, OnceLock, Weak},
 };
 use win_wrap::hook::WindowsHook;
 
@@ -70,8 +70,11 @@ impl Commander {
      * 让指挥官开始工作。
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
-    pub(crate) fn apply(&self, context: Arc<Context>) {
-        let talents = context.talent_provider.talents.clone();
+    pub(crate) fn apply(&self, context: Weak<Context>) {
+        let talents = unsafe { &*context.as_ptr() }
+            .talent_provider
+            .talents
+            .clone();
 
         self.keyboard_hook
             .set(set_keyboard_hook(context.clone(), talents))

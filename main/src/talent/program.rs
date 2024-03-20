@@ -23,7 +23,7 @@ use log::error;
 use rigela_macros::talent;
 
 use std::{
-    sync::{Arc, OnceLock},
+    sync::{OnceLock, Weak},
     thread,
     time::Duration,
 };
@@ -34,7 +34,9 @@ use win_wrap::{
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "退出", key = (VkRigelA, VkEscape))]
-async fn exit(context: Arc<Context>) {
+async fn exit(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     context.performer.speak(&t!("program.exit")).await;
     context.terminator.exit().await;
 }
@@ -47,7 +49,9 @@ impl Speakable for DateTime<Local> {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
-async fn current_time(context: Arc<Context>) {
+async fn current_time(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     context.performer.speak(&Local::now()).await;
 }
 
@@ -63,7 +67,9 @@ impl Speakable for &PdhCounter {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看CPU使用率", key = (VkRigelA, VkQ))]
-async fn current_cpu_usage(context: Arc<Context>) {
+async fn current_cpu_usage(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     static CPU_QUERY: OnceLock<(PdhCounter, PdhQuery)> = OnceLock::new();
     let (counter, query) = CPU_QUERY.get_or_init(|| {
         let query = PdhQuery::new();
@@ -81,19 +87,25 @@ async fn current_cpu_usage(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
-async fn popup_menu(context: Arc<Context>) {
+async fn popup_menu(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     context.gui_provider.show_popup_menu();
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "自定义热键", key = (VkRigelA, VkK))]
-async fn hotkeys(context: Arc<Context>) {
+async fn hotkeys(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     context.gui_provider.show_hotkeys_form();
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
-async fn view_window_title(context: Arc<Context>) {
+async fn view_window_title(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     match AccessibleObject::from_foreground_window() {
         Ok(o) => {
             context.performer.speak(&(o, 0)).await;
@@ -110,7 +122,9 @@ async fn view_window_title(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "查看当前焦点", key = (VkRigelA, VkTab))]
-async fn view_focus(context: Arc<Context>) {
+async fn view_focus(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     let Ok(focused) = context.ui_automation.get_focused_element() else {
         return;
     };
@@ -119,6 +133,8 @@ async fn view_focus(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "停止正在输出的语音", key = (VkCtrl))]
-async fn stop_tts_output(context: Arc<Context>) {
+async fn stop_tts_output(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     context.performer.get_tts().stop_all().await;
 }

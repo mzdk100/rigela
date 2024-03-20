@@ -11,11 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::gui::forms::settings_form::SettingsForm;
-use crate::gui::utils::set_hook;
 use crate::{
     commander::{keys::Keys, CommandType::Key},
     configs::config_operations::{get_hotkeys, save_hotkeys},
+    gui::{forms::settings_form::SettingsForm, utils::set_hook},
     talent::Talented,
 };
 use nwd::NwgPartial;
@@ -97,7 +96,10 @@ impl SettingsForm {
     // 初始化数据
     fn init_data(&self) {
         let context = self.context.get().unwrap().clone();
-        *self.talents.borrow_mut() = context.talent_provider.talents.clone();
+        *self.talents.borrow_mut() = unsafe { &*context.as_ptr() }
+            .talent_provider
+            .talents
+            .clone();
         *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
@@ -263,11 +265,13 @@ impl SettingsForm {
     fn start_custom_hotkey(&self) {
         let context = self.context.get().unwrap().clone();
 
-        let pf = context.performer.clone();
-        context.main_handler.spawn(async move {
-            let info = t!("hotkeys.please_input_info").to_string();
-            pf.speak(&info).await;
-        });
+        let pf = unsafe { &*context.as_ptr() }.performer.clone();
+        unsafe { &*context.as_ptr() }
+            .main_handler
+            .spawn(async move {
+                let info = t!("hotkeys.please_input_info").to_string();
+                pf.speak(&info).await;
+            });
 
         let senders = [
             self.hotkeys_ui.finish_custom.sender(),

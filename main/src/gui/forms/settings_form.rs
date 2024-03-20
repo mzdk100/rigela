@@ -11,34 +11,45 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
-use crate::configs::config_operations::{
-    get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,
-    get_run_on_startup,
+use crate::{
+    bring_window_front,
+    commander::keys::Keys,
+    configs::{
+        config_operations::{
+            get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,
+            get_run_on_startup,
+        },
+        general::Lang,
+        tts::TtsPropertyItem,
+    },
+    context::Context,
+    gui::{
+        command::{
+            add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd, import_config_cmd,
+            reset_config_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
+            set_mouse_read_cmd, set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
+        },
+        forms::hotkeys::HotKeysUi,
+        utils::set_hook,
+    },
+    performer::tts::{TtsProperty, VoiceInfo},
 };
-use crate::configs::general::Lang;
-use crate::configs::tts::TtsPropertyItem;
-use crate::gui::command::{
-    add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd, import_config_cmd,
-    reset_config_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
-    set_mouse_read_cmd, set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
-};
-use crate::gui::forms::hotkeys::HotKeysUi;
-use crate::gui::utils::set_hook;
-use crate::performer::tts::{TtsProperty, VoiceInfo};
-use crate::{bring_window_front, context::Context};
 use nwd::{NwgPartial, NwgUi};
-use nwg::stretch::{
-    geometry::Size,
-    style::{Dimension as D, Style},
+use nwg::{
+    modal_message,
+    stretch::{
+        geometry::Size,
+        style::{Dimension as D, Style},
+    },
+    CheckBox, CheckBoxState, MessageParams, NoticeSender,
 };
-use nwg::{modal_message, CheckBox, CheckBoxState, MessageParams, NoticeSender};
 use rigela_macros::GuiFormImpl;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::ops::DerefMut;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    path::PathBuf,
+    sync::{Arc, Mutex, OnceLock, Weak},
+};
 use win_wrap::hook::WindowsHook;
 
 const FRAME_SIZE: Size<D> = Size {
@@ -48,7 +59,7 @@ const FRAME_SIZE: Size<D> = Size {
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct SettingsForm {
-    pub(crate) context: OnceLock<Arc<Context>>,
+    pub(crate) context: OnceLock<Weak<Context>>,
 
     pub(crate) talents: RefCell<Arc<Vec<crate::gui::forms::hotkeys::Talent>>>,
     pub(crate) talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
@@ -61,19 +72,19 @@ pub struct SettingsForm {
     pitch: Arc<Mutex<i32>>,
     volume: Arc<Mutex<i32>>,
 
-    #[nwg_control(size: (800, 600), position: (200, 200), title: &t!("settings.title"))]
+    #[nwg_control(size: (800, 600), position: (200, 200), title: & t ! ("settings.title"))]
     #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
     pub(crate) window: nwg::Window,
 
     #[nwg_layout(parent: window)]
     layout: nwg::FlexboxLayout,
 
-    #[nwg_control(collection: vec![
-    t!("settings.menu_general_item").to_string(), 
-    t!("settings.menu_voice_item").to_string(),
-    t!("settings.menu_hotkeys_item").to_string(),
-    t!("settings.menu_mouse_item").to_string(),
-    t!("settings.menu_advanced_item").to_string(),
+    #[nwg_control(collection: vec ! [
+    t ! ("settings.menu_general_item").to_string(),
+    t ! ("settings.menu_voice_item").to_string(),
+    t ! ("settings.menu_hotkeys_item").to_string(),
+    t ! ("settings.menu_mouse_item").to_string(),
+    t ! ("settings.menu_advanced_item").to_string(),
     ])]
     #[nwg_layout_item(layout: layout, size: Size{width: D::Points(150.0), height: D::Auto})]
     #[nwg_events(OnListBoxSelect: [SettingsForm::change_interface])]
@@ -123,16 +134,12 @@ pub struct SettingsForm {
     #[nwg_events(
     (data_view, OnKeyRelease): [SettingsForm::on_dv_key_press(SELF, EVT_DATA)],
     (data_view, OnListViewItemChanged): [SettingsForm::on_dv_selection_changed],
-
     (btn_set, OnButtonClick): [SettingsForm::on_set_hotkey],
     (btn_set, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
-
     (btn_clear, OnButtonClick): [SettingsForm::on_clear_hotkey],
     (btn_clear, OnKeyRelease): [SettingsForm::on_btn_key_release(SELF, EVT_DATA, HANDLE)],
-
     (finish_custom, OnNotice): [SettingsForm::on_finish_custom],
     (cancel_custom, OnNotice): [SettingsForm::on_cancel_custom],
-
     (btn_close, OnButtonClick): [SettingsForm::on_save],
     )]
     pub(crate) hotkeys_ui: HotKeysUi,
@@ -227,11 +234,13 @@ impl SettingsForm {
                     self.general_ui.cancel_program_hotkeys_notice.sender(),
                 ];
 
-                let pf = context.performer.clone();
-                context.main_handler.spawn(async move {
-                    let info = "请输入要用做启动程序的快捷方式的热键!";
-                    pf.speak(&info.to_string()).await;
-                });
+                let pf = unsafe { &*context.as_ptr() }.performer.clone();
+                unsafe { &*context.as_ptr() }
+                    .main_handler
+                    .spawn(async move {
+                        let info = "请输入要用做启动程序的快捷方式的热键!";
+                        pf.speak(&info.to_string()).await;
+                    });
 
                 let mut hook = self.general_ui.hook.borrow_mut();
                 *hook = Some(set_hook(keys, &senders));
@@ -378,8 +387,9 @@ impl SettingsForm {
         // 更新语言显示
         let lang = get_lang(self.context.get().unwrap().clone());
         let index = match lang {
-            Lang::Zh => 0,
+            Lang::FollowSystem => 0,
             Lang::En => 1,
+            Lang::Zh => 2,
         };
         self.general_ui.cb_lang.set_selection(Some(index));
 
@@ -387,7 +397,7 @@ impl SettingsForm {
         let format_voice_info = |v: &VoiceInfo| format!("{}_{}", v.engine, v.name);
 
         let ctx = self.context.get().unwrap().clone();
-        let tts = ctx.performer.get_tts();
+        let tts = unsafe { &*ctx.as_ptr() }.performer.get_tts();
         let all_voice = self.all_voices.clone();
         let voice = self.voice.clone();
         let speed = self.speed.clone();
@@ -395,8 +405,8 @@ impl SettingsForm {
         let volume = self.volume.clone();
         let update_voice_sender = self.voice_ui.update_voice_notice.sender().clone();
 
-        ctx.work_runtime.spawn(async move {
-            *all_voice.lock().unwrap().deref_mut() = tts
+        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
+            *all_voice.lock().unwrap() = tts
                 .get_all_voiceinfo()
                 .await
                 .iter()
@@ -404,19 +414,19 @@ impl SettingsForm {
                 .collect();
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Voice)).await;
             if let TtsProperty::Voice(v) = voiceinfo {
-                *voice.lock().unwrap().deref_mut() = format_voice_info(&v);
+                *voice.lock().unwrap() = format_voice_info(&v);
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Speed)).await;
             if let TtsProperty::Speed(v) = voiceinfo {
-                *speed.lock().unwrap().deref_mut() = v;
+                *speed.lock().unwrap() = v;
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Pitch)).await;
             if let TtsProperty::Pitch(v) = voiceinfo {
-                *pitch.lock().unwrap().deref_mut() = v;
+                *pitch.lock().unwrap() = v;
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Volume)).await;
             if let TtsProperty::Volume(v) = voiceinfo {
-                *volume.lock().unwrap().deref_mut() = v;
+                *volume.lock().unwrap() = v;
             }
 
             update_voice_sender.notice();
@@ -465,6 +475,7 @@ impl SettingsForm {
             .set_selection(Some((100 - self.volume.lock().unwrap().clone()) as usize));
     }
 }
+
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
     program_hotkeys: Arc<Mutex<Vec<Keys>>>,
@@ -480,30 +491,31 @@ pub struct GeneralUi {
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_add_desktop_shortcut: CheckBox,
 
-    #[nwg_control(text: &t!("settings.run_on_startup"))]
+    #[nwg_control(text: & t ! ("settings.run_on_startup"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     ck_run_on_startup: CheckBox,
 
-    #[nwg_control(text: &t!("settings.auto_check_update"))]
+    #[nwg_control(text: & t ! ("settings.auto_check_update"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     ck_auot_update: CheckBox,
 
-    #[nwg_control(text: &t!("settings.check_update"))]
+    #[nwg_control(text: & t ! ("settings.check_update"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     btn_check_update: nwg::Button,
 
-    #[nwg_control(text: &t!("settings.lang"))]
+    #[nwg_control(text: & t ! ("settings.lang"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 6)]
     lb_lang: nwg::Label,
 
     #[nwg_control(collection: vec ! [
-    t!("settings.lang_zh_item").to_string(), 
-    t!("settings.lang_en_item").to_string(),
+    t ! ("settings.lang_follow_system_item").to_string(),
+    t ! ("settings.lang_en_item").to_string(),
+    t ! ("settings.lang_zh_item").to_string(),
     ])]
     #[nwg_layout_item(layout: layout, col: 2, row: 6)]
     cb_lang: nwg::ComboBox<String>,
 
-    #[nwg_control(text: &t!("settings.btn_close"))]
+    #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
 
@@ -522,42 +534,42 @@ pub struct VoiceUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: &t!("settings.lb_role"))]
+    #[nwg_control(text: & t ! ("settings.lb_role"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     lb_role: nwg::Label,
 
-    #[nwg_control(collection: vec![] )]
+    #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
     cb_role: nwg::ComboBox<String>,
 
-    #[nwg_control(text:&t!("settings.lb_speed"))]
+    #[nwg_control(text: & t ! ("settings.lb_speed"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     lb_speed: nwg::Label,
 
-    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
+    #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
     cb_speed: nwg::ComboBox<String>,
 
-    #[nwg_control(text:  &t!("settings.lb_pitch"))]
+    #[nwg_control(text: & t ! ("settings.lb_pitch"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     lb_pitch: nwg::Label,
 
-    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
+    #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
     cb_pitch: nwg::ComboBox<String>,
 
-    #[nwg_control(text: &t!("settings.lb_volume"))]
+    #[nwg_control(text: & t ! ("settings.lb_volume"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
     lb_volume: nwg::Label,
 
-    #[nwg_control(collection: (1..101).map(|i| format!("{}", i)).rev().collect() )]
+    #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
     cb_volume: nwg::ComboBox<String>,
 
     #[nwg_control]
     update_voice_notice: nwg::Notice,
 
-    #[nwg_control(text: &t!("settings.btn_close"))]
+    #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
 }
@@ -570,21 +582,21 @@ pub struct MouseUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: &t!("settings.ck_mouse_read"))]
+    #[nwg_control(text: & t ! ("settings.ck_mouse_read"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     ck_mouse_read: CheckBox,
 
-    #[nwg_control(text: &t!("settings.btn_close"))]
+    #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
-    #[nwg_resource(title: t!("settings.export_title").to_string(), action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
+    #[nwg_resource(title: t ! ("settings.export_title").to_string(), action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
     export_dialog: nwg::FileDialog,
 
-    #[nwg_resource(title: t!("settings.import_title").to_string(), action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
+    #[nwg_resource(title: t ! ("settings.import_title").to_string(), action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
     import_dialog: nwg::FileDialog,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
@@ -593,19 +605,19 @@ pub struct AdvancedUi {
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
     layout2: nwg::GridLayout,
 
-    #[nwg_control(text: &t!("settings.btn_export"))]
+    #[nwg_control(text: & t ! ("settings.btn_export"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
     btn_export: nwg::Button,
 
-    #[nwg_control(text: &t!("settings.btn_import"))]
+    #[nwg_control(text: & t ! ("settings.btn_import"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
     btn_import: nwg::Button,
 
-    #[nwg_control(text: &t!("settings.btn_reset"))]
+    #[nwg_control(text: & t ! ("settings.btn_reset"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
     btn_reset: nwg::Button,
 
-    #[nwg_control(text: &t!("settings.btn_close"))]
+    #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
 }

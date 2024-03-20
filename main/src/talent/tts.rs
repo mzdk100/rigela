@@ -11,71 +11,75 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::event_core::editor::editor_key_handle;
 use crate::{
     commander::keys::Keys::*,
     context::Context,
-    performer::cache::Direction as CacheDirection,
-    performer::tts::{Direction, TtsProperty, ValueChange},
+    event_core::editor::editor_key_handle,
+    performer::{
+        cache::Direction as CacheDirection,
+        tts::{Direction, TtsProperty, ValueChange},
+    },
 };
 #[allow(unused_imports)]
 use async_trait::async_trait;
 use rigela_macros::talent;
 use rigela_utils::clip::set_clipboard_text;
 #[allow(unused_imports)]
-use std::sync::Arc;
+use std::sync::Weak;
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音属性值增加", key = (VkRigelA, VkCtrl, VkUp))]
-async fn increase(context: Arc<Context>) {
+async fn increase(context: Weak<Context>) {
     {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let tts = context.performer.get_tts();
+    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     tts.set_tts_prop_value(ValueChange::Increment).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音属性值降低", key = (VkRigelA, VkCtrl, VkDown))]
-async fn reduce(context: Arc<Context>) {
+async fn reduce(context: Weak<Context>) {
     {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let tts = context.performer.get_tts();
+    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     tts.set_tts_prop_value(ValueChange::Decrement).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音下一属性", key = (VkRigelA, VkCtrl, VkRight))]
-async fn next_prop(context: Arc<Context>) {
+async fn next_prop(context: Weak<Context>) {
     {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let tts = context.performer.get_tts();
+    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     tts.move_tts_prop(Direction::Next).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "语音上一属性", key = (VkRigelA, VkCtrl, VkLeft))]
-async fn prev_prop(context: Arc<Context>) {
+async fn prev_prop(context: Weak<Context>) {
     {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let tts = context.performer.get_tts();
+    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     tts.move_tts_prop(Direction::Prev).await;
     speak_tts_prop(context).await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区上一字符", key = (VkRigelA, VkLeft))]
-async fn prev_cache_char(context: Arc<Context>) {
+async fn prev_cache_char(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     {
         *editor_key_handle().lock().unwrap() = true;
     }
@@ -89,7 +93,9 @@ async fn prev_cache_char(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区下一字符", key = (VkRigelA, VkRight))]
-async fn next_cache_char(context: Arc<Context>) {
+async fn next_cache_char(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     {
         *editor_key_handle().lock().unwrap() = true;
     }
@@ -103,7 +109,9 @@ async fn next_cache_char(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "解释缓冲区当前字符", key = (VkRigelA, VkUp))]
-async fn trans_cache_char(context: Arc<Context>) {
+async fn trans_cache_char(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     {
         *editor_key_handle().lock().unwrap() = true;
     }
@@ -119,7 +127,9 @@ async fn trans_cache_char(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区当前字符组词", key = (VkRigelA, VkDown))]
-async fn make_word_cache_char(context: Arc<Context>) {
+async fn make_word_cache_char(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     {
         *editor_key_handle().lock().unwrap() = true;
     }
@@ -132,14 +142,17 @@ async fn make_word_cache_char(context: Arc<Context>) {
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "拷贝缓冲区", key = (VkRigelA, VkC))]
-async fn cache_to_clipboard(context: Arc<Context>) {
+async fn cache_to_clipboard(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
+
     let cache = context.performer.get_cache();
     let text = cache.get_data();
     set_clipboard_text(text);
     // context.performer.play_sound("boundary.wav").await;
 }
 
-async fn speak_tts_prop(context: Arc<Context>) {
+async fn speak_tts_prop(context: Weak<Context>) {
+    let context = unsafe { &*context.as_ptr() };
     let tts = context.performer.get_tts();
 
     let info = match tts.get_tts_prop_value(None).await {

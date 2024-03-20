@@ -15,24 +15,31 @@ about.btn_ok:
 hotkeys.btn_clear:
   en: Clear (&L)
   zh-CN: 清除 (&L)
+
 hotkeys.btn_close:
   en: Close (&C)
   zh-CN: 关闭 (&C)
+
 hotkeys.btn_set:
   en: Set (&S)
   zh-CN: 设置 (&S)
+
 hotkeys.col_custom_key:
   en: Custom Keys
   zh-CN: 自定义热键
+
 hotkeys.col_init_key:
   en: Init Keys
   zh-CN: 初始热键
+
 hotkeys.col_talent_name:
   en: Talent Name
   zh-CN: 技能名称
+
 hotkeys.lb_custom:
   en: "Custom:"
   zh-CN: "自定义:"
+
 hotkeys.tb_keys_info:
   en: Please input new keys..
   zh-CN: 请输入新的热键..
@@ -83,69 +90,95 @@ popupmenu.setting_item:
 settings.auto_check_update:
   en: Auto Update (&A)
   zh-CN: 自动更新 (&A)
+
 settings.btn_close:
   en: Close (&C)
   zh-CN: 关闭 (&C)
+
 settings.btn_export:
   en: Export Configuration... (&E)
   zh-CN: 导出配置... (&E)
+
 settings.btn_import:
   en: Import Configuration... (&I)
   zh-CN: 导入配置... (&I)
+
 settings.btn_reset:
   en: Restore Default Configuration (&R)
   zh-CN: 恢复默认配置 (&R)
+
 settings.check_update:
   en: Check Update (&C)
   zh-CN: 检查更新 (&C)
+
 settings.ck_mouse_read:
   en: Read Mouse (&R)
   zh-CN: 朗读鼠标 (&R)
+
 settings.export_title:
   en: "Please select the folder to export the configuration file:"
   zh-CN: "请选择需要导出的文件夹:"
+
 settings.import_title:
   en: "Please select the file to import the configuration:"
   zh-CN: "请选择需要导入的文件:"
+
 settings.lang:
   en: Language(Need Restart) (&L)
   zh-CN: 语言(重启生效) (&L)
+
 settings.lang_en_item:
   en: English
   zh-CN: English
+
 settings.lang_zh_item:
   en: 中文
   zh-CN: 中文
+
+settings.lang_follow_system_item:
+  en: Follow operation system
+  zh-CN: 跟随系统
+
 settings.lb_pitch:
   en: Pitch (&P)
   zh-CN: 朗读语调 (&P)
+
 settings.lb_role:
   en: Role (&R)
   zh-CN: 朗读角色 (&R)
+
 settings.lb_speed:
   en: Speed (&S)
   zh-CN: 朗读语速 (&E)
+
 settings.lb_volume:
   en: Volume (&O)
   zh-CN: 朗读音量 (&O)
+
 settings.menu_advanced_item:
   en: Advanced
   zh-CN: 高级设置
+
 settings.menu_general_item:
   en: General
   zh-CN: 常规设置
+
 settings.menu_hotkeys_item:
   en: Hot Keys
   zh-CN: 热键自定义
+
 settings.menu_mouse_item:
   en: Mouse
   zh-CN: 鼠标设置
+
 settings.menu_voice_item:
   en: TTS
   zh-CN: 语音设置
+
 settings.run_on_startup:
   en: Run on Startup (&R)
   zh-CN: 开机启动 (&R)
+
 settings.title:
   en: RigelA - Settings
   zh-CN: RigelA - 设置
@@ -153,12 +186,15 @@ settings.title:
 tray.exit_item:
   en: Exit (&X)
   zh-CN: 退出 (&X)
+
 tray.help_item:
   en: Help (&H)
   zh-CN: 帮助 (&H)
+
 tray.setting_item:
   en: Settings (&S)
   zh-CN: 设置 (&S)
+
 tray.tip:
   en: RigelA
   zh-CN: RigelA
@@ -188,70 +224,93 @@ welcome.btn_close:
   zh-CN: 关闭 (&C)
 
 
-cmd.msg_auto_check_off:
+command.msg_auto_check_off:
   en: Turn off auto update
-  zh-CN: 已关闭自动更新!
-cmd.msg_auto_check_on:
+  zh-CN: 已关闭自动更新！
+
+command.msg_auto_check_on:
   en: Turn on auto update
   zh-CN: 已开启自动更新！
-cmd.msg_auto_start_off:
+
+command.msg_auto_start_off:
   en: Turn off auto start
   zh-CN: 已关闭开机自动启动！
-cmd.msg_auto_start_on:
+
+command.msg_auto_start_on:
   en: Turn on auto start
   zh-CN: 已开启开机自动启动！
-cmd.msg_confirm_title:
+
+command.msg_confirm_title:
   en: Confirm
   zh-CN: 确认
-cmd.msg_export_success:
+
+command.msg_export_success:
   en: Export success!
-  zh-CN: 导出成功!
-cmd.msg_import_success:
+  zh-CN: 导出成功！
+
+command.msg_import_success:
   en: Import success!
-  zh-CN: 导入成功!
-cmd.msg_mind_title:
+  zh-CN: 导入成功！
+
+command.msg_mind_title:
   en: Note
   zh-CN: 提示
-cmd.msg_mouse_read_off:
+
+command.msg_mouse_read_off:
   en: Mouse Reading already off
   zh-CN: 已关闭鼠标朗读
-cmd.msg_mouse_read_on:
+
+command.msg_mouse_read_on:
   en: Mouse Reading already on
   zh-CN: 已开启鼠标朗读
-cmd.msg_newest_version:
+
+command.msg_newest_version:
   en: You are using the newest version!
   zh-CN: 当前版本已是最新版本！
-cmd.msg_no_updater:
+
+command.msg_no_updater:
   en: No need to update!
   zh-CN: 您已经更新到最新版！
-cmd.msg_reset_confirm:
+
+command.msg_reset_confirm:
   en: Would you like to restore all settings to default?
-  zh-CN: 您确定要恢复所有的设置到默认配置吗?
-cmd.msg_reset_success:
+  zh-CN: 您确定要恢复所有的设置到默认配置吗？
+
+command.msg_reset_success:
   en: Restore success!
-  zh-CN: 恢复完成!
-cmd.msg_switch_to_en:
-  en: Switch to English！
+  zh-CN: 恢复完成！
+
+command.msg_switch_to_en:
+  en: Switch to English!
   zh-CN: Switch to English！
-cmd.msg_switch_to_zh:
+
+command.msg_switch_to_zh:
   en: 已切换为中文！
   zh-CN: 已切换为中文！
-cmd.msg_thanks:
+
+command.msg_switch_to_follow_system:
+  en: Switch to follow system!
+  zh-CN: 已切换为跟随系统！
+
+command.msg_thanks:
   en: Thanks for your support!
   zh-CN: 感谢支持！
-cmd.tts_pitch:
+
+command.tts_pitch:
   en: "Pitch: %{value}"
   zh-CN: "音调: %{value}"
-cmd.tts_role:
+
+command.tts_role:
   en: "ole: %{value}"
   zh-CN: "角色: %{value}"
-cmd.tts_speed:
+
+command.tts_speed:
   en: "Speed: %{value}"
   zh-CN: "语速: %{value}"
-cmd.tts_volume:
+
+command.tts_volume:
   en: "Volume: %{value}"
   zh-CN: "音量: %{value}"
-
 
 command.program_name:
   en: RigelA Screen Reader

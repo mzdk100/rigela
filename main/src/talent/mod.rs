@@ -39,7 +39,10 @@ use crate::{
 use async_trait::async_trait;
 use std::{
     fmt::{Debug, Formatter},
-    sync::Arc,
+    sync::{
+        Arc,
+        Weak,
+    },
 };
 
 /**
@@ -67,7 +70,7 @@ pub(crate) trait Talented {
      * 执行能力的入口方法。
      * `context` 框架的上下文环境。
      * */
-    async fn perform(&self, context: Arc<Context>);
+    async fn perform(&self, context: Weak<Context>);
 }
 
 /// 能力提供者，包含所有能力对象列表

@@ -19,7 +19,7 @@ use crate::{
 };
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex, OnceLock, RwLock},
+    sync::{Arc, Mutex, OnceLock, RwLock, Weak},
 };
 use win_wrap::{
     common::LRESULT,
@@ -32,7 +32,7 @@ use win_wrap::{
 };
 
 /// 设置键盘钩子
-pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
+pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
     let context = context.clone();
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
@@ -55,7 +55,9 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
         // 调用已在指挥器注册过的回调函数
-        let fns = context.commander.get_key_callback_fns();
+        let fns = unsafe { &*context.as_ptr() }
+            .commander
+            .get_key_callback_fns();
         for (keys, callback) in fns.iter() {
             if keys.contains(&key) {
                 callback(key, pressed);
@@ -81,7 +83,9 @@ pub(crate) fn set_keyboard_hook(context: Arc<Context>, talents: Arc<Vec<Talent>>
                 // 所有键按下都把大写锁定键的状态切换关闭
                 *ignore_capital_key.lock().unwrap() = true;
                 // 保存最后按下的键
-                context.commander.set_last_pressed_key(&key);
+                unsafe { &*context.as_ptr() }
+                    .commander
+                    .set_last_pressed_key(&key);
 
                 // 执行能力操作
                 for i in talents.iter() {
@@ -158,13 +162,19 @@ fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
     })
 }
 
-// 执行能力项的操作
-fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
+/**
+ * 执行能力项的操作
+ * `context` 读屏的上下文环境。
+ * `talent` 一个能力对象。
+ * */
+fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
     let ctx = context.clone();
     let id = talent.get_id();
-    context.main_handler.spawn(async move {
-        talent.perform(ctx.clone()).await;
-    });
+    unsafe { &*context.as_ptr() }
+        .main_handler
+        .spawn(async move {
+            talent.perform(ctx.clone()).await;
+        });
     if id == "stop_tts_output" {
         // 打断语音的能力不需要拦截键盘事件
         return LRESULT(0);
@@ -173,7 +183,9 @@ fn execute(context: Arc<Context>, talent: Talent) -> LRESULT {
 }
 
 // 处理大小写锁定键
-fn capital_handle(context: Arc<Context>, state: bool, hook_toggle: &Mutex<bool>) {
+fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &Mutex<bool>) {
+    let context = unsafe { &*context.as_ptr() };
+
     {
         *hook_toggle.lock().unwrap() = true;
     }
@@ -195,7 +207,7 @@ fn get_old_point() -> &'static Mutex<(i32, i32)> {
 }
 
 /// 设置鼠标钩子
-pub(crate) fn set_mouse_hook(context: Arc<Context>) -> WindowsHook {
+pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
     let context = context.clone();
 
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {

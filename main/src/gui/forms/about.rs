@@ -15,11 +15,11 @@ use crate::{bring_window_front, context::Context};
 use nwd::NwgUi;
 use nwg::{EventData, NoticeSender};
 use rigela_macros::GuiFormImpl;
-use std::sync::{Arc, OnceLock};
+use std::sync::{OnceLock, Weak};
 
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct AboutForm {
-    context: OnceLock<Arc<Context>>,
+    context: OnceLock<Weak<Context>>,
 
     #[nwg_control(title: & t ! ("about.title"), size: (320, 240), position: (300, 300), flags: "WINDOW|VISIBLE")]
     #[nwg_events(OnWindowClose: [AboutForm::on_exit], OnInit: [AboutForm::on_init])]
@@ -28,12 +28,12 @@ pub struct AboutForm {
     #[nwg_layout(parent: window, spacing: 5)]
     layout: nwg::GridLayout,
 
-    #[nwg_control(text: & t !("about.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
+    #[nwg_control(text: & t ! ("about.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [AboutForm::on_key_press(SELF, EVT_DATA)])]
     text_box: nwg::TextBox,
 
-    #[nwg_control(text: &t!("about.btn_ok"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
+    #[nwg_control(text: & t ! ("about.btn_ok"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 4, col: 2, col_span: 2)]
     #[nwg_events(OnButtonClick: [AboutForm::on_btn_ok])]
     btn_ok: nwg::Button,

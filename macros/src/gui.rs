@@ -21,7 +21,7 @@ pub fn parse_gui(input: TokenStream) -> TokenStream {
 
     quote! {
         impl crate::gui::GuiForm for #name {
-            fn set_context(&self, context: Arc<Context>) {
+            fn set_context(&self, context: Weak<Context>) {
                 self.context.set(context.clone()).unwrap();
             }
 

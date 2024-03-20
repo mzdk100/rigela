@@ -12,10 +12,7 @@
  */
 
 use crate::{
-    configs::{
-        general::Lang,
-        config_manager::ConfigManager,
-    },
+    configs::config_manager::ConfigManager,
     browser::form_browser::FormBrowser,
     commander::Commander,
     event_core,
@@ -153,27 +150,23 @@ impl Context {
     /**
      * 把上下文对象应用于每一个组件。
      * */
-    pub(crate) fn apply(&self) {
-        let ctx = Arc::new(self.clone());
-
+    pub(crate) fn apply(self: &Arc<Self>) {
+        let ctx = Arc::downgrade(self);
         // 初始化命令管理器
         self.commander.apply(ctx.clone());
 
         // 加载配置文件
-        self.config_manager.init();
-        // 设置语言
-        let lang = match self.config_manager.get_config().general_config.lang.clone() {
-            Lang::Zh => "zh-CN",
-            Lang::En => "en",
-        };
-        rust_i18n::set_locale(lang);
+        self.config_manager.apply();
 
         // 启动表演者
         let performer = self.performer.clone();
         self.work_runtime.spawn(async move {
-            performer.apply(Arc::downgrade(&ctx)).await;
+            performer.apply(ctx).await;
             info!("The performer is ready.");
         });
+
+        // 初始化GUI窗口界面
+        self.gui_provider.apply(Arc::downgrade(self));
     }
 
     /**
