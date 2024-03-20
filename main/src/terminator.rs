@@ -17,27 +17,30 @@ use std::{
     time::Duration,
 };
 use tokio::{
-    sync::{
-        Mutex,
-        RwLock,
-    },
+    sync::{Mutex, RwLock},
     time::sleep,
 };
-use win_wrap::message::{change_window_message_filter, MSGFLT_ADD, pump_waiting_messages, WM_COPYDATA, WM_USER};
+use win_wrap::message::{
+    change_window_message_filter, pump_waiting_messages, MSGFLT_ADD, WM_COPYDATA, WM_USER,
+};
+
+type CallbackFn = dyn Fn() + Sync + Send + 'static;
 
 #[derive(Clone)]
-pub(crate) struct Terminator(
-    Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>,
-    Arc<RwLock<bool>>,
-);
+pub(crate) struct Terminator {
+    listeners: Arc<Mutex<Vec<Box<CallbackFn>>>>,
+    quit: Arc<RwLock<bool>>,
+}
 
 impl Terminator {
     /**
      * 创建终结者对象，可以异步等待退出信号。
      * */
     pub(crate) fn new() -> Self {
-        let listeners = Arc::new(Mutex::new(vec![]));
-        Self(listeners, RwLock::new(false).into())
+        Self {
+            listeners: Default::default(),
+            quit: RwLock::new(false).into(),
+        }
     }
 
     /**
@@ -45,14 +48,14 @@ impl Terminator {
      * `func` 一个监听函数。
      * */
     pub(crate) async fn add_exiting_listener(&self, func: impl Fn() + Sync + Send + 'static) {
-        self.0.lock().await.push(Box::new(func))
+        self.listeners.lock().await.push(Box::new(func))
     }
 
     /**
      * 发送退出信号。
      * */
     pub(crate) async fn exit(&self) {
-        *self.1.write().await = true;
+        *self.quit.write().await = true;
     }
 
     pub(crate) async fn wait(&self) {
@@ -65,14 +68,13 @@ impl Terminator {
         // 异步的线程循环
         loop {
             pump_waiting_messages();
-            let lock = self.1.read().await;
-            if *lock {
+            let quit = { self.quit.read().await.clone() };
+            if quit {
                 break;
             }
-            drop(lock);
-            sleep(Duration::from_millis(10)).await;
+            sleep(Duration::from_millis(100)).await;
         }
-        let lock = self.0.lock().await;
+        let lock = self.listeners.lock().await;
         lock.iter().for_each(|f| f());
     }
 }

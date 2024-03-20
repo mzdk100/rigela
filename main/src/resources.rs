@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use log::error;
 use rigela_resources::clone_resource;
 use rigela_utils::{
     fs::{get_file_modified_duration, get_program_directory},
@@ -18,6 +19,8 @@ use rigela_utils::{
 };
 use std::{io::Error, path::PathBuf};
 use tokio::fs::File;
+
+const PATH_NAME: &str = "resources";
 
 /// 资源提供者
 #[derive(Debug)]
@@ -30,9 +33,11 @@ impl ResourceProvider {
      * 创建一个资源读取器。
      * */
     pub(crate) fn new() -> Self {
-        let root_dir = get_program_directory().join("resources");
+        let root_dir = get_program_directory().join(PATH_NAME);
         if !root_dir.exists() {
-            std::fs::create_dir_all(&root_dir).unwrap();
+            if std::fs::create_dir_all(&root_dir).is_err() {
+                error!("创建资源目录失败");
+            }
         }
         Self { root_dir }
     }
@@ -43,11 +48,13 @@ impl ResourceProvider {
      * */
     pub(crate) async fn open(&self, resource_name: &str) -> Result<File, Error> {
         let path = self.root_dir.join(resource_name);
+
         if get_file_modified_duration(&path).await > 3600 * 6 {
             // 如果文件修改时间超出6个小时才重新克隆文件，加快启动速度
             let url = format!("{}/{}", SERVER_HOME_URI, resource_name);
             return clone_resource(url, &path).await;
         }
+
         File::open(&path).await
     }
 

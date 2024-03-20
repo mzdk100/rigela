@@ -37,7 +37,7 @@ use std::{
     fs::remove_file,
     path::{Path, PathBuf},
     process::Command,
-    sync::Weak,
+    sync::Arc,
 };
 use win_wrap::{
     common::{message_box, HWND, MB_OK},
@@ -45,18 +45,16 @@ use win_wrap::{
 };
 
 /// 退出程序。
-pub(crate) fn exit_cmd(context: Weak<Context>) {
+pub(crate) fn exit_cmd(context: Arc<Context>) {
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            let talent = unsafe { &*ctx.as_ptr() }.talent_provider.get_exit_talent();
-            talent.perform(ctx.clone()).await;
-        });
+    context.main_handler.spawn(async move {
+        let talent = ctx.talent_provider.get_exit_talent();
+        talent.perform(ctx.clone()).await;
+    });
 }
 
 /// 打开帮助文档。
-pub(crate) fn help_cmd(_context: Weak<Context>) {
+pub(crate) fn help_cmd(_context: Arc<Context>) {
     let help_path = get_program_directory().join(HELP_DIR);
     Command::new("notepad")
         .arg(help_path)
@@ -65,101 +63,93 @@ pub(crate) fn help_cmd(_context: Weak<Context>) {
 }
 
 /// 打开设置窗口。
-pub(crate) fn settings_cmd(context: Weak<Context>) {
-    let context = unsafe { &*context.as_ptr() };
-
+pub(crate) fn settings_cmd(context: Arc<Context>) {
     context.gui_provider.show_settings_form();
 }
 
 /// 检查更新。
 #[allow(unused)]
-pub(crate) fn check_update_cmd(context: Weak<Context>, auto: bool) {
+pub(crate) fn check_update_cmd(context: Arc<Context>, auto: bool) {
     // {
     //     #[cfg(debug_assertions)]
     //     return;
     // }
 
-    unsafe { &*context.as_ptr() }
-        .work_runtime
-        .spawn(async move {
-            match (auto, check_update().await) {
-                (true, UpdateState::None) => {
-                    // 如果是自动检查更新，且检查失败，则不做任何操作
-                    return;
-                }
-                (false, UpdateState::None) => {
-                    // 手动检查, 未检测到更新需要弹窗提示
-                    message_box(
-                        HWND::default(),
-                        &t!("command.msg_newest_version"),
-                        &t!("command.msg_mind_title"),
-                        MB_OK,
-                    );
-                    return;
-                }
-                (_, UpdateState::Updated) => {
-                    message_box(
-                        HWND::default(),
-                        &t!("command.msg_newest_version"),
-                        &t!("command.msg_mind_title"),
-                        MB_OK,
-                    );
-                    return;
-                }
-                _ => {}
-            };
-
-            // 启动更新器
-            let child = match confirm_update_exists().await {
-                Ok(_) => Command::new("cmd.exe")
-                    // 需要使用cmd.exe辅助启动，使用start参数不等待，否则当更新器尝试kill主进程时，更新器自己也会被kill
-                    .arg("/c")
-                    .arg("start")
-                    .arg(get_program_directory().join("libs/update.exe"))
-                    .arg(current_exe().unwrap().to_str().unwrap())
-                    .spawn(),
-                Err(_) => {
-                    message_box(
-                        HWND::default(),
-                        &t!("command.msg_no_updater"),
-                        &t!("command.msg_mind_title"),
-                        MB_OK,
-                    );
-                    return;
-                }
-            };
-            if let Err(e) = child {
-                error!("Failed to start update.exe. {}", e);
+    context.work_runtime.spawn(async move {
+        match (auto, check_update().await) {
+            (true, UpdateState::None) => {
+                // 如果是自动检查更新，且检查失败，则不做任何操作
+                return;
             }
-        });
+            (false, UpdateState::None) => {
+                // 手动检查, 未检测到更新需要弹窗提示
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_newest_version"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
+                return;
+            }
+            (_, UpdateState::Updated) => {
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_newest_version"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
+                return;
+            }
+            _ => {}
+        };
+
+        // 启动更新器
+        let child = match confirm_update_exists().await {
+            Ok(_) => Command::new("cmd.exe")
+                // 需要使用cmd.exe辅助启动，使用start参数不等待，否则当更新器尝试kill主进程时，更新器自己也会被kill
+                .arg("/c")
+                .arg("start")
+                .arg(get_program_directory().join("libs/update.exe"))
+                .arg(current_exe().unwrap().to_str().unwrap())
+                .spawn(),
+            Err(_) => {
+                message_box(
+                    HWND::default(),
+                    &t!("cmd.msg_no_updater"),
+                    &t!("cmd.msg_mind_title"),
+                    MB_OK,
+                );
+                return;
+            }
+        };
+        if let Err(e) = child {
+            error!("Failed to start update.exe. {}", e);
+        }
+    });
 }
 
 /// 打开自定义热键窗口。
-pub(crate) fn custom_hotkeys_cmd(context: Weak<Context>) {
-    unsafe { &*context.as_ptr() }
-        .gui_provider
-        .show_hotkeys_form();
+pub(crate) fn custom_hotkeys_cmd(context: Arc<Context>) {
+    context.gui_provider.show_hotkeys_form();
 }
 
 /// 打开欢迎界面。
-pub(crate) fn welcome_form_cmd(context: Weak<Context>) {
-    unsafe { &*context.as_ptr() }
-        .gui_provider
-        .show_welcome_form();
+pub(crate) fn welcome_form_cmd(context: Arc<Context>) {
+    context.gui_provider.show_welcome_form();
 }
 
 /// 打开捐赠界面。
-pub(crate) fn donate_cmd(_context: Weak<Context>) {
-    message_box(HWND::default(), &t!("command.msg_thanks"), "RigelA", MB_OK);
+pub(crate) fn donate_cmd(_context: Arc<Context>) {
+    message_box(HWND::default(), &t!("cmd.msg_thanks"), "RigelA", MB_OK);
 }
 
 /// 打开关于窗口
-pub(crate) fn about_form_cmd(context: Weak<Context>) {
-    unsafe { &*context.as_ptr() }.gui_provider.show_about_form();
+pub(crate) fn about_form_cmd(context: Arc<Context>) {
+    context.gui_provider.show_about_form();
 }
 
 /// 访问开源官网
-pub(crate) fn visit_host_website_cmd(_context: Weak<Context>) {
+pub(crate) fn visit_host_website_cmd(_context: Arc<Context>) {
     const URL: &str = "https://github.com/mzdk100/rigela";
 
     Command::new("cmd")
@@ -169,218 +159,196 @@ pub(crate) fn visit_host_website_cmd(_context: Weak<Context>) {
 }
 
 /// 设置开机自动启动
-pub(crate) fn set_auto_start_cmd(context: Weak<Context>, toggle: bool) {
+pub(crate) fn set_auto_start_cmd(context: Arc<Context>, toggle: bool) {
     if set_startup_registry(toggle).is_err() {
         error!("registry operation failed! ");
     }
     save_run_on_startup(context.clone(), toggle);
 
     let msg = if toggle {
-        t!("command.msg_auto_start_on").to_string()
+        t!("cmd.msg_auto_start_on").to_string()
     } else {
-        t!("command.msg_auto_start_off").to_string()
+        t!("cmd.msg_auto_start_off").to_string()
     };
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            pf.speak(&msg).await;
-        });
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(&msg).await;
+    });
 }
 
 /// 设置自动检测更新
-pub(crate) fn set_auto_check_update_cmd(context: Weak<Context>, toggle: bool) {
+pub(crate) fn set_auto_check_update_cmd(context: Arc<Context>, toggle: bool) {
     save_auto_check_update(context.clone(), toggle);
 
     let msg = if toggle {
-        t!("command.msg_auto_check_on").to_string()
+        t!("cmd.msg_auto_check_on").to_string()
     } else {
-        t!("command.msg_auto_check_off").to_string()
+        t!("cmd.msg_auto_check_off").to_string()
     };
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            pf.speak(&msg).await;
-        });
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(&msg).await;
+    });
 }
 
 /// 设置语言
-pub(crate) fn set_lang_cmd(context: Weak<Context>, index: usize) {
+pub(crate) fn set_lang_cmd(context: Arc<Context>, index: usize) {
+    // Todo
+
     let lang = match index {
         1 => Lang::En,
-        2 => Lang::Zh,
-        _ => Lang::FollowSystem,
+        _ => Lang::Zh,
     };
     save_lang(context.clone(), &lang);
 
-    let msg = match lang {
-        Lang::Zh => t!("command.msg_switch_to_zh"),
-        Lang::En => t!("command.msg_switch_to_en"),
-        _ => t!("command.msg_switch_to_follow_system"),
-    }.to_string();
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            pf.speak(&msg).await;
-        });
+    let msg = if lang == Lang::Zh {
+        t!("cmd.msg_switch_to_zh").to_string()
+    } else {
+        t!("cmd.msg_switch_to_en").to_string()
+    };
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        pf.speak(&msg).await;
+    });
 }
 
 /// 设置语音角色
-pub(crate) fn set_voice_cmd(context: Weak<Context>, engine: String, name: String) {
+pub(crate) fn set_voice_cmd(context: Arc<Context>, engine: String, name: String) {
     let ctx = context.clone();
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts().clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            let info = tts
-                .get_all_voiceinfo()
-                .await
-                .iter()
-                .find(|v| v.name == name && v.engine == engine)
-                .unwrap()
-                .clone();
+    let tts = context.performer.get_tts().clone();
+    context.main_handler.spawn(async move {
+        let info = tts
+            .get_all_voiceinfo()
+            .await
+            .iter()
+            .find(|v| v.name == name && v.engine == engine)
+            .unwrap()
+            .clone();
 
-            let mut root = unsafe { &*ctx.as_ptr() }.config_manager.get_config();
-            let cfg = TtsConfig {
-                voice: (info.engine, info.id),
-                ..root.tts_config
-            };
-            root.tts_config = cfg.clone();
-            unsafe { &*ctx.as_ptr() }.config_manager.set_config(&root);
-            tts.apply_config(&cfg.clone()).await;
-            unsafe { &*ctx.as_ptr() }
-                .performer
-                .speak(&t!("command.tts_role", value = info.name))
-                .await;
-        });
+        let mut root = ctx.config_manager.get_config();
+        let cfg = TtsConfig {
+            voice: (info.engine, info.id),
+            ..root.tts_config
+        };
+        root.tts_config = cfg.clone();
+        ctx.config_manager.set_config(&root);
+        tts.apply_config(&cfg.clone()).await;
+        ctx.performer
+            .speak(&t!("cmd.tts_role", value = info.name))
+            .await;
+    });
 }
 
 /// 设置语音速度
-pub(crate) fn set_speed_cmd(context: Weak<Context>, index: usize) {
+pub(crate) fn set_speed_cmd(context: Arc<Context>, index: usize) {
     let speed = 100 - index as i32;
 
-    let mut root = unsafe { &*context.as_ptr() }.config_manager.get_config();
+    let mut root = context.config_manager.get_config();
     let cfg = TtsConfig {
         speed,
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    unsafe { &*context.as_ptr() }
-        .config_manager
-        .set_config(&root);
+    context.config_manager.set_config(&root);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            tts.apply_config(&cfg.clone()).await;
-            pf.speak(&t!("command.tts_speed", value = speed)).await;
-        });
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(&t!("cmd.tts_speed", value = speed)).await;
+    });
 }
 
 /// 设置语音音调
-pub(crate) fn set_pitch_cmd(context: Weak<Context>, index: usize) {
+pub(crate) fn set_pitch_cmd(context: Arc<Context>, index: usize) {
     let pitch = 100 - index as i32;
 
-    let mut root = unsafe { &*context.as_ptr() }.config_manager.get_config();
+    let mut root = context.config_manager.get_config();
     let cfg = TtsConfig {
         pitch,
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    unsafe { &*context.as_ptr() }
-        .config_manager
-        .set_config(&root);
+    context.config_manager.set_config(&root);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            tts.apply_config(&cfg.clone()).await;
-            pf.speak(&t!("command.tts_pitch", value = pitch)).await;
-        });
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(&t!("cmd.tts_pitch", value = pitch)).await;
+    });
 }
 
 /// 设置语音音量
-pub(crate) fn set_volume_cmd(context: Weak<Context>, index: usize) {
+pub(crate) fn set_volume_cmd(context: Arc<Context>, index: usize) {
     let volume = 100 - index as i32;
 
-    let mut root = unsafe { &*context.as_ptr() }.config_manager.get_config();
+    let mut root = context.config_manager.get_config();
     let cfg = TtsConfig {
         volume,
         ..root.tts_config
     };
     root.tts_config = cfg.clone();
-    unsafe { &*context.as_ptr() }
-        .config_manager
-        .set_config(&root);
+    context.config_manager.set_config(&root);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            tts.apply_config(&cfg.clone()).await;
-            pf.speak(&t!("command.tts_volume", value = volume)).await;
-        });
+    let tts = context.performer.get_tts();
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        tts.apply_config(&cfg.clone()).await;
+        pf.speak(&t!("cmd.tts_volume", value = volume)).await;
+    });
 }
 
 /// 设置鼠标朗读
-pub(crate) fn set_mouse_read_cmd(context: Weak<Context>, toggle: bool) {
+pub(crate) fn set_mouse_read_cmd(context: Arc<Context>, toggle: bool) {
     apply_mouse_config(context.clone(), toggle);
 
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            let state = match toggle {
-                true => t!("command.msg_mouse_read_on"),
-                false => t!("command.msg_mouse_read_off"),
-            };
-            pf.speak(&state).await;
-        });
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        let state = match toggle {
+            true => t!("cmd.msg_mouse_read_on"),
+            false => t!("cmd.msg_mouse_read_off"),
+        };
+        pf.speak(&state).await;
+    });
 }
 
 /// 导出配置
-pub(crate) fn export_config_cmd(_context: Weak<Context>, path: PathBuf) {
+pub(crate) fn export_config_cmd(_context: Arc<Context>, path: PathBuf) {
     if backup_data(&path).is_err() {
         error!("备份数据失败");
     }
 
     message_box(
         HWND::default(),
-        &t!("command.msg_export_success"),
-        &t!("command.msg_mind_title"),
+        &t!("cmd.msg_export_success"),
+        &t!("cmd.msg_mind_title"),
         MB_OK,
     );
 }
 
 /// 导入配置
-pub(crate) fn import_config_cmd(context: Weak<Context>, path: PathBuf) {
+pub(crate) fn import_config_cmd(context: Arc<Context>, path: PathBuf) {
     if restore_data(&path).is_err() {
         error!("恢复数据失败");
     }
 
-    unsafe { &*context.as_ptr() }.config_manager.apply();
+    context.config_manager.init();
     reapply_config(context.clone());
 
     message_box(
         HWND::default(),
-        &t!("command.msg_import_success"),
-        &t!("command.msg_mind_title"),
+        &t!("cmd.msg_import_success"),
+        &t!("cmd.msg_mind_title"),
         MB_OK,
     );
 }
 
 /// 还原默认配置
-pub(crate) fn reset_config_cmd(context: Weak<Context>) {
+pub(crate) fn reset_config_cmd(context: Arc<Context>) {
     let msg_params = MessageParams {
-        title: &t!("command.msg_confirm_title"),
-        content: &t!("command.msg_reset_confirm"),
+        title: &t!("cmd.msg_confirm_title"),
+        content: &t!("cmd.msg_reset_confirm"),
         buttons: nwg::MessageButtons::OkCancel,
         icons: nwg::MessageIcons::Question,
     };
@@ -388,40 +356,36 @@ pub(crate) fn reset_config_cmd(context: Weak<Context>) {
         return;
     }
 
-    unsafe { &*context.as_ptr() }
-        .config_manager
-        .set_config(&ConfigRoot::default());
+    context.config_manager.set_config(&ConfigRoot::default());
     reapply_config(context.clone());
 }
 
 // 重新应用配置
-fn reapply_config(context: Weak<Context>) {
-    let config = unsafe { &*context.as_ptr() }.config_manager.get_config();
+fn reapply_config(context: Arc<Context>) {
+    let config = context.config_manager.get_config();
 
     let enable = config.general_config.run_on_startup.clone();
     if set_startup_registry(enable).is_err() {
         error!("关闭开机自动启动失败");
     }
 
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
+    let pf = context.performer.clone();
     let ctx = context.clone();
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
+    let tts = context.performer.get_tts();
     let tts_cfg = config.tts_config.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            // 应用配置到TTS
-            tts.apply_config(&tts_cfg.clone()).await;
+    context.main_handler.spawn(async move {
+        // 应用配置到TTS
+        tts.apply_config(&tts_cfg.clone()).await;
 
-            // 重新显示设置界面，更新界面上的状态值
-            unsafe { &*ctx.as_ptr() }.gui_provider.show_settings_form();
+        // 重新显示设置界面，更新界面上的状态值
+        ctx.gui_provider.show_settings_form();
 
-            pf.speak(&t!("command.msg_reset_success")).await;
-        });
+        pf.speak(&t!("cmd.msg_reset_success")).await;
+    });
 }
 
 /// 添加桌面快捷方式
-pub(crate) fn add_desktop_shortcut_cmd(context: Weak<Context>, toggle: bool, keys: &[Keys]) {
+pub(crate) fn add_desktop_shortcut_cmd(context: Arc<Context>, toggle: bool, keys: &[Keys]) {
     let path = get_known_folder_path(&FOLDERID_Desktop, KF_FLAG_DEFAULT, None).unwrap();
     let path = Path::new(&path).join(t!("command.program_name").to_string() + ".lnk");
 
@@ -434,12 +398,10 @@ pub(crate) fn add_desktop_shortcut_cmd(context: Weak<Context>, toggle: bool, key
 
     save_is_display_shortcut(context.clone(), toggle);
 
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }
-        .main_handler
-        .spawn(async move {
-            let state = if toggle { "添加" } else { "删除" };
-            let info = format!("已{}桌面快捷方式", state);
-            pf.speak(&info).await;
-        });
+    let pf = context.performer.clone();
+    context.main_handler.spawn(async move {
+        let state = if toggle { "添加" } else { "删除" };
+        let info = format!("已{}桌面快捷方式", state);
+        pf.speak(&info).await;
+    });
 }
