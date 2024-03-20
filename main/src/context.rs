@@ -180,6 +180,9 @@ impl Context {
         self.ia2.remove_all_listeners();
         self.ui_automation.remove_all_event_listeners();
         self.config_manager.save_config();
+
+        // 退出Gui界面
+        self.gui_provider.dispose();
     }
 }
 

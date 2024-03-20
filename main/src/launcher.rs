@@ -113,9 +113,6 @@ impl Launcher {
         self.context.terminator.wait().await;
         self.context.dispose();
 
-        // 退出Gui界面
-        self.context.gui_provider.uninit();
-
         // 播放退出音效
         self.context.performer.play_sound(Single("exit.wav")).await;
 

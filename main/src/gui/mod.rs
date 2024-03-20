@@ -119,7 +119,10 @@ impl GuiProvider {
         self.welcome.get().unwrap().0.notice();
     }
 
-    pub(crate) fn uninit(&self) {
+    /**
+     * 清理GUI占用的资源。
+     * */
+    pub(crate) fn dispose(&self) {
         self.welcome.get().unwrap().1.notice();
         self.tray.get().unwrap().1.notice();
         self.popup_menu.get().unwrap().1.notice();
