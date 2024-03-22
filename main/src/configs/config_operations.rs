@@ -15,121 +15,105 @@ use crate::configs::general::{GeneralConfig, Lang};
 use crate::{commander::keys::Keys, configs::mouse::MouseConfig, context::Context};
 use std::{collections::HashMap, sync::Weak};
 
+macro_rules! get_cfg {
+    ($context:expr) => {
+        unsafe { &*($context.as_ptr()) }.config_manager.get_config()
+    };
+}
+
+macro_rules! set_cfg {
+    ($context:expr, $cfg: expr) => {
+        let context = unsafe { &*($context.as_ptr()) };
+        context.config_manager.set_config(&$cfg);
+    };
+}
+
 // ------  鼠标配置  ------
 
 /// 获取当前的朗读鼠标状态
 pub(crate) fn get_mouse_read_state(context: Weak<Context>) -> bool {
-    let context = unsafe { &*context.as_ptr() };
-
-    context.config_manager.get_config().mouse_config.is_read
+    get_cfg!(context).mouse_config.is_read
 }
 
 /// 设置是否开启朗读鼠标
 pub(crate) fn apply_mouse_config(context: Weak<Context>, is_read: bool) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut root = context.config_manager.get_config();
-    root.mouse_config = MouseConfig { is_read };
-    context.config_manager.set_config(&root);
+    let mut cfg = get_cfg!(context);
+    cfg.mouse_config = MouseConfig { is_read };
+    set_cfg!(context, cfg);
 }
 
 // ------  键盘配置  -------
 
 /// 获取当前的热键配置
 pub(crate) fn get_hotkeys(context: Weak<Context>) -> HashMap<String, Vec<Keys>> {
-    let context = unsafe { &*context.as_ptr() };
-
-    let root = context.config_manager.get_config();
-    root.hotkeys_config.talent_keys.clone()
+    get_cfg!(context).hotkeys_config.talent_keys.clone()
 }
 
 ///  保存热键配置
 pub(crate) fn save_hotkeys(context: Weak<Context>, hotkeys: HashMap<String, Vec<Keys>>) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut config = context.config_manager.get_config();
-    config.hotkeys_config.talent_keys = hotkeys;
-    context.config_manager.set_config(&config);
+    let mut cfg = get_cfg!(context);
+    cfg.hotkeys_config.talent_keys = hotkeys;
+    set_cfg!(context, cfg);
 }
 
 // ------  常规配置  -------
 
 /// 获取是否显示桌面快捷方式
 pub(crate) fn get_is_display_shortcut(context: Weak<Context>) -> bool {
-    let context = unsafe { &*context.as_ptr() };
-
-    let root = context.config_manager.get_config();
-    root.general_config.desktop_shortcut
+    get_cfg!(context).general_config.desktop_shortcut
 }
 
 /// 保存是否显示桌面快捷方式
 pub(crate) fn save_is_display_shortcut(context: Weak<Context>, desktop_shortcut: bool) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut root = context.config_manager.get_config();
-    root.general_config = GeneralConfig {
+    let mut cfg = get_cfg!(context);
+    cfg.general_config = GeneralConfig {
         desktop_shortcut,
-        ..root.general_config
+        ..cfg.general_config
     };
-    context.config_manager.set_config(&root);
+    set_cfg!(context, cfg);
 }
 
 /// 获取是否开机自启
 pub(crate) fn get_run_on_startup(context: Weak<Context>) -> bool {
-    let context = unsafe { &*context.as_ptr() };
-
-    let root = context.config_manager.get_config();
-    root.general_config.run_on_startup
+    get_cfg!(context).general_config.run_on_startup
 }
 
 /// 保存是否开机自启
 pub(crate) fn save_run_on_startup(context: Weak<Context>, run_on_startup: bool) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut root = context.config_manager.get_config();
-    root.general_config = GeneralConfig {
+    let mut cfg = get_cfg!(context);
+    cfg.general_config = GeneralConfig {
         run_on_startup,
-        ..root.general_config
+        ..cfg.general_config
     };
-    context.config_manager.set_config(&root);
+    set_cfg!(context, cfg);
 }
 
 /// 获取是否自动更新
 pub(crate) fn get_auto_check_update(context: Weak<Context>) -> bool {
-    let context = unsafe { &*context.as_ptr() };
-
-    let root = context.config_manager.get_config();
-    root.general_config.auto_check_update
+    get_cfg!(context).general_config.auto_check_update
 }
 
 /// 保存是否自动更新
 pub(crate) fn save_auto_check_update(context: Weak<Context>, auto_check_update: bool) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut root = context.config_manager.get_config();
-    root.general_config = GeneralConfig {
+    let mut cfg = get_cfg!(context);
+    cfg.general_config = GeneralConfig {
         auto_check_update,
-        ..root.general_config
+        ..cfg.general_config
     };
-    context.config_manager.set_config(&root);
+    set_cfg!(context, cfg);
 }
 
 /// 获取当前语言
 pub(crate) fn get_lang(context: Weak<Context>) -> Lang {
-    let context = unsafe { &*context.as_ptr() };
-
-    let root = context.config_manager.get_config();
-    root.general_config.lang
+    get_cfg!(context).general_config.lang
 }
 
 /// 保存当前语言
 pub(crate) fn save_lang(context: Weak<Context>, lang: &Lang) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let mut root = context.config_manager.get_config();
-    root.general_config = GeneralConfig {
+    let mut cfg = get_cfg!(context);
+    cfg.general_config = GeneralConfig {
         lang: lang.clone(),
-        ..root.general_config
+        ..cfg.general_config
     };
-    context.config_manager.set_config(&root);
+    set_cfg!(context, cfg);
 }
