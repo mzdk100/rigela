@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::fmt::Display;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use win_wrap::common::get_user_default_locale_name;
 
 /// 常规配置项
@@ -42,22 +42,23 @@ pub(crate) enum Lang {
     En,
 }
 
-impl Lang {
-    pub(crate) fn to_string(&self) -> String {
+impl Into<String> for Lang {
+    fn into(self) -> String {
         match self {
             Self::Zh => "zh-CN".to_string(),
             Self::En => "en".to_string(),
-            Self::FollowSystem => get_user_default_locale_name()
+            Self::FollowSystem => get_user_default_locale_name(),
         }
     }
 }
 
-impl From<&str> for Lang {
-    fn from(value: &str) -> Self {
+impl<S: AsRef<str>> From<S> for Lang {
+    fn from(value: S) -> Self {
+        let value = value.as_ref();
         match value {
             "zh-CN" => Self::Zh,
             "en" => Self::En,
-            _ => Self::FollowSystem
+            _ => Self::FollowSystem,
         }
     }
 }
