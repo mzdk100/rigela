@@ -80,7 +80,13 @@ pub(crate) async fn check_update() -> UpdateState {
     }
 
     let old_md5: DocsMd5 = match read_file(&md5_file).await {
-        Ok(ref d) => toml::from_str(d).expect("Can't parse docs_md5.toml."),
+        Ok(ref d) => match toml::from_str(d) {
+            Ok(x) => x,
+            Err(_) => {
+                error!("Can't read docs_md5.toml");
+                return UpdateState::None;
+            }
+        },
         Err(e) => {
             error!("Can't read docs_md5.toml. {}", e);
             return UpdateState::None;
@@ -134,29 +140,26 @@ pub(crate) async fn get_newest_docs_md5() -> DocsMd5 {
 /// 保存新的docs_md5
 pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
     let docs_md5_path = get_program_directory().join(DOCS_MD5_FILE);
-    let data = toml::to_string(md5).expect("Can't parse to docs_md5.toml.");
+    let data = toml::to_string(md5).unwrap_or_else(|_| {
+        error!("数据格式错误.");
+        String::new()
+    });
 
     write_file(&docs_md5_path, data.as_bytes())
         .await
-        .expect("write docs_md5.toml error.");
+        .unwrap_or_else(|_| error!("保存md5出错"));
 }
 
 /// 保存最新的文档。
 pub(crate) async fn save_docs(help_or_update_log: bool) {
-    let path = if help_or_update_log {
-        get_program_directory().join(HELP_DIR)
-    } else {
-        get_program_directory().join(UPDATE_LOG_DIR)
-    };
-    let url = if help_or_update_log {
-        HELP_URL
-    } else {
-        UPDATE_LOG_URL
+    let (path, url) = match help_or_update_log {
+        true => (get_program_directory().join(HELP_DIR), HELP_URL),
+        false => (get_program_directory().join(UPDATE_LOG_DIR), UPDATE_LOG_URL),
     };
 
     write_file(&path, parse_html_node(url, "blob-content").await.as_bytes())
         .await
-        .expect("Can't write docs file.");
+        .unwrap_or_else(|_| error!("保存文档出错"));
 }
 
 // 异步获取gitcode文件数据
@@ -270,9 +273,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
-        else {
-            return false;
-        };
+    else {
+        return false;
+    };
     let Some(key) = key.get_code() else {
         return false;
     };
