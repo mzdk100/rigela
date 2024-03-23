@@ -20,6 +20,7 @@ use crate::{
     talent::Talented,
 };
 use keys::Keys;
+use std::time::Duration;
 use std::{
     fmt::{Debug, Formatter},
     sync::{Arc, Mutex, OnceLock, Weak},
@@ -50,6 +51,7 @@ pub(crate) struct Commander {
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
     key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
+    is_double_click: Mutex<(Keys, bool)>,
 }
 
 impl Commander {
@@ -59,10 +61,11 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            keyboard_hook: OnceLock::new(),
-            mouse_hook: OnceLock::new(),
+            keyboard_hook: Default::default(),
+            mouse_hook: Default::default(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
             key_callback_fns: Mutex::new(Vec::new()),
+            is_double_click: Mutex::new((Keys::VkNone, false)),
         }
     }
 
@@ -121,6 +124,38 @@ impl Commander {
 
     pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
         self.key_callback_fns.lock().unwrap().clone()
+    }
+
+    pub(crate) fn is_double_click(context: Weak<Context>, key: &Keys) -> bool {
+        let result = unsafe { &*context.as_ptr() }
+            .commander
+            .get_is_double_click(key);
+
+        if !result {
+            unsafe { &*context.as_ptr() }
+                .commander
+                .set_double_click(key, true);
+
+            let cmd = unsafe { &*context.as_ptr() }.commander.clone();
+            let key = key.clone();
+            unsafe { &*context.as_ptr() }
+                .main_handler
+                .spawn(async move {
+                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    cmd.set_double_click(&key, false);
+                });
+        }
+
+        result
+    }
+
+    pub(crate) fn get_is_double_click(&self, key: &Keys) -> bool {
+        let (k, b) = *self.is_double_click.lock().unwrap();
+        (k == key.clone()) && b
+    }
+
+    pub(crate) fn set_double_click(&self, key: &Keys, double: bool) {
+        *self.is_double_click.lock().unwrap() = (key.clone(), double);
     }
 }
 

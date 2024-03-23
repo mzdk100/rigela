@@ -22,6 +22,8 @@ use chrono::prelude::{DateTime, Local};
 use log::error;
 use rigela_macros::talent;
 
+use crate::commander::{CommandType, Commander};
+use std::ops::ControlFlow::Break;
 use std::{
     sync::{OnceLock, Weak},
     thread,
@@ -50,9 +52,26 @@ impl Speakable for DateTime<Local> {
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
 async fn current_time(context: Weak<Context>) {
-    let context = unsafe { &*context.as_ptr() };
+    use crate::commander;
 
-    context.performer.speak(&Local::now()).await;
+    let cts = self.get_supported_cmd_list();
+    let mut keys = vec![];
+    for ct in cts {
+        if let CommandType::Key(k) = ct {
+            keys.extend(k);
+            break;
+        }
+    }
+    let key = keys.last().unwrap();
+    let double = Commander::is_double_click(context.clone(), key);
+
+    let localtime = Local::now();
+    let msg = match double {
+        true => localtime.format("%Y年%m月%d日").to_string(),
+        false => localtime.format("%H时%M分%S秒").to_string(),
+    };
+
+    unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
 }
 
 impl Speakable for &PdhCounter {
@@ -61,7 +80,7 @@ impl Speakable for &PdhCounter {
             "program.current_cpu_usage",
             value = self.get_value().1.round()
         )
-            .to_string()
+        .to_string()
     }
 }
 
