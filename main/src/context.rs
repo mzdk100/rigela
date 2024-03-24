@@ -12,25 +12,16 @@
  */
 
 use crate::{
-    configs::config_manager::ConfigManager,
-    browser::form_browser::FormBrowser,
-    commander::Commander,
-    event_core,
-    gui::GuiProvider,
-    performer::Performer,
-    resources::ResourceProvider,
-    talent::TalentProvider,
-    tasks::TaskManager,
+    browser::form_browser::FormBrowser, commander::Commander,
+    configs::config_manager::ConfigManager, event_core, gui::GuiProvider, performer::Performer,
+    resources::ResourceProvider, talent::TalentProvider, tasks::TaskManager,
     terminator::Terminator,
 };
-#[cfg(target_arch = "x86_64")]
-use rigela_proxy32::process::Proxy32Process;
-use a11y::{
-    ia2::Ia2,
-    jab::Jab,
-};
+use a11y::{ia2::Ia2, jab::Jab};
 use log::info;
 use peeper::server::PeeperServer;
+#[cfg(target_arch = "x86_64")]
+use rigela_proxy32::process::Proxy32Process;
 use rigela_utils::fs::get_program_directory;
 use std::sync::Arc;
 use tokio::runtime::{Builder, Handle, Runtime};
@@ -101,7 +92,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-            let proxy32process = Proxy32Process::new();
+        let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();

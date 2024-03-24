@@ -115,8 +115,8 @@ impl UiAutomation {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_focus_changed_listener<CB>(&self, func: CB)
-        where
-            CB: Fn(UiAutomationElement) -> () + 'static,
+    where
+        CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationFocusChangedEventHandler =
             OnFocusChangedCallback::new(func, self.0.clone()).into();
@@ -145,7 +145,7 @@ impl UiAutomation {
             self.0
                 .RemoveEventHandlerGroup(element.get_raw(), group.get_raw())
         }
-            .unwrap_or(())
+        .unwrap_or(())
     }
 }
 

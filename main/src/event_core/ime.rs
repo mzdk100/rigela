@@ -12,8 +12,7 @@
  */
 
 use crate::{
-    event_core::editor::editor_key_handle,
-    context::Context,
+    context::Context, event_core::editor::editor_key_handle,
     performer::sound::SoundArgument::Single,
 };
 use peeper::model::CandidateList;
@@ -49,23 +48,25 @@ pub(crate) async fn subscribe_ime_events(context: Arc<Context>) {
         })
         .await;
     let ctx = context.clone();
-    context.peeper_server.add_on_ime_conversion_mode_listener(move |conversion_mode| {
-        // https://learn.microsoft.com/zh-cn/windows/win32/intl/ime-conversion-mode-values
-        let mode = if conversion_mode & IME_CMODE_NATIVE.0 == IME_CMODE_NATIVE.0 {
-            t!("ime.native_input")
-        } else if conversion_mode & IME_CMODE_ALPHANUMERIC.0 == IME_CMODE_ALPHANUMERIC.0 {
-            t!("ime.alpha_numeric_input")
-        } else if conversion_mode & IME_CMODE_FULLSHAPE.0 == IME_CMODE_FULLSHAPE.0 {
-            t!("ime.fullshape_input")
-        } else {
-            return;
-        };
-        let performer = ctx.performer.clone();
+    context
+        .peeper_server
+        .add_on_ime_conversion_mode_listener(move |conversion_mode| {
+            // https://learn.microsoft.com/zh-cn/windows/win32/intl/ime-conversion-mode-values
+            let mode = if conversion_mode & IME_CMODE_NATIVE.0 == IME_CMODE_NATIVE.0 {
+                t!("ime.native_input")
+            } else if conversion_mode & IME_CMODE_ALPHANUMERIC.0 == IME_CMODE_ALPHANUMERIC.0 {
+                t!("ime.alpha_numeric_input")
+            } else if conversion_mode & IME_CMODE_FULLSHAPE.0 == IME_CMODE_FULLSHAPE.0 {
+                t!("ime.fullshape_input")
+            } else {
+                return;
+            };
+            let performer = ctx.performer.clone();
 
-        ctx.main_handler.spawn(async move {
-            performer.speak(&mode).await
-        });
-    }).await;
+            ctx.main_handler
+                .spawn(async move { performer.speak(&mode).await });
+        })
+        .await;
 
     // 订阅微软输入法的候选事件
     let ctx = context.clone();

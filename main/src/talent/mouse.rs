@@ -26,7 +26,10 @@ use win_wrap::input::{click, get_cur_mouse_point, right_click};
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
-    unsafe { &*context.as_ptr() }.performer.speak(&t!("mouse.click")).await;
+    unsafe { &*context.as_ptr() }
+        .performer
+        .speak(&t!("mouse.click"))
+        .await;
 }
 
 //noinspection RsUnresolvedReference
@@ -34,13 +37,20 @@ async fn click(context: Weak<Context>) {
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
-    unsafe { &*context.as_ptr() }.performer.speak(&t!("mouse.right_click")).await;
+    unsafe { &*context.as_ptr() }
+        .performer
+        .speak(&t!("mouse.right_click"))
+        .await;
 }
 
 //noinspection RsUnresolvedReference
 #[talent(doc = "鼠标朗读", key = (VkRigelA, VkM))]
 async fn read_mouse(context: Weak<Context>) {
-    let is_read = !unsafe { &*context.as_ptr() }.config_manager.get_config().mouse_config.is_read;
+    let is_read = !unsafe { &*context.as_ptr() }
+        .config_manager
+        .get_config()
+        .mouse_config
+        .is_read;
     apply_mouse_config(context.clone(), is_read);
     let state = match is_read {
         true => t!("mouse.state_on"),

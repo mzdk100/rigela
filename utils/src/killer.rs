@@ -35,8 +35,8 @@ enum KillSignal {
 }
 
 pub fn listen_to_killing<T>(cb: T)
-    where
-        T: Future + Send + 'static,
+where
+    T: Future + Send + 'static,
 {
     tokio::spawn(async move {
         let mut stream = server_run::<KillSignal>(PIPE_NAME).await;

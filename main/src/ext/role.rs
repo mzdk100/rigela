@@ -85,8 +85,8 @@ impl AccessibleRoleExt for UiAutomationElement {
             ControlType::TreeItem => t!("role.tree_item"),
             ControlType::Window => t!("role.window"),
         }
-            .parse()
-            .unwrap()
+        .parse()
+        .unwrap()
     }
 }
 
@@ -159,8 +159,8 @@ impl AccessibleRoleExt for (AccessibleObject, i32) {
             ROLE_SYSTEM_WINDOW => t!("role.window"),
             _ => t!("role.unknown"),
         }
-            .parse()
-            .unwrap()
+        .parse()
+        .unwrap()
     }
 }
 
@@ -228,7 +228,9 @@ impl<'lib> AccessibleRoleExt for AccessibleContext<'lib> {
             AccessibleRole::Paragraph => t!("role.paragraph"),
             AccessibleRole::Ruler => t!("role.ruler"),
             AccessibleRole::EditBar => t!("role.edit_bar"),
-            AccessibleRole::ProgressMonitor => t!("role.progress_monitor")
-        }.parse().unwrap()
+            AccessibleRole::ProgressMonitor => t!("role.progress_monitor"),
+        }
+        .parse()
+        .unwrap()
     }
 }

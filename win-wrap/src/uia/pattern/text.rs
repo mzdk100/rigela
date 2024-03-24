@@ -214,7 +214,9 @@ impl UiAutomationTextRange {
      * `range` 指向要与此范围进行比较的文本范围。
      * */
     pub fn compare(&self, range: &UiAutomationTextRange) -> bool {
-        unsafe { self.0.Compare(&range.0) }.unwrap_or(false.into()).as_bool()
+        unsafe { self.0.Compare(&range.0) }
+            .unwrap_or(false.into())
+            .as_bool()
     }
 
     /**
@@ -250,7 +252,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap

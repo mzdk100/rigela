@@ -312,9 +312,9 @@ pub struct BassChannelOutputStream {
 impl BassChannelOutputStream {
     fn create(slot: impl FnOnce(HMODULE) -> Option<i32>) -> Self {
         #[cfg(target_arch = "x86_64")]
-            let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-64.dll"));
+        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-64.dll"));
         #[cfg(target_arch = "x86")]
-            let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-32.dll"));
+        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-32.dll"));
         let h_module = match load_library(bass_path.to_str().unwrap()) {
             Ok(h) => h,
             Err(e) => {

@@ -13,20 +13,13 @@
 
 use crate::{
     client::PeeperClient,
-    model::{
-        CandidateList,
-        PeeperData,
-    },
+    model::{CandidateList, PeeperData},
 };
 use win_wrap::{
     common::{HWND, LPARAM, WPARAM},
     input::{
-        imm_get_candidate_list,
-        imm_get_context,
-        imm_release_context,
-        IMN_CHANGECANDIDATE,
-        IMN_SETCONVERSIONMODE,
-        imm_get_conversion_status,
+        imm_get_candidate_list, imm_get_context, imm_get_conversion_status, imm_release_context,
+        IMN_CHANGECANDIDATE, IMN_SETCONVERSIONMODE,
     },
 };
 

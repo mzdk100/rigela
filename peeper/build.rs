@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#[cfg(feature = "dll")]
+use cargo_rigela;
 use std::{
     env,
     fs::create_dir,
     fs::{copy, read_dir},
     path::Path,
 };
-#[cfg(feature = "dll")]
-use cargo_rigela;
 
 fn copy_deps(target: &str) {
     let cargo = env::var("CARGO").unwrap();

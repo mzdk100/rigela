@@ -138,11 +138,13 @@ pub(crate) async fn subscribe_focus_events(context: Arc<Context>) {
 
     // 绑定JAB后代对象的激活事件
     let ctx = context.clone();
-    context.jab.add_on_property_active_descendent_change_listener(move |_, _, new| {
-        let performer = ctx.performer.clone();
+    context
+        .jab
+        .add_on_property_active_descendent_change_listener(move |_, _, new| {
+            let performer = ctx.performer.clone();
 
-        ctx.main_handler.spawn(async move {
-            performer.speak(&new).await;
+            ctx.main_handler.spawn(async move {
+                performer.speak(&new).await;
+            });
         });
-    });
 }

@@ -88,7 +88,7 @@ pub fn create_event(
             ),
         }
     }
-        .expect("Can't create the event.")
+    .expect("Can't create the event.")
 }
 
 /**

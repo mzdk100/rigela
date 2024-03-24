@@ -11,11 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
-use std::path::PathBuf;
 #[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
 use rigela_utils::library::{get_library_path, setup_library};
+#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
+use std::path::PathBuf;
 
 //noinspection RsModuleNaming
 #[cfg(feature = "IAccessible2Lib")]
@@ -49,11 +48,17 @@ pub fn setup() {
     // 释放windowsaccessbridge.dll
     // 二进制提取自https://builds.openlogic.com/downloadJDK/openlogic-openjdk/8u402-b06/openlogic-openjdk-8u402-b06-windows-x32.zip
     #[cfg(all(target_arch = "x86", feature = "JabLib"))]
-    setup_library(JAB_LIB_NAME, include_bytes!("../lib/WindowsAccessBridge-32.dll"));
+    setup_library(
+        JAB_LIB_NAME,
+        include_bytes!("../lib/WindowsAccessBridge-32.dll"),
+    );
 
     // 二进制提取自https://corretto.aws/downloads/resources/17.0.8.7.1/amazon-corretto-17.0.8.7.1-windows-x64-jdk.zip
     #[cfg(all(target_arch = "x86_64", feature = "JabLib"))]
-    setup_library(JAB_LIB_NAME, include_bytes!("../lib/windowsaccessbridge-64.dll"));
+    setup_library(
+        JAB_LIB_NAME,
+        include_bytes!("../lib/windowsaccessbridge-64.dll"),
+    );
 }
 
 /**

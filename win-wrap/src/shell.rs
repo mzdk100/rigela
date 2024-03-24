@@ -272,7 +272,7 @@ impl ShellLink {
                 self.0.SetIDList(std::ptr::null())
             }
         }
-            .unwrap_or(());
+        .unwrap_or(());
         self
     }
 

@@ -51,10 +51,7 @@ mod terminator;
 
 use launcher::Launcher;
 use log::info;
-use rigela_utils::{
-    killer::kill,
-    logger::init_logger,
-};
+use rigela_utils::{killer::kill, logger::init_logger};
 
 #[tokio::main]
 async fn main() {

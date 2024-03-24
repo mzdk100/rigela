@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 use win_wrap::{
     common::{get_foreground_window, Result},
     msaa::object::AccessibleObject,

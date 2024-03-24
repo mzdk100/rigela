@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 #[cfg(target_arch = "x86_64")]
 fn main() {
     use std::env;
@@ -31,7 +30,6 @@ fn main() {
     let is_release = arg_list.contains(&"--release".to_string());
     build_peeper(&cargo, "i686-pc-windows-msvc", is_release);
     build_peeper(&cargo, "x86_64-pc-windows-msvc", is_release);
-
 
     // 下一步是构建32位目标，因为64位主程序需要依赖他
     let args = {
@@ -77,9 +75,28 @@ fn build_peeper(cargo: &str, target: &str, release: bool) {
     use std::process::Command;
 
     let args2 = if release {
-        vec!["rustc", "-p", "peeper", "--release", "--features", "dll", "--target", target, "--crate-type=dylib"]
+        vec![
+            "rustc",
+            "-p",
+            "peeper",
+            "--release",
+            "--features",
+            "dll",
+            "--target",
+            target,
+            "--crate-type=dylib",
+        ]
     } else {
-        vec!["rustc", "-p", "peeper", "--features", "dll", "--target", target, "--crate-type=dylib"]
+        vec![
+            "rustc",
+            "-p",
+            "peeper",
+            "--features",
+            "dll",
+            "--target",
+            target,
+            "--crate-type=dylib",
+        ]
     };
     let status = Command::new(cargo)
         .args(args2)

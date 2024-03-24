@@ -11,14 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use std::sync::Arc;
+use crate::{ext::role::AccessibleRoleExt, performer::Speakable};
 use a11y::jab::context::AccessibleContext;
-use crate::{
-    ext::role::AccessibleRoleExt,
-    performer::Speakable,
-};
-
+use std::sync::Arc;
 
 /// 给JAB对象实现朗读接口
 impl Speakable for Arc<AccessibleContext<'_>> {

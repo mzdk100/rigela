@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
-use a11y::ia2::object::Accessible2Object;
 use crate::performer::Speakable;
+use a11y::ia2::object::Accessible2Object;
 
 impl Speakable for Accessible2Object {
     fn get_sentence(&self) -> String {

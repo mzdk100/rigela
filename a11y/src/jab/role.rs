@@ -629,7 +629,7 @@ impl AccessibleRole {
             ACCESSIBLE_RULER => Self::Ruler,
             ACCESSIBLE_EDITBAR => Self::EditBar,
             PROGRESS_MONITOR => Self::ProgressMonitor,
-            _ => Self::Unknown
+            _ => Self::Unknown,
         }
     }
 }

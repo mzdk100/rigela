@@ -12,8 +12,7 @@
  */
 
 use crate::{
-    ia2::object::Accessible2Object,
-    IAccessible2Lib::AccessibleRelation::IAccessibleRelation,
+    ia2::object::Accessible2Object, IAccessible2Lib::AccessibleRelation::IAccessibleRelation,
 };
 use std::ffi::c_void;
 use windows::core::Type;
@@ -76,7 +75,7 @@ impl AccessibleRelation {
             }
             match Accessible2Object::from_raw(&Type::from_abi(target as *mut c_void).unwrap()) {
                 Ok(x) => Some(x),
-                Err(_) => None
+                Err(_) => None,
             }
         }
     }

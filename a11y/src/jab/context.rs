@@ -410,9 +410,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(name) = self
             ._lib
             .get_virtual_accessible_name(self._vm_id, self._ac, len)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some(
             String::from_utf16_lossy(&name)
                 .trim_matches('\0')
@@ -428,9 +428,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(v) =
             self._lib
                 .get_current_accessible_value_from_context(self._vm_id, self._ac, len as i16)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
         if val.is_empty() {
             return None;
@@ -446,9 +446,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(v) =
             self._lib
                 .get_maximum_accessible_value_from_context(self._vm_id, self._ac, len as i16)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
         if val.is_empty() {
             return None;
@@ -464,9 +464,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(v) =
             self._lib
                 .get_minimum_accessible_value_from_context(self._vm_id, self._ac, len as i16)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         let val = String::from_utf16_lossy(&v).trim_matches('\0').to_string();
         if val.is_empty() {
             return None;
@@ -504,9 +504,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_accessible_hypertext_ext(self._vm_id, self._ac, start_index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some(AccessibleHypertext::new(
             self._lib,
             self._vm_id,
@@ -537,9 +537,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_visible_children(self._vm_id, self._ac, start_index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         let mut v = vec![];
         for i in 0..info.returnedChildrenCount {
             v.push(Self::new(self._lib, self._vm_id, info.children[i as usize]));
@@ -597,9 +597,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(obj) =
             self._lib
                 .get_accessible_selection_from_context(self._vm_id, self._ac, index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some(Self::new(self._lib, self._vm_id, obj as AC))
     }
 
@@ -645,9 +645,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) =
             self._lib
                 .get_text_attributes_in_range(self._vm_id, self._ac, start_index, end_index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some((AccessibleTextAttributes::new(info.0), info.1))
     }
 
@@ -661,9 +661,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_accessible_text_selection_info(self._vm_id, self._ac)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some((
             info.selectionStartIndex,
             info.selectionEndIndex,
@@ -685,9 +685,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_accessible_text_info(self._vm_id, self._ac, x, y)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some((info.charCount, info.caretIndex, info.indexAtPoint))
     }
 
@@ -723,9 +723,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_accessible_text_items(self._vm_id, self._ac, index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         let word = String::from_utf16_lossy(&info.word)
             .trim_matches('\0')
             .to_string();
@@ -783,9 +783,9 @@ impl<'lib> AccessibleContext<'lib> {
         let Some(info) = self
             ._lib
             .get_accessible_text_rect(self._vm_id, self._ac, index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some((info.x, info.y, info.width, info.height))
     }
 

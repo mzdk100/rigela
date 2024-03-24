@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::performer::sound::SoundArgument::WithFreq;
 use crate::{
     commander::keys::Keys, context::Context, ext::element::UiAutomationElementExt,
     performer::sound::SoundArgument::Single,
@@ -29,7 +30,6 @@ use win_wrap::control::edit::Edit;
 use win_wrap::control::WindowControl;
 use win_wrap::msaa::object::OBJID_CARET;
 use win_wrap::uia::pattern::text::TextUnit;
-use crate::performer::sound::SoundArgument::WithFreq;
 
 //noinspection SpellCheckingInspection
 /**
@@ -49,24 +49,28 @@ async fn subscribe_msaa_events(context: Arc<Context>) {
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
 
-    context.msaa.add_on_object_location_change_listener(move |src| {
-        let performer = performer.clone();
+    context
+        .msaa
+        .add_on_object_location_change_listener(move |src| {
+            let performer = performer.clone();
 
-        if OBJID_CARET.0 != src.id_object {
-            return;
-        }
-        let Ok((obj, _)) = src.get_object() else {
-            return;
-        };
-        let Some(obj) = obj.parent() else {
-            return;
-        };
-        main_handler.spawn(async move {
-            let control = WindowControl::from(obj.window());
-            let (start, end) = control.get_sel();
-            performer.play_sound(WithFreq("progress.wav", (start * 10 + 400) as f32)).await;
+            if OBJID_CARET.0 != src.id_object {
+                return;
+            }
+            let Ok((obj, _)) = src.get_object() else {
+                return;
+            };
+            let Some(obj) = obj.parent() else {
+                return;
+            };
+            main_handler.spawn(async move {
+                let control = WindowControl::from(obj.window());
+                let (start, end) = control.get_sel();
+                performer
+                    .play_sound(WithFreq("progress.wav", (start * 10 + 400) as f32))
+                    .await;
+            });
         });
-    });
 }
 
 #[allow(unused_variables)]
@@ -76,25 +80,30 @@ async fn subscribe_jab_events(context: Arc<Context>) {
     let main_handler = context.main_handler.clone();
     let performer = context.performer.clone();
 
-    context.jab.add_on_property_caret_change_listener(move |src, old, new| {
-        let Some((char, word, line)) = src.get_text_items(new) else {
-            return;
-        };
-
-        let commander = commander.clone();
-        let event_core = event_core.clone();
-        let performer = performer.clone();
-
-        main_handler.spawn(async move {
-            if event_core.should_ignore(char.to_string(), Duration::from_millis(50)).await {
+    context
+        .jab
+        .add_on_property_caret_change_listener(move |src, old, new| {
+            let Some((char, word, line)) = src.get_text_items(new) else {
                 return;
-            }
-            match commander.get_last_pressed_key() {
-                Keys::VkUp | Keys::VkDown => performer.speak(&line).await,
-                _ => performer.speak(&char).await
             };
+
+            let commander = commander.clone();
+            let event_core = event_core.clone();
+            let performer = performer.clone();
+
+            main_handler.spawn(async move {
+                if event_core
+                    .should_ignore(char.to_string(), Duration::from_millis(50))
+                    .await
+                {
+                    return;
+                }
+                match commander.get_last_pressed_key() {
+                    Keys::VkUp | Keys::VkDown => performer.speak(&line).await,
+                    _ => performer.speak(&char).await,
+                };
+            });
         });
-    });
 }
 
 #[allow(dead_code)]
@@ -128,7 +137,10 @@ async fn subscribe_uia_events(context: Arc<Context>) {
         let performer = performer.clone();
 
         main_handler.spawn(async move {
-            if event_core.should_ignore(caret.get_text(-1), Duration::from_millis(50)).await {
+            if event_core
+                .should_ignore(caret.get_text(-1), Duration::from_millis(50))
+                .await
+            {
                 return;
             }
             performer.speak(&caret).await;
@@ -177,7 +189,10 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         let performer = performer.clone();
 
         main_handler.spawn(async move {
-            if event_core.should_ignore(text.clone(), Duration::from_millis(50)).await {
+            if event_core
+                .should_ignore(text.clone(), Duration::from_millis(50))
+                .await
+            {
                 return;
             }
             performer.speak(&text).await;

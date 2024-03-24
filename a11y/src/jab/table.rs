@@ -14,8 +14,8 @@
 use crate::{
     jab::context::AccessibleContext,
     JabLib::{
-        JabLib,
         packages::{AccessibleContext as AC, AccessibleTableCellInfo, AccessibleTableInfo},
+        JabLib,
     },
 };
 
@@ -67,7 +67,11 @@ impl<'lib> AccessibleTable<'lib> {
      * `column` 列索引。
      * */
     pub fn get_column_description(&self, column: i32) -> Option<AccessibleContext<'lib>> {
-        if let Some(ac) = self._lib.get_accessible_table_column_description(self._vm_id, self._table.accessibleContext, column) {
+        if let Some(ac) = self._lib.get_accessible_table_column_description(
+            self._vm_id,
+            self._table.accessibleContext,
+            column,
+        ) {
             return Some(AccessibleContext::new(self._lib, self._vm_id, ac));
         }
         None
@@ -78,7 +82,11 @@ impl<'lib> AccessibleTable<'lib> {
      * `row` 行索引。
      * */
     pub fn get_row_description(&self, row: i32) -> Option<AccessibleContext<'lib>> {
-        if let Some(ac) = self._lib.get_accessible_table_row_description(self._vm_id, self._table.accessibleContext, row) {
+        if let Some(ac) = self._lib.get_accessible_table_row_description(
+            self._vm_id,
+            self._table.accessibleContext,
+            row,
+        ) {
             return Some(AccessibleContext::new(self._lib, self._vm_id, ac));
         }
         None
@@ -88,7 +96,10 @@ impl<'lib> AccessibleTable<'lib> {
      * 将指定表格的表行标题作为表格对象返回。
      * */
     pub fn get_row_header(&self) -> Option<AccessibleTable<'lib>> {
-        let Some(info) = self._lib.get_accessible_table_row_header(self._vm_id, self._table.accessibleContext) else {
+        let Some(info) = self
+            ._lib
+            .get_accessible_table_row_header(self._vm_id, self._table.accessibleContext)
+        else {
             return None;
         };
         Some(Self {
@@ -104,7 +115,10 @@ impl<'lib> AccessibleTable<'lib> {
      * 将指定表格的表列标题作为表格对象返回。
      * */
     pub fn get_column_header(&self) -> Option<AccessibleTable<'lib>> {
-        let Some(info) = self._lib.get_accessible_table_column_header(self._vm_id, self._table.accessibleContext) else {
+        let Some(info) = self
+            ._lib
+            .get_accessible_table_column_header(self._vm_id, self._table.accessibleContext)
+        else {
             return None;
         };
         Some(Self {
@@ -121,7 +135,8 @@ impl<'lib> AccessibleTable<'lib> {
      * `row` 行索引。
      * */
     pub fn is_row_selected(&self, row: i32) -> bool {
-        self._lib.is_accessible_table_row_selected(self._vm_id, self._table.accessibleTable, row)
+        self._lib
+            .is_accessible_table_row_selected(self._vm_id, self._table.accessibleTable, row)
     }
 
     /**
@@ -129,7 +144,11 @@ impl<'lib> AccessibleTable<'lib> {
      * `column` 列索引。
      * */
     pub fn is_column_selected(&self, column: i32) -> bool {
-        self._lib.is_accessible_table_column_selected(self._vm_id, self._table.accessibleTable, column)
+        self._lib.is_accessible_table_column_selected(
+            self._vm_id,
+            self._table.accessibleTable,
+            column,
+        )
     }
 
     /**
@@ -138,10 +157,19 @@ impl<'lib> AccessibleTable<'lib> {
      * `column` 列索引。
      * */
     pub fn get_cell(&self, row: i32, column: i32) -> Option<AccessibleTableCell> {
-        let Some(info) = self._lib.get_accessible_table_cell_info(self._vm_id, self._table.accessibleTable, row, column) else {
+        let Some(info) = self._lib.get_accessible_table_cell_info(
+            self._vm_id,
+            self._table.accessibleTable,
+            row,
+            column,
+        ) else {
             return None;
         };
-        Some(AccessibleTableCell { _lib: &self._lib, _vm_id: self._vm_id, _info: info })
+        Some(AccessibleTableCell {
+            _lib: &self._lib,
+            _vm_id: self._vm_id,
+            _info: info,
+        })
     }
 
     /**
@@ -149,7 +177,8 @@ impl<'lib> AccessibleTable<'lib> {
      * `index` 索引。
      * */
     pub fn get_column(&self, index: i32) -> i32 {
-        self._lib.get_accessible_table_column(self._vm_id, self._table.accessibleTable, index)
+        self._lib
+            .get_accessible_table_column(self._vm_id, self._table.accessibleTable, index)
     }
 
     /**
@@ -157,21 +186,24 @@ impl<'lib> AccessibleTable<'lib> {
      * `index` 索引。
      * */
     pub fn get_row(&self, index: i32) -> i32 {
-        self._lib.get_accessible_table_row(self._vm_id, self._table.accessibleTable, index)
+        self._lib
+            .get_accessible_table_row(self._vm_id, self._table.accessibleTable, index)
     }
 
     /**
      * 返回表中选定的列数。
      * */
     pub fn get_column_selection_count(&self) -> i32 {
-        self._lib.get_accessible_table_column_selection_count(self._vm_id, self._table.accessibleTable)
+        self._lib
+            .get_accessible_table_column_selection_count(self._vm_id, self._table.accessibleTable)
     }
 
     /**
      * 返回表中选定的行数。
      * */
     pub fn get_row_selection_count(&self) -> i32 {
-        self._lib.get_accessible_table_row_selection_count(self._vm_id, self._table.accessibleTable)
+        self._lib
+            .get_accessible_table_row_selection_count(self._vm_id, self._table.accessibleTable)
     }
 
     /**
@@ -180,7 +212,8 @@ impl<'lib> AccessibleTable<'lib> {
      * `column` 列索引。
      * */
     pub fn get_index(&self, row: i32, column: i32) -> i32 {
-        self._lib.get_accessible_table_index(self._vm_id, self._table.accessibleTable, row, column)
+        self._lib
+            .get_accessible_table_index(self._vm_id, self._table.accessibleTable, row, column)
     }
 
     /**
@@ -188,7 +221,11 @@ impl<'lib> AccessibleTable<'lib> {
      * `count` 数组长度。
      * */
     pub fn get_column_selections(&self, count: i32) -> Vec<i32> {
-        if let Some(v) = self._lib.get_accessible_table_column_selections(self._vm_id, self._table.accessibleTable, count) {
+        if let Some(v) = self._lib.get_accessible_table_column_selections(
+            self._vm_id,
+            self._table.accessibleTable,
+            count,
+        ) {
             return v;
         }
         vec![]
@@ -199,7 +236,11 @@ impl<'lib> AccessibleTable<'lib> {
      * `count` 数组长度。
      * */
     pub fn get_row_selections(&self, count: i32) -> Vec<i32> {
-        if let Some(v) = self._lib.get_accessible_table_row_selections(self._vm_id, self._table.accessibleTable, count) {
+        if let Some(v) = self._lib.get_accessible_table_row_selections(
+            self._vm_id,
+            self._table.accessibleTable,
+            count,
+        ) {
             return v;
         }
         vec![]
@@ -208,7 +249,8 @@ impl<'lib> AccessibleTable<'lib> {
 
 impl<'lib> Drop for AccessibleTable<'lib> {
     fn drop(&mut self) {
-        self._lib.release_java_object(self._vm_id, self._table.accessibleContext);
+        self._lib
+            .release_java_object(self._vm_id, self._table.accessibleContext);
     }
 }
 
@@ -272,6 +314,7 @@ impl<'lib> AccessibleTableCell<'lib> {
 
 impl<'lib> Drop for AccessibleTableCell<'lib> {
     fn drop(&mut self) {
-        self._lib.release_java_object(self._vm_id, self._info.accessibleContext)
+        self._lib
+            .release_java_object(self._vm_id, self._info.accessibleContext)
     }
 }

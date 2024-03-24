@@ -250,7 +250,7 @@ impl Accessible2Object {
             let mut role = std::mem::zeroed();
             self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap

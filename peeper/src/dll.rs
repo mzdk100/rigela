@@ -11,15 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{client::PeeperClient, handler::{on_ime, on_input_char}, HOOK_INIT, HOOK_UNINIT, wm};
+use crate::{
+    client::PeeperClient,
+    handler::{on_ime, on_input_char},
+    wm, HOOK_INIT, HOOK_UNINIT,
+};
 use log::debug;
 use std::{ffi::c_void, sync::RwLock};
 use win_wrap::{
-    common::{call_next_hook_ex, get_module_file_name, HMODULE, LPARAM, LRESULT, WPARAM, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH, DLL_THREAD_ATTACH, DLL_THREAD_DETACH},
+    common::{
+        call_next_hook_ex, get_module_file_name, DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH,
+        DLL_THREAD_ATTACH, DLL_THREAD_DETACH, HMODULE, LPARAM, LRESULT, WPARAM,
+    },
     ext::LParamExt,
     hook::CwpStruct,
-    message::{MSG, register_window_message},
     input::{WM_CHAR, WM_IME_NOTIFY},
+    message::{register_window_message, MSG},
 };
 
 macro_rules! handle_event {

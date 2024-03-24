@@ -39,10 +39,7 @@ use crate::{
 use async_trait::async_trait;
 use std::{
     fmt::{Debug, Formatter},
-    sync::{
-        Arc,
-        Weak,
-    },
+    sync::{Arc, Weak},
 };
 
 /**

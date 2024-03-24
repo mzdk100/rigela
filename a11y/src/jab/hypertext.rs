@@ -69,9 +69,9 @@ impl<'lib> AccessibleHypertext<'lib> {
         let Some(link) =
             self._lib
                 .get_accessible_hyperlink(self._vm_id, self._info.accessibleHypertext, index)
-            else {
-                return None;
-            };
+        else {
+            return None;
+        };
         Some(Self::new(self._lib, self._vm_id, self._ac, link))
     }
 

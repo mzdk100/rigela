@@ -15,11 +15,7 @@ use crate::context::Context;
 use rigela_utils::bass::BassChannelOutputStream;
 use std::{
     collections::HashMap,
-    sync::{
-        Arc,
-        OnceLock,
-        Weak,
-    },
+    sync::{Arc, OnceLock, Weak},
     time::Duration,
 };
 use tokio::{sync::Mutex, time::sleep};

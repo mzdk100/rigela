@@ -17,10 +17,7 @@ use rigela_utils::{killer::kill, SERVER_HOME_URI};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
 use std::{
-    env::{
-        args,
-        temp_dir,
-    },
+    env::{args, temp_dir},
     fs::{copy, remove_file},
     path::{Path, PathBuf},
     str::FromStr,

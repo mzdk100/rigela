@@ -126,7 +126,7 @@ impl PeeperServer {
      * `listener` 一个监听函数。
      * */
     pub async fn add_on_input_char_listener(&self, listener: impl Fn(u16) + Send + Sync + 'static) {
-        add_listener!(self,ListenerType::OnInputChar, listener);
+        add_listener!(self, ListenerType::OnInputChar, listener);
     }
 
     /**
@@ -137,7 +137,7 @@ impl PeeperServer {
         &self,
         listener: impl Fn(CandidateList) + Send + Sync + 'static,
     ) {
-        add_listener!(self,ListenerType::OnImeCandidateList, listener);
+        add_listener!(self, ListenerType::OnImeCandidateList, listener);
     }
 
     //noinspection StructuralWrap
@@ -149,7 +149,7 @@ impl PeeperServer {
         &self,
         listener: impl Fn(u32) + Send + Sync + 'static,
     ) {
-        add_listener!(self,ListenerType::OnImeConversionMode, listener)
+        add_listener!(self, ListenerType::OnImeConversionMode, listener)
     }
 }
 

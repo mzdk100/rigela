@@ -11,13 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    fmt::{Debug, Formatter},
-};
+use crate::browser::BrowserElement;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
-use crate::browser::BrowserElement;
-
 
 /// 窗口浏览器，使用虚拟焦点对象浏览窗口控件
 pub(crate) struct FormBrowser {

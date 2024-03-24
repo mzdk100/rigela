@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 use std::fmt::{Debug, Formatter};
-use windows::{
-    core::HSTRING,
-    Win32::System::Com::IPersistFile,
+pub use windows::Win32::System::Com::{
+    STGM, STGM_CONVERT, STGM_CREATE, STGM_DELETEONRELEASE, STGM_DIRECT, STGM_DIRECT_SWMR,
+    STGM_FAILIFTHERE, STGM_NOSCRATCH, STGM_NOSNAPSHOT, STGM_PRIORITY, STGM_READ, STGM_READWRITE,
+    STGM_SHARE_DENY_NONE, STGM_SHARE_DENY_READ, STGM_SHARE_DENY_WRITE, STGM_SHARE_EXCLUSIVE,
+    STGM_TRANSACTED, STGM_WRITE,
 };
-pub use windows::Win32::System::Com::{STGM, STGM_CONVERT, STGM_CREATE, STGM_DELETEONRELEASE, STGM_DIRECT, STGM_DIRECT_SWMR, STGM_FAILIFTHERE, STGM_NOSCRATCH, STGM_NOSNAPSHOT, STGM_PRIORITY, STGM_READ, STGM_READWRITE, STGM_SHARE_DENY_NONE, STGM_SHARE_DENY_READ, STGM_SHARE_DENY_WRITE, STGM_SHARE_EXCLUSIVE, STGM_TRANSACTED, STGM_WRITE};
+use windows::{core::HSTRING, Win32::System::Com::IPersistFile};
 
 /// 允许从磁盘文件加载对象或将其保存到磁盘文件，而不是存储对象或流。由于打开文件所需的信息因应用程序而异，因此对象上的 load 实现还必须打开其磁盘文件。
 pub struct PersistFile(IPersistFile);
@@ -40,7 +41,7 @@ impl PersistFile {
             if let Ok(f) = self.0.GetCurFile() {
                 return match f.to_string() {
                     Ok(s) => Some(s.clone()),
-                    Err(_) => None
+                    Err(_) => None,
                 };
             }
         }
@@ -81,9 +82,10 @@ impl PersistFile {
         unsafe {
             match filename {
                 None => self.0.Save(None, remember),
-                Some(f) => self.0.Save(&HSTRING::from(f), remember)
+                Some(f) => self.0.Save(&HSTRING::from(f), remember),
             }
-        }.unwrap_or(());
+        }
+        .unwrap_or(());
     }
 
     /**

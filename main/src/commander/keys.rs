@@ -50,7 +50,6 @@ use win_wrap::input::{
     VK_VOLUME_UP, VK_W, VK_X, VK_XBUTTON1, VK_XBUTTON2, VK_Y, VK_Z,
 };
 
-
 //noinspection SpellCheckingInspection
 /**
  * 特别注意： 命名没有完善， 小键盘 VkNumPad 开头(大写P)， 不要与 VkNumpad (小写p)混淆
@@ -556,7 +555,7 @@ impl Keys {
             Self::VkXbutton2 => Some(VK_XBUTTON2),
             Self::VkY => Some(VK_Y),
             Self::VkZ => Some(VK_Z),
-            Self::VkNone => None
+            Self::VkNone => None,
         }
     }
 }

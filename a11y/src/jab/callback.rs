@@ -42,15 +42,15 @@ pub(crate) enum AccessibleCallback {
     PropertyChildChange(
         Box<
             dyn Fn(AccessibleContextType, AccessibleContextType, AccessibleContextType)
-            + Sync
-            + Send,
+                + Sync
+                + Send,
         >,
     ),
     PropertyActiveDescendentChange(
         Box<
             dyn Fn(AccessibleContextType, AccessibleContextType, AccessibleContextType)
-            + Sync
-            + Send,
+                + Sync
+                + Send,
         >,
     ),
     PropertyTableModelChange(Box<dyn Fn(AccessibleContextType, String, String) + Sync + Send>),

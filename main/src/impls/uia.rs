@@ -94,7 +94,7 @@ impl Speakable for UiAutomationElement {
                     ToggleState::Indeterminate => t!("uia.toggle_indeterminate"),
                 }
             )
-                .as_str();
+            .as_str();
         }
 
         text

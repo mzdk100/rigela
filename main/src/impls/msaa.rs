@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::ext::role::AccessibleRoleExt;
 use crate::performer::Speakable;
 use win_wrap::msaa::object::AccessibleObject;
-use crate::ext::role::AccessibleRoleExt;
 
 impl Speakable for (AccessibleObject, i32) {
     fn get_sentence(&self) -> String {

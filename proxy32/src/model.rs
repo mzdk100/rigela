@@ -64,7 +64,7 @@ pub enum Proxy32Data {
     // vvtts获取发音人列表响应
     EciSynthRequest(String),
     // vvtts合成请求
-    EciSynthResponse(Vec<u8>),                // vvtts合成响应
+    EciSynthResponse(Vec<u8>), // vvtts合成响应
 }
 
 #[derive(Debug, Deserialize, Serialize)]

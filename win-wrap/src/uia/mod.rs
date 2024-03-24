@@ -15,3 +15,4 @@ pub mod automation;
 pub mod element;
 mod event;
 pub mod pattern;
+pub mod property;

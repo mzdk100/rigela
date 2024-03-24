@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    call_proc,
-    library::setup_library,
-};
+use crate::{call_proc, library::setup_library};
 use encoding_rs::GBK;
 use log::info;
 use std::{
@@ -24,9 +21,7 @@ use std::{
     sync::OnceLock,
     thread,
 };
-use tokio::{
-    sync::oneshot::{self, channel, Sender},
-};
+use tokio::sync::oneshot::{self, channel, Sender};
 use win_wrap::{
     common::{free_library, get_proc_address, load_library, FARPROC, HMODULE, LPARAM, WPARAM},
     message::{message_loop, post_thread_message, register_window_message},
@@ -221,7 +216,13 @@ impl Ibmeci {
 
         let h_module = match load_library(eci_path.to_str().unwrap()) {
             Ok(h) => h,
-            Err(e) => return Err(format!("Can't open the library ({}). {}", eci_path.display(), e))
+            Err(e) => {
+                return Err(format!(
+                    "Can't open the library ({}). {}",
+                    eci_path.display(),
+                    e
+                ))
+            }
         };
         info!("{} loaded.", eci_path.display());
         let (tx, rx) = oneshot::channel();
@@ -358,9 +359,9 @@ impl Ibmeci {
             (7, "Elderly Female 1"),
             (8, "Elderly Male 1"),
         ]
-            .iter()
-            .map(|i| (i.0, i.1.to_string()))
-            .collect()
+        .iter()
+        .map(|i| (i.0, i.1.to_string()))
+        .collect()
     }
 
     /**

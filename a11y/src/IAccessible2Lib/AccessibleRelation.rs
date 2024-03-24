@@ -228,7 +228,12 @@ pub(crate) unsafe trait IAccessibleRelation: IUnknown {
      * `nTargets` actual number of targets in the returned array (not more than maxTargets)
      * retrieval E_INVALIDARG if bad [in] passed, e.g., a negative value
      * */
-    pub(crate) fn targets(&self, maxTargets: i32, targets: *mut *mut IUnknown, nTargets: *mut i32) -> HRESULT;
+    pub(crate) fn targets(
+        &self,
+        maxTargets: i32,
+        targets: *mut *mut IUnknown,
+        nTargets: *mut i32,
+    ) -> HRESULT;
 }
 
 /**

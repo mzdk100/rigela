@@ -11,20 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::sync::Arc;
+use crate::performer::Speakable;
 use a11y::{
-    ia2::{
-        object::Accessible2Object,
-        relation::AccessibleRelation,
-    },
+    ia2::{object::Accessible2Object, relation::AccessibleRelation},
     jab::context::AccessibleContext,
 };
-use win_wrap::{
-    msaa::object::AccessibleObject,
-    uia::element::UiAutomationElement,
-};
+use std::sync::Arc;
 use win_wrap::common::RECT;
-use crate::performer::Speakable;
+use win_wrap::{msaa::object::AccessibleObject, uia::element::UiAutomationElement};
 
 pub(crate) mod form_browser;
 
@@ -46,7 +40,7 @@ impl<'a> BrowserElement<'a> {
             Self::IA2(None, None) => 0,
             Self::JAB(x) => x.get_child_count(),
             Self::MSAA(x, _) => x.child_count() as i32,
-            Self::UIA(x) => x.get_child_count()
+            Self::UIA(x) => x.get_child_count(),
         }
     }
     pub(crate) fn get_child(&self, index: i32) -> Option<Arc<Self>> {
@@ -54,39 +48,41 @@ impl<'a> BrowserElement<'a> {
             Self::IA2(Some(x), _) => match x.relation(index) {
                 Ok(y) => Some(Self::IA2(None, Some(y))),
                 Err(_) => None,
-            }
+            },
             Self::IA2(None, Some(x)) => Some(Self::IA2(x.target(index), None)),
             Self::IA2(None, None) => None,
             Self::JAB(x) => match x.get_child(index) {
                 None => None,
-                Some(y) => Some(Self::JAB(y))
-            }
+                Some(y) => Some(Self::JAB(y)),
+            },
             Self::MSAA(x, _) => match x.get_child(index) {
                 Ok(y) => Some(Self::MSAA(y, 0)),
-                Err(_) => None
-            }
+                Err(_) => None,
+            },
             Self::UIA(x) => match x.get_child(index) {
                 None => None,
-                Some(y) => Some(Self::UIA(y))
-            }
+                Some(y) => Some(Self::UIA(y)),
+            },
         };
         match child {
             None => None,
-            Some(x) => Some(x.into())
+            Some(x) => Some(x.into()),
         }
     }
     pub(crate) fn get_rect(&self) -> Option<RECT> {
         match self {
             Self::IA2(_, _) => None,
-            Self::JAB(x) => if let Some(r) = x.get_bound_rectangle() {
-                Some(RECT {
-                    left: r.0,
-                    top: r.1,
-                    right: r.0 + r.2,
-                    bottom: r.1 + r.3,
-                })
-            } else {
-                None
+            Self::JAB(x) => {
+                if let Some(r) = x.get_bound_rectangle() {
+                    Some(RECT {
+                        left: r.0,
+                        top: r.1,
+                        right: r.0 + r.2,
+                        bottom: r.1 + r.3,
+                    })
+                } else {
+                    None
+                }
             }
             Self::MSAA(x, y) => {
                 let r = x.location(*y);
@@ -97,7 +93,7 @@ impl<'a> BrowserElement<'a> {
                     bottom: r.1 + r.3,
                 })
             }
-            Self::UIA(x) => Some(x.get_rect())
+            Self::UIA(x) => Some(x.get_rect()),
         }
     }
 }
@@ -117,11 +113,11 @@ impl<'a> Speakable for BrowserElement<'a> {
         match self {
             Self::IA2(x, _) => match x {
                 None => String::new(),
-                Some(y) => y.get_sentence()
-            }
+                Some(y) => y.get_sentence(),
+            },
             Self::JAB(x) => Arc::new(x).get_states_en_us().unwrap(),
             Self::MSAA(x, y) => (x.clone(), *y).get_sentence(),
-            Self::UIA(x) => x.get_sentence()
+            Self::UIA(x) => x.get_sentence(),
         }
     }
 }
