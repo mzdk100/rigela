@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::common::HANDLE;
 use std::ffi::c_void;
-use windows::Win32::System::Memory::{VirtualAllocEx, VirtualFreeEx};
+
 pub use windows::Win32::System::Memory::{
     MEM_COMMIT, MEM_DECOMMIT, MEM_FREE, MEM_LARGE_PAGES, MEM_RELEASE, MEM_REPLACE_PLACEHOLDER,
     MEM_RESERVE, MEM_RESERVE_PLACEHOLDER, MEM_RESET, MEM_RESET_UNDO, PAGE_ENCLAVE_DECOMMIT,
@@ -28,6 +27,12 @@ pub use windows::Win32::System::Memory::{
     SEC_NOCACHE, SEC_PARTITION_OWNER_HANDLE, SEC_PROTECTED_IMAGE, SEC_RESERVE, SEC_WRITECOMBINE,
     VIRTUAL_ALLOCATION_TYPE, VIRTUAL_FREE_TYPE,
 };
+use windows::Win32::System::{
+    Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory},
+    Memory::{VirtualAllocEx, VirtualFreeEx},
+};
+
+use crate::common::HANDLE;
 
 /**
  * 保留、提交或更改指定进程的虚拟地址空间中内存区域的状态。 函数将它分配的内存初始化为零。
@@ -91,4 +96,51 @@ pub fn virtual_free(
     free_type: VIRTUAL_FREE_TYPE,
 ) {
     unsafe { VirtualFreeEx(h_process, address, size, free_type) }.unwrap_or(())
+}
+
+/**
+ * read_process_memory 将指定地址范围中的数据从指定进程的地址空间复制到当前进程的指定缓冲区中。 具有PROCESS_VM_READ访问权限的句柄的任何进程都可以调用函数。
+ * 要读取的整个区域必须可访问，如果无法访问，则函数将失败。
+ * `h_process` 包含正在读取的内存的进程句柄。 句柄必须具有对进程的PROCESS_VM_READ访问权限。
+ * `base_address` 指向从中读取的指定进程中基址的指针。 在进行任何数据传输之前，系统会验证指定大小的基址和内存中的所有数据是否可供读取访问，如果无法访问，则函数将失败。
+ * `n_size` 要从指定进程读取的字节数。
+ * */
+pub fn read_process_memory(
+    h_process: HANDLE,
+    base_address: *const c_void,
+    buffer: *mut c_void,
+    n_size: usize,
+) {
+    unsafe {
+        let mut len = std::mem::zeroed();
+        ReadProcessMemory(h_process, base_address, buffer, n_size, Some(&mut len))
+            .is_err()
+            .unwrap_or(());
+        len
+    }
+}
+
+//noinspection StructuralWrap
+/**
+ * 将数据写入到指定进程中的内存区域。要写入的整个区域必须可访问，否则操作将失败。
+ * 返回接收传输到指定进程的字节数。
+ * write_process_memory 将数据从当前进程中的指定缓冲区复制到指定进程的地址范围。 任何具有 PROCESS_VM_WRITE 句柄且PROCESS_VM_OPERATION访问要写入的进程的进程都可以调用 函数。 通常（但并非总是）正在调试包含正在写入的地址空间的进程。
+ * 要写入到的整个区域必须可访问，如果无法访问，则函数将失败。
+ * `h_process` 要修改的进程内存的句柄。 句柄必须具有对进程的PROCESS_VM_WRITE和PROCESS_VM_OPERATION访问权限。
+ * `base_address` 指向将数据写入到的指定进程中基址的指针。 在进行数据传输之前，系统会验证指定大小的基址和内存中的所有数据是否可供写入访问，如果无法访问，则函数将失败。
+ * `buffer` 指向缓冲区的指针，该缓冲区包含要写入指定进程的地址空间中的数据。
+ * `n_size` 要写入指定进程的字节数。
+ * */
+pub fn write_process_memory(
+    h_process: HANDLE,
+    base_address: *const c_void,
+    buffer: *const c_void,
+    n_size: usize,
+) -> usize {
+    unsafe {
+        let mut written = std::mem::zeroed();
+        WriteProcessMemory(h_process, base_address, buffer, n_size, Some(&mut written))
+            .unwrap_or(());
+        written
+    }
 }
