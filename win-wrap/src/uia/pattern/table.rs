@@ -12,16 +12,16 @@
  */
 
 use crate::{ext::VecExt, uia::element::UiAutomationElement};
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
-use windows::Win32::UI::Accessibility::{
-    IUIAutomation6, IUIAutomationTableItemPattern, UIA_TableItemPatternId,
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
 };
 use windows::{
     core::Interface,
     Win32::UI::Accessibility::{
-        IUIAutomationTablePattern, RowOrColumnMajor_ColumnMajor, RowOrColumnMajor_Indeterminate,
-        RowOrColumnMajor_RowMajor, UIA_TablePatternId,
+        IUIAutomation6, IUIAutomationTableItemPattern, IUIAutomationTablePattern,
+        RowOrColumnMajor_ColumnMajor, RowOrColumnMajor_Indeterminate, RowOrColumnMajor_RowMajor,
+        UIA_TableItemPatternId, UIA_TablePatternId,
     },
 };
 
@@ -95,7 +95,9 @@ pub enum RowOrColumnMajor {
     None,
 }
 
-pub struct UiAutomationTableItemPattern(IUIAutomationTableItemPattern);
+/// 提供对支持 UiAutomationTablePattern 的容器中的子元素的访问。
+/// 支持此接口的元素还必须支持 UiAutomationGridItemPattern，以提供不特定于表的属性。
+pub struct UiAutomationTableItemPattern(Arc<IUIAutomation6>, IUIAutomationTableItemPattern);
 
 /// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtableitempattern
 impl UiAutomationTableItemPattern {
@@ -111,7 +113,41 @@ impl UiAutomationTableItemPattern {
             .unwrap()
             .cast::<IUIAutomationTableItemPattern>()
             .unwrap();
-        Ok(Self(pattern))
+        Ok(Self(value.get_aut(), pattern))
+    }
+
+    /**
+     * 查询与表项或单元格关联的列标题。
+     * */
+    pub fn get_column_header_items(&self) -> Option<Vec<UiAutomationElement>> {
+        unsafe {
+            if let Ok(arr) = self.1.GetCurrentColumnHeaderItems() {
+                return Some(
+                    arr.to_vec()
+                        .iter()
+                        .map(|i| UiAutomationElement::obtain(self.0.clone(), i.clone()))
+                        .collect(),
+                );
+            }
+            None
+        }
+    }
+
+    /**
+     * 查询与表项或单元格关联的行标题。
+     * */
+    pub fn get_row_header_items(&self) -> Option<Vec<UiAutomationElement>> {
+        unsafe {
+            if let Ok(arr) = self.1.GetCurrentRowHeaderItems() {
+                return Some(
+                    arr.to_vec()
+                        .iter()
+                        .map(|i| UiAutomationElement::obtain(self.0.clone(), i.clone()))
+                        .collect(),
+                );
+            }
+            None
+        }
     }
 }
 
