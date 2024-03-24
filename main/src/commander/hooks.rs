@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    commander::{keys::Keys, CommandType, Talent},
+    commander::{keyboard::keys::Keys, CommandType, Talent},
     configs::config_operations::{get_hotkeys, get_mouse_read_state},
     context::Context,
     talent::mouse::mouse_read,

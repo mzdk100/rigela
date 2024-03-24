@@ -12,14 +12,14 @@
  */
 
 pub(crate) mod hooks;
-pub(crate) mod keys;
+pub(crate) mod keyboard;
 
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
     talent::Talented,
 };
-use keys::Keys;
+use keyboard::keys::Keys;
 use std::time::Duration;
 use std::{
     fmt::{Debug, Formatter},

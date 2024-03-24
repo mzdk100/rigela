@@ -12,6 +12,7 @@
  */
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use win_wrap::input::{
     VIRTUAL_KEY, VK_0, VK_1, VK_2, VK_3, VK_4, VK_5, VK_6, VK_7, VK_8, VK_9, VK_A, VK_ABNT_C1,
     VK_ABNT_C2, VK_ACCEPT, VK_ADD, VK_APPS, VK_ATTN, VK_B, VK_BACK, VK_BROWSER_BACK,
@@ -558,6 +559,17 @@ impl Keys {
             Self::VkNone => None,
         }
     }
+
+    pub(crate) fn is_modifierkey(&self) -> bool {
+        const KEYS: [Keys; 5] = [
+            Keys::VkShift,
+            Keys::VkCtrl,
+            Keys::VkAlt,
+            Keys::VkWin,
+            Keys::VkRigelA,
+        ];
+        KEYS.contains(self)
+    }
 }
 
 impl From<(u32, bool)> for Keys {
@@ -993,6 +1005,12 @@ impl_keys_str_into!(
 
     "" => Keys::VkNone
 );
+
+impl fmt::Display for Keys {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{}", self.clone())
+    }
+}
 
 mod tests {
     #[allow(unused_imports)]

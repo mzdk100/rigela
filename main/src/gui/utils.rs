@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys;
+use crate::commander::keyboard::keys::Keys;
 use log::error;
 use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};

@@ -11,19 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::keys::Keys;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub(crate) struct HotKeysConfig {
-    pub(crate) talent_keys: HashMap<String, Vec<Keys>>,
-}
-
-impl Default for HotKeysConfig {
-    fn default() -> Self {
-        Self {
-            talent_keys: HashMap::new(),
-        }
-    }
-}
+pub(crate) mod combo_keys;
+pub(crate) mod combo_keys_manager;
+pub(crate) mod keys;
+pub(crate) mod modify_keys;

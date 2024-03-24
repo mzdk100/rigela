@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keys::Keys::{VkNumlock, VkScroll};
+use crate::commander::keyboard::keys::Keys::{VkNumlock, VkScroll};
 use crate::context::Context;
 use std::sync::Arc;
 use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};

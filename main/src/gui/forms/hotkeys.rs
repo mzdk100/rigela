@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    commander::{keys::Keys, CommandType::Key},
+    commander::{keyboard::keys::Keys, CommandType::Key},
     configs::config_operations::{get_hotkeys, save_hotkeys},
     gui::{forms::settings_form::SettingsForm, utils::set_hook},
     talent::Talented,

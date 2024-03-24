@@ -13,7 +13,7 @@
 
 use crate::{
     bring_window_front,
-    commander::keys::Keys,
+    commander::keyboard::keys::Keys,
     configs::{
         config_operations::{
             get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,

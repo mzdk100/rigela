@@ -12,7 +12,7 @@
  */
 
 #[allow(unused_imports)]
-use crate::commander::keys::Keys::*;
+use crate::commander::keyboard::keys::Keys::*;
 use crate::configs::config_operations::apply_mouse_config;
 use crate::context::Context;
 use async_trait::async_trait;

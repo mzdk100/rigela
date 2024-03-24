@@ -12,7 +12,7 @@
  */
 
 use crate::configs::general::{GeneralConfig, Lang};
-use crate::{commander::keys::Keys, configs::mouse::MouseConfig, context::Context};
+use crate::{commander::keyboard::keys::Keys, configs::mouse::MouseConfig, context::Context};
 use std::{collections::HashMap, sync::Weak};
 
 macro_rules! get_cfg {

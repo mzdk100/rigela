@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    commander::keys::Keys::*,
+    commander::keyboard::keys::Keys::*,
     context::Context,
     event_core::editor::editor_key_handle,
     performer::{

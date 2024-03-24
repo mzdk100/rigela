@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    commander::keys::Keys,
+    commander::keyboard::keys::Keys,
     configs::{
         config_manager::ConfigRoot,
         config_operations::{

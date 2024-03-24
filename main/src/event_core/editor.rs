@@ -13,7 +13,7 @@
 
 use crate::performer::sound::SoundArgument::WithFreq;
 use crate::{
-    commander::keys::Keys, context::Context, ext::element::UiAutomationElementExt,
+    commander::keyboard::keys::Keys, context::Context, ext::element::UiAutomationElementExt,
     performer::sound::SoundArgument::Single,
 };
 use a11y::ia2::{

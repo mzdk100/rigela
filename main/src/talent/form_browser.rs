@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{commander::keys::Keys::*, context::Context, performer::sound::SoundArgument::Single};
+use crate::{
+    commander::keyboard::keys::Keys::*, context::Context, performer::sound::SoundArgument::Single,
+};
 use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]

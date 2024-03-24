@@ -12,7 +12,7 @@
  */
 
 use crate::{
-    commander::keys::Keys::*,
+    commander::keyboard::keys::Keys::*,
     context::Context,
     ext::window::AccessibleWindowExt,
     performer::{sound::SoundArgument::Single, Speakable},
