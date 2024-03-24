@@ -125,13 +125,14 @@ async fn subscribe_foreground_window_events(context: Arc<Context>) {
     // 给MSAA前台窗口改变绑定处理事件
     let ctx = context.clone();
     context.msaa.add_on_system_foreground_listener(move |src| {
-        let form_browser = ctx.form_browser.clone();
+        let navigator = ctx.ui_navigator.clone();
         let ui_automation = ctx.ui_automation.clone();
 
         // form_browser需要异步操作
         ctx.main_handler.spawn(async move {
             if let Some(root) = ui_automation.element_from_handle(src.h_wnd) {
-                form_browser.render(root.into()).await
+                navigator.clear().await;
+                navigator.add_all(root.into()).await
             }
         });
     });

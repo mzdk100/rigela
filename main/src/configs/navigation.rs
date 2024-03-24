@@ -11,10 +11,38 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub(crate) mod config_manager;
-pub(crate) mod config_operations;
-pub(crate) mod general;
-pub(crate) mod hotkeys;
-pub(crate) mod mouse;
-pub(crate) mod navigation;
-pub(crate) mod tts;
+use serde::{Deserialize, Serialize};
+
+/**
+ * 导航模式。
+ * */
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub(crate) enum NavigationMode {
+    /// 线性模式
+    Linear,
+    /// 平面模式
+    Plane,
+    /// 树状模式
+    Tree,
+}
+
+impl Default for NavigationMode {
+    fn default() -> Self {
+        Self::Linear
+    }
+}
+
+/// 导航配置项
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub(crate) struct NavigationConfig {
+    /// 导航模式
+    pub(crate) mode: NavigationMode,
+}
+
+impl Default for NavigationConfig {
+    fn default() -> Self {
+        Self {
+            mode: NavigationMode::default(),
+        }
+    }
+}

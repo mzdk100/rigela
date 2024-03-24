@@ -12,7 +12,8 @@
  */
 
 use crate::{
-    commander::keyboard::keys::Keys::*, context::Context, performer::sound::SoundArgument::Single,
+    commander::keyboard::keys::Keys::*, configs::navigation::NavigationMode, context::Context,
+    navigator::linear::LinearNavigator, performer::sound::SoundArgument::Single,
 };
 use async_trait::async_trait;
 use rigela_macros::talent;
@@ -21,12 +22,12 @@ use std::sync::Weak;
 
 const WAVE: &str = "boundary.wav";
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "上一个控件", key = (VkNumPad7))]
 async fn prev_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context.form_browser.prev().await.current().await {
+    match context.ui_navigator.prev().await.current().await {
         Some(element) => {
             context.performer.speak(element.as_ref()).await;
         }
@@ -36,12 +37,12 @@ async fn prev_element(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "下一个控件", key = (VkNumPad9))]
 async fn next_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context.form_browser.next().await.current().await {
+    match context.ui_navigator.next().await.current().await {
         Some(element) => {
             context.performer.speak(element.as_ref()).await;
         }
@@ -49,12 +50,12 @@ async fn next_element(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "当前控件", key = (VkNumPad8))]
 async fn curr_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context.form_browser.current().await {
+    match context.ui_navigator.current().await {
         Some(element) => {
             context.performer.speak(element.as_ref()).await;
         }
@@ -64,75 +65,80 @@ async fn curr_element(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "上一个子控件", key = (VkNumPad4))]
 async fn prev_child_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context
-        .form_browser
-        .prev_child()
-        .await
-        .current_child()
-        .await
-    {
-        Some(element) => {
-            context.performer.speak(element.as_ref()).await;
-        }
-        None => {
-            context.performer.play_sound(Single(WAVE)).await;
-        }
-    };
+    context.performer.play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "下一个子控件", key = (VkNumPad6))]
 async fn next_child_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context
-        .form_browser
-        .next_child()
-        .await
-        .current_child()
-        .await
-    {
-        Some(element) => {
-            context.performer.speak(element.as_ref()).await;
-        }
-        None => {
-            context.performer.play_sound(Single(WAVE)).await;
-        }
-    };
+    context.performer.play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "当前子控件", key = (VkNumPad5))]
 async fn curr_child_element(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    match context.form_browser.current_child().await {
-        Some(element) => {
-            context.performer.speak(element.as_ref()).await;
-        }
-        None => {
-            context.performer.play_sound(Single(WAVE)).await;
-        }
-    };
+    context.performer.play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "下一个模式", key = (VkAdd))]
 async fn mode_next(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    context.performer.play_sound(Single(WAVE)).await;
+    let mut config = context.config_manager.get_config();
+    config.navigation_config.mode = match config.navigation_config.mode {
+        NavigationMode::Linear => NavigationMode::Plane,
+        NavigationMode::Plane => NavigationMode::Tree,
+        NavigationMode::Tree => NavigationMode::Linear,
+    };
+    context.config_manager.set_config(&config);
+    let text = match config.navigation_config.mode {
+        NavigationMode::Linear => {
+            let performer = context.performer.clone();
+            context.main_handler.spawn(async move {
+                performer.play_sound(Single(WAVE)).await;
+            });
+            t!("navigator.linear")
+        }
+        NavigationMode::Plane => t!("navigator.plane"),
+        NavigationMode::Tree => t!("navigator.tree"),
+    }
+        .to_string();
+    context.performer.speak(&text).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "上一个模式", key = (VkSubtract))]
 async fn mode_prev(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    context.performer.play_sound(Single(WAVE)).await;
+    let mut config = context.config_manager.get_config();
+    config.navigation_config.mode = match config.navigation_config.mode {
+        NavigationMode::Linear => NavigationMode::Tree,
+        NavigationMode::Plane => NavigationMode::Linear,
+        NavigationMode::Tree => NavigationMode::Plane,
+    };
+    context.config_manager.set_config(&config);
+    let text = match config.navigation_config.mode {
+        NavigationMode::Linear => t!("navigator.linear"),
+        NavigationMode::Plane => t!("navigator.plane"),
+        NavigationMode::Tree => {
+            let performer = context.performer.clone();
+            context.main_handler.spawn(async move {
+                performer.play_sound(Single(WAVE)).await;
+            });
+            t!("navigator.tree")
+        }
+    }
+        .to_string();
+    context.performer.speak(&text).await;
 }

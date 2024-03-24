@@ -11,17 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[allow(unused_imports)]
-use crate::commander::keyboard::keys::Keys::*;
-use crate::configs::config_operations::apply_mouse_config;
-use crate::context::Context;
+use crate::{
+    commander::keyboard::keys::Keys::*, configs::config_operations::apply_mouse_config,
+    context::Context,
+};
 use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标单击", key = (VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
@@ -32,7 +32,7 @@ async fn click(context: Weak<Context>) {
         .await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标右击", key = (VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
@@ -43,7 +43,7 @@ async fn right_click(context: Weak<Context>) {
         .await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标朗读", key = (VkRigelA, VkM))]
 async fn read_mouse(context: Weak<Context>) {
     let is_read = !unsafe { &*context.as_ptr() }
@@ -61,8 +61,8 @@ async fn read_mouse(context: Weak<Context>) {
 
 async fn get_point(context: Weak<Context>) -> (i32, i32) {
     let context = unsafe { &*context.as_ptr() };
-    let ele = match context.form_browser.current_child().await {
-        None => context.form_browser.current().await,
+    let ele = match context.ui_navigator.get_last_visit().await {
+        None => None,
         e => e,
     };
     match ele {

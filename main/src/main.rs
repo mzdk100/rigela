@@ -27,14 +27,14 @@ i18n!("locale");
  * 4. ext 一些扩展操作的函数；
  * 5. event_core用于订阅和处理各种辅助功能事件；
  * 6. gui GUI图形界面模块，实现所有的UI交互逻辑；
- * 7. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
- * 8. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
- * 9. talent 能力模块，定义所有能力，这些能力通常绑定到输入设备上，例如（键盘、鼠标、触摸屏等）；
- * 10. tasks 任务模块，针对一些异步的任务进行管理；
- * 11. terminator 终结者，用于控制和等待程序结束；
- * 12. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
+ * 7. navigator UI界面元素导航模块，通过“线性”、“平面”和“树状”等模式在UI元素中访问和浏览界面信息，并可以针对元素进行操作；
+ * 8. performer 表演者，负责把信息转换成用户可以感知的形式，例如语音；
+ * 9. resources 资源模块，可以读写资源文件，内部实现了自动增量更新；
+ * 10. talent 能力模块，定义所有能力，这些能力通常绑定到输入设备上，例如（键盘、鼠标、触摸屏等）；
+ * 11. tasks 任务模块，针对一些异步的任务进行管理；
+ * 12. terminator 终结者，用于控制和等待程序结束；
+ * 13. context 上下文环境，可以贯穿整个框架的环境，让每一个模块之间可以互相访问。
  * */
-mod browser;
 mod commander;
 mod configs;
 mod context;
@@ -43,6 +43,7 @@ mod ext;
 mod gui;
 mod impls;
 mod launcher;
+mod navigator;
 mod performer;
 mod resources;
 mod talent;

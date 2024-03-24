@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-mod form_browser;
 pub(crate) mod mouse;
+mod navigator;
 mod program;
 mod tts;
 
@@ -20,11 +20,11 @@ use crate::{
     commander::CommandType,
     context::Context,
     talent::{
-        form_browser::{
+        mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
+        navigator::{
             CurrChildElementTalent, CurrElementTalent, ModeNextTalent, ModePrevTalent,
             NextChildElementTalent, NextElementTalent, PrevChildElementTalent, PrevElementTalent,
         },
-        mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
         program::{
             CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
             StopTtsOutputTalent, ViewFocusTalent, ViewWindowTitleTalent,

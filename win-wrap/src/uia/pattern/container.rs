@@ -68,8 +68,8 @@ impl UiAutomationItemContainerPattern {
         property_id: UiaPropertyId,
         value: T,
     ) -> Option<UiAutomationElement>
-        where
-            VARIANT: From<T>,
+    where
+        VARIANT: From<T>,
     {
         unsafe {
             let Ok(r) = (match start_after {

@@ -17,19 +17,19 @@ use a11y::{
     jab::context::AccessibleContext,
 };
 use std::sync::Arc;
-use win_wrap::common::RECT;
-use win_wrap::{msaa::object::AccessibleObject, uia::element::UiAutomationElement};
+use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
 
-pub(crate) mod form_browser;
-
-pub(crate) enum BrowserElement<'a> {
+/**
+ * UI元素。
+ * */
+pub(crate) enum UiElement<'a> {
     IA2(Option<Accessible2Object>, Option<AccessibleRelation>),
     JAB(AccessibleContext<'a>),
     MSAA(AccessibleObject, i32),
     UIA(UiAutomationElement),
 }
 
-impl<'a> BrowserElement<'a> {
+impl<'a> UiElement<'a> {
     /**
      * 获取子对象数量。
      * */
@@ -98,17 +98,17 @@ impl<'a> BrowserElement<'a> {
     }
 }
 
-unsafe impl<'a> Sync for BrowserElement<'a> {}
+unsafe impl<'a> Sync for UiElement<'a> {}
 
-unsafe impl<'a> Send for BrowserElement<'a> {}
+unsafe impl<'a> Send for UiElement<'a> {}
 
-impl<'a> From<UiAutomationElement> for BrowserElement<'a> {
+impl<'a> From<UiAutomationElement> for UiElement<'a> {
     fn from(value: UiAutomationElement) -> Self {
         Self::UIA(value)
     }
 }
 
-impl<'a> Speakable for BrowserElement<'a> {
+impl<'a> Speakable for UiElement<'a> {
     fn get_sentence(&self) -> String {
         match self {
             Self::IA2(x, _) => match x {

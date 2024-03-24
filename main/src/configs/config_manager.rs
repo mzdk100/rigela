@@ -12,7 +12,8 @@
  */
 
 use crate::configs::{
-    general::GeneralConfig, hotkeys::HotKeysConfig, mouse::MouseConfig, tts::TtsConfig,
+    general::GeneralConfig, hotkeys::HotKeysConfig, mouse::MouseConfig,
+    navigation::NavigationConfig, tts::TtsConfig,
 };
 use log::{error as err_log, info};
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,7 @@ pub(crate) struct ConfigRoot {
     pub(crate) mouse_config: MouseConfig,
     pub(crate) hotkeys_config: HotKeysConfig,
     pub(crate) general_config: GeneralConfig,
+    pub(crate) navigation_config: NavigationConfig,
 }
 
 /// 配置管理器
@@ -88,11 +90,11 @@ impl ConfigManager {
      * */
     pub(crate) fn read(&self) -> ConfigRoot {
         _read_config(&self.path).unwrap_or_else(|_| {
-            err_log!("读取配置文件失败，写入默认配置");
+            err_log!("The config file is invalid, this will be regenerated.");
             _write_config(&self.path, &ConfigRoot::default()).unwrap_or_else(|_| {
-                err_log!("写入默认配置文件失败");
+                err_log!("Can't write the default config file.");
             });
-            info!("写入默认配置文件成功");
+            info!("Using default config.");
             Default::default()
         })
     }
@@ -124,7 +126,7 @@ impl ConfigManager {
 
             // 开始执行配置写入
             let cfg = config.lock().unwrap().clone();
-            _write_config(&path, &cfg).unwrap_or_else(|_| err_log!("写入配置文件失败"));
+            _write_config(&path, &cfg).unwrap_or_else(|_| err_log!("Can't write the config file."));
 
             *write_finished.lock().unwrap() = true;
         });

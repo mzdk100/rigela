@@ -12,10 +12,9 @@
  */
 
 use crate::{
-    browser::form_browser::FormBrowser, commander::Commander,
-    configs::config_manager::ConfigManager, event_core, gui::GuiProvider, performer::Performer,
-    resources::ResourceProvider, talent::TalentProvider, tasks::TaskManager,
-    terminator::Terminator,
+    commander::Commander, configs::config_manager::ConfigManager, event_core, gui::GuiProvider,
+    navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
+    talent::TalentProvider, tasks::TaskManager, terminator::Terminator,
 };
 use a11y::{ia2::Ia2, jab::Jab};
 use log::info;
@@ -35,7 +34,6 @@ pub(crate) struct Context {
     pub(crate) commander: Arc<Commander>,
     pub(crate) config_manager: Arc<ConfigManager>,
     pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) form_browser: Arc<FormBrowser>,
     pub(crate) gui_provider: Arc<GuiProvider>,
     pub(crate) jab: Arc<Jab>,
     pub(crate) main_handler: Arc<Handle>,
@@ -51,6 +49,7 @@ pub(crate) struct Context {
     pub(crate) task_manager: Arc<TaskManager>,
     pub(crate) terminator: Arc<Terminator>,
     pub(crate) ui_automation: Arc<UiAutomation>,
+    pub(crate) ui_navigator: Arc<UiNavigator>,
 }
 
 impl Context {
@@ -110,7 +109,7 @@ impl Context {
         let event_core = event_core::EventCore::new();
 
         // 窗口浏览器
-        let form_browser = FormBrowser::new();
+        let form_browser = UiNavigator::new();
 
         // Gui 窗口界面管理器
         let window_manager = GuiProvider::new();
@@ -133,7 +132,7 @@ impl Context {
             ui_automation: ui_automation.into(),
             work_runtime: work_runtime.into(),
             event_core: event_core.into(),
-            form_browser: Arc::new(form_browser),
+            ui_navigator: Arc::new(form_browser),
             gui_provider: window_manager.into(),
         }
     }
@@ -197,7 +196,7 @@ impl Clone for Context {
             ui_automation: self.ui_automation.clone(),
             work_runtime: self.work_runtime.clone(),
             event_core: self.event_core.clone(),
-            form_browser: self.form_browser.clone(),
+            ui_navigator: self.ui_navigator.clone(),
             gui_provider: self.gui_provider.clone(),
         }
     }
