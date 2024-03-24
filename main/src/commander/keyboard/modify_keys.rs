@@ -40,45 +40,46 @@ impl From<Keys> for ModifierKeys {
 
 impl From<&str> for ModifierKeys {
     fn from(key: &str) -> ModifierKeys {
-        match key {
-            "RigelA" => ModifierKeys::RIGELA,
-            "Ctrl" => ModifierKeys::CTRL,
-            "Alt" => ModifierKeys::ALT,
-            "Shift" => ModifierKeys::SHIFT,
-            "Win" => ModifierKeys::WIN,
-            "RigelA_Ctrl" => ModifierKeys::RIGELA | ModifierKeys::CTRL,
-            "RigelA_Alt" => ModifierKeys::RIGELA | ModifierKeys::ALT,
-            "RigelA_Shift" => ModifierKeys::RIGELA | ModifierKeys::SHIFT,
-            "RigelA_Win" => ModifierKeys::RIGELA | ModifierKeys::WIN,
-            "Ctrl_Alt" => ModifierKeys::CTRL | ModifierKeys::ALT,
-            "Ctrl_Shift" => ModifierKeys::CTRL | ModifierKeys::SHIFT,
-            "Ctrl_Win" => ModifierKeys::CTRL | ModifierKeys::WIN,
-            "Alt_Shift" => ModifierKeys::ALT | ModifierKeys::SHIFT,
-            "Alt_Win" => ModifierKeys::ALT | ModifierKeys::WIN,
-            "Shift_Win" => ModifierKeys::SHIFT | ModifierKeys::WIN,
-            "RigelA_Ctrl_Alt" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::ALT,
-            "RigelA_Ctrl_Shift" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::SHIFT,
-            "RigelA_Ctrl_Win" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::WIN,
-            "RigelA_Alt_Shift" => ModifierKeys::RIGELA | ModifierKeys::ALT | ModifierKeys::SHIFT,
-            "RigelA_Alt_Win" => ModifierKeys::RIGELA | ModifierKeys::ALT | ModifierKeys::WIN,
-            "RigelA_Shift_Win" => ModifierKeys::RIGELA | ModifierKeys::SHIFT | ModifierKeys::WIN,
-            "Ctrl_Alt_Shift" => ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::SHIFT,
-            "Ctrl_Alt_Win" => ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::WIN,
-            "Ctrl_Shift_Win" => ModifierKeys::CTRL | ModifierKeys::SHIFT | ModifierKeys::WIN,
-            "Alt_Shift_Win" => ModifierKeys::ALT | ModifierKeys::SHIFT | ModifierKeys::WIN,
-            "RigelA_Ctrl_Alt_Shift" => {
+        let key = key.to_ascii_lowercase();
+        match key.as_str() {
+            "rigela" => ModifierKeys::RIGELA,
+            "ctrl" => ModifierKeys::CTRL,
+            "alt" => ModifierKeys::ALT,
+            "shift" => ModifierKeys::SHIFT,
+            "win" => ModifierKeys::WIN,
+            "rigela_ctrl" => ModifierKeys::RIGELA | ModifierKeys::CTRL,
+            "rigela_alt" => ModifierKeys::RIGELA | ModifierKeys::ALT,
+            "rigela_shift" => ModifierKeys::RIGELA | ModifierKeys::SHIFT,
+            "rigela_win" => ModifierKeys::RIGELA | ModifierKeys::WIN,
+            "ctrl_alt" => ModifierKeys::CTRL | ModifierKeys::ALT,
+            "ctrl_shift" => ModifierKeys::CTRL | ModifierKeys::SHIFT,
+            "ctrl_win" => ModifierKeys::CTRL | ModifierKeys::WIN,
+            "alt_shift" => ModifierKeys::ALT | ModifierKeys::SHIFT,
+            "alt_win" => ModifierKeys::ALT | ModifierKeys::WIN,
+            "shift_win" => ModifierKeys::SHIFT | ModifierKeys::WIN,
+            "rigela_ctrl_alt" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::ALT,
+            "rigela_ctrl_shift" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::SHIFT,
+            "rigela_ctrl_win" => ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::WIN,
+            "rigela_alt_shift" => ModifierKeys::RIGELA | ModifierKeys::ALT | ModifierKeys::SHIFT,
+            "rigela_alt_win" => ModifierKeys::RIGELA | ModifierKeys::ALT | ModifierKeys::WIN,
+            "rigela_shift_win" => ModifierKeys::RIGELA | ModifierKeys::SHIFT | ModifierKeys::WIN,
+            "ctrl_alt_shift" => ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::SHIFT,
+            "ctrl_alt_win" => ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::WIN,
+            "ctrl_shift_win" => ModifierKeys::CTRL | ModifierKeys::SHIFT | ModifierKeys::WIN,
+            "alt_shift_win" => ModifierKeys::ALT | ModifierKeys::SHIFT | ModifierKeys::WIN,
+            "rigela_ctrl_alt_shift" => {
                 ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::SHIFT
             }
-            "RigelA_Ctrl_Alt_Win" => {
+            "rigela_ctrl_alt_win" => {
                 ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::WIN
             }
-            "RigelA_Ctrl_Shift_Win" => {
+            "rigela_ctrl_shift_win" => {
                 ModifierKeys::RIGELA | ModifierKeys::CTRL | ModifierKeys::SHIFT | ModifierKeys::WIN
             }
-            "RigelA_Alt_Shift_Win" => {
+            "rigela_alt_shift_win" => {
                 ModifierKeys::RIGELA | ModifierKeys::ALT | ModifierKeys::SHIFT | ModifierKeys::WIN
             }
-            "Ctrl_Alt_Shift_Win" => {
+            "ctrl_alt_shift_win" => {
                 ModifierKeys::CTRL | ModifierKeys::ALT | ModifierKeys::SHIFT | ModifierKeys::WIN
             }
             _ => ModifierKeys::empty(),
