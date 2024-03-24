@@ -19,27 +19,27 @@ use std::hash::Hash;
 
 /// 定义组合键
 /// Example: combo_keys!("RigelA", Keys::VkEsc), combo_keys!("RigelA", Keys::F12, double),
-#[allow(unused)]
-macro_rules! combo_keys {
+#[macro_export]
+macro_rules! combo_key {
     ($mdf: literal, $key: path) => {
         ComboKey {
             main_key: $key,
             modify_keys: ModifierKeys::from($mdf),
             state: State::SinglePress,
         }
-        ($mdf: literal, $key: path, double) =>{
-            ComboKey {
-                main_key: $key,
-                modify_keys: ModifierKeys::from($mdf),
-                state: State::DoublePress,
-            }
-            ($mdf: literal, $key: path, long) => {
-                ComboKey {
-                    main_key: $key,
-                    modify_keys: ModifierKeys::from($mdf),
-                    state: State::LongPress,
-                }
-            }
+    };
+    ($mdf: literal, $key: path, double) => {
+        ComboKey {
+            main_key: $key,
+            modify_keys: ModifierKeys::from($mdf),
+            state: State::DoublePress,
+        }
+    };
+    ($mdf: literal, $key: path, long) => {
+        ComboKey {
+            main_key: $key,
+            modify_keys: ModifierKeys::from($mdf),
+            state: State::LongPress,
         }
     };
 }

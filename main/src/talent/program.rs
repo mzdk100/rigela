@@ -11,6 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::combo_key;
+use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::commander::keyboard::combo_keys::State;
+use crate::commander::keyboard::modify_keys::ModifierKeys;
+use crate::commander::{CommandType, Commander};
 use crate::{
     commander::keyboard::keys::Keys::*,
     context::Context,
@@ -21,8 +26,6 @@ use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
 use log::error;
 use rigela_macros::talent;
-
-use crate::commander::{CommandType, Commander};
 use std::ops::ControlFlow::Break;
 use std::{
     sync::{OnceLock, Weak},
@@ -35,7 +38,7 @@ use win_wrap::{
 };
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "退出", key = (VkRigelA, VkEscape))]
+#[talent(doc = "退出", key = combo_key!("RigelA", VkEscape))]
 async fn exit(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 

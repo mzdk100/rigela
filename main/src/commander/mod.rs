@@ -14,6 +14,7 @@
 pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
@@ -36,7 +37,7 @@ type KeyCallbackFn = Arc<dyn Fn(Keys, bool) + Send + Sync>;
 #[allow(dead_code)]
 pub(crate) enum CommandType {
     // 键盘命令
-    Key(Vec<Keys>),
+    Key(ComboKey),
     // 触摸命令
     Touch,
     // 语音命令
