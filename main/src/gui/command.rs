@@ -16,8 +16,7 @@ use crate::{
     configs::{
         config_manager::ConfigRoot,
         config_operations::{
-            apply_mouse_config, save_auto_check_update, save_is_display_shortcut, save_lang,
-            save_run_on_startup,
+            apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
         },
         general::Lang,
         tts::TtsConfig,
@@ -219,7 +218,7 @@ pub(crate) fn set_lang_cmd(context: Weak<Context>, index: usize) {
         Lang::En => t!("command.msg_switch_to_en"),
         _ => t!("command.msg_switch_to_follow_system"),
     }
-    .to_string();
+        .to_string();
     let pf = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
         .main_handler
@@ -427,19 +426,21 @@ fn reapply_config(context: Weak<Context>) {
         });
 }
 
+/// 获取桌面快捷方式的路径
+pub(crate) fn get_desktop_shortcut_path() -> PathBuf {
+    let path = get_known_folder_path(&FOLDERID_Desktop, KF_FLAG_DEFAULT, None).unwrap();
+    Path::new(&path).join(t!("command.program_name").to_string() + ".lnk")
+}
+
 /// 添加桌面快捷方式
 pub(crate) fn add_desktop_shortcut_cmd(context: Weak<Context>, toggle: bool, keys: &[Keys]) {
-    let path = get_known_folder_path(&FOLDERID_Desktop, KF_FLAG_DEFAULT, None).unwrap();
-    let path = Path::new(&path).join(t!("command.program_name").to_string() + ".lnk");
-
+    let path = get_desktop_shortcut_path();
     match toggle {
         true => {
             create_shortcut_link(path.to_str().unwrap().to_string(), keys);
         }
         false => remove_file(&path).unwrap_or(()),
     }
-
-    save_is_display_shortcut(context.clone(), toggle);
 
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }

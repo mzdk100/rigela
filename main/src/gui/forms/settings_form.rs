@@ -11,13 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     bring_window_front,
+    commander::keyboard::combo_keys::ComboKey,
     configs::{
         config_operations::{
-            get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,
-            get_run_on_startup,
+            get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
         },
         general::Lang,
         tts::TtsPropertyItem,
@@ -25,9 +24,10 @@ use crate::{
     context::Context,
     gui::{
         command::{
-            add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd, import_config_cmd,
-            reset_config_cmd, set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd,
-            set_mouse_read_cmd, set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
+            add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd,
+            get_desktop_shortcut_path, import_config_cmd, reset_config_cmd,
+            set_auto_check_update_cmd, set_auto_start_cmd, set_lang_cmd, set_mouse_read_cmd,
+            set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
         },
         forms::hotkeys::HotKeysUi,
         utils::set_hook,
@@ -358,7 +358,7 @@ impl SettingsForm {
         bring_window_front!(&self.window);
 
         // 更新桌面快捷显示
-        let state = match get_is_display_shortcut(self.context.get().unwrap().clone()) {
+        let state = match get_desktop_shortcut_path().exists() {
             true => CheckBoxState::Checked,
             false => CheckBoxState::Unchecked,
         };

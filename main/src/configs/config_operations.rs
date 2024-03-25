@@ -11,9 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::configs::general::{GeneralConfig, Lang};
-use crate::{configs::mouse::MouseConfig, context::Context};
+use crate::{
+    commander::keyboard::combo_keys::ComboKey,
+    configs::{
+        general::{GeneralConfig, Lang},
+        mouse::MouseConfig,
+    },
+    context::Context,
+};
 use std::{collections::HashMap, sync::Weak};
 
 macro_rules! get_cfg {
@@ -58,21 +63,6 @@ pub(crate) fn save_hotkeys(context: Weak<Context>, hotkeys: HashMap<String, Comb
 }
 
 // ------  常规配置  -------
-
-/// 获取是否显示桌面快捷方式
-pub(crate) fn get_is_display_shortcut(context: Weak<Context>) -> bool {
-    get_cfg!(context).general_config.desktop_shortcut
-}
-
-/// 保存是否显示桌面快捷方式
-pub(crate) fn save_is_display_shortcut(context: Weak<Context>, desktop_shortcut: bool) {
-    let mut cfg = get_cfg!(context);
-    cfg.general_config = GeneralConfig {
-        desktop_shortcut,
-        ..cfg.general_config
-    };
-    set_cfg!(context, cfg);
-}
 
 /// 获取是否开机自启
 pub(crate) fn get_run_on_startup(context: Weak<Context>) -> bool {
