@@ -13,7 +13,7 @@
 
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
-    commander::{keyboard::keys::Keys, CommandType, Talent},
+    commander::{keyboard::keys::Keys, Talent},
     configs::config_operations::{get_hotkeys, get_mouse_read_state},
     context::Context,
     talent::mouse::mouse_read,
@@ -65,11 +65,8 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
             }
         }
 
-        // 转换RigelA键
-        let key = match key {
-            Keys::VkNumPad0 | Keys::VkCapital | Keys::VkInsert => Keys::VkRigelA,
-            _ => key,
-        };
+        // 转换RigelA的键
+        let key = key.trans_rigela();
 
         let mut map = key_track.write().unwrap();
         map.insert(key, pressed);
@@ -89,23 +86,34 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
                 unsafe { &*context.as_ptr() }
                     .commander
                     .set_last_pressed_key(&key);
-
-                // 执行能力操作
-                for i in talents.iter() {
-                    match get_hotkeys(context.clone()).get(&i.get_id()) {
-                        // 如果用户自定义过热键优先使用他定义的。
-                        Some(keys) if match_keys(&keys, &map) => {
-                            return execute(context.clone(), Arc::clone(i));
-                        }
-                        // 如果用户没定义过这个能力的热键就使用默认的。
-                        None if match_cmd_list(i.clone(), &map) => {
-                            return execute(context.clone(), Arc::clone(i));
-                        }
-                        _ => continue,
-                    };
-                }
             }
+
             _ => {}
+        }
+
+        // Todo: 执行能力操作
+        if pressed && !key.is_modifierkey() {
+            let combo_key: ComboKey = map
+                .iter()
+                .filter_map(|(k, v)| if *v { Some(k.clone()) } else { None })
+                .collect::<Vec<Keys>>()
+                .into();
+
+            for i in talents.iter() {
+                match get_hotkeys(context.clone()).get(&i.get_id()) {
+                    // 如果用户自定义过热键优先使用他定义的。
+                    Some(c) if c.clone() == combo_key => {
+                        return execute(context.clone(), Arc::clone(i));
+                    }
+
+                    // 如果用户没定义过这个能力的热键就使用默认的。
+                    None if i.get_combo_key().unwrap_or(Default::default()) == combo_key => {
+                        return execute(context.clone(), Arc::clone(i));
+                    }
+
+                    _ => continue,
+                };
+            }
         }
 
         let key_count = map.values().filter(|i| **i).count();
@@ -136,24 +144,6 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
 
         drop(map); // 必须先释放锁再next()，否则可能会死锁
         next()
-    })
-}
-
-// 匹配技能项的热键列表是否与当前Hook到的按键相同
-fn match_keys(keys: &ComboKey, map: &HashMap<Keys, bool>) -> bool {
-    let combo_key: ComboKey = map
-        .iter()
-        .filter_map(|(k, v)| if *v { Some(k.clone()) } else { None })
-        .collect::<Vec<Keys>>()
-        .into();
-
-    combo_key == *keys
-}
-
-fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
-    talent.get_supported_cmd_list().iter().any(|x| match x {
-        CommandType::Key(y) => match_keys(y, map),
-        _ => false,
     })
 }
 

@@ -37,30 +37,18 @@ impl Parse for Metadata {
         cmd_list.append(Ident::new("vec", Span::call_site()));
         cmd_list.append(Punct::new('!', Spacing::Alone));
 
-        cmd_list.append(Group::new(Bracket, {
-            let mut items = TokenStream::new();
+        for i in iter {
+            let ident = i.path.get_ident().unwrap();
+            let type_str = ident.to_string().to_upper_camel_case().to_string();
+            let cmd_type = Ident::new(type_str.as_str(), Span::call_site());
+            let cmd = i.value.to_token_stream();
 
-            for i in iter {
-                let ident = i.path.get_ident().unwrap();
-                let type_str = ident.to_string().to_upper_camel_case().to_string();
-                let cmd_type = Ident::new(type_str.as_str(), Span::call_site());
-                let cbk = i.value.to_token_stream();
+            let cmd_type = quote! {
+                crate::commander::CommandType::#cmd_type(#cmd)
+            };
 
-                let cmd_type = quote! {
-                    crate::commander::CommandType::#cmd_type(#cbk)
-                };
-                // cmd_type.to_tokens(&mut items);
-                // let value: Group = syn::parse2(i.value.to_token_stream())?;
-                // let mut data = TokenStream::new();
-                // data.append(Ident::new("vec", Span::call_site()));
-                // data.append(Punct::new('!', Spacing::Alone));
-                // data.append(Group::new(Bracket, value.stream()));
-
-                items = cmd_type;
-            }
-
-            items
-        }));
+            cmd_list.append(Group::new(Bracket, cmd_type));
+        }
 
         Ok(Self { doc, cmd_list })
     }
@@ -86,12 +74,24 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             fn get_supported_cmd_list(&self) -> Vec<crate::commander::CommandType> {
                 #cmd_list
             }
+
+            fn get_combo_key(&self) -> std::option::Option<crate::commander::keyboard::combo_keys::ComboKey> {
+                for cmd_type in self.get_supported_cmd_list() {
+                    if let crate::commander::CommandType::Key(combo_key) = cmd_type {
+                        return std::option::Option::Some(combo_key);
+                    }
+                }
+                std::option::Option::None
+            }
+
             fn get_id(&self) -> String {
                 #id_raw.to_string()
             }
+
             fn get_doc(&self) -> String {
                 #doc_raw.to_string()
             }
+
             async  fn perform(&self, context: Weak<Context>) {
                 #body
             }

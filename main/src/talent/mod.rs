@@ -16,6 +16,7 @@ pub(crate) mod mouse;
 mod program;
 mod tts;
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     commander::CommandType,
     context::Context,
@@ -62,6 +63,9 @@ pub(crate) trait Talented {
      * 获取能力可支持的命令类型。
      * */
     fn get_supported_cmd_list(&self) -> Vec<CommandType>;
+
+    // 获取热键
+    fn get_combo_key(&self) -> Option<ComboKey>;
 
     /**
      * 执行能力的入口方法。

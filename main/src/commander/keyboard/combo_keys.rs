@@ -26,18 +26,10 @@ macro_rules! combo_key {
         ComboKey::new($key, ModifierKeys::empty(), State::SinglePress)
     };
     ($key: path, double) => {
-        ComboKey::new (
-            main_key: $key,
-            modify_keys: ModifierKeys::empty(),
-            state: State::DoublePress,
-        )
+        ComboKey::new($key, ModifierKeys::empty(), State::DoublePress)
     };
     ($key: path, long) => {
-        ComboKey::new (
-            main_key: $key,
-            modify_keys: ModifierKeys::empty(),
-            state: State::LongPress,
-        )
+        ComboKey::new($key, ModifierKeys::empty(), State::LongPress)
     };
     ($mdf: literal, $key: path) => {
         ComboKey::new($key, ModifierKeys::from($mdf), State::SinglePress)
@@ -106,7 +98,7 @@ impl fmt::Display for ComboKey {
             State::DoublePress => "(Double)",
             State::LongPress => "(Long)",
         };
-        write!(f, "{} + {}{state}", self.main_key, self.modify_keys)
+        write!(f, "{} + {}{state}", self.modify_keys, self.main_key)
     }
 }
 

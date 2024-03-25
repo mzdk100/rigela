@@ -17,8 +17,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 bitflags! {
-#[allow(unused)]
-#[allow(unused)]
     #[derive(Serialize, Deserialize)]
     pub(crate) struct ModifierKeys: u8 {
         const RIGELA = 0b0000_0001;
