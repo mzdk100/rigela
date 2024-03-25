@@ -65,8 +65,8 @@ async fn read_mouse(context: Weak<Context>) {
 
 async fn get_point(context: Weak<Context>) -> (i32, i32) {
     let context = unsafe { &*context.as_ptr() };
-    let ele = match context.form_browser.current_child().await {
-        None => context.form_browser.current().await,
+    let ele = match context.ui_navigator.get_last_visit().await {
+        None => None,
         e => e,
     };
     match ele {

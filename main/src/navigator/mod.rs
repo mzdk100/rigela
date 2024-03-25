@@ -22,7 +22,7 @@ use std::{
 
 use tokio::sync::Mutex;
 
-use crate::{navigator::element::UiElement, performer::Speakable};
+use crate::navigator::element::UiElement;
 
 /**
  * UI导航器。
