@@ -62,7 +62,7 @@ pub struct SettingsForm {
     pub(crate) context: OnceLock<Weak<Context>>,
 
     pub(crate) talents: RefCell<Arc<Vec<crate::gui::forms::hotkeys::Talent>>>,
-    pub(crate) talent_keys: RefCell<HashMap<String, ComboKey>>,
+    pub(crate) talent_keys: RefCell<HashMap<ComboKey, String>>,
     pub(crate) hotkeys: Arc<Mutex<ComboKey>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 

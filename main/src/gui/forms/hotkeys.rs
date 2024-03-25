@@ -99,8 +99,8 @@ impl SettingsForm {
         let context = self.context.get().unwrap().clone();
         *self.talents.borrow_mut() = unsafe { &*context.as_ptr() }
             .talent_provider
-            .talents
-            .clone();
+            .get_all_talents()
+            .into();
         *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
@@ -113,8 +113,11 @@ impl SettingsForm {
         for (i, talent) in talents.iter().enumerate() {
             dv.insert_item(talent.get_doc());
 
-            let talent_keys = self.talent_keys.borrow().clone();
-            let keys = talent_keys.get(&talent.get_id());
+            let _talent_keys = self.talent_keys.borrow().clone();
+            // Todo
+            // let keys = talent_keys.iter().filter(|(_, id)| **id == talent.get_id())
+            //     .map(|(k, _)| k.clone()).collect::<Vec<_>>().first();
+            let keys = None;
 
             // 获取默认的热键组合字符串
             let get_str = |t: &Talent| {
@@ -158,8 +161,13 @@ impl SettingsForm {
             return;
         }
 
-        let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
-        if self.talent_keys.borrow().get(&id_).is_some() {
+        let _id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
+        // Todo
+        // let keys = self.talent_keys.borrow().iter().filter(|(_, id)| **id == id_)
+        //     .map(|(k, _)| k.clone()).collect::<Vec<_>>().first();
+        let keys: Option<String> = None;
+
+        if keys.is_some() {
             self.hotkeys_ui.btn_clear.set_enabled(true);
         }
     }
@@ -213,7 +221,8 @@ impl SettingsForm {
 
             let context = self.context.get().unwrap().clone();
             let mut talent_keys = self.talent_keys.borrow_mut().clone();
-            talent_keys.remove(&id_);
+            // Todo
+            // talent_keys.remove(&id_);
             save_hotkeys(context.clone(), talent_keys);
         }
 
@@ -249,7 +258,7 @@ impl SettingsForm {
 
             let context = self.context.get().unwrap().clone();
             let mut talent_keys = self.talent_keys.borrow_mut().clone();
-            talent_keys.insert(id_.to_string(), hotkeys);
+            talent_keys.insert(hotkeys, id_.to_string());
             save_hotkeys(context.clone(), talent_keys);
         }
 
