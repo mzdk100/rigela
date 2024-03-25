@@ -11,18 +11,22 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    commander::keyboard::keys::Keys::*, configs::config_operations::apply_mouse_config,
-    context::Context,
-};
+use crate::combo_key;
+use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::commander::keyboard::combo_keys::State;
+#[allow(unused_imports)]
+use crate::commander::keyboard::keys::Keys::*;
+use crate::commander::keyboard::modify_keys::ModifierKeys;
+use crate::configs::config_operations::apply_mouse_config;
+use crate::context::Context;
 use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
-//noinspection RsUnresolvedPath
-#[talent(doc = "鼠标单击", key = (VkNumPadDiv))]
+//noinspection RsUnresolvedReference
+#[talent(doc = "鼠标单击", key = combo_key!(VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
@@ -32,8 +36,8 @@ async fn click(context: Weak<Context>) {
         .await;
 }
 
-//noinspection RsUnresolvedPath
-#[talent(doc = "鼠标右击", key = (VkNumPadMul))]
+//noinspection RsUnresolvedReference
+#[talent(doc = "鼠标右击", key = combo_key!(VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
@@ -43,8 +47,8 @@ async fn right_click(context: Weak<Context>) {
         .await;
 }
 
-//noinspection RsUnresolvedPath
-#[talent(doc = "鼠标朗读", key = (VkRigelA, VkM))]
+//noinspection RsUnresolvedReference
+#[talent(doc = "鼠标朗读", key = combo_key!("RigelA", VkM))]
 async fn read_mouse(context: Weak<Context>) {
     let is_read = !unsafe { &*context.as_ptr() }
         .config_manager
@@ -61,8 +65,8 @@ async fn read_mouse(context: Weak<Context>) {
 
 async fn get_point(context: Weak<Context>) -> (i32, i32) {
     let context = unsafe { &*context.as_ptr() };
-    let ele = match context.ui_navigator.get_last_visit().await {
-        None => None,
+    let ele = match context.form_browser.current_child().await {
+        None => context.form_browser.current().await,
         e => e,
     };
     match ele {

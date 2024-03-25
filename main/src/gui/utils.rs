@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::commander::keyboard::keys::Keys;
 use log::error;
 use nwg::NoticeSender;
@@ -383,7 +384,7 @@ pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
 /// 设置键盘钩子
 /// @param keys 产生好的键位列表
 /// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
-pub(crate) fn set_hook(keys: Arc<Mutex<Vec<Keys>>>, senders: &[NoticeSender; 2]) -> WindowsHook {
+pub(crate) fn set_hook(keys: Arc<Mutex<ComboKey>>, senders: &[NoticeSender; 2]) -> WindowsHook {
     let hotkeys = keys.clone();
     let finish_sender = senders[0];
     let cancel_sender = senders[1];
@@ -423,8 +424,7 @@ pub(crate) fn set_hook(keys: Arc<Mutex<Vec<Keys>>>, senders: &[NoticeSender; 2])
                 _ => {
                     // 读取已经按下键位到存储缓冲
                     let mut hotkeys = hotkeys.lock().unwrap();
-                    hotkeys.clear();
-                    hotkeys.extend(keys);
+                    *hotkeys = keys.into();
 
                     finish_sender.notice();
                 }

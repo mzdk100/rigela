@@ -560,6 +560,17 @@ impl Keys {
         }
     }
 
+    /// 转换RigelA键, 非Rigela键原键返回
+    pub(crate) fn trans_rigela(self) -> Self {
+        const RIGELA_KEY: [Keys; 3] = [Keys::VkNumPad0, Keys::VkInsert, Keys::VkCapital];
+
+        if RIGELA_KEY.contains(&self) {
+            Keys::VkRigelA
+        } else {
+            self
+        }
+    }
+
     pub(crate) fn is_modifierkey(&self) -> bool {
         const KEYS: [Keys; 5] = [
             Keys::VkShift,
@@ -1008,7 +1019,8 @@ impl_keys_str_into!(
 
 impl fmt::Display for Keys {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{}", self.clone())
+        let text: &str = self.clone().into();
+        writeln!(f, "{text}")
     }
 }
 

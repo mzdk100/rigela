@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
-    commander::{keyboard::keys::Keys, CommandType::Key},
+    commander::CommandType::Key,
     configs::config_operations::{get_hotkeys, save_hotkeys},
     gui::{forms::settings_form::SettingsForm, utils::set_hook},
     talent::Talented,
@@ -119,7 +120,7 @@ impl SettingsForm {
             let get_str = |t: &Talent| {
                 for cmd_type in t.get_supported_cmd_list() {
                     if let Key(keys) = cmd_type {
-                        return Self::keys_to_string(&keys);
+                        return format!("{keys}");
                     }
                 }
                 "".to_string()
@@ -224,7 +225,7 @@ impl SettingsForm {
     pub(crate) fn on_finish_custom(&self) {
         self.hook.take().unwrap().unhook();
 
-        let hotkeys: Vec<Keys> = self.hotkeys.lock().unwrap().clone();
+        let hotkeys = self.hotkeys.lock().unwrap().clone();
         let key_str = Self::keys_to_string(&hotkeys);
         self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
@@ -290,10 +291,7 @@ impl SettingsForm {
     }
 
     // 键码集合转字符串
-    fn keys_to_string(keys: &[Keys]) -> String {
-        keys.iter()
-            .map(|x| -> &str { (*x).into() })
-            .collect::<Vec<&str>>()
-            .join("+")
+    fn keys_to_string(keys: &ComboKey) -> String {
+        format!("{keys}")
     }
 }

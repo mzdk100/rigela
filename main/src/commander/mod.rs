@@ -14,6 +14,7 @@
 pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
@@ -36,7 +37,7 @@ type KeyCallbackFn = Arc<dyn Fn(Keys, bool) + Send + Sync>;
 #[allow(dead_code)]
 pub(crate) enum CommandType {
     // 键盘命令
-    Key(Vec<Keys>),
+    Key(ComboKey),
     // 触摸命令
     Touch,
     // 语音命令
@@ -46,6 +47,7 @@ pub(crate) enum CommandType {
 /**
  * 指挥官结构。
  * */
+#[allow(unused)]
 pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
@@ -126,6 +128,7 @@ impl Commander {
         self.key_callback_fns.lock().unwrap().clone()
     }
 
+    #[allow(unused)]
     pub(crate) fn is_double_click(context: Weak<Context>, key: &Keys) -> bool {
         let result = unsafe { &*context.as_ptr() }
             .commander
@@ -149,11 +152,13 @@ impl Commander {
         result
     }
 
+    #[allow(unused)]
     pub(crate) fn get_is_double_click(&self, key: &Keys) -> bool {
         let (k, b) = *self.is_double_click.lock().unwrap();
         (k == key.clone()) && b
     }
 
+    #[allow(unused)]
     pub(crate) fn set_double_click(&self, key: &Keys, double: bool) {
         *self.is_double_click.lock().unwrap() = (key.clone(), double);
     }
