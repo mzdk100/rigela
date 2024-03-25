@@ -13,7 +13,6 @@
 
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
-    commander::CommandType::Key,
     configs::config_operations::{get_hotkeys, save_hotkeys},
     gui::{forms::settings_form::SettingsForm, utils::set_hook},
     talent::Talented,
@@ -101,7 +100,7 @@ impl SettingsForm {
             .talent_provider
             .talents
             .clone();
-        *self.talent_keys.borrow_mut() = get_hotkeys(context.clone());
+        *self.custom_talents.borrow_mut() = get_hotkeys(context.clone());
     }
 
     // 更新列表项目
@@ -113,23 +112,21 @@ impl SettingsForm {
         for (i, talent) in talents.iter().enumerate() {
             dv.insert_item(talent.get_doc());
 
-            let talent_keys = self.talent_keys.borrow().clone();
-            let keys = talent_keys.get(&talent.get_id());
+            let custom_talent = self.custom_talents.borrow().clone();
+            let custom_keys = custom_talent.get(&talent.get_id());
 
             // 获取默认的热键组合字符串
-            let get_str = |t: &Talent| {
-                for cmd_type in t.get_supported_cmd_list() {
-                    if let Key(keys) = cmd_type {
-                        return format!("{keys}");
-                    }
+            fn get_talent_keys_str(t: &Talent) -> String {
+                match t.get_combo_key() {
+                    Some(keys) => format!("{}", keys),
+                    None => String::new(),
                 }
-                "".to_string()
             };
 
             // 如果存在自定义热键，就仅显示自定义热键，否则显示默认热键
-            let (keys_str, col) = match keys {
-                Some(keys) => (Self::keys_to_string(keys), 2),
-                None => (get_str(talent), 1),
+            let (keys_str, col) = match custom_keys {
+                Some(keys) => (format!("{keys}"), 2),
+                None => (get_talent_keys_str(talent), 1),
             };
 
             dv.insert_item(InsertListViewItem {
@@ -159,7 +156,7 @@ impl SettingsForm {
         }
 
         let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
-        if self.talent_keys.borrow().get(&id_).is_some() {
+        if self.custom_talents.borrow().get(&id_).is_some() {
             self.hotkeys_ui.btn_clear.set_enabled(true);
         }
     }
@@ -212,7 +209,7 @@ impl SettingsForm {
             }
 
             let context = self.context.get().unwrap().clone();
-            let mut talent_keys = self.talent_keys.borrow_mut().clone();
+            let mut talent_keys = self.custom_talents.borrow_mut().clone();
             talent_keys.remove(&id_);
             save_hotkeys(context.clone(), talent_keys);
         }
@@ -226,7 +223,7 @@ impl SettingsForm {
         self.hook.take().unwrap().unhook();
 
         let hotkeys = self.hotkeys.lock().unwrap().clone();
-        let key_str = Self::keys_to_string(&hotkeys);
+        let key_str = hotkeys.to_string();
         self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
         // 这里需要包裹，不然调用init_data会闪退
@@ -248,7 +245,7 @@ impl SettingsForm {
             }
 
             let context = self.context.get().unwrap().clone();
-            let mut talent_keys = self.talent_keys.borrow_mut().clone();
+            let mut talent_keys = self.custom_talents.borrow_mut().clone();
             talent_keys.insert(id_.to_string(), hotkeys);
             save_hotkeys(context.clone(), talent_keys);
         }
@@ -288,10 +285,5 @@ impl SettingsForm {
             0 => -1,
             _ => items[0] as i32,
         }
-    }
-
-    // 键码集合转字符串
-    fn keys_to_string(keys: &ComboKey) -> String {
-        format!("{keys}")
     }
 }
