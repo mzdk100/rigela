@@ -15,13 +15,13 @@ pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::talent::TalentProvider;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
     talent::Talented,
 };
 use keyboard::keys::Keys;
-use std::time::Duration;
 use std::{
     fmt::{Debug, Formatter},
     sync::{Arc, Mutex, OnceLock, Weak},
@@ -49,11 +49,11 @@ pub(crate) enum CommandType {
  * */
 #[allow(unused)]
 pub(crate) struct Commander {
+    talent_provider: Arc<Mutex<TalentProvider>>,
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
     key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
-    is_double_click: Mutex<(Keys, bool)>,
 }
 
 impl Commander {
@@ -63,11 +63,11 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
+            talent_provider: Arc::new(Mutex::new(TalentProvider::new())),
             keyboard_hook: Default::default(),
             mouse_hook: Default::default(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
             key_callback_fns: Mutex::new(Vec::new()),
-            is_double_click: Mutex::new((Keys::VkNone, false)),
         }
     }
 
@@ -76,18 +76,22 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Weak<Context>) {
-        let talents = unsafe { &*context.as_ptr() }
-            .talent_provider
-            .talents
-            .clone();
+        self.talent_provider
+            .lock()
+            .unwrap()
+            .update_custom_combo_key_map(context.clone());
 
         self.keyboard_hook
-            .set(set_keyboard_hook(context.clone(), talents))
+            .set(set_keyboard_hook(context.clone()))
             .unwrap_or(());
 
         self.mouse_hook
             .set(set_mouse_hook(context.clone()))
             .unwrap_or(());
+    }
+
+    pub(crate) fn get_talent_provider(&self) -> Arc<Mutex<TalentProvider>> {
+        self.talent_provider.clone()
     }
 
     /**
@@ -126,41 +130,6 @@ impl Commander {
 
     pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
         self.key_callback_fns.lock().unwrap().clone()
-    }
-
-    #[allow(unused)]
-    pub(crate) fn is_double_click(context: Weak<Context>, key: &Keys) -> bool {
-        let result = unsafe { &*context.as_ptr() }
-            .commander
-            .get_is_double_click(key);
-
-        if !result {
-            unsafe { &*context.as_ptr() }
-                .commander
-                .set_double_click(key, true);
-
-            let cmd = unsafe { &*context.as_ptr() }.commander.clone();
-            let key = key.clone();
-            unsafe { &*context.as_ptr() }
-                .main_handler
-                .spawn(async move {
-                    tokio::time::sleep(Duration::from_millis(200)).await;
-                    cmd.set_double_click(&key, false);
-                });
-        }
-
-        result
-    }
-
-    #[allow(unused)]
-    pub(crate) fn get_is_double_click(&self, key: &Keys) -> bool {
-        let (k, b) = *self.is_double_click.lock().unwrap();
-        (k == key.clone()) && b
-    }
-
-    #[allow(unused)]
-    pub(crate) fn set_double_click(&self, key: &Keys, double: bool) {
-        *self.is_double_click.lock().unwrap() = (key.clone(), double);
     }
 }
 
