@@ -19,11 +19,13 @@ use std::sync::Mutex;
 
 type EventHandler = Box<dyn Fn()>;
 
+#[allow(unused)]
 pub(crate) struct ComboKeysManage {
     combokeys: Mutex<HashSet<ComboKeyExt>>,
     key_bindings: Mutex<HashMap<ComboKey, EventHandler>>,
 }
 
+#[allow(unused)]
 impl ComboKeysManage {
     pub(crate) fn new() -> ComboKeysManage {
         ComboKeysManage {
@@ -40,5 +42,5 @@ impl ComboKeysManage {
             .insert(combo.clone(), handler);
     }
 
-    fn process_key_event(&self, key: Keys, down: bool, modifiers: ModifierKeys) {}
+    fn process_key_event(&self, _key: Keys, _down: bool, _modifiers: ModifierKeys) {}
 }

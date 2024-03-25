@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     bring_window_front,
-    commander::keyboard::keys::Keys,
     configs::{
         config_operations::{
             get_auto_check_update, get_is_display_shortcut, get_lang, get_mouse_read_state,
@@ -62,8 +62,8 @@ pub struct SettingsForm {
     pub(crate) context: OnceLock<Weak<Context>>,
 
     pub(crate) talents: RefCell<Arc<Vec<crate::gui::forms::hotkeys::Talent>>>,
-    pub(crate) talent_keys: RefCell<HashMap<String, Vec<Keys>>>,
-    pub(crate) hotkeys: Arc<Mutex<Vec<Keys>>>,
+    pub(crate) talent_keys: RefCell<HashMap<String, ComboKey>>,
+    pub(crate) hotkeys: Arc<Mutex<ComboKey>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 
     all_voices: Arc<Mutex<Vec<String>>>,
@@ -255,11 +255,7 @@ impl SettingsForm {
         self.general_ui.hook.borrow_mut().take().unwrap().unhook();
         let keys = self.general_ui.program_hotkeys.lock().unwrap().clone();
 
-        let keys_str = keys
-            .iter()
-            .map(|key| -> &str { (*key).into() })
-            .collect::<Vec<_>>()
-            .join("+ ");
+        let keys_str = format!("{keys}");
         let info = format!("您确定要将{keys_str}用作程序启动的热键吗？");
 
         let msg_params = MessageParams {
@@ -272,7 +268,8 @@ impl SettingsForm {
             return;
         }
 
-        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
+        // Todo
+        // add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
 
         self.general_ui
             .ck_add_desktop_shortcut
@@ -477,7 +474,7 @@ impl SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    program_hotkeys: Arc<Mutex<Vec<Keys>>>,
+    program_hotkeys: Arc<Mutex<ComboKey>>,
     hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]

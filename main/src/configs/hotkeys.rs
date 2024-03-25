@@ -11,13 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::keys::Keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::commander::keyboard::combo_keys::ComboKey;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct HotKeysConfig {
-    pub(crate) talent_keys: HashMap<String, Vec<Keys>>,
+    pub(crate) talent_keys: HashMap<String, ComboKey>,
 }
 
 impl Default for HotKeysConfig {

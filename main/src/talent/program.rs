@@ -15,7 +15,6 @@ use crate::combo_key;
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::commander::keyboard::combo_keys::State;
 use crate::commander::keyboard::modify_keys::ModifierKeys;
-use crate::commander::{CommandType, Commander};
 use crate::{
     commander::keyboard::keys::Keys::*,
     context::Context,
@@ -26,7 +25,6 @@ use async_trait::async_trait;
 use chrono::prelude::{DateTime, Local};
 use log::error;
 use rigela_macros::talent;
-use std::ops::ControlFlow::Break;
 use std::{
     sync::{OnceLock, Weak},
     thread,
@@ -53,28 +51,26 @@ impl Speakable for DateTime<Local> {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "当前时间", key = (VkRigelA, VkF12))]
+#[talent(doc = "当前时间", key = combo_key!("RigelA", VkF12))]
 async fn current_time(context: Weak<Context>) {
-    use crate::commander;
-
-    let cts = self.get_supported_cmd_list();
-    let mut keys = vec![];
-    for ct in cts {
-        if let CommandType::Key(k) = ct {
-            keys.extend(k);
-            break;
-        }
-    }
-    let key = keys.last().unwrap();
-    let double = Commander::is_double_click(context.clone(), key);
-
-    let localtime = Local::now();
-    let msg = match double {
-        true => localtime.format("%Y年%m月%d日").to_string(),
-        false => localtime.format("%H时%M分%S秒").to_string(),
-    };
-
-    unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
+    // let cts = self.get_supported_cmd_list();
+    // let mut keys = vec![];
+    // for ct in cts {
+    //     if let CommandType::Key(k) = ct {
+    //         keys.extend(k);
+    //         break;
+    //     }
+    // }
+    // let key = keys.last().unwrap();
+    // let double = Commander::is_double_click(context.clone(), key);
+    //
+    // let localtime = Local::now();
+    // let msg = match double {
+    //     true => localtime.format("%Y年%m月%d日").to_string(),
+    //     false => localtime.format("%H时%M分%S秒").to_string(),
+    // };
+    //
+    // unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
 }
 
 impl Speakable for &PdhCounter {
@@ -88,7 +84,7 @@ impl Speakable for &PdhCounter {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "查看CPU使用率", key = (VkRigelA, VkQ))]
+#[talent(doc = "查看CPU使用率", key = combo_key!("RigelA", VkQ))]
 async fn current_cpu_usage(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
@@ -108,7 +104,7 @@ async fn current_cpu_usage(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "弹出菜单", key = (VkRigelA, VkR))]
+#[talent(doc = "弹出菜单", key = combo_key!("RigelA", VkR))]
 async fn popup_menu(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
@@ -116,7 +112,7 @@ async fn popup_menu(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "自定义热键", key = (VkRigelA, VkK))]
+#[talent(doc = "自定义热键", key = combo_key!("RigelA", VkK))]
 async fn hotkeys(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
@@ -124,7 +120,7 @@ async fn hotkeys(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "查看前景窗口标题", key = (VkRigelA, VkT))]
+#[talent(doc = "查看前景窗口标题", key = combo_key!("RigelA", VkT))]
 async fn view_window_title(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
@@ -143,7 +139,7 @@ async fn view_window_title(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "查看当前焦点", key = (VkRigelA, VkTab))]
+#[talent(doc = "查看当前焦点", key = combo_key!("RigelA", VkTab))]
 async fn view_focus(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
@@ -154,7 +150,7 @@ async fn view_focus(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "停止正在输出的语音", key = (VkCtrl))]
+#[talent(doc = "停止正在输出的语音", key = combo_key!("Ctrl", VkSpace))]
 async fn stop_tts_output(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 

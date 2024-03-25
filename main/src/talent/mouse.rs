@@ -11,8 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::combo_key;
+use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::commander::keyboard::combo_keys::State;
 #[allow(unused_imports)]
 use crate::commander::keyboard::keys::Keys::*;
+use crate::commander::keyboard::modify_keys::ModifierKeys;
 use crate::configs::config_operations::apply_mouse_config;
 use crate::context::Context;
 use async_trait::async_trait;
@@ -22,7 +26,7 @@ use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标单击", key = (VkNumPadDiv))]
+#[talent(doc = "鼠标单击", key = combo_key!(VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
@@ -33,7 +37,7 @@ async fn click(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标右击", key = (VkNumPadMul))]
+#[talent(doc = "鼠标右击", key = combo_key!(VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
@@ -44,7 +48,7 @@ async fn right_click(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedReference
-#[talent(doc = "鼠标朗读", key = (VkRigelA, VkM))]
+#[talent(doc = "鼠标朗读", key = combo_key!("RigelA", VkM))]
 async fn read_mouse(context: Weak<Context>) {
     let is_read = !unsafe { &*context.as_ptr() }
         .config_manager

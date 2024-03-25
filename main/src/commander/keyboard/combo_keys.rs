@@ -13,6 +13,7 @@
 
 use crate::commander::keyboard::keys::Keys;
 use crate::commander::keyboard::modify_keys::ModifierKeys;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
 use std::hash::Hash;
@@ -21,39 +22,42 @@ use std::hash::Hash;
 /// Example: combo_keys!("RigelA", Keys::VkEsc), combo_keys!("RigelA", Keys::F12, double),
 #[macro_export]
 macro_rules! combo_key {
-    ($mdf: literal, $key: path) => {
-        ComboKey {
+    ($key: path) => {
+        ComboKey::new($key, ModifierKeys::empty(), State::SinglePress)
+    };
+    ($key: path, double) => {
+        ComboKey::new (
             main_key: $key,
-            modify_keys: ModifierKeys::from($mdf),
-            state: State::SinglePress,
-        }
+            modify_keys: ModifierKeys::empty(),
+            state: State::DoublePress,
+        )
+    };
+    ($key: path, long) => {
+        ComboKey::new (
+            main_key: $key,
+            modify_keys: ModifierKeys::empty(),
+            state: State::LongPress,
+        )
+    };
+    ($mdf: literal, $key: path) => {
+        ComboKey::new($key, ModifierKeys::from($mdf), State::SinglePress)
     };
     ($mdf: literal, $key: path, double) => {
-        ComboKey {
-            main_key: $key,
-            modify_keys: ModifierKeys::from($mdf),
-            state: State::DoublePress,
-        }
+        ComboKey::new($key, ModifierKeys::from($mdf), State::DoublePress)
     };
     ($mdf: literal, $key: path, long) => {
-        ComboKey {
-            main_key: $key,
-            modify_keys: ModifierKeys::from($mdf),
-            state: State::LongPress,
-        }
+        ComboKey::new($key, ModifierKeys::from($mdf), State::LongPress)
     };
 }
 
-#[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) enum State {
     SinglePress,
     DoublePress,
     LongPress,
 }
 
-#[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) struct ComboKey {
     main_key: Keys,
     modify_keys: ModifierKeys,
@@ -67,6 +71,31 @@ impl Default for ComboKey {
             modify_keys: ModifierKeys::empty(),
             state: State::SinglePress,
         }
+    }
+}
+
+impl ComboKey {
+    pub(crate) fn new(main_key: Keys, modify_keys: ModifierKeys, state: State) -> Self {
+        ComboKey {
+            main_key,
+            modify_keys,
+            state,
+        }
+    }
+}
+
+impl From<Vec<Keys>> for ComboKey {
+    fn from(keys: Vec<Keys>) -> Self {
+        let mut mdf = ModifierKeys::empty();
+        let mut main = Keys::VkNone;
+        for k in keys {
+            match k.is_modifierkey() {
+                true => mdf |= ModifierKeys::from(k),
+                false => main = k,
+            }
+        }
+
+        ComboKey::new(main, mdf, State::SinglePress)
     }
 }
 

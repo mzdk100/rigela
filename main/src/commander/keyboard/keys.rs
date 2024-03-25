@@ -1008,7 +1008,8 @@ impl_keys_str_into!(
 
 impl fmt::Display for Keys {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{}", self.clone())
+        let text: &str = self.clone().into();
+        writeln!(f, "{text}")
     }
 }
 

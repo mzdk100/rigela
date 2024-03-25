@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     commander::{keyboard::keys::Keys, CommandType, Talent},
     configs::config_operations::{get_hotkeys, get_mouse_read_state},
@@ -79,9 +80,11 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
                 drop(map); // 必须先释放锁再next()，否则可能会死锁
                 return next();
             }
+
             true => {
                 // 所有键按下都把大写锁定键的状态切换关闭
                 *ignore_capital_key.lock().unwrap() = true;
+
                 // 保存最后按下的键
                 unsafe { &*context.as_ptr() }
                     .commander
@@ -91,7 +94,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
                 for i in talents.iter() {
                     match get_hotkeys(context.clone()).get(&i.get_id()) {
                         // 如果用户自定义过热键优先使用他定义的。
-                        Some(keys) if match_keys(keys, &map) => {
+                        Some(keys) if match_keys(&keys, &map) => {
                             return execute(context.clone(), Arc::clone(i));
                         }
                         // 如果用户没定义过这个能力的热键就使用默认的。
@@ -137,22 +140,14 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
 }
 
 // 匹配技能项的热键列表是否与当前Hook到的按键相同
-fn match_keys(keys: &[Keys], map: &HashMap<Keys, bool>) -> bool {
-    let pressed_key_count = map.values().filter(|i| **i).count();
-    if keys.len() != pressed_key_count {
-        // 如果当前按下的键数量和能力定义的键数量不一样就直接匹配失败
-        return false;
-    }
+fn match_keys(keys: &ComboKey, map: &HashMap<Keys, bool>) -> bool {
+    let combo_key: ComboKey = map
+        .iter()
+        .filter_map(|(k, v)| if *v { Some(k.clone()) } else { None })
+        .collect::<Vec<Keys>>()
+        .into();
 
-    for key in keys {
-        match map.get(key) {
-            // 能匹配到按键，并且按键状态为按下，进入下一轮循环
-            Some(x) if *x => continue,
-            _ => return false,
-        }
-    }
-    // 所有按键都匹配成功
-    true
+    combo_key == *keys
 }
 
 fn match_cmd_list(talent: Talent, map: &HashMap<Keys, bool>) -> bool {
