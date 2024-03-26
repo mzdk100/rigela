@@ -72,7 +72,7 @@ impl Terminator {
             if quit {
                 break;
             }
-            sleep(Duration::from_millis(100)).await;
+            sleep(Duration::from_millis(20)).await;
         }
         let lock = self.listeners.lock().await;
         lock.iter().for_each(|f| f());
