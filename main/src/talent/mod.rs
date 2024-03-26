@@ -16,11 +16,9 @@ mod navigator;
 mod program;
 mod tts;
 
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::configs::config_operations::get_hotkeys;
-use crate::talent::program::CurrentDateTalent;
 use crate::{
-    commander::CommandType,
+    commander::{keyboard::combo_keys::ComboKey, CommandType},
+    configs::config_operations::get_hotkeys,
     context::Context,
     talent::{
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},
@@ -29,8 +27,8 @@ use crate::{
             NextChildElementTalent, NextElementTalent, PrevChildElementTalent, PrevElementTalent,
         },
         program::{
-            CurrentCpuUsageTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent, PopupMenuTalent,
-            StopTtsOutputTalent, ViewFocusTalent, ViewWindowTitleTalent,
+            CurrentCpuUsageTalent, CurrentDateTalent, CurrentTimeTalent, ExitTalent, HotkeysTalent,
+            PopupMenuTalent, StopTtsOutputTalent, ViewFocusTalent, ViewWindowTitleTalent,
         },
         tts::{
             CacheToClipboardTalent, IncreaseTalent, MakeWordCacheCharTalent, NextCacheCharTalent,
@@ -40,8 +38,8 @@ use crate::{
     },
 };
 use async_trait::async_trait;
-use std::collections::HashMap;
 use std::{
+    collections::HashMap,
     fmt::{Debug, Formatter},
     sync::{Arc, Mutex, Weak},
 };
@@ -81,27 +79,32 @@ pub(crate) trait Talented {
 
 /// 能力提供者，包含所有能力对象列表
 pub(crate) struct TalentProvider {
-    // 技能对象集合
+    // 能力对象集合
     talents: HashMap<String, Talent>,
-    // 技能ID列表，使技能保持有序
+    // 能力ID列表，使能力保持有序
     talent_ids: Vec<String>,
-    // 热键技能映射，加速热键技能获取
+    // 热键能力映射，加速热键能力获取
     combo_key_map: Mutex<HashMap<ComboKey, String>>,
 }
 
-macro_rules! add_talent {
-    ($talents:ident, $talent_ids: ident, $combo_key_map: ident, $talent:expr) => {
-        let talent = Arc::new($talent);
-        let id = talent.get_id();
-        let combo_key = talent.get_combo_key();
+macro_rules! make_talents {
+    ($talents:ident, $combo_key_map: ident, $($talent:expr),*) => {{
+        let mut talent_ids = Vec::new();
 
-        $talents.insert(id.clone(), talent);
-        $talent_ids.push(id.clone());
+        $(
+            let talent = Arc::new($talent);
+            let id = talent.get_id();
+            let combo_key = talent.get_combo_key();
 
-        if let Some(combo_key) = combo_key {
-            $combo_key_map.insert(combo_key, id.clone());
-        }
-    };
+            $talents.insert(id.clone(), talent);
+            talent_ids.push(id.clone());
+
+            if let Some(combo_key) = combo_key {
+                $combo_key_map.insert(combo_key, id.clone());
+            }
+        )*
+        talent_ids
+    }};
 }
 
 impl TalentProvider {
@@ -110,41 +113,47 @@ impl TalentProvider {
      * */
     pub(crate) fn new() -> Self {
         let mut talents = HashMap::<String, Talent>::new();
-        let mut talent_ids = Vec::<String>::new();
         let mut combo_key_map = HashMap::<ComboKey, String>::new();
 
-        add_talent!(talents, talent_ids, combo_key_map, ExitTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CurrentTimeTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CurrentDateTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CurrentCpuUsageTalent);
-        add_talent!(talents, talent_ids, combo_key_map, PopupMenuTalent);
-        add_talent!(talents, talent_ids, combo_key_map, HotkeysTalent);
-        add_talent!(talents, talent_ids, combo_key_map, ViewFocusTalent);
-        add_talent!(talents, talent_ids, combo_key_map, ViewWindowTitleTalent);
-        add_talent!(talents, talent_ids, combo_key_map, StopTtsOutputTalent);
-        // 窗口浏览能力
-        add_talent!(talents, talent_ids, combo_key_map, ModePrevTalent);
-        add_talent!(talents, talent_ids, combo_key_map, ModeNextTalent);
-        add_talent!(talents, talent_ids, combo_key_map, PrevElementTalent);
-        add_talent!(talents, talent_ids, combo_key_map, NextElementTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CurrElementTalent);
-        add_talent!(talents, talent_ids, combo_key_map, PrevChildElementTalent);
-        add_talent!(talents, talent_ids, combo_key_map, NextChildElementTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CurrChildElementTalent);
-        // 语音调节能力
-        add_talent!(talents, talent_ids, combo_key_map, IncreaseTalent);
-        add_talent!(talents, talent_ids, combo_key_map, ReduceTalent);
-        add_talent!(talents, talent_ids, combo_key_map, NextPropTalent);
-        add_talent!(talents, talent_ids, combo_key_map, PrevPropTalent);
-        add_talent!(talents, talent_ids, combo_key_map, PrevCacheCharTalent);
-        add_talent!(talents, talent_ids, combo_key_map, NextCacheCharTalent);
-        add_talent!(talents, talent_ids, combo_key_map, TransCacheCharTalent);
-        add_talent!(talents, talent_ids, combo_key_map, MakeWordCacheCharTalent);
-        add_talent!(talents, talent_ids, combo_key_map, CacheToClipboardTalent);
-        // 鼠标能力
-        add_talent!(talents, talent_ids, combo_key_map, ClickTalent);
-        add_talent!(talents, talent_ids, combo_key_map, RightClickTalent);
-        add_talent!(talents, talent_ids, combo_key_map, ReadMouseTalent);
+        let talent_ids = make_talents!(
+            talents,
+            combo_key_map,
+
+            // 常用能力
+            ExitTalent,
+            CurrentTimeTalent,
+            CurrentDateTalent,
+            CurrentCpuUsageTalent,
+            PopupMenuTalent,
+            HotkeysTalent,
+            ViewFocusTalent,
+            ViewWindowTitleTalent,
+            StopTtsOutputTalent,
+            // 导航器能力
+            ModePrevTalent,
+            ModeNextTalent,
+            PrevElementTalent,
+            NextElementTalent,
+            CurrElementTalent,
+            PrevChildElementTalent,
+            NextChildElementTalent,
+            CurrChildElementTalent,
+            // 语音调节能力
+            IncreaseTalent,
+            ReduceTalent,
+            NextPropTalent,
+            PrevPropTalent,
+            // 语音缓冲区能力
+            PrevCacheCharTalent,
+            NextCacheCharTalent,
+            TransCacheCharTalent,
+            MakeWordCacheCharTalent,
+            CacheToClipboardTalent,
+            // 鼠标能力
+            ClickTalent,
+            RightClickTalent,
+            ReadMouseTalent
+        );
 
         Self {
             talents,
@@ -201,8 +210,9 @@ impl TalentProvider {
             .and_then(|id| self.get_talent_by_id(id))
     }
 }
+
 impl Debug for TalentProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "TalentAccessor({})", self.talents.len())
+        write!(f, "TalentProvider({})", self.talents.len())
     }
 }
