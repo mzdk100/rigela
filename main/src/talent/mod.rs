@@ -82,7 +82,9 @@ pub(crate) trait Talented {
 pub(crate) struct TalentProvider {
     // 技能对象集合
     talents: HashMap<String, Talent>,
+    // 技能ID列表，使技能保持有序
     talent_ids: Vec<String>,
+    // 热键技能映射，加速热键技能获取
     combo_key_map: Mutex<HashMap<ComboKey, String>>,
 }
 
@@ -149,19 +151,23 @@ impl TalentProvider {
         }
     }
 
+    /// 获取全部技能项
     #[allow(unused)]
     pub(crate) fn get_talents(&self) -> Vec<Talent> {
         self.talents.values().cloned().collect()
     }
 
+    /// 获取所有技能ID
     pub(crate) fn get_talent_ids(&self) -> Vec<String> {
         self.talent_ids.clone()
     }
 
+    /// 通过ID获取技能
     pub(crate) fn get_talent_by_id(&self, id: &str) -> Option<Talent> {
         self.talents.get(id).map(|t| t.clone())
     }
 
+    /// 更新自定义热键的技能映射
     pub(crate) fn update_custom_combo_key_map(&self, context: Weak<Context>) {
         let map = get_hotkeys(context);
         let map2: HashMap<ComboKey, String>;
@@ -184,6 +190,7 @@ impl TalentProvider {
         *self.combo_key_map.lock().unwrap() = map2;
     }
 
+    /// 通过热键获取技能
     pub(crate) fn get_talent_by_combo_key(&self, combo_key: &ComboKey) -> Option<Talent> {
         self.combo_key_map
             .lock()

@@ -44,16 +44,23 @@ macro_rules! combo_key {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) enum State {
+    Idle,
     SinglePress,
     DoublePress,
     LongPress,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        State::Idle
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) struct ComboKey {
-    main_key: Keys,
-    modify_keys: ModifierKeys,
-    state: State,
+    pub(crate) main_key: Keys,
+    pub(crate) modify_keys: ModifierKeys,
+    pub(crate) state: State,
 }
 
 impl Default for ComboKey {
@@ -97,12 +104,12 @@ impl fmt::Display for ComboKey {
             State::SinglePress => "",
             State::DoublePress => "(Double)",
             State::LongPress => "(Long)",
+            _ => "",
         };
         write!(f, "{} + {}{state}", self.modify_keys, self.main_key)
     }
 }
 
-#[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub(crate) struct ComboKeyExt {
     combokey: ComboKey,
@@ -117,5 +124,11 @@ impl From<ComboKey> for ComboKeyExt {
             timestamp: 0,
             count: 0,
         }
+    }
+}
+
+impl Into<ComboKey> for ComboKeyExt {
+    fn into(self) -> ComboKey {
+        self.combokey
     }
 }

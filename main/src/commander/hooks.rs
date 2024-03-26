@@ -99,9 +99,9 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                 .collect::<Vec<Keys>>()
                 .into();
 
-            let talent_provider = unsafe { &*context.as_ptr() }.talent_provider.clone();
-            if let Some(i) = talent_provider.get_talent_by_combo_key(&combo_key) {
-                return execute(context.clone(), i);
+            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+            if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
+                return execute(context.clone(), talent);
             }
         }
 

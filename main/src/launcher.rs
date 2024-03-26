@@ -109,7 +109,7 @@ impl Launcher {
         // 启动事件监听
         self.context.event_core.run(self.context.clone()).await;
 
-        // 更新自定义热键
+        // 更新自定义热键, 这个调用放在apply里面不会生效
         self.context
             .talent_provider
             .update_custom_combo_key_map(Arc::downgrade(&self.context));

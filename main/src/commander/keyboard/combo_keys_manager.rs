@@ -11,36 +11,35 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt};
-use crate::commander::keyboard::keys::Keys;
-use crate::commander::keyboard::modify_keys::ModifierKeys;
-use std::collections::{HashMap, HashSet};
+use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt, State};
 use std::sync::Mutex;
-
-type EventHandler = Box<dyn Fn()>;
 
 #[allow(unused)]
 pub(crate) struct ComboKeysManage {
-    combokeys: Mutex<HashSet<ComboKeyExt>>,
-    key_bindings: Mutex<HashMap<ComboKey, EventHandler>>,
+    combo_key_cache: Mutex<ComboKeyExt>,
 }
 
 #[allow(unused)]
 impl ComboKeysManage {
     pub(crate) fn new() -> ComboKeysManage {
         ComboKeysManage {
-            combokeys: Default::default(),
-            key_bindings: Default::default(),
+            combo_key_cache: Mutex::new(ComboKeyExt::default()),
         }
     }
 
-    fn add_binding(&mut self, combo: &ComboKey, handler: EventHandler) {
-        self.combokeys.lock().unwrap().insert(combo.clone().into());
-        self.key_bindings
-            .lock()
-            .unwrap()
-            .insert(combo.clone(), handler);
-    }
+    fn process_combo_key(&self, key: ComboKey, pressed: bool) -> ComboKey {
+        let mut combo_key_cache = self.combo_key_cache.lock().unwrap();
 
-    fn process_key_event(&self, _key: Keys, _down: bool, _modifiers: ModifierKeys) {}
+        if key == combo_key_cache.clone().into() {
+            match pressed {
+                true => {}
+                false => {}
+            }
+        }
+
+        ComboKey {
+            state: State::SinglePress,
+            ..key
+        }
+    }
 }
