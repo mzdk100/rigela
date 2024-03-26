@@ -51,12 +51,12 @@ pub(crate) fn apply_mouse_config(context: Weak<Context>, is_read: bool) {
 // ------  键盘配置  -------
 
 /// 获取当前的热键配置
-pub(crate) fn get_hotkeys(context: Weak<Context>) -> HashMap<String, ComboKey> {
+pub(crate) fn get_hotkeys(context: Weak<Context>) -> HashMap<ComboKey, String> {
     get_cfg!(context).hotkeys_config.talent_keys.clone()
 }
 
 ///  保存热键配置
-pub(crate) fn save_hotkeys(context: Weak<Context>, hotkeys: HashMap<String, ComboKey>) {
+pub(crate) fn save_hotkeys(context: Weak<Context>, hotkeys: HashMap<ComboKey, String>) {
     let mut cfg = get_cfg!(context);
     cfg.hotkeys_config.talent_keys = hotkeys;
     set_cfg!(context, cfg);

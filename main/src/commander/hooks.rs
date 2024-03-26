@@ -14,7 +14,7 @@
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     commander::{keyboard::keys::Keys, Talent},
-    configs::config_operations::{get_hotkeys, get_mouse_read_state},
+    configs::config_operations::get_mouse_read_state,
     context::Context,
     talent::mouse::mouse_read,
 };
@@ -33,7 +33,7 @@ use win_wrap::{
 };
 
 /// 设置键盘钩子
-pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>>) -> WindowsHook {
+pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
     let context = context.clone();
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
@@ -99,20 +99,15 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>, talents: Arc<Vec<Talent>
                 .collect::<Vec<Keys>>()
                 .into();
 
-            for i in talents.iter() {
-                match get_hotkeys(context.clone()).get(&i.get_id()) {
-                    // 如果用户自定义过热键优先使用他定义的。
-                    Some(c) if c.clone() == combo_key => {
-                        return execute(context.clone(), Arc::clone(i));
-                    }
-
-                    // 如果用户没定义过这个能力的热键就使用默认的。
-                    None if i.get_combo_key().unwrap_or(Default::default()) == combo_key => {
-                        return execute(context.clone(), Arc::clone(i));
-                    }
-
-                    _ => continue,
-                };
+            let talent_provider = unsafe { &*context.as_ptr() }
+                .commander
+                .get_talent_provider();
+            if let Some(i) = talent_provider
+                .lock()
+                .unwrap()
+                .get_talent_by_combo_key(&combo_key)
+            {
+                return execute(context.clone(), i);
             }
         }
 
