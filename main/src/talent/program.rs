@@ -52,24 +52,15 @@ impl Speakable for DateTime<Local> {
 //noinspection RsUnresolvedReference
 #[talent(doc = "当前时间", key = combo_key!("RigelA", VkF12))]
 async fn current_time(context: Weak<Context>) {
-    // let cts = self.get_supported_cmd_list();
-    // let mut keys = vec![];
-    // for ct in cts {
-    //     if let CommandType::Key(k) = ct {
-    //         keys.extend(k);
-    //         break;
-    //     }
-    // }
-    // let key = keys.last().unwrap();
-    // let double = Commander::is_double_click(context.clone(), key);
-    //
-    // let localtime = Local::now();
-    // let msg = match double {
-    //     true => localtime.format("%Y年%m月%d日").to_string(),
-    //     false => localtime.format("%H时%M分%S秒").to_string(),
-    // };
-    //
-    // unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
+    let msg = Local::now().format("%H时%M分%S秒").to_string();
+    unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
+}
+
+//noinspection RsUnresolvedReference
+#[talent(doc = "当前日期", key = combo_key!("RigelA", VkF12, double))]
+async fn current_date(context: Weak<Context>) {
+    let msg = Local::now().format("%Y年%m月%d日").to_string();
+    unsafe { &*context.as_ptr() }.performer.speak(&msg).await;
 }
 
 impl Speakable for &PdhCounter {

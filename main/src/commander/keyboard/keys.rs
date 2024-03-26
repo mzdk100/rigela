@@ -571,6 +571,7 @@ impl Keys {
         }
     }
 
+    /// 判断是否为组合键的辅助案件，一共5个：[RigelA, Ctrl, Alt, Shift, Win]
     pub(crate) fn is_modifierkey(&self) -> bool {
         const KEYS: [Keys; 5] = [
             Keys::VkShift,
@@ -585,6 +586,7 @@ impl Keys {
 
 impl From<(u32, bool)> for Keys {
     //noinspection SpellCheckingInspection
+    /// 从原始虚拟键码和扩展码转换为按键枚举
     fn from(info: (u32, bool)) -> Self {
         let (vk, ext) = (VIRTUAL_KEY { 0: info.0 as u16 }, info.1);
 
@@ -868,6 +870,7 @@ impl From<(u32, bool)> for Keys {
     }
 }
 
+/// 键盘枚举和字符的相互转换
 macro_rules! impl_keys_str_into {
     ($($k:tt => $v:path), *) => {
         impl From<&str> for Keys {
@@ -1021,6 +1024,12 @@ impl fmt::Display for Keys {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let text: &str = self.clone().into();
         writeln!(f, "{text}")
+    }
+}
+
+impl Default for Keys {
+    fn default() -> Self {
+        Self::VkNone
     }
 }
 

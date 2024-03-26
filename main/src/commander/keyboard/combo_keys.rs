@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
 use std::hash::Hash;
+use std::ops::Deref;
 
 /// 定义组合键
 /// Example: combo_keys!("RigelA", Keys::VkEsc), combo_keys!("RigelA", Keys::F12, double),
@@ -44,26 +45,23 @@ macro_rules! combo_key {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) enum State {
+    Idle,
     SinglePress,
     DoublePress,
     LongPress,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub(crate) struct ComboKey {
-    main_key: Keys,
-    modify_keys: ModifierKeys,
-    state: State,
+impl Default for State {
+    fn default() -> Self {
+        State::Idle
+    }
 }
 
-impl Default for ComboKey {
-    fn default() -> Self {
-        ComboKey {
-            main_key: Keys::VkNone,
-            modify_keys: ModifierKeys::empty(),
-            state: State::SinglePress,
-        }
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub(crate) struct ComboKey {
+    pub(crate) main_key: Keys,
+    pub(crate) modify_keys: ModifierKeys,
+    pub(crate) state: State,
 }
 
 impl ComboKey {
@@ -87,6 +85,7 @@ impl From<Vec<Keys>> for ComboKey {
             }
         }
 
+        // Todo State default Idle
         ComboKey::new(main, mdf, State::SinglePress)
     }
 }
@@ -97,17 +96,17 @@ impl fmt::Display for ComboKey {
             State::SinglePress => "",
             State::DoublePress => "(Double)",
             State::LongPress => "(Long)",
+            _ => "",
         };
         write!(f, "{} + {}{state}", self.modify_keys, self.main_key)
     }
 }
 
-#[allow(unused)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub(crate) struct ComboKeyExt {
-    combokey: ComboKey,
-    timestamp: u64,
-    count: u32,
+    pub(crate) combokey: ComboKey,
+    pub(crate) timestamp: u64,
+    pub(crate) count: u32,
 }
 
 impl From<ComboKey> for ComboKeyExt {
@@ -117,5 +116,12 @@ impl From<ComboKey> for ComboKeyExt {
             timestamp: 0,
             count: 0,
         }
+    }
+}
+
+impl Deref for ComboKeyExt {
+    type Target = ComboKey;
+    fn deref(&self) -> &Self::Target {
+        &self.combokey
     }
 }

@@ -61,8 +61,8 @@ const FRAME_SIZE: Size<D> = Size {
 pub struct SettingsForm {
     pub(crate) context: OnceLock<Weak<Context>>,
 
-    pub(crate) talents: RefCell<Arc<Vec<crate::gui::forms::hotkeys::Talent>>>,
-    pub(crate) custom_talents: RefCell<HashMap<String, ComboKey>>,
+    pub(crate) talent_ids: RefCell<Arc<Vec<String>>>,
+    pub(crate) custom_combo_keys: RefCell<HashMap<String, ComboKey>>,
     pub(crate) hotkeys: Arc<Mutex<ComboKey>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 

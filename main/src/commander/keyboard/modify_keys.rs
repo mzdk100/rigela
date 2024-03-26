@@ -40,6 +40,29 @@ impl From<Keys> for ModifierKeys {
     }
 }
 
+impl Into<Vec<Keys>> for ModifierKeys {
+    fn into(self) -> Vec<Keys> {
+        let mut keys = Vec::new();
+        if self.contains(ModifierKeys::RIGELA) {
+            keys.push(Keys::VkRigelA);
+        }
+        if self.contains(ModifierKeys::CTRL) {
+            keys.push(Keys::VkCtrl);
+        }
+        if self.contains(ModifierKeys::ALT) {
+            keys.push(Keys::VkAlt);
+        }
+        if self.contains(ModifierKeys::SHIFT) {
+            keys.push(Keys::VkShift);
+        }
+        if self.contains(ModifierKeys::WIN) {
+            keys.push(Keys::VkWin);
+        }
+
+        keys
+    }
+}
+
 impl From<&str> for ModifierKeys {
     fn from(key: &str) -> ModifierKeys {
         let key = key.to_ascii_lowercase();
@@ -92,27 +115,33 @@ impl From<&str> for ModifierKeys {
 impl fmt::Display for ModifierKeys {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut list = vec![];
-        if self.clone() & ModifierKeys::RIGELA != ModifierKeys::empty() {
+        if self.contains(ModifierKeys::RIGELA) {
             list.push("RigelA");
         }
-        if self.clone() & ModifierKeys::CTRL != ModifierKeys::empty() {
+        if self.contains(ModifierKeys::CTRL) {
             list.push("Ctrl");
         }
-        if self.clone() & ModifierKeys::ALT != ModifierKeys::empty() {
+        if self.contains(ModifierKeys::SHIFT) {
             list.push("Alt");
         }
         if self.clone() & ModifierKeys::SHIFT != ModifierKeys::empty() {
             list.push("Shift");
         }
-        if self.clone() & ModifierKeys::WIN != ModifierKeys::empty() {
+        if self.contains(ModifierKeys::WIN) {
             list.push("Win");
         }
         let text = if list.is_empty() {
             String::new()
         } else {
-            list.join("_")
+            list.join(" + ")
         };
 
         write!(f, "{text}")
+    }
+}
+
+impl Default for ModifierKeys {
+    fn default() -> Self {
+        ModifierKeys::empty()
     }
 }

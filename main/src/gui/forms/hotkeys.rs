@@ -15,13 +15,9 @@ use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
     configs::config_operations::{get_hotkeys, save_hotkeys},
     gui::{forms::settings_form::SettingsForm, utils::set_hook},
-    talent::Talented,
 };
 use nwd::NwgPartial;
 use nwg::{modal_message, InsertListViewItem, MessageParams};
-use std::sync::Arc;
-
-pub type Talent = Arc<dyn Talented + Send + Sync>;
 
 #[derive(Default, NwgPartial)]
 pub struct HotKeysUi {
@@ -96,11 +92,10 @@ impl SettingsForm {
     // 初始化数据
     fn init_data(&self) {
         let context = self.context.get().unwrap().clone();
-        *self.talents.borrow_mut() = unsafe { &*context.as_ptr() }
-            .talent_provider
-            .talents
-            .clone();
-        *self.custom_talents.borrow_mut() = get_hotkeys(context.clone());
+        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+
+        *self.talent_ids.borrow_mut() = pv.get_talent_ids().into();
+        *self.custom_combo_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
     // 更新列表项目
@@ -108,25 +103,27 @@ impl SettingsForm {
         let dv = &self.hotkeys_ui.data_view;
         dv.clear();
 
-        let talents = self.talents.borrow().clone();
-        for (i, talent) in talents.iter().enumerate() {
+        let context = self.context.get().unwrap();
+        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+
+        let ids = self.talent_ids.borrow().clone();
+        for (i, id) in ids.iter().enumerate() {
+            let talent = pv.get_talent_by_id(id).unwrap();
             dv.insert_item(talent.get_doc());
 
-            let custom_talent = self.custom_talents.borrow().clone();
-            let custom_keys = custom_talent.get(&talent.get_id());
-
-            // 获取默认的热键组合字符串
-            fn get_talent_keys_str(t: &Talent) -> String {
-                match t.get_combo_key() {
-                    Some(keys) => format!("{}", keys),
-                    None => String::new(),
-                }
-            };
+            let custom_talents = self.custom_combo_keys.borrow().clone();
+            let custom_talent = custom_talents.get(id);
 
             // 如果存在自定义热键，就仅显示自定义热键，否则显示默认热键
-            let (keys_str, col) = match custom_keys {
-                Some(keys) => (format!("{keys}"), 2),
-                None => (get_talent_keys_str(talent), 1),
+            let (keys_str, col) = match custom_talent {
+                Some(combo_key) => (combo_key.to_string(), 2),
+                None => (
+                    talent
+                        .get_combo_key()
+                        .unwrap_or(ComboKey::default())
+                        .to_string(),
+                    1,
+                ),
             };
 
             dv.insert_item(InsertListViewItem {
@@ -141,7 +138,7 @@ impl SettingsForm {
     // 列表框键盘事件，当列表框有选中项按下回车，启动自定义热键配置
     pub(crate) fn on_dv_key_press(&self, data: &nwg::EventData) {
         let index = self.get_list_sel_index();
-        if data.on_key() == nwg::keys::RETURN && index != -1 {
+        if data.on_key() == nwg::keys::RETURN && index.is_some() {
             self.start_custom_hotkey();
         }
     }
@@ -151,12 +148,13 @@ impl SettingsForm {
         self.hotkeys_ui.btn_clear.set_enabled(false);
 
         let index = self.get_list_sel_index();
-        if index == -1 {
+        if index.is_none() {
             return;
         }
 
-        let id_ = self.talents.borrow().get(index as usize).unwrap().get_id();
-        if self.custom_talents.borrow().get(&id_).is_some() {
+        let ids = self.talent_ids.borrow().clone();
+        let id = ids.get(index.unwrap()).unwrap();
+        if self.custom_combo_keys.borrow().contains_key(id) {
             self.hotkeys_ui.btn_clear.set_enabled(true);
         }
     }
@@ -171,7 +169,7 @@ impl SettingsForm {
 
     // 设置热键按钮事件
     pub(crate) fn on_set_hotkey(&self) {
-        if self.get_list_sel_index() != -1 {
+        if self.get_list_sel_index().is_some() {
             self.start_custom_hotkey();
         }
     }
@@ -187,15 +185,19 @@ impl SettingsForm {
     // 清除热键按钮事件
     pub(crate) fn on_clear_hotkey(&self) {
         let index = self.get_list_sel_index();
-        if index == -1 {
+        if index.is_none() {
             return;
         }
 
         {
-            let talents = self.talents.borrow();
-            let talent = talents.get(index as usize).unwrap();
+            let context = self.context.get().unwrap().clone();
+            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+
+            let ids = self.talent_ids.borrow().clone();
+            let id = ids.get(index.unwrap()).unwrap();
+
+            let talent = pv.get_talent_by_id(id).unwrap();
             let doc = talent.get_doc();
-            let id_ = talent.get_id();
             let info = t!("hotkeys.confirm_clear", value = doc).to_string();
 
             let msg_params = MessageParams {
@@ -208,10 +210,10 @@ impl SettingsForm {
                 return;
             }
 
-            let context = self.context.get().unwrap().clone();
-            let mut talent_keys = self.custom_talents.borrow_mut().clone();
-            talent_keys.remove(&id_);
-            save_hotkeys(context.clone(), talent_keys);
+            self.custom_combo_keys.borrow_mut().remove(id);
+            save_hotkeys(context.clone(), self.custom_combo_keys.borrow().clone());
+
+            pv.update_custom_combo_key_map(context.clone());
         }
 
         self.init_data();
@@ -222,16 +224,20 @@ impl SettingsForm {
     pub(crate) fn on_finish_custom(&self) {
         self.hook.take().unwrap().unhook();
 
-        let hotkeys = self.hotkeys.lock().unwrap().clone();
-        let key_str = hotkeys.to_string();
+        let combo_key = self.hotkeys.lock().unwrap().clone();
+        let key_str = combo_key.to_string();
         self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
         // 这里需要包裹，不然调用init_data会闪退
         {
-            let talents = self.talents.borrow();
-            let talents = talents.get(self.get_list_sel_index() as usize).unwrap();
-            let doc = talents.get_doc();
-            let id_ = talents.get_id();
+            let context = self.context.get().unwrap().clone();
+            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+
+            let ids = self.talent_ids.borrow().clone();
+            let id = ids.get(self.get_list_sel_index().unwrap()).unwrap();
+
+            let talent = pv.get_talent_by_id(id).unwrap();
+            let doc = talent.get_doc();
             let info = t!("hotkeys.confirm_apply_keys", keys = key_str, value = doc).to_string();
 
             let msg_params = MessageParams {
@@ -244,10 +250,12 @@ impl SettingsForm {
                 return;
             }
 
-            let context = self.context.get().unwrap().clone();
-            let mut talent_keys = self.custom_talents.borrow_mut().clone();
-            talent_keys.insert(id_.to_string(), hotkeys);
-            save_hotkeys(context.clone(), talent_keys);
+            self.custom_combo_keys
+                .borrow_mut()
+                .insert(id.clone(), combo_key);
+            save_hotkeys(context.clone(), self.custom_combo_keys.borrow().clone());
+
+            pv.update_custom_combo_key_map(context.clone());
         }
 
         self.init_data();
@@ -279,11 +287,12 @@ impl SettingsForm {
     }
 
     // 获取当前列表项选中索引
-    fn get_list_sel_index(&self) -> i32 {
+    fn get_list_sel_index(&self) -> Option<usize> {
         let items = self.hotkeys_ui.data_view.selected_items();
-        match items.len() {
-            0 => -1,
-            _ => items[0] as i32,
+        if items.len() == 0 {
+            None
+        } else {
+            Some(items[0])
         }
     }
 }
