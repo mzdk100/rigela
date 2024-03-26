@@ -15,7 +15,6 @@ pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::talent::TalentProvider;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
@@ -49,7 +48,6 @@ pub(crate) enum CommandType {
  * */
 #[allow(unused)]
 pub(crate) struct Commander {
-    talent_provider: Arc<Mutex<TalentProvider>>,
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
@@ -63,7 +61,6 @@ impl Commander {
      * */
     pub(crate) fn new() -> Self {
         Self {
-            talent_provider: Arc::new(Mutex::new(TalentProvider::new())),
             keyboard_hook: Default::default(),
             mouse_hook: Default::default(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
@@ -76,11 +73,6 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Weak<Context>) {
-        self.talent_provider
-            .lock()
-            .unwrap()
-            .update_custom_combo_key_map(context.clone());
-
         self.keyboard_hook
             .set(set_keyboard_hook(context.clone()))
             .unwrap_or(());
@@ -88,10 +80,6 @@ impl Commander {
         self.mouse_hook
             .set(set_mouse_hook(context.clone()))
             .unwrap_or(());
-    }
-
-    pub(crate) fn get_talent_provider(&self) -> Arc<Mutex<TalentProvider>> {
-        self.talent_provider.clone()
     }
 
     /**

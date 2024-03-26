@@ -109,6 +109,11 @@ impl Launcher {
         // 启动事件监听
         self.context.event_core.run(self.context.clone()).await;
 
+        // 更新自定义热键
+        self.context
+            .talent_provider
+            .update_custom_combo_key_map(Arc::downgrade(&self.context));
+
         // 等待程序退出的信号
         self.context.terminator.wait().await;
         self.context.dispose();

@@ -17,7 +17,7 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct HotKeysConfig {
-    pub(crate) talent_keys: HashMap<ComboKey, String>,
+    pub(crate) talent_keys: HashMap<String, ComboKey>,
 }
 
 impl Default for HotKeysConfig {

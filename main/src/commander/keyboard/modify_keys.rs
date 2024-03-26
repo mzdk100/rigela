@@ -110,7 +110,7 @@ impl fmt::Display for ModifierKeys {
         let text = if list.is_empty() {
             String::new()
         } else {
-            list.join("_")
+            list.join("+")
         };
 
         write!(f, "{text}")
