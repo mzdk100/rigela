@@ -17,9 +17,12 @@ use crate::{
 };
 use a11y::{get_ia2_lib_path, setup};
 use log::{error, info};
-use rigela_utils::{killer::listen_to_killing, library::setup_library};
-use std::sync::Arc;
-use tokio::process::Command;
+use rigela_utils::{killer::wait_until_killed, library::setup_library};
+use std::sync::{Arc, Weak};
+use tokio::{
+    process::Command,
+    runtime::Runtime,
+};
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
 /// 启动器对象
@@ -31,7 +34,7 @@ impl Launcher {
     /**
      * 创建一个发射台，通常一个进程只有一个实例。
      * */
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(work_runtime: Weak<Runtime>, terminator: Weak<Terminator>) -> Self {
         // 初始化COM线程模型。
         let res = co_initialize_multi_thread();
         if res.is_err() {
@@ -40,11 +43,8 @@ impl Launcher {
         // 安装a11y的运行时
         setup();
 
-        // 创建一个终结者对象，main方法将使用他异步等待程序退出
-        let terminator = Terminator::new();
-
         // 上下文对象的创建，需要传入终结器，上下文对象通过终结器对象响应终结消息
-        let context = Context::new(terminator);
+        let context = Context::new(unsafe { &*work_runtime.as_ptr() }, terminator.upgrade().unwrap());
         let context = Arc::new(context);
         // 调用上下文对象的应用到每一个组件的方法
         context.apply();
@@ -56,10 +56,11 @@ impl Launcher {
     /**
      * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
      * */
-    pub(crate) async fn launch(&mut self) {
+    pub(crate) async fn launch(&self) {
         // 监听外部进程请求主程序退出，这是一种安全杀死主进程的方案
         let ctx = Arc::downgrade(&self.context);
-        listen_to_killing(async move {
+        self.context.work_runtime.spawn(async move {
+            wait_until_killed().await;
             unsafe { &*ctx.as_ptr() }
                 .talent_provider
                 .get_exit_talent()
@@ -107,23 +108,31 @@ impl Launcher {
         }
 
         // 启动事件监听
-        self.context.event_core.run(self.context.clone()).await;
+        self.context
+            .event_core
+            .run(Arc::downgrade(&self.context))
+            .await;
 
         // 更新自定义热键, 这个调用放在apply里面不会生效
         self.context
             .talent_provider
             .update_custom_combo_key_map(Arc::downgrade(&self.context));
+    }
 
-        // 等待程序退出的信号
-        self.context.terminator.wait().await;
-        self.context.dispose();
+    //noinspection RsUnresolvedPath
+    /**
+     * 退出程序。
+     * */
+    pub(crate) async fn exit(&self) {
+        // 杀死32位代理模块
+        #[cfg(target_arch = "x86_64")]
+        self.context.proxy32process.kill().await.wait().await;
 
         // 播放退出音效
         self.context.performer.play_sound(Single("exit.wav")).await;
 
-        // 杀死32位代理模块
-        #[cfg(target_arch = "x86_64")]
-        self.context.proxy32process.kill().await.wait().await;
+        // 清理上下文
+        self.context.dispose();
 
         // 解除远进程监控
         peeper::unmount();
@@ -147,8 +156,8 @@ fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
-    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
     setup_library("peeper.dll", peeper_dll);
 }

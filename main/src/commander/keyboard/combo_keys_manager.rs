@@ -11,11 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::State::{DoublePress, LongPress, SinglePress};
-use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt};
-use crate::context::Context;
-use std::sync::{Arc, Mutex, Weak};
-use std::time::Duration;
+use crate::{
+    commander::keyboard::combo_keys::{
+        ComboKey, ComboKeyExt,
+        State::{DoublePress, LongPress, SinglePress},
+    },
+    context::Context,
+};
+use std::{
+    sync::{Arc, Mutex, Weak},
+    time::Duration,
+};
 use tokio::time::sleep;
 
 #[allow(unused)]
@@ -46,19 +52,19 @@ impl ComboKeysManage {
         match pressed {
             true if key.main_key == pressed_cache.main_key
                 && pressed_cache.state == SinglePress =>
-            {
-                *pressed_cache = Default::default();
-                Some(ComboKey {
-                    state: DoublePress,
-                    ..key
-                })
-            }
+                {
+                    *pressed_cache = Default::default();
+                    Some(ComboKey {
+                        state: DoublePress,
+                        ..key
+                    })
+                }
             true => {
                 *pressed_cache = ComboKey {
                     state: SinglePress,
                     ..key
                 }
-                .into();
+                    .into();
                 *release_cache = key.clone().into();
 
                 //  200毫秒后， pressed_cache.count Default::default
@@ -91,7 +97,7 @@ impl ComboKeysManage {
         let pressed_cache = self.pressed_cache.clone();
 
         unsafe { &*context.as_ptr() }
-            .main_handler
+            .work_runtime
             .spawn(async move {
                 sleep(Duration::from_millis(200)).await;
                 *pressed_cache.lock().unwrap() = Default::default();
@@ -104,7 +110,7 @@ impl ComboKeysManage {
         let combo_key = combo_key.clone();
 
         unsafe { &*context.as_ptr() }
-            .main_handler
+            .work_runtime
             .spawn(async move {
                 sleep(Duration::from_millis(500)).await;
                 let k = { release_cache.lock().unwrap().main_key.clone() };
@@ -114,7 +120,7 @@ impl ComboKeysManage {
                         state: LongPress,
                         ..combo_key
                     }
-                    .into();
+                        .into();
                 }
             });
     }
