@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Formatter;
 use std::hash::Hash;
+use std::ops::Deref;
 
 /// 定义组合键
 /// Example: combo_keys!("RigelA", Keys::VkEsc), combo_keys!("RigelA", Keys::F12, double),
@@ -56,21 +57,11 @@ impl Default for State {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub(crate) struct ComboKey {
     pub(crate) main_key: Keys,
     pub(crate) modify_keys: ModifierKeys,
     pub(crate) state: State,
-}
-
-impl Default for ComboKey {
-    fn default() -> Self {
-        ComboKey {
-            main_key: Keys::VkNone,
-            modify_keys: ModifierKeys::empty(),
-            state: State::SinglePress,
-        }
-    }
 }
 
 impl ComboKey {
@@ -94,6 +85,7 @@ impl From<Vec<Keys>> for ComboKey {
             }
         }
 
+        // Todo State default Idle
         ComboKey::new(main, mdf, State::SinglePress)
     }
 }
@@ -112,9 +104,9 @@ impl fmt::Display for ComboKey {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub(crate) struct ComboKeyExt {
-    combokey: ComboKey,
-    timestamp: u64,
-    count: u32,
+    pub(crate) combokey: ComboKey,
+    pub(crate) timestamp: u64,
+    pub(crate) count: u32,
 }
 
 impl From<ComboKey> for ComboKeyExt {
@@ -127,8 +119,9 @@ impl From<ComboKey> for ComboKeyExt {
     }
 }
 
-impl Into<ComboKey> for ComboKeyExt {
-    fn into(self) -> ComboKey {
-        self.combokey
+impl Deref for ComboKeyExt {
+    type Target = ComboKey;
+    fn deref(&self) -> &Self::Target {
+        &self.combokey
     }
 }

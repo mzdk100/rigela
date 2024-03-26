@@ -15,6 +15,7 @@ pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::commander::keyboard::combo_keys_manager::ComboKeysManage;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
@@ -52,6 +53,7 @@ pub(crate) struct Commander {
     mouse_hook: OnceLock<WindowsHook>,
     last_pressed_key: Arc<Mutex<Keys>>,
     key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
+    pub(crate) combo_key_manager: Arc<ComboKeysManage>,
 }
 
 impl Commander {
@@ -65,6 +67,7 @@ impl Commander {
             mouse_hook: Default::default(),
             last_pressed_key: Mutex::new(Keys::VkNone).into(),
             key_callback_fns: Mutex::new(Vec::new()),
+            combo_key_manager: ComboKeysManage::new().into(),
         }
     }
 

@@ -11,35 +11,68 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt, State};
-use std::sync::Mutex;
+use crate::commander::keyboard::combo_keys::State::{DoublePress, LongPress, SinglePress};
+use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt};
+use std::sync::{Arc, Mutex};
 
 #[allow(unused)]
 pub(crate) struct ComboKeysManage {
-    combo_key_cache: Mutex<ComboKeyExt>,
+    pressed_cache: Arc<Mutex<ComboKeyExt>>,
+    release_cache: Arc<Mutex<ComboKeyExt>>,
 }
 
 #[allow(unused)]
 impl ComboKeysManage {
     pub(crate) fn new() -> ComboKeysManage {
         ComboKeysManage {
-            combo_key_cache: Mutex::new(ComboKeyExt::default()),
+            pressed_cache: Arc::new(Mutex::new(ComboKeyExt::default())),
+            release_cache: Arc::new(Mutex::new(ComboKeyExt::default())),
         }
     }
 
-    fn process_combo_key(&self, key: ComboKey, pressed: bool) -> ComboKey {
-        let mut combo_key_cache = self.combo_key_cache.lock().unwrap();
+    pub(crate) fn process_combo_key(&self, key: ComboKey, pressed: bool) -> Option<ComboKey> {
+        let mut pressed_cache = self.pressed_cache.lock().unwrap();
+        let mut release_cache = self.release_cache.lock().unwrap();
 
-        if key == combo_key_cache.clone().into() {
-            match pressed {
-                true => {}
-                false => {}
+        match pressed {
+            true if key.main_key == pressed_cache.main_key
+                && pressed_cache.state == SinglePress =>
+            {
+                *pressed_cache = Default::default();
+                Some(ComboKey {
+                    state: DoublePress,
+                    ..key
+                })
             }
-        }
+            true => {
+                *pressed_cache = ComboKey {
+                    state: SinglePress,
+                    ..key
+                }
+                .into();
+                *release_cache = key.clone().into();
 
-        ComboKey {
-            state: State::SinglePress,
-            ..key
+                // Todo
+                //  200毫秒后， pressed_cache.count Default::default
+                // 500毫秒后， 如果 release.count != Default::default State = LongPress
+
+                Some(ComboKey {
+                    state: SinglePress,
+                    ..key
+                })
+            }
+            false => {
+                if release_cache.main_key == key.main_key && release_cache.state == LongPress {
+                    *release_cache = Default::default();
+                    Some(ComboKey {
+                        state: LongPress,
+                        ..key
+                    })
+                } else {
+                    *release_cache = Default::default();
+                    None
+                }
+            }
         }
     }
 }

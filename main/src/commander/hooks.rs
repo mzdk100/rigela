@@ -71,9 +71,24 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         let mut map = key_track.write().unwrap();
         map.insert(key, pressed);
 
+        let mng = unsafe { &*context.as_ptr() }
+            .commander
+            .combo_key_manager
+            .clone();
+        let mut combo_key: Option<ComboKey> = None;
+
+        let ck: ComboKey = map
+            .iter()
+            .filter_map(|(k, v)| if *v { Some(k.clone()) } else { None })
+            .collect::<Vec<Keys>>()
+            .into();
         match pressed {
             // 松开按键，需要排除大写锁定键，由后面的大写锁定键代码专门处理
             false if info.vkCode as u16 != VK_CAPITAL.0 => {
+                if !key.is_modifierkey() {
+                    combo_key = mng.process_combo_key(ck, pressed);
+                }
+
                 drop(map); // 必须先释放锁再next()，否则可能会死锁
                 return next();
             }
@@ -86,19 +101,16 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                 unsafe { &*context.as_ptr() }
                     .commander
                     .set_last_pressed_key(&key);
+
+                if !key.is_modifierkey() {
+                    combo_key = mng.process_combo_key(ck, pressed);
+                }
             }
 
             _ => {}
         }
 
-        // Todo: 执行能力操作
-        if pressed && !key.is_modifierkey() {
-            let combo_key: ComboKey = map
-                .iter()
-                .filter_map(|(k, v)| if *v { Some(k.clone()) } else { None })
-                .collect::<Vec<Keys>>()
-                .into();
-
+        if let Some(combo_key) = combo_key {
             let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
             if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
                 return execute(context.clone(), talent);
