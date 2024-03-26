@@ -11,18 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::model::CandidateList;
 use crate::{
-    model::{PeeperData, PeeperPacket},
+    model::{CandidateList, PeeperData, PeeperPacket},
     utils::get_pipe_name,
 };
 use log::{error, info};
 use rigela_utils::pipe::{PipeStream, PipeStreamError};
-use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+};
 use tokio::{
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
-    runtime::{Builder, Runtime},
+    runtime::Runtime,
     sync::Mutex,
 };
 
@@ -41,19 +42,14 @@ enum ListenerType {
 
 pub struct PeeperServer {
     listeners: Arc<Mutex<Vec<ListenerType>>>,
-    rt: Runtime,
+    work_runtime: &'static Runtime,
 }
 
 impl PeeperServer {
-    pub fn new() -> Self {
-        let rt = Builder::new_multi_thread()
-            .enable_all()
-            .worker_threads(1)
-            .build()
-            .unwrap();
+    pub fn new(work_runtime: &'static Runtime) -> Self {
         Self {
             listeners: Arc::new(vec![].into()),
-            rt,
+            work_runtime,
         }
     }
 
@@ -79,7 +75,7 @@ impl PeeperServer {
 
     fn on_client(&self, mut stream: PipeStream<PeeperPacket, NamedPipeServer>) {
         let listeners = self.listeners.clone();
-        self.rt.spawn(async move {
+        self.work_runtime.spawn(async move {
             loop {
                 let packet = stream.recv().await;
                 if let Err(PipeStreamError::ReadEof) = &packet {

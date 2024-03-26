@@ -112,7 +112,7 @@ async fn mode_next(context: Weak<Context>) {
     let text = match config.navigation_config.mode {
         NavigationMode::Linear => {
             let performer = context.performer.clone();
-            context.main_handler.spawn(async move {
+            context.work_runtime.spawn(async move {
                 performer.play_sound(Single(WAVE)).await;
             });
             t!("navigator.linear")
@@ -141,7 +141,7 @@ async fn mode_prev(context: Weak<Context>) {
         NavigationMode::Plane => t!("navigator.plane"),
         NavigationMode::Tree => {
             let performer = context.performer.clone();
-            context.main_handler.spawn(async move {
+            context.work_runtime.spawn(async move {
                 performer.play_sound(Single(WAVE)).await;
             });
             t!("navigator.tree")

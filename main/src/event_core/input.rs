@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::keys::Keys::{VkNumlock, VkScroll};
-use crate::context::Context;
-use std::sync::Arc;
+use crate::{
+    commander::keyboard::keys::Keys::{VkNumlock, VkScroll},
+    context::Context,
+};
+use std::sync::Weak;
 use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};
 
 //noinspection SpellCheckingInspection
@@ -21,18 +23,18 @@ use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};
  * 订阅键盘输入事件。
  * `context` 读屏框架的上下文环境。
  * */
-pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
+pub(crate) async fn subscribe_input_events(context: Weak<Context>) {
     let ctx = context.clone();
 
     subscribe_lock_key_events(context.clone()).await;
 
-    context
+    unsafe { &*context.as_ptr() }
         .peeper_server
         .add_on_input_char_listener(move |c| {
-            ctx.task_manager.abort("ime");
-            let performer = ctx.performer.clone();
+            unsafe { &*ctx.as_ptr() }.task_manager.abort("ime");
+            let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
 
-            ctx.main_handler.spawn(async move {
+            unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
                 performer.speak(&c).await;
             });
         })
@@ -40,7 +42,7 @@ pub(crate) async fn subscribe_input_events(context: Arc<Context>) {
 }
 
 /// 处理锁定键状态更改播报
-pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
+pub(crate) async fn subscribe_lock_key_events(context: Weak<Context>) {
     let ctx = context.clone();
     let handle = move |key, pressed: bool| {
         if !pressed {
@@ -64,12 +66,12 @@ pub(crate) async fn subscribe_lock_key_events(context: Arc<Context>) {
             }
             _ => unreachable!(),
         };
-        let pf = ctx.performer.clone();
-        ctx.main_handler.spawn(async move {
-            pf.speak(&info.to_string()).await;
+        let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
+        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
+            performer.speak(&info.to_string()).await;
         });
     };
-    context
+    unsafe { &*context.as_ptr() }
         .commander
         .add_key_event_listener(&vec![VkScroll, VkNumlock], handle);
 }

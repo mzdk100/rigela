@@ -156,7 +156,7 @@ fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
     let ctx = context.clone();
     let id = talent.get_id();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             talent.perform(ctx.clone()).await;
         });
@@ -178,10 +178,10 @@ fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &Mutex<bool>
     {
         *hook_toggle.lock().unwrap() = false;
     }
-    let pf = context.performer.clone();
-    context.main_handler.spawn(async move {
+    let performer = context.performer.clone();
+    context.work_runtime.spawn(async move {
         let info = if !state { "大写" } else { "小写" };
-        pf.speak(&info.to_string()).await;
+        performer.speak(&info.to_string()).await;
     });
 }
 

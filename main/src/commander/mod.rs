@@ -14,17 +14,18 @@
 pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
-use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::{
-    commander::hooks::{set_keyboard_hook, set_mouse_hook},
+    commander::{
+        hooks::{set_keyboard_hook, set_mouse_hook},
+        keyboard::{combo_keys::ComboKey, keys::Keys},
+    },
     context::Context,
     talent::Talented,
 };
-use keyboard::keys::Keys;
-use std::time::Duration;
 use std::{
     fmt::{Debug, Formatter},
     sync::{Arc, Mutex, OnceLock, Weak},
+    time::Duration,
 };
 use win_wrap::hook::WindowsHook;
 
@@ -125,7 +126,10 @@ impl Commander {
     }
 
     pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
-        self.key_callback_fns.lock().unwrap().clone()
+        let Ok(v) = self.key_callback_fns.lock() else {
+            return vec![];
+        };
+        v.clone()
     }
 
     #[allow(unused)]
@@ -142,7 +146,7 @@ impl Commander {
             let cmd = unsafe { &*context.as_ptr() }.commander.clone();
             let key = key.clone();
             unsafe { &*context.as_ptr() }
-                .main_handler
+                .work_runtime
                 .spawn(async move {
                     tokio::time::sleep(Duration::from_millis(200)).await;
                     cmd.set_double_click(&key, false);

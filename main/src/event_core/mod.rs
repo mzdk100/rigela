@@ -13,25 +13,29 @@
 
 mod dialog;
 pub(crate) mod editor;
+mod element;
 mod focus;
 mod ime;
 mod input;
 mod progress;
 
+use std::{
+    fmt::{Debug, Formatter},
+    sync::{Arc, Weak},
+    time::{Duration, SystemTime},
+};
+
+use tokio::sync::Mutex;
+
 use crate::{
     context::Context,
     event_core::{
         dialog::subscribe_dialog_events, editor::subscribe_editor_events,
-        focus::subscribe_focus_events, ime::subscribe_ime_events, input::subscribe_input_events,
+        element::subscribe_element_events, focus::subscribe_focus_events,
+        ime::subscribe_ime_events, input::subscribe_input_events,
         progress::subscribe_progress_events,
     },
 };
-use std::{
-    fmt::{Debug, Formatter},
-    sync::Arc,
-    time::{Duration, SystemTime},
-};
-use tokio::sync::{Mutex, OnceCell};
 
 /// 事件过滤器
 #[derive(Debug)]
@@ -43,14 +47,12 @@ pub(crate) struct EventItem {
 /// 事件处理中心
 #[derive(Clone)]
 pub(crate) struct EventCore {
-    context: OnceCell<Arc<Context>>,
     filter: Arc<Mutex<Vec<EventItem>>>,
 }
 
 impl EventCore {
     pub(crate) fn new() -> Self {
         Self {
-            context: OnceCell::new(),
             filter: Arc::new(vec![].into()),
         }
     }
@@ -83,17 +85,15 @@ impl EventCore {
     }
 
     /// 启动事件监听
-    pub(crate) async fn run(&self, context: Arc<Context>) {
-        self.context.set(context.clone()).unwrap_or(());
-
+    pub(crate) async fn run(&self, context: Weak<Context>) {
         // 订阅UIA的焦点元素改变事件
         subscribe_focus_events(context.clone()).await;
 
-        // 监听前台窗口变动
-        subscribe_foreground_window_events(context.clone()).await;
-
         // 订阅对话框事件
         subscribe_dialog_events(context.clone()).await;
+
+        // 订阅元素改变事件
+        subscribe_element_events(context.clone()).await;
 
         // 订阅输入事件
         subscribe_input_events(context.clone()).await;
@@ -118,22 +118,4 @@ impl Debug for EventCore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EventCore").finish()
     }
-}
-
-/// 监测前台窗口变动，发送控件元素到form_browser
-async fn subscribe_foreground_window_events(context: Arc<Context>) {
-    // 给MSAA前台窗口改变绑定处理事件
-    let ctx = context.clone();
-    context.msaa.add_on_system_foreground_listener(move |src| {
-        let navigator = ctx.ui_navigator.clone();
-        let ui_automation = ctx.ui_automation.clone();
-
-        // form_browser需要异步操作
-        ctx.main_handler.spawn(async move {
-            if let Some(root) = ui_automation.element_from_handle(src.h_wnd) {
-                navigator.clear().await;
-                navigator.add_all(root.into()).await
-            }
-        });
-    });
 }

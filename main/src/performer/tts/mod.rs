@@ -129,7 +129,7 @@ impl Tts {
     }
 
     async fn get_engine(&self) -> Weak<dyn TtsEngine + Sync + Send> {
-        let ctx = self.context.upgrade().unwrap();
+        let ctx = unsafe { &*self.context.as_ptr() };
         let ttc_cfg = ctx.config_manager.get_config().tts_config;
         let engine_name = ttc_cfg.voice.0.clone();
 
@@ -156,7 +156,9 @@ impl Tts {
         {
             *self.is_cancelled.lock().unwrap() = true;
         }
-        let ctx = self.context.upgrade().unwrap();
+        let Some(ctx) = self.context.upgrade() else {
+            return;
+        };
         let engine = ctx.config_manager.get_config().tts_config.voice.0.clone();
 
         let lock = self.all_engines.read().await;
@@ -251,8 +253,8 @@ impl Tts {
      * `engine` 实现了TtsEngine特征的语音引擎对象。
      * */
     pub(crate) async fn put_default_engine<T>(&self, engine: T) -> &Self
-    where
-        T: TtsEngine + Sync + Send + 'static,
+        where
+            T: TtsEngine + Sync + Send + 'static,
     {
         self.default_engine
             .get_or_init(|| async { engine.get_name() })
@@ -266,8 +268,8 @@ impl Tts {
      * `engine` 实现了TtsEngine特征的语音引擎对象。
      * */
     pub(crate) async fn add_engine<T>(&self, engine: T) -> &Self
-    where
-        T: TtsEngine + Sync + Send + 'static,
+        where
+            T: TtsEngine + Sync + Send + 'static,
     {
         for (id, name) in engine.get_all_voices().await.iter() {
             self.all_voices.lock().await.push(VoiceInfo {
@@ -366,4 +368,5 @@ impl Debug for Tts {
 }
 
 unsafe impl Send for Tts {}
+
 unsafe impl Sync for Tts {}

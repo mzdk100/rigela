@@ -13,69 +13,56 @@
 
 use std::{
     fmt::{Debug, Formatter},
-    sync::Arc,
-    time::Duration,
-};
-use tokio::{
-    sync::{Mutex, RwLock},
-    time::sleep,
-};
-use win_wrap::message::{
-    change_window_message_filter, pump_waiting_messages, MSGFLT_ADD, WM_COPYDATA, WM_USER,
+    sync::{Arc, Mutex},
 };
 
-type CallbackFn = dyn Fn() + Sync + Send + 'static;
+use win_wrap::{
+    common::{LPARAM, WPARAM},
+    message::{
+        change_window_message_filter, message_loop, post_thread_message, MSGFLT_ADD, WM_COPYDATA,
+        WM_QUIT, WM_USER,
+    },
+};
 
 #[derive(Clone)]
-pub(crate) struct Terminator {
-    listeners: Arc<Mutex<Vec<Box<CallbackFn>>>>,
-    quit: Arc<RwLock<bool>>,
-}
+pub(crate) struct Terminator(Arc<Mutex<Vec<Box<dyn Fn() + Sync + Send + 'static>>>>, u32);
 
 impl Terminator {
     /**
      * 创建终结者对象，可以异步等待退出信号。
      * */
-    pub(crate) fn new() -> Self {
-        Self {
-            listeners: Default::default(),
-            quit: RwLock::new(false).into(),
-        }
+    pub(crate) fn new(thread_id: u32) -> Self {
+        let listeners = Arc::new(vec![].into());
+        Self(listeners, thread_id)
     }
 
     /**
      * * 添加一个监听器，当正在退出主程序时，发出通知。
      * `func` 一个监听函数。
      * */
-    pub(crate) async fn add_exiting_listener(&self, func: impl Fn() + Sync + Send + 'static) {
-        self.listeners.lock().await.push(Box::new(func))
+    pub(crate) fn add_exiting_listener(&self, func: impl Fn() + Sync + Send + 'static) {
+        self.0.lock().unwrap().push(Box::new(func))
+    }
+
+    /* 发送退出信号。 */
+    pub(crate) fn exit(&self) {
+        post_thread_message(self.1, WM_QUIT, WPARAM::default(), LPARAM::default())
     }
 
     /**
-     * 发送退出信号。
+     * 等待退出信号。
      * */
-    pub(crate) async fn exit(&self) {
-        *self.quit.write().await = true;
-    }
-
-    pub(crate) async fn wait(&self) {
+    pub(crate) fn wait(&self) {
         // 某些进程的WM_COPYDATA和大于WM_USER的消息可能会因为权限无法接收和处理，我们使用change_window_message_filter函数来改变这种行为
         change_window_message_filter(WM_COPYDATA, MSGFLT_ADD);
         for i in (WM_USER + 1)..0xffff {
             change_window_message_filter(i, MSGFLT_ADD);
         }
-
-        // 异步的线程循环
-        loop {
-            pump_waiting_messages();
-            let quit = { self.quit.read().await.clone() };
-            if quit {
-                break;
-            }
-            sleep(Duration::from_millis(20)).await;
+        message_loop(|_| ());
+        let listeners = self.0.lock().unwrap();
+        for i in listeners.iter() {
+            (&*i)()
         }
-        let lock = self.listeners.lock().await;
-        lock.iter().for_each(|f| f());
     }
 }
 

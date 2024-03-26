@@ -50,19 +50,47 @@ mod talent;
 mod tasks;
 mod terminator;
 
+use crate::terminator::Terminator;
 use launcher::Launcher;
 use log::info;
 use rigela_utils::{killer::kill, logger::init_logger};
+use std::sync::{Arc, Weak};
+use tokio::runtime::Builder;
+use win_wrap::threading::get_current_thread_id;
 
-#[tokio::main]
-async fn main() {
-    // 通知其他的读屏进程退出，防止多开
-    kill().await;
-
+fn main() {
     // 初始化日志库
     init_logger(None);
 
+    // 创建一个终结者对象，main方法将使用他异步等待程序退出
+    let terminator = Terminator::new(get_current_thread_id());
+    let terminator = Arc::new(terminator);
+
+    // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
+    let work_runtime = Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap();
+    let work_runtime = Arc::new(work_runtime);
+
+    // 创建发射台
+    let launcher = Launcher::new(Arc::downgrade(&work_runtime), Arc::downgrade(&terminator));
+    let launcher = Arc::new(launcher);
+    work_runtime.spawn(entry(Arc::downgrade(&launcher)));
+
+    // 等待程序结束（wait方法实现了Windows 的消息循环）
+    terminator.wait();
+
+    // 退出程序
+    work_runtime.block_on(launcher.exit())
+}
+
+async fn entry(launcher: Weak<Launcher>) {
+    // 通知其他的读屏进程退出，防止多开
+    kill().await;
+
     // 使用发射台启动主程序
     info!("Launching RigelA...");
-    Launcher::new().launch().await;
+    unsafe { &*launcher.as_ptr() }.launch().await;
 }

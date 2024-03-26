@@ -236,7 +236,7 @@ impl SettingsForm {
 
                 let pf = unsafe { &*context.as_ptr() }.performer.clone();
                 unsafe { &*context.as_ptr() }
-                    .main_handler
+                    .work_runtime
                     .spawn(async move {
                         pf.speak(&t!("settings.def_shortcut_hotkey")).await;
                     });

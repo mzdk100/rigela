@@ -47,7 +47,7 @@ use win_wrap::{
 pub(crate) fn exit_cmd(context: Weak<Context>) {
     let ctx = context.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             let talent = unsafe { &*ctx.as_ptr() }.talent_provider.get_exit_talent();
             talent.perform(ctx.clone()).await;
@@ -181,7 +181,7 @@ pub(crate) fn set_auto_start_cmd(context: Weak<Context>, toggle: bool) {
     };
     let pf = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             pf.speak(&msg).await;
         });
@@ -198,7 +198,7 @@ pub(crate) fn set_auto_check_update_cmd(context: Weak<Context>, toggle: bool) {
     };
     let pf = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             pf.speak(&msg).await;
         });
@@ -221,7 +221,7 @@ pub(crate) fn set_lang_cmd(context: Weak<Context>, index: usize) {
         .to_string();
     let pf = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             pf.speak(&msg).await;
         });
@@ -232,7 +232,7 @@ pub(crate) fn set_voice_cmd(context: Weak<Context>, engine: String, name: String
     let ctx = context.clone();
     let tts = unsafe { &*context.as_ptr() }.performer.get_tts().clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             let info = tts
                 .get_all_voiceinfo()
@@ -274,7 +274,7 @@ pub(crate) fn set_speed_cmd(context: Weak<Context>, index: usize) {
     let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             tts.apply_config(&cfg.clone()).await;
             performer
@@ -300,7 +300,7 @@ pub(crate) fn set_pitch_cmd(context: Weak<Context>, index: usize) {
     let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             tts.apply_config(&cfg.clone()).await;
             performer
@@ -326,7 +326,7 @@ pub(crate) fn set_volume_cmd(context: Weak<Context>, index: usize) {
     let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             tts.apply_config(&cfg.clone()).await;
             performer
@@ -341,7 +341,7 @@ pub(crate) fn set_mouse_read_cmd(context: Weak<Context>, toggle: bool) {
 
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             let state = match toggle {
                 true => t!("command.msg_mouse_read_on"),
@@ -414,7 +414,7 @@ fn reapply_config(context: Weak<Context>) {
     let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
     let tts_cfg = config.tts_config.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             // 应用配置到TTS
             tts.apply_config(&tts_cfg.clone()).await;
@@ -444,7 +444,7 @@ pub(crate) fn add_desktop_shortcut_cmd(context: Weak<Context>, toggle: bool, key
 
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
-        .main_handler
+        .work_runtime
         .spawn(async move {
             let state = if toggle { "添加" } else { "删除" };
             let info = format!("已{}桌面快捷方式", state);

@@ -265,7 +265,7 @@ impl SettingsForm {
 
         let pf = unsafe { &*context.as_ptr() }.performer.clone();
         unsafe { &*context.as_ptr() }
-            .main_handler
+            .work_runtime
             .spawn(async move {
                 let info = t!("hotkeys.please_input_info").to_string();
                 pf.speak(&info).await;

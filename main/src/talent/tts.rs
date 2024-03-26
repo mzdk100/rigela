@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::combo_key;
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::combo_keys::State;
-use crate::commander::keyboard::modify_keys::ModifierKeys;
 use crate::{
-    commander::keyboard::keys::Keys::*,
+    combo_key,
+    commander::keyboard::{
+        combo_keys::{ComboKey, State},
+        keys::Keys::*,
+        modify_keys::ModifierKeys,
+    },
     context::Context,
     event_core::editor::editor_key_handle,
     performer::{
@@ -31,7 +32,7 @@ use rigela_utils::clip::set_clipboard_text;
 #[allow(unused_imports)]
 use std::sync::Weak;
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "语音属性值增加", key = combo_key!("RigelA_Ctrl", VkUp))]
 async fn increase(context: Weak<Context>) {
     {
@@ -88,8 +89,10 @@ async fn prev_cache_char(context: Weak<Context>) {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Backward);
+    let Some(cache) = context.performer.get_cache() else {
+        return;
+    };
+    let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Backward);
     let tts = context.performer.get_tts();
     tts.stop().await;
     tts.speak(text).await;
@@ -104,8 +107,10 @@ async fn next_cache_char(context: Weak<Context>) {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Forward);
+    let Some(cache) = context.performer.get_cache() else {
+        return;
+    };
+    let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Forward);
     let tts = context.performer.get_tts();
     tts.stop().await;
     tts.speak(text).await;
@@ -120,8 +125,10 @@ async fn trans_cache_char(context: Weak<Context>) {
         *editor_key_handle().lock().unwrap() = true;
     }
 
-    let cache = context.performer.get_cache();
-    let text = cache.get(CacheDirection::Current);
+    let Some(cache) = context.performer.get_cache() else {
+        return;
+    };
+    let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Current);
     // Todo: 查字典
 
     let tts = context.performer.get_tts();
@@ -138,9 +145,12 @@ async fn make_word_cache_char(context: Weak<Context>) {
         *editor_key_handle().lock().unwrap() = true;
     }
 
+    let Some(cache) = context.performer.get_cache() else {
+        return;
+    };
     let tts = context.performer.get_tts();
     tts.stop().await;
-    let words = context.performer.get_cache().get_current_char_words();
+    let words = unsafe { &*cache.as_ptr() }.get_current_char_words();
     tts.speak(words).await;
 }
 
@@ -149,8 +159,10 @@ async fn make_word_cache_char(context: Weak<Context>) {
 async fn cache_to_clipboard(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
-    let cache = context.performer.get_cache();
-    let text = cache.get_data();
+    let Some(cache) = context.performer.get_cache() else {
+        return;
+    };
+    let text = unsafe { &*cache.as_ptr() }.get_data();
     set_clipboard_text(text);
     // context.performer.play_sound("boundary.wav").await;
 }

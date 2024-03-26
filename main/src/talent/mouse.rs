@@ -25,7 +25,7 @@ use rigela_macros::talent;
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标单击", key = combo_key!(VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
@@ -85,7 +85,7 @@ async fn get_point(context: Weak<Context>) -> (i32, i32) {
 pub(crate) fn mouse_read(context: Weak<Context>, x: i32, y: i32) {
     let uia = unsafe { &*context.as_ptr() }.ui_automation.clone();
     let ele = uia.element_from_point(x, y).unwrap();
-    let pf = unsafe { &*context.as_ptr() }.performer.clone();
-    let h = unsafe { &*context.as_ptr() }.main_handler.clone();
-    h.spawn(async move { pf.speak(&ele).await });
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    work_runtime.spawn(async move { performer.speak(&ele).await });
 }

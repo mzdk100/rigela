@@ -19,6 +19,7 @@ pub(crate) mod tts;
 use crate::{
     context::Context,
     performer::{
+        cache::Cache,
         sound::{Sound, SoundArgument},
         tts::{sapi5::Sapi5Engine, vvtts::VvttsEngine, Tts},
     },
@@ -38,7 +39,7 @@ pub(crate) trait Speakable {
 #[derive(Debug)]
 pub(crate) struct Performer {
     tts: OnceCell<Arc<Tts>>,
-    cache: OnceCell<Arc<cache::Cache>>,
+    cache: OnceCell<Arc<Cache>>,
     sound: Arc<Sound>,
 }
 
@@ -67,7 +68,7 @@ impl Performer {
             .add_engine(VvttsEngine::new(context.clone()).await)
             .await;
         self.cache
-            .set(Arc::new(cache::Cache::build(context.clone()).await))
+            .set(Arc::new(Cache::build(context.clone()).await))
             .unwrap_or(());
     }
 
@@ -77,8 +78,11 @@ impl Performer {
     }
 
     /// 获取表演者的缓冲区
-    pub(crate) fn get_cache(&self) -> Arc<cache::Cache> {
-        self.cache.get().unwrap().clone()
+    pub(crate) fn get_cache(&self) -> Option<Weak<Cache>> {
+        if let Some(c) = self.cache.get() {
+            return Some(Arc::downgrade(c));
+        }
+        None
     }
 
     /**

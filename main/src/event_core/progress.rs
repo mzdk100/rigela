@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
-use crate::performer::sound::SoundArgument::WithFreq;
-use std::sync::Arc;
+use crate::{context::Context, performer::sound::SoundArgument::WithFreq};
+use std::sync::Weak;
 use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
 
 //noinspection SpellCheckingInspection
@@ -21,11 +20,11 @@ use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
  * 订阅进度通知事件。
  * `context` 读屏框架的上下文环境。
  * */
-pub(crate) async fn subscribe_progress_events(context: Arc<Context>) {
-    let main_handler = context.main_handler.clone();
-    let performer = context.performer.clone();
+pub(crate) async fn subscribe_progress_events(context: Weak<Context>) {
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    context
+    unsafe { &*context.as_ptr() }
         .msaa
         .add_on_object_value_change_listener(move |src| {
             let Ok((obj, child)) = src.get_object() else {
@@ -38,12 +37,12 @@ pub(crate) async fn subscribe_progress_events(context: Arc<Context>) {
                 .get_value(child)
                 .trim_matches(|c| c == '%' || c == ' ')
                 .parse::<u32>()
-            else {
-                return;
-            };
+                else {
+                    return;
+                };
             let performer = performer.clone();
 
-            main_handler.spawn(async move {
+            work_runtime.spawn(async move {
                 performer
                     .play_sound(WithFreq("progress.wav", 2000f32 + 460f32 * (value as f32)))
                     .await;

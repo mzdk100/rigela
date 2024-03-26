@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::performer::sound::SoundArgument::WithFreq;
 use crate::{
-    commander::keyboard::keys::Keys, context::Context, ext::element::UiAutomationElementExt,
-    performer::sound::SoundArgument::Single,
+    commander::keyboard::keys::Keys,
+    context::Context,
+    ext::element::UiAutomationElementExt,
+    performer::sound::SoundArgument::{Single, WithFreq},
 };
 use a11y::ia2::{
     text::{
@@ -24,19 +25,22 @@ use a11y::ia2::{
     WinEventSourceExt,
 };
 use log::error;
-use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
-use win_wrap::control::edit::Edit;
-use win_wrap::control::WindowControl;
-use win_wrap::msaa::object::OBJID_CARET;
-use win_wrap::uia::pattern::text::TextUnit;
+use std::{
+    sync::{Mutex, OnceLock, Weak},
+    time::Duration,
+};
+use win_wrap::{
+    control::{edit::Edit, WindowControl},
+    msaa::object::OBJID_CARET,
+    uia::pattern::text::TextUnit,
+};
 
 //noinspection SpellCheckingInspection
 /**
  * 订阅编辑器事件。
  * `context` 读屏框架的上下文环境。
  * */
-pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
+pub(crate) async fn subscribe_editor_events(context: Weak<Context>) {
     subscribe_uia_events(context.clone()).await;
     subscribe_ia2_events(context.clone()).await;
     subscribe_msaa_events(context.clone()).await;
@@ -45,11 +49,11 @@ pub(crate) async fn subscribe_editor_events(context: Arc<Context>) {
 }
 
 #[allow(unused_variables)]
-async fn subscribe_msaa_events(context: Arc<Context>) {
-    let main_handler = context.main_handler.clone();
-    let performer = context.performer.clone();
+async fn subscribe_msaa_events(context: Weak<Context>) {
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    context
+    unsafe { &*context.as_ptr() }
         .msaa
         .add_on_object_location_change_listener(move |src| {
             let performer = performer.clone();
@@ -63,7 +67,7 @@ async fn subscribe_msaa_events(context: Arc<Context>) {
             let Some(obj) = obj.parent() else {
                 return;
             };
-            main_handler.spawn(async move {
+            work_runtime.spawn(async move {
                 let control = WindowControl::from(obj.window());
                 let (start, end) = control.get_sel();
                 performer
@@ -74,13 +78,13 @@ async fn subscribe_msaa_events(context: Arc<Context>) {
 }
 
 #[allow(unused_variables)]
-async fn subscribe_jab_events(context: Arc<Context>) {
-    let commander = context.commander.clone();
-    let event_core = context.event_core.clone();
-    let main_handler = context.main_handler.clone();
-    let performer = context.performer.clone();
+async fn subscribe_jab_events(context: Weak<Context>) {
+    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    context
+    unsafe { &*context.as_ptr() }
         .jab
         .add_on_property_caret_change_listener(move |src, old, new| {
             let Some((char, word, line)) = src.get_text_items(new) else {
@@ -91,7 +95,7 @@ async fn subscribe_jab_events(context: Arc<Context>) {
             let event_core = event_core.clone();
             let performer = performer.clone();
 
-            main_handler.spawn(async move {
+            work_runtime.spawn(async move {
                 if event_core
                     .should_ignore(char.to_string(), Duration::from_millis(50))
                     .await
@@ -107,12 +111,12 @@ async fn subscribe_jab_events(context: Arc<Context>) {
 }
 
 #[allow(dead_code)]
-async fn subscribe_uia_events(context: Arc<Context>) {
-    let event_core = context.event_core.clone();
-    let main_handler = context.main_handler.clone();
-    let performer = context.performer.clone();
-    let commander = context.commander.clone();
-    let ui_automation = context.ui_automation.clone();
+async fn subscribe_uia_events(context: Weak<Context>) {
+    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
+    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let ui_automation = unsafe { &*context.as_ptr() }.ui_automation.clone();
     let root = ui_automation.get_root_element();
 
     let group = ui_automation.create_event_handler_group();
@@ -136,7 +140,7 @@ async fn subscribe_uia_events(context: Arc<Context>) {
         let event_core = event_core.clone();
         let performer = performer.clone();
 
-        main_handler.spawn(async move {
+        work_runtime.spawn(async move {
             if event_core
                 .should_ignore(caret.get_text(-1), Duration::from_millis(50))
                 .await
@@ -154,19 +158,18 @@ async fn subscribe_uia_events(context: Arc<Context>) {
         error!("Add the event handler group of the uia is failed.");
     }
 
-    context
+    unsafe { &*context.as_ptr() }
         .terminator
-        .add_exiting_listener(move || ui_automation.remove_event_handler_group(&root, &group))
-        .await;
+        .add_exiting_listener(move || ui_automation.remove_event_handler_group(&root, &group));
 }
 
-async fn subscribe_ia2_events(context: Arc<Context>) {
-    let commander = context.commander.clone();
-    let event_core = context.event_core.clone();
-    let main_handler = context.main_handler.clone();
-    let performer = context.performer.clone();
+async fn subscribe_ia2_events(context: Weak<Context>) {
+    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
+    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
+    let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    context.ia2.add_on_text_caret_moved_listener(move |src| {
+    unsafe { &*context.as_ptr() }.ia2.add_on_text_caret_moved_listener(move |src| {
         let text = match src.get_text() {
             Ok(t) => t,
             Err(e) => {
@@ -188,7 +191,7 @@ async fn subscribe_ia2_events(context: Arc<Context>) {
         let event_core = event_core.clone();
         let performer = performer.clone();
 
-        main_handler.spawn(async move {
+        work_runtime.spawn(async move {
             if event_core
                 .should_ignore(text.clone(), Duration::from_millis(50))
                 .await
@@ -206,10 +209,10 @@ pub(crate) fn editor_key_handle() -> &'static Mutex<bool> {
 }
 
 /// 处理编辑框的光标键播报
-pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
+pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     let ctx = context.clone();
     let cb_uia = move |key: Keys, pressed| {
-        let Ok(ctrl) = ctx.ui_automation.get_focused_element() else {
+        let Ok(ctrl) = unsafe { &*ctx.as_ptr() }.ui_automation.get_focused_element() else {
             return;
         };
         match pressed {
@@ -229,10 +232,10 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
                         _ => {}
                     }
 
-                    let pf = ctx.performer.clone();
-                    ctx.main_handler.spawn(async move {
-                        pf.play_sound(Single("edge.wav")).await;
-                        pf.speak(&caret).await;
+                    let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
+                    unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
+                        performer.play_sound(Single("edge.wav")).await;
+                        performer.speak(&caret).await;
                     });
                 }
             }
@@ -241,7 +244,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
 
     let ctx = context.clone();
     let cb_ia2 = move |key: Keys, pressed| {
-        if let Ok(acc_obj) = ctx.msaa.get_focus_object() {
+        if let Ok(acc_obj) = unsafe { &*ctx.as_ptr() }.msaa.get_focus_object() {
             if let Ok(text) = AccessibleText::from_accessible_object(acc_obj) {
                 match pressed {
                     true => {
@@ -257,10 +260,10 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
                                 _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
                             };
 
-                            let pf = ctx.performer.clone();
-                            ctx.main_handler.spawn(async move {
-                                pf.play_sound(Single("edge.wav")).await;
-                                pf.speak(&text).await;
+                            let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
+                            unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
+                                performer.play_sound(Single("edge.wav")).await;
+                                performer.speak(&text).await;
                             });
                         }
                     }
@@ -270,6 +273,6 @@ pub(crate) async fn subscribe_cusor_key_events(context: Arc<Context>) {
     };
 
     let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
-    context.commander.add_key_event_listener(&keys, cb_uia);
-    context.commander.add_key_event_listener(&keys, cb_ia2);
+    unsafe { &*context.as_ptr() }.commander.add_key_event_listener(&keys, cb_uia);
+    unsafe { &*context.as_ptr() }.commander.add_key_event_listener(&keys, cb_ia2);
 }

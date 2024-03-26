@@ -23,7 +23,7 @@ use peeper::server::PeeperServer;
 use rigela_proxy32::process::Proxy32Process;
 use rigela_utils::fs::get_program_directory;
 use std::sync::Arc;
-use tokio::runtime::{Builder, Handle, Runtime};
+use tokio::runtime::Runtime;
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -36,10 +36,9 @@ pub(crate) struct Context {
     pub(crate) event_core: Arc<event_core::EventCore>,
     pub(crate) gui_provider: Arc<GuiProvider>,
     pub(crate) jab: Arc<Jab>,
-    pub(crate) main_handler: Arc<Handle>,
     pub(crate) msaa: Arc<Msaa>,
     pub(crate) ia2: Arc<Ia2>,
-    pub(crate) work_runtime: Arc<Runtime>,
+    pub(crate) work_runtime: &'static Runtime,
     pub(crate) resource_provider: Arc<ResourceProvider>,
     pub(crate) peeper_server: Arc<PeeperServer>,
     pub(crate) performer: Arc<Performer>,
@@ -56,7 +55,7 @@ impl Context {
     /**
      * 创建一个框架上下文环境。
      * */
-    pub(crate) fn new(terminator: Terminator) -> Self {
+    pub(crate) fn new(work_runtime: &'static Runtime, terminator: Arc<Terminator>) -> Self {
         // 创建一个指挥官，用于下发操作命令
         let commander = Commander::new();
 
@@ -67,9 +66,6 @@ impl Context {
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
         let performer = Performer::new();
 
-        // 获取一个主线程携程处理器，可以在子线程中调度任务到主线程
-        let main_handler = Handle::current();
-
         // MSAA(Microsoft Active Accessibility，辅助功能）接口
         let msaa = Msaa::new();
 
@@ -79,19 +75,12 @@ impl Context {
         // JAB (Java Access Bridge，无障碍访问桥)
         let jab = Jab::new();
 
-        // 获取一个工作线程携程运行时，可以把任何耗时的操作任务调度到子线程中
-        let work_runtime = Builder::new_multi_thread()
-            .worker_threads(2)
-            .enable_all()
-            .build()
-            .unwrap();
-
         // 进程亏叹气服务
-        let peeper_server = PeeperServer::new();
+        let peeper_server = PeeperServer::new(work_runtime);
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-        let proxy32process = Proxy32Process::new();
+            let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -117,7 +106,6 @@ impl Context {
         Self {
             commander: commander.into(),
             config_manager: config_manager.into(),
-            main_handler: main_handler.into(),
             msaa: msaa.into(),
             ia2: ia2.into(),
             jab: jab.into(),
@@ -128,9 +116,9 @@ impl Context {
             resource_provider: resource_provider.into(),
             talent_provider: talent_provider.into(),
             task_manager: task_manager.into(),
-            terminator: terminator.into(),
+            terminator,
             ui_automation: ui_automation.into(),
-            work_runtime: work_runtime.into(),
+            work_runtime,
             event_core: event_core.into(),
             ui_navigator: Arc::new(form_browser),
             gui_provider: window_manager.into(),
@@ -181,7 +169,6 @@ impl Clone for Context {
         Self {
             commander: self.commander.clone(),
             config_manager: self.config_manager.clone(),
-            main_handler: self.main_handler.clone(),
             msaa: self.msaa.clone(),
             ia2: self.ia2.clone(),
             jab: self.jab.clone(),
@@ -194,7 +181,7 @@ impl Clone for Context {
             task_manager: self.task_manager.clone(),
             terminator: self.terminator.clone(),
             ui_automation: self.ui_automation.clone(),
-            work_runtime: self.work_runtime.clone(),
+            work_runtime: self.work_runtime,
             event_core: self.event_core.clone(),
             ui_navigator: self.ui_navigator.clone(),
             gui_provider: self.gui_provider.clone(),

@@ -34,6 +34,7 @@ pub(crate) struct UiNavigator {
     container: Mutex<Vec<Arc<UiElement<'static>>>>,
 }
 
+#[allow(dead_code)]
 impl UiNavigator {
     pub(crate) fn new() -> Self {
         Self {
@@ -62,6 +63,15 @@ impl UiNavigator {
                 container.push(c.into());
             }
         }
+    }
+
+    /**
+     * 添加一个元素。
+     * `element` 要添加的元素。
+     * */
+    pub(crate) async fn put(&self, element: UiElement<'static>) {
+        let mut container = self.container.lock().await;
+        container.push(element.into());
     }
 
     /**

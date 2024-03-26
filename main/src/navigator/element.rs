@@ -29,6 +29,7 @@ pub(crate) enum UiElement<'a> {
     UIA(UiAutomationElement),
 }
 
+#[allow(dead_code)]
 impl<'a> UiElement<'a> {
     /**
      * 获取子对象数量。
@@ -105,6 +106,12 @@ unsafe impl<'a> Send for UiElement<'a> {}
 impl<'a> From<UiAutomationElement> for UiElement<'a> {
     fn from(value: UiAutomationElement) -> Self {
         Self::UIA(value)
+    }
+}
+
+impl<'a> From<(AccessibleObject, i32)> for UiElement<'a> {
+    fn from(value: (AccessibleObject, i32)) -> Self {
+        Self::MSAA(value.0, value.1)
     }
 }
 

@@ -11,12 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::combo_key;
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::combo_keys::State;
-use crate::commander::keyboard::modify_keys::ModifierKeys;
 use crate::{
-    commander::keyboard::keys::Keys::*,
+    combo_key,
+    commander::keyboard::{
+        combo_keys::ComboKey, combo_keys::State, keys::Keys::*, modify_keys::ModifierKeys,
+    },
     context::Context,
     ext::window::AccessibleWindowExt,
     performer::{sound::SoundArgument::Single, Speakable},
@@ -35,13 +34,13 @@ use win_wrap::{
     pdh::{PdhCounter, PdhCounterExt, PdhQuery},
 };
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "退出", key = combo_key!("RigelA", VkEscape))]
 async fn exit(context: Weak<Context>) {
     let context = unsafe { &*context.as_ptr() };
 
     context.performer.speak(&t!("program.exit")).await;
-    context.terminator.exit().await;
+    context.terminator.exit();
 }
 
 impl Speakable for DateTime<Local> {
@@ -79,7 +78,7 @@ impl Speakable for &PdhCounter {
             "program.current_cpu_usage",
             value = self.get_value().1.round()
         )
-        .to_string()
+            .to_string()
     }
 }
 

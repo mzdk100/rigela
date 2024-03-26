@@ -49,7 +49,7 @@ pub(crate) enum State {
     LongPress,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) struct ComboKey {
     main_key: Keys,
     modify_keys: ModifierKeys,
@@ -103,7 +103,7 @@ impl fmt::Display for ComboKey {
 }
 
 #[allow(unused)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub(crate) struct ComboKeyExt {
     combokey: ComboKey,
     timestamp: u64,

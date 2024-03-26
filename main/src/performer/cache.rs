@@ -13,8 +13,10 @@
 
 use crate::context::Context;
 use log::error;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, Weak};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, Weak},
+};
 use tokio::io::AsyncReadExt;
 
 /// 缓冲区
@@ -23,7 +25,7 @@ pub(crate) struct Cache {
     data: Mutex<String>,
     char_list: Mutex<Vec<char>>,
     index: Mutex<Option<usize>>,
-    words: Arc<HashMap<String, String>>,
+    word_map: Arc<HashMap<String, String>>,
 }
 
 impl Cache {
@@ -31,7 +33,7 @@ impl Cache {
     /// 创建缓存对象
     pub(crate) async fn build(context: Weak<Context>) -> Self {
         let res = context.upgrade().unwrap().resource_provider.clone();
-        let words = match res.open("words.txt").await {
+        let word_map = match res.open("words.txt").await {
             Ok(mut f) => {
                 let mut data: String = Default::default();
                 if f.read_to_string(&mut data).await.is_err() {
@@ -53,7 +55,7 @@ impl Cache {
             data: Default::default(),
             char_list: Default::default(),
             index: Default::default(),
-            words,
+            word_map,
         }
     }
 
@@ -114,7 +116,15 @@ impl Cache {
 
     pub(crate) fn get_current_char_words(&self) -> String {
         let char = self.get(Direction::Current);
-        self.words.get(&char).unwrap_or(&char).clone()
+        self.word_map.get(&char).unwrap_or(&char).clone()
+    }
+
+    /**
+     * 获取解释词。
+     * `origin` 原始字符串。
+     * */
+    pub(crate) fn make_word(&self, origin: &str) -> Option<&String> {
+        self.word_map.get(origin)
     }
 }
 
