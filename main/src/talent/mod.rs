@@ -18,6 +18,7 @@ mod tts;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::configs::config_operations::get_hotkeys;
+use crate::talent::program::CurrentDateTalent;
 use crate::{
     commander::CommandType,
     context::Context,
@@ -114,6 +115,7 @@ impl TalentProvider {
 
         add_talent!(talents, talent_ids, combo_key_map, ExitTalent);
         add_talent!(talents, talent_ids, combo_key_map, CurrentTimeTalent);
+        add_talent!(talents, talent_ids, combo_key_map, CurrentDateTalent);
         add_talent!(talents, talent_ids, combo_key_map, CurrentCpuUsageTalent);
         add_talent!(talents, talent_ids, combo_key_map, PopupMenuTalent);
         add_talent!(talents, talent_ids, combo_key_map, HotkeysTalent);

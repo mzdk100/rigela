@@ -13,7 +13,10 @@
 
 use crate::commander::keyboard::combo_keys::State::{DoublePress, LongPress, SinglePress};
 use crate::commander::keyboard::combo_keys::{ComboKey, ComboKeyExt};
-use std::sync::{Arc, Mutex};
+use crate::context::Context;
+use std::sync::{Arc, Mutex, Weak};
+use std::time::Duration;
+use tokio::time::sleep;
 
 #[allow(unused)]
 pub(crate) struct ComboKeysManage {
@@ -30,7 +33,13 @@ impl ComboKeysManage {
         }
     }
 
-    pub(crate) fn process_combo_key(&self, key: ComboKey, pressed: bool) -> Option<ComboKey> {
+    /// 组合键处理
+    pub(crate) fn process_combo_key(
+        &self,
+        context: Weak<Context>,
+        key: ComboKey,
+        pressed: bool,
+    ) -> Option<ComboKey> {
         let mut pressed_cache = self.pressed_cache.lock().unwrap();
         let mut release_cache = self.release_cache.lock().unwrap();
 
@@ -52,9 +61,10 @@ impl ComboKeysManage {
                 .into();
                 *release_cache = key.clone().into();
 
-                // Todo
                 //  200毫秒后， pressed_cache.count Default::default
+                self.pressed_delay(context.clone());
                 // 500毫秒后， 如果 release.count != Default::default State = LongPress
+                self.release_delay(context.clone(), &key);
 
                 Some(ComboKey {
                     state: SinglePress,
@@ -74,5 +84,38 @@ impl ComboKeysManage {
                 }
             }
         }
+    }
+
+    // 按键按下延时处理
+    fn pressed_delay(&self, context: Weak<Context>) {
+        let pressed_cache = self.pressed_cache.clone();
+
+        unsafe { &*context.as_ptr() }
+            .main_handler
+            .spawn(async move {
+                sleep(Duration::from_millis(200)).await;
+                *pressed_cache.lock().unwrap() = Default::default();
+            });
+    }
+
+    // 按键释放延时处理
+    fn release_delay(&self, context: Weak<Context>, combo_key: &ComboKey) {
+        let release_cache = self.release_cache.clone();
+        let combo_key = combo_key.clone();
+
+        unsafe { &*context.as_ptr() }
+            .main_handler
+            .spawn(async move {
+                sleep(Duration::from_millis(500)).await;
+                let k = { release_cache.lock().unwrap().main_key.clone() };
+                if combo_key.main_key == k {
+                    let mut ck = release_cache.lock().unwrap();
+                    *ck = ComboKey {
+                        state: LongPress,
+                        ..combo_key
+                    }
+                    .into();
+                }
+            });
     }
 }

@@ -86,7 +86,14 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
             // 松开按键，需要排除大写锁定键，由后面的大写锁定键代码专门处理
             false if info.vkCode as u16 != VK_CAPITAL.0 => {
                 if !key.is_modifierkey() {
-                    combo_key = mng.process_combo_key(ck, pressed);
+                    combo_key = mng.process_combo_key(context.clone(), ck, pressed);
+
+                    if let Some(combo_key) = combo_key {
+                        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+                        if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
+                            return execute(context.clone(), talent);
+                        }
+                    }
                 }
 
                 drop(map); // 必须先释放锁再next()，否则可能会死锁
@@ -103,7 +110,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     .set_last_pressed_key(&key);
 
                 if !key.is_modifierkey() {
-                    combo_key = mng.process_combo_key(ck, pressed);
+                    combo_key = mng.process_combo_key(context.clone(), ck, pressed);
                 }
             }
 
