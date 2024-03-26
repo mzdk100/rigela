@@ -70,6 +70,15 @@ impl StringExt for *const u16 {
     }
 }
 
+impl StringExt for &[u16] {
+    fn to_string_utf16(self) -> String {
+        let Some(p) = self.iter().position(|x| x == &0)  else {
+            return String::new();
+        };
+        String::from_utf16_lossy(&self[..p])
+    }
+}
+
 /// Vec的扩展操作。
 pub trait VecExt<T> {
     fn to_vec(self) -> Vec<T>;
