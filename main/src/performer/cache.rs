@@ -13,6 +13,9 @@
 
 use crate::context::Context;
 use log::error;
+use rust_i18n::AtomicStr;
+use std::fmt::Debug;
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, Weak},
@@ -20,11 +23,10 @@ use std::{
 use tokio::io::AsyncReadExt;
 
 /// 缓冲区
-#[derive(Debug)]
 pub(crate) struct Cache {
-    data: Mutex<String>,
+    data: AtomicStr,
     char_list: Mutex<Vec<char>>,
-    index: Mutex<Option<usize>>,
+    index: AtomicI64,
     word_map: Arc<HashMap<String, String>>,
 }
 
@@ -52,9 +54,9 @@ impl Cache {
         };
 
         Self {
-            data: Default::default(),
+            data: AtomicStr::new(""),
             char_list: Default::default(),
-            index: Default::default(),
+            index: AtomicI64::new(-1),
             word_map,
         }
     }
@@ -62,53 +64,44 @@ impl Cache {
     /// 更新缓冲区
     pub(crate) fn update(&self, value: String) {
         self.char_list.lock().unwrap().clear();
-        *self.index.lock().unwrap() = None;
-        *self.data.lock().unwrap() = value;
+        self.index.store(-1, Ordering::Release);
+        self.data.replace(value);
     }
 
     /// 获取字符,参数可以是上一个，下一个，或者当前
     pub(crate) fn get(&self, direction: Direction) -> String {
-        let lock = { self.index.lock().unwrap() };
-        match *lock {
-            Some(index) => {
-                drop(lock);
+        let index = self.index.load(Ordering::Acquire);
+        match index {
+            -1 => self.get_first_char().into(),
+            _ => {
                 let len = self.char_list.lock().unwrap().len();
 
                 let new_index = match direction {
-                    Direction::Forward if index == len - 1 => index,
+                    Direction::Forward if index as usize == len - 1 => index,
                     Direction::Forward => index + 1,
                     Direction::Backward if index == 0 => index,
                     Direction::Backward => index - 1,
                     _ => index,
                 };
 
-                let mut lock = { self.index.lock().unwrap() };
-                *lock = new_index.into();
-                drop(lock);
-
+                self.index.store(new_index, Ordering::Release);
                 let list = { self.char_list.lock().unwrap() };
-                list.get(new_index).unwrap().clone().into()
-            }
-            None => {
-                drop(lock);
-                self.get_first_char().into()
+                list.get(new_index as usize).unwrap().clone().into()
             }
         }
     }
 
     /// 获取缓冲区数据
     pub(crate) fn get_data(&self) -> String {
-        self.data.lock().unwrap().clone()
+        self.data.to_string().clone()
     }
 
     /// 延时计算
     fn get_first_char(&self) -> char {
-        let mut index = { self.index.lock().unwrap() };
-        index.replace(0);
-        drop(index);
+        self.index.store(0, Ordering::Release);
 
         let mut list = { self.char_list.lock().unwrap() };
-        let data = { self.data.lock().unwrap() };
+        let data = self.data.to_string().clone();
         data.char_indices().for_each(|(_, ch)| list.push(ch));
 
         list.first().unwrap().clone()
@@ -134,4 +127,10 @@ pub(crate) enum Direction {
     Current,
     Forward,
     Backward,
+}
+
+impl Debug for Cache {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Cache").finish()
+    }
 }

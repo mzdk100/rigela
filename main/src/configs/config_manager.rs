@@ -17,6 +17,7 @@ use crate::configs::{
 };
 use log::{error as err_log, info};
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     fs::{read_to_string, File},
     io::Write,
@@ -46,7 +47,7 @@ pub(crate) struct ConfigManager {
     // 更新配置的操作时间
     update_time: Arc<Mutex<Instant>>,
     // 延时写入是否完成
-    write_finished: Arc<Mutex<bool>>,
+    write_finished: Arc<AtomicBool>,
 }
 
 impl ConfigManager {
@@ -58,7 +59,7 @@ impl ConfigManager {
             path,
             config: Default::default(),
             update_time: Arc::new(Mutex::new(Instant::now())),
-            write_finished: Mutex::new(true).into(),
+            write_finished: AtomicBool::new(true).into(),
         }
     }
 
@@ -109,12 +110,10 @@ impl ConfigManager {
         // 写出操作再新的线程进行
         spawn(move || {
             // 延时写入没有完成前，防止重复调用
-            if !*write_finished.lock().unwrap() {
+            if !write_finished.load(Ordering::Acquire) {
                 return;
             }
-            {
-                *write_finished.lock().unwrap() = false;
-            }
+            write_finished.store(false, Ordering::SeqCst);
 
             // 延迟到当前配置更新时间的推后10秒钟
             loop {
@@ -128,7 +127,7 @@ impl ConfigManager {
             let cfg = config.lock().unwrap().clone();
             _write_config(&path, &cfg).unwrap_or_else(|_| err_log!("Can't write the config file."));
 
-            *write_finished.lock().unwrap() = true;
+            write_finished.store(true, Ordering::SeqCst);
         });
     }
 

@@ -15,6 +15,7 @@ use crate::{utils, utils::download_and_replace_bin};
 use log::error;
 use nwd::NwgUi;
 use nwg::EventData;
+use rust_i18n::AtomicStr;
 use std::{
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex, OnceLock},
@@ -26,7 +27,7 @@ const TITLE: &str = "Rigela - 更新";
 #[derive(Default, NwgUi)]
 pub struct App {
     pub(crate) handler: OnceLock<tokio::runtime::Handle>,
-    info: Arc<Mutex<String>>,
+    info: AStr,
     progress: Arc<Mutex<u32>>,
 
     #[nwg_control( title: TITLE, size: (480, 320), position: (300,300))]
@@ -80,12 +81,13 @@ impl App {
         self.progress_label.set_enabled(false);
         self.progress_bar.set_enabled(false);
 
-        let info = self.info.clone();
+        let info = self.info.0.clone();
         let sender = self.get_info_notice.sender();
         self.handler.get().unwrap().spawn(async move {
-            *info.lock().unwrap().deref_mut() = utils::get_update_log()
+            let text = utils::get_update_log()
                 .await
                 .unwrap_or("网络异常".to_string());
+            info.replace(text);
             sender.notice();
         });
     }
@@ -127,7 +129,7 @@ impl App {
 
     // 获取到新的日志更新到编辑框
     fn on_get_info_notice(&self) {
-        let text = self.info.lock().unwrap().deref().clone();
+        let text = self.info.0.to_string().clone();
         self.text_box.set_text(text.as_str());
         self.text_box.set_selection(0..0);
     }
@@ -142,5 +144,13 @@ impl App {
         }
 
         self.progress_bar.set_pos(num);
+    }
+}
+
+struct AStr(Arc<AtomicStr>);
+
+impl Default for AStr {
+    fn default() -> Self {
+        Self(Arc::new(AtomicStr::from("")))
     }
 }

@@ -20,10 +20,11 @@ use crate::{
     context::Context,
     performer::text_processing::transform_single_char,
 };
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
-    sync::{Arc, Mutex as StdMutex, Weak},
+    sync::{Arc, Weak},
     time::Duration,
 };
 use tokio::{
@@ -78,7 +79,7 @@ pub(crate) enum ValueChange {
 ///  语音TTS的抽象实现
 pub(crate) struct Tts {
     default_engine: OnceCell<String>,
-    is_cancelled: StdMutex<bool>,
+    is_cancelled: AtomicBool,
     all_engines: RwLock<HashMap<String, Arc<dyn TtsEngine + Sync + Send>>>,
     all_voices: Mutex<Vec<VoiceInfo>>,
     context: Weak<Context>,
@@ -119,13 +120,13 @@ impl Tts {
             }
 
             {
-                *self.is_cancelled.lock().unwrap() = false;
+                self.is_cancelled.store(false, Ordering::Release);
             }
 
             engine.wait().await;
         }
 
-        return !*self.is_cancelled.lock().unwrap();
+        return !self.is_cancelled.load(Ordering::Acquire);
     }
 
     async fn get_engine(&self) -> Weak<dyn TtsEngine + Sync + Send> {
@@ -153,9 +154,7 @@ impl Tts {
      * * 停止当前的朗读任务。
      * */
     pub(crate) async fn stop(&self) {
-        {
-            *self.is_cancelled.lock().unwrap() = true;
-        }
+        self.is_cancelled.store(true, Ordering::Release);
         let Some(ctx) = self.context.upgrade() else {
             return;
         };
@@ -177,9 +176,7 @@ impl Tts {
      * 停止所有语音引擎的朗读。
      * */
     pub(crate) async fn stop_all(&self) {
-        {
-            *self.is_cancelled.lock().unwrap() = true;
-        }
+        self.is_cancelled.store(true, Ordering::Release);
         self.all_engines
             .read()
             .await
@@ -253,8 +250,8 @@ impl Tts {
      * `engine` 实现了TtsEngine特征的语音引擎对象。
      * */
     pub(crate) async fn put_default_engine<T>(&self, engine: T) -> &Self
-        where
-            T: TtsEngine + Sync + Send + 'static,
+    where
+        T: TtsEngine + Sync + Send + 'static,
     {
         self.default_engine
             .get_or_init(|| async { engine.get_name() })
@@ -268,8 +265,8 @@ impl Tts {
      * `engine` 实现了TtsEngine特征的语音引擎对象。
      * */
     pub(crate) async fn add_engine<T>(&self, engine: T) -> &Self
-        where
-            T: TtsEngine + Sync + Send + 'static,
+    where
+        T: TtsEngine + Sync + Send + 'static,
     {
         for (id, name) in engine.get_all_voices().await.iter() {
             self.all_voices.lock().await.push(VoiceInfo {

@@ -23,9 +23,11 @@ use crate::{
     },
 };
 use nwg::{NativeUi, NoticeSender};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::OnceLock;
 use std::{
     fmt::{Debug, Formatter},
-    sync::{mpsc, Mutex, OnceLock, Weak},
+    sync::{mpsc, Weak},
     thread,
 };
 use win_wrap::com::co_uninitialize;
@@ -52,10 +54,7 @@ pub(crate) struct GuiProvider {
 }
 
 // 防止重复初始化
-fn already_init() -> &'static Mutex<bool> {
-    static INSTANCE: OnceLock<Mutex<bool>> = OnceLock::new();
-    INSTANCE.get_or_init(|| false.into())
-}
+static ALREADY_INIT: AtomicBool = AtomicBool::new(false);
 
 macro_rules! build_form {
     ($var:ident, $type_:ident, $context:expr, $sd:expr) => {
@@ -82,12 +81,10 @@ impl GuiProvider {
      * `context` 读屏的上下文环境。
      * */
     pub(crate) fn apply(&self, context: Weak<Context>) {
-        if already_init().lock().unwrap().clone() {
+        if ALREADY_INIT.load(Ordering::SeqCst) {
             return;
         }
-        {
-            *already_init().lock().unwrap() = true;
-        }
+        ALREADY_INIT.store(true, Ordering::Release);
 
         let (tx, rx) = mpsc::channel::<(NoticeSender, NoticeSender)>();
 

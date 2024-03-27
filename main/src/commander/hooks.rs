@@ -18,10 +18,10 @@ use crate::{
     context::Context,
     talent::mouse::mouse_read,
 };
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::{
     collections::HashMap,
-    sync::{Mutex, OnceLock, RwLock, Weak},
+    sync::{RwLock, Weak},
 };
 use win_wrap::{
     common::LRESULT,
@@ -191,10 +191,7 @@ fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &AtomicBool)
 }
 
 // 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中
-fn get_old_point() -> &'static Mutex<(i32, i32)> {
-    static INSTANCE: OnceLock<Mutex<(i32, i32)>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new((0, 0)))
-}
+static OLD_POINT: (AtomicU32, AtomicU32) = (AtomicU32::new(0), AtomicU32::new(0));
 
 /// 设置鼠标钩子
 pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
@@ -209,13 +206,13 @@ pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
         let (x, y) = (info.pt.x, info.pt.y);
 
         // 如果坐标差值小于10个像素，不处理直接返回
-        let (old_x, old_y) = *get_old_point().lock().unwrap();
+        let old_x = OLD_POINT.0.load(Ordering::Relaxed) as i32;
+        let old_y = OLD_POINT.1.load(Ordering::Relaxed) as i32;
         if (x - old_x).pow(2) + (y - old_y).pow(2) < 100 {
             return next();
         }
-        {
-            *get_old_point().lock().unwrap() = (x, y);
-        }
+        OLD_POINT.0.store(x as u32, Ordering::Relaxed);
+        OLD_POINT.1.store(y as u32, Ordering::Relaxed);
 
         mouse_read(context.clone(), x, y);
         next()
