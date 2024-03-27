@@ -269,7 +269,8 @@ impl SettingsForm {
             return;
         }
 
-        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys.into());
+        let keys: Vec<Keys> = keys.into();
+        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
 
         self.general_ui
             .ck_add_desktop_shortcut
