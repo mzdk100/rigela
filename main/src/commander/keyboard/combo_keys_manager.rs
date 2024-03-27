@@ -43,7 +43,7 @@ impl ComboKeysManage {
     pub(crate) fn process_combo_key(
         &self,
         context: Weak<Context>,
-        key: ComboKey,
+        key: &ComboKey,
         pressed: bool,
     ) -> Option<ComboKey> {
         let mut pressed_cache = self.pressed_cache.lock().unwrap();
@@ -52,19 +52,19 @@ impl ComboKeysManage {
         match pressed {
             true if key.main_key == pressed_cache.main_key
                 && pressed_cache.state == SinglePress =>
-                {
-                    *pressed_cache = Default::default();
-                    Some(ComboKey {
-                        state: DoublePress,
-                        ..key
-                    })
-                }
+            {
+                *pressed_cache = Default::default();
+                Some(ComboKey {
+                    state: DoublePress,
+                    ..key.clone()
+                })
+            }
             true => {
                 *pressed_cache = ComboKey {
                     state: SinglePress,
-                    ..key
+                    ..key.clone()
                 }
-                    .into();
+                .into();
                 *release_cache = key.clone().into();
 
                 //  200毫秒后， pressed_cache.count Default::default
@@ -74,7 +74,7 @@ impl ComboKeysManage {
 
                 Some(ComboKey {
                     state: SinglePress,
-                    ..key
+                    ..key.clone()
                 })
             }
             false => {
@@ -82,7 +82,7 @@ impl ComboKeysManage {
                     *release_cache = Default::default();
                     Some(ComboKey {
                         state: LongPress,
-                        ..key
+                        ..key.clone()
                     })
                 } else {
                     *release_cache = Default::default();
@@ -120,7 +120,7 @@ impl ComboKeysManage {
                         state: LongPress,
                         ..combo_key
                     }
-                        .into();
+                    .into();
                 }
             });
     }

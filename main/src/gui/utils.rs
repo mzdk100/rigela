@@ -13,11 +13,15 @@
 
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::commander::keyboard::keys::Keys;
+use crate::context::Context;
 use log::error;
 use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Weak;
+use std::time::Duration;
 use std::{
     collections::HashMap,
     env::{args, current_exe},
@@ -27,6 +31,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
+use tokio::time::sleep;
 use win_wrap::{
     common::{LRESULT, SW_SHOWNORMAL},
     ext::LParamExt,
@@ -384,7 +389,82 @@ pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
 /// 设置键盘钩子
 /// @param keys 产生好的键位列表
 /// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
-pub(crate) fn set_hook(keys: Arc<Mutex<ComboKey>>, senders: &[NoticeSender; 2]) -> WindowsHook {
+pub(crate) fn set_hook(
+    context: Weak<Context>,
+    keys: Arc<Mutex<Option<ComboKey>>>,
+    senders: &[NoticeSender; 2],
+) -> WindowsHook {
+    let hotkeys = keys.clone();
+    let finish_sender = senders[0];
+    let cancel_sender = senders[1];
+    let is_started = AtomicBool::new(false);
+
+    fn start(context: Weak<Context>, sender: NoticeSender) {
+        unsafe { &*context.as_ptr() }
+            .work_runtime
+            .spawn(async move {
+                sleep(Duration::from_secs(1)).await;
+                sender.notice();
+            });
+    }
+
+    let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
+    WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, _next| {
+        let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
+        let info: &KbdLlHookStruct = l_param.to();
+        let is_extended = info.flags.contains(LLKHF_EXTENDED);
+        let key: Keys = (info.vkCode, is_extended).into();
+        let cur_key = key.trans_rigela();
+
+        {
+            key_track.lock().unwrap().insert(cur_key.clone(), pressed);
+        }
+
+        let keys: ComboKey = key_track
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(k, p)| **k == cur_key || **p)
+            .map(|(x, _)| *x)
+            .collect::<Vec<Keys>>()
+            .into();
+
+        let mng = unsafe { &*context.as_ptr() }
+            .commander
+            .combo_key_manager
+            .clone();
+        let cancel_keys = [Keys::VkEscape, Keys::VkReturn];
+        match pressed {
+            true if !cur_key.is_modifierkey() => {
+                if !is_started.load(Ordering::Relaxed) {
+                    start(context.clone(), finish_sender.clone());
+                    is_started.store(true, Ordering::Relaxed);
+                }
+
+                let mut hotkeys = hotkeys.lock().unwrap();
+                *hotkeys = mng.process_combo_key(context.clone(), &keys, pressed);
+
+                if cancel_keys.contains(&cur_key) {
+                    cancel_sender.notice()
+                }
+            }
+            false => {
+                // todo
+            }
+            _ => {}
+        }
+
+        LRESULT(1)
+    })
+}
+
+/// 设置键盘钩子简化版
+/// @param keys 产生好的键位列表
+/// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
+pub(crate) fn set_hook_simple(
+    keys: Arc<Mutex<ComboKey>>,
+    senders: &[NoticeSender; 2],
+) -> WindowsHook {
     let hotkeys = keys.clone();
     let finish_sender = senders[0];
     let cancel_sender = senders[1];

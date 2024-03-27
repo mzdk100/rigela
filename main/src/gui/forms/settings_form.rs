@@ -30,7 +30,7 @@ use crate::{
             set_pitch_cmd, set_speed_cmd, set_voice_cmd, set_volume_cmd,
         },
         forms::hotkeys::HotKeysUi,
-        utils::set_hook,
+        utils::set_hook_simple,
     },
     performer::tts::{TtsProperty, VoiceInfo},
 };
@@ -63,7 +63,7 @@ pub struct SettingsForm {
 
     pub(crate) talent_ids: RefCell<Arc<Vec<String>>>,
     pub(crate) custom_combo_keys: RefCell<HashMap<String, ComboKey>>,
-    pub(crate) hotkeys: Arc<Mutex<ComboKey>>,
+    pub(crate) hotkeys: Arc<Mutex<Option<ComboKey>>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 
     all_voices: Arc<Mutex<Vec<String>>>,
@@ -242,7 +242,7 @@ impl SettingsForm {
                     });
 
                 let mut hook = self.general_ui.hook.borrow_mut();
-                *hook = Some(set_hook(keys, &senders));
+                *hook = Some(set_hook_simple(keys, &senders));
             }
             CheckBoxState::Unchecked => {
                 add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), false, &vec![])
