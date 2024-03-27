@@ -18,9 +18,10 @@ use crate::{
     context::Context,
     talent::mouse::mouse_read,
 };
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex, OnceLock, RwLock, Weak},
+    sync::{Mutex, OnceLock, RwLock, Weak},
 };
 use win_wrap::{
     common::LRESULT,
@@ -38,15 +39,15 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
     // 暂停键盘钩子
-    let ignore_hook = Arc::new(Mutex::new(false));
+    let ignore_hook = AtomicBool::new(false);
     // 大小写锁定键状态
-    let capital_key_state = Arc::new(Mutex::new(false));
+    let capital_key_state = AtomicBool::new(false);
     // 暂停大小写键转换功能
-    let ignore_capital_key = Arc::new(Mutex::new(false));
+    let ignore_capital_key = AtomicBool::new(false);
 
     WindowsHook::new(HOOK_TYPE_KEYBOARD_LL, move |w_param, l_param, next| {
         // 根据状态条件暂停钩子处理
-        if *ignore_hook.lock().unwrap() {
+        if ignore_hook.load(Ordering::Relaxed) {
             return next();
         }
 
@@ -102,7 +103,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
 
             true => {
                 // 所有键按下都把大写锁定键的状态切换关闭
-                *ignore_capital_key.lock().unwrap() = true;
+                ignore_capital_key.store(true, Ordering::Relaxed);
 
                 // 保存最后按下的键
                 unsafe { &*context.as_ptr() }
@@ -131,16 +132,16 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                 true => {
                     // 如果按下大写锁定键，保存状态
                     let (_, state) = get_key_state(VK_CAPITAL);
-                    *capital_key_state.lock().unwrap() = state;
+                    capital_key_state.store(state, Ordering::Relaxed);
                     // 如果单独按下大写锁定键，开启锁定键的状态改变
                     if key_count == 1 {
-                        *ignore_capital_key.lock().unwrap() = false;
+                        ignore_capital_key.store(false, Ordering::Relaxed);
                     }
                 }
                 false => {
                     // 松开按键时，检测是否允许改变状态，如果允许，关闭钩子处理，模拟发送锁定键并播报状态
-                    if *ignore_capital_key.lock().unwrap() == false {
-                        let state = *capital_key_state.lock().unwrap();
+                    if ignore_capital_key.load(Ordering::Relaxed) == false {
+                        let state = capital_key_state.load(Ordering::Relaxed);
                         capital_handle(context.clone(), state, &ignore_hook);
                     }
                 }
@@ -176,16 +177,12 @@ fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
 }
 
 // 处理大小写锁定键
-fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &Mutex<bool>) {
-    let context = unsafe { &*context.as_ptr() };
-
-    {
-        *hook_toggle.lock().unwrap() = true;
-    }
+fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &AtomicBool) {
+    hook_toggle.store(true, Ordering::Relaxed);
     send_key(VK_CAPITAL);
-    {
-        *hook_toggle.lock().unwrap() = false;
-    }
+    hook_toggle.store(false, Ordering::Relaxed);
+
+    let context = unsafe { &*context.as_ptr() };
     let performer = context.performer.clone();
     context.work_runtime.spawn(async move {
         let info = if !state { "大写" } else { "小写" };
