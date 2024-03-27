@@ -17,14 +17,14 @@ use crate::configs::{
 };
 use log::{error as err_log, info};
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::{
     fs::{read_to_string, File},
     io::Write,
     path::PathBuf,
     sync::{Arc, Mutex},
     thread::{sleep, spawn},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 /// 配置项目的根元素
@@ -44,8 +44,8 @@ pub(crate) struct ConfigManager {
     pub(crate) path: PathBuf,
     // 当前的配置
     config: Arc<Mutex<ConfigRoot>>,
-    // 更新配置的操作时间
-    update_time: Arc<Mutex<Instant>>,
+    // 更新配置的操作时间,不要求过于精确，时间戳就可以，Instant是纳秒级别的
+    update_time: Arc<AtomicU64>,
     // 延时写入是否完成
     write_finished: Arc<AtomicBool>,
 }
@@ -58,7 +58,7 @@ impl ConfigManager {
         Self {
             path,
             config: Default::default(),
-            update_time: Arc::new(Mutex::new(Instant::now())),
+            update_time: AtomicU64::new(0).into(),
             write_finished: AtomicBool::new(true).into(),
         }
     }
@@ -82,7 +82,7 @@ impl ConfigManager {
     pub(crate) fn set_config(&self, config: &ConfigRoot) {
         *self.config.lock().unwrap() = config.clone();
 
-        *self.update_time.lock().unwrap() = Instant::now();
+        self.update_time.store(get_time_stamp(), Ordering::Relaxed);
         self.write();
     }
 
@@ -117,7 +117,7 @@ impl ConfigManager {
 
             // 延迟到当前配置更新时间的推后10秒钟
             loop {
-                if Instant::now() >= *update_time.lock().unwrap() + Duration::from_secs(10) {
+                if get_time_stamp() - update_time.load(Ordering::Acquire) > 10 {
                     break;
                 }
                 sleep(Duration::from_secs(10));
@@ -159,4 +159,12 @@ fn _read_config(path: &PathBuf) -> Result<ConfigRoot, Box<dyn std::error::Error>
     let cfg = toml::from_str::<ConfigRoot>(data.as_mut_str())?;
 
     Ok(cfg)
+}
+
+// 计算时间戳， 单位：秒
+fn get_time_stamp() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs()
 }

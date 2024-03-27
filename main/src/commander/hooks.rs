@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::commander::keyboard::combo_keys::{ComboKey, State};
 use crate::{
     commander::{keyboard::keys::Keys, Talent},
     configs::config_operations::get_mouse_read_state,
@@ -72,6 +72,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         let mut map = key_track.write().unwrap();
         map.insert(key, pressed);
 
+        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
         let mng = unsafe { &*context.as_ptr() }
             .commander
             .combo_key_manager
@@ -87,10 +88,16 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
             // 松开按键，需要排除大写锁定键，由后面的大写锁定键代码专门处理
             false if info.vkCode as u16 != VK_CAPITAL.0 => {
                 if !key.is_modifierkey() {
-                    combo_key = mng.process_combo_key(context.clone(), &ck, pressed);
+                    let ck_long = ComboKey {
+                        state: State::LongPress,
+                        ..ck
+                    };
+                    combo_key = match pv.get_talent_by_combo_key(&ck_long) {
+                        Some(_) => mng.process_combo_key(context.clone(), &ck, pressed),
+                        None => None,
+                    };
 
                     if let Some(combo_key) = combo_key {
-                        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
                         if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
                             return execute(context.clone(), talent);
                         }
@@ -111,7 +118,19 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     .set_last_pressed_key(&key);
 
                 if !key.is_modifierkey() {
-                    combo_key = mng.process_combo_key(context.clone(), &ck, pressed);
+                    let ck_single = ComboKey {
+                        state: State::SinglePress,
+                        ..ck
+                    };
+                    let ck_double = ComboKey {
+                        state: State::DoublePress,
+                        ..ck
+                    };
+
+                    combo_key = match pv.get_talent_by_combo_key(&ck_double) {
+                        Some(_) => mng.process_combo_key(context.clone(), &ck, pressed),
+                        None => Some(ck_single),
+                    }
                 }
             }
 
@@ -119,7 +138,6 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         }
 
         if let Some(combo_key) = combo_key {
-            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
             if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
                 return execute(context.clone(), talent);
             }
@@ -190,11 +208,9 @@ fn capital_handle(context: Weak<Context>, state: bool, hook_toggle: &AtomicBool)
     });
 }
 
-// 保存鼠标坐标，由于hook闭包函数是Fn类型，无法修改闭包外部值，所以坐标无法保存在set_mouse函数当中
-static OLD_POINT: (AtomicU32, AtomicU32) = (AtomicU32::new(0), AtomicU32::new(0));
-
 /// 设置鼠标钩子
 pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
+    let old_point: (AtomicU32, AtomicU32) = (AtomicU32::new(0), AtomicU32::new(0));
     let context = context.clone();
 
     WindowsHook::new(HOOK_TYPE_MOUSE_LL, move |w_param, l_param, next| {
@@ -206,13 +222,13 @@ pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
         let (x, y) = (info.pt.x, info.pt.y);
 
         // 如果坐标差值小于10个像素，不处理直接返回
-        let old_x = OLD_POINT.0.load(Ordering::Relaxed) as i32;
-        let old_y = OLD_POINT.1.load(Ordering::Relaxed) as i32;
+        let old_x = old_point.0.load(Ordering::Relaxed) as i32;
+        let old_y = old_point.1.load(Ordering::Relaxed) as i32;
         if (x - old_x).pow(2) + (y - old_y).pow(2) < 100 {
             return next();
         }
-        OLD_POINT.0.store(x as u32, Ordering::Relaxed);
-        OLD_POINT.1.store(y as u32, Ordering::Relaxed);
+        old_point.0.store(x as u32, Ordering::Relaxed);
+        old_point.1.store(y as u32, Ordering::Relaxed);
 
         mouse_read(context.clone(), x, y);
         next()

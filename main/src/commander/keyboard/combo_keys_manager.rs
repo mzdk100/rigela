@@ -11,31 +11,36 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::keys::Keys;
+use crate::commander::keyboard::keys::Keys::VkNone;
 use crate::{
     commander::keyboard::combo_keys::{
-        ComboKey, ComboKeyExt,
+        ComboKey,
         State::{DoublePress, LongPress, SinglePress},
     },
     context::Context,
 };
+use rust_i18n::AtomicStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
-    sync::{Arc, Mutex, Weak},
+    sync::{Arc, Weak},
     time::Duration,
 };
 use tokio::time::sleep;
 
-#[allow(unused)]
 pub(crate) struct ComboKeysManage {
-    pressed_cache: Arc<Mutex<ComboKeyExt>>,
-    release_cache: Arc<Mutex<ComboKeyExt>>,
+    // 元组包含： 按键键名， 是否按下
+    pressed_cache: Arc<(AtomicStr, AtomicBool)>,
+    release_cache: Arc<(AtomicStr, AtomicBool)>,
 }
 
 #[allow(unused)]
 impl ComboKeysManage {
     pub(crate) fn new() -> ComboKeysManage {
+        let key: &str = VkNone.into();
         ComboKeysManage {
-            pressed_cache: Arc::new(Mutex::new(ComboKeyExt::default())),
-            release_cache: Arc::new(Mutex::new(ComboKeyExt::default())),
+            pressed_cache: (AtomicStr::from(key), AtomicBool::new(false)).into(),
+            release_cache: (AtomicStr::from(key), AtomicBool::new(false)).into(),
         }
     }
 
@@ -46,46 +51,60 @@ impl ComboKeysManage {
         key: &ComboKey,
         pressed: bool,
     ) -> Option<ComboKey> {
-        let mut pressed_cache = self.pressed_cache.lock().unwrap();
-        let mut release_cache = self.release_cache.lock().unwrap();
-
+        let main_key: &str = key.main_key.into();
         match pressed {
-            true if key.main_key == pressed_cache.main_key
-                && pressed_cache.state == SinglePress =>
+            true if main_key.to_string() == self.pressed_cache.0.to_string().clone()
+                && self.pressed_cache.1.load(Ordering::Acquire) =>
             {
-                *pressed_cache = Default::default();
+                // 产生双击，把按压缓存的状态设为默认
+                let key_none: &str = VkNone.into();
+                self.pressed_cache.0.replace(key_none);
+                self.pressed_cache.1.store(false, Ordering::Relaxed);
+
                 Some(ComboKey {
                     state: DoublePress,
                     ..key.clone()
                 })
             }
-            true => {
-                *pressed_cache = ComboKey {
-                    state: SinglePress,
-                    ..key.clone()
-                }
-                .into();
-                *release_cache = key.clone().into();
 
-                //  200毫秒后， pressed_cache.count Default::default
+            true => {
+                // 第一次按下某个键， 按压缓存设为按下，释放缓存设为松开， 启动延时任务。
+                self.pressed_cache.0.replace(main_key);
+                self.pressed_cache.1.store(true, Ordering::Relaxed);
+
+                self.release_cache.0.replace(main_key);
+                self.release_cache.1.store(false, Ordering::Relaxed);
+
+                //  200毫秒后， 按压状态松开
                 self.pressed_delay(context.clone());
-                // 500毫秒后， 如果 release.count != Default::default State = LongPress
-                self.release_delay(context.clone(), &key);
+                // 500毫秒后， 释放状态为长按
+                self.release_delay(context.clone(), &key.main_key);
 
                 Some(ComboKey {
                     state: SinglePress,
                     ..key.clone()
                 })
             }
+
             false => {
-                if release_cache.main_key == key.main_key && release_cache.state == LongPress {
-                    *release_cache = Default::default();
+                if main_key == self.release_cache.0.to_string().clone()
+                    && self.release_cache.1.load(Ordering::Acquire)
+                {
+                    // 如果产生长按， 复原释放缓存
+                    let key_none: &str = VkNone.into();
+                    self.release_cache.0.replace(key_none);
+                    self.release_cache.1.store(false, Ordering::Relaxed);
+
                     Some(ComboKey {
                         state: LongPress,
                         ..key.clone()
                     })
                 } else {
-                    *release_cache = Default::default();
+                    // 松开任意键， 复原释放缓存
+                    let key_none: &str = VkNone.into();
+                    self.release_cache.0.replace(key_none);
+                    self.release_cache.1.store(false, Ordering::Relaxed);
+
                     None
                 }
             }
@@ -100,27 +119,27 @@ impl ComboKeysManage {
             .work_runtime
             .spawn(async move {
                 sleep(Duration::from_millis(200)).await;
-                *pressed_cache.lock().unwrap() = Default::default();
+
+                // 延时200毫秒后， 取消双击
+                pressed_cache.1.store(false, Ordering::Relaxed);
             });
     }
 
     // 按键释放延时处理
-    fn release_delay(&self, context: Weak<Context>, combo_key: &ComboKey) {
+    fn release_delay(&self, context: Weak<Context>, key: &Keys) {
         let release_cache = self.release_cache.clone();
-        let combo_key = combo_key.clone();
+        let key = key.clone();
 
         unsafe { &*context.as_ptr() }
             .work_runtime
             .spawn(async move {
                 sleep(Duration::from_millis(500)).await;
-                let k = { release_cache.lock().unwrap().main_key.clone() };
-                if combo_key.main_key == k {
-                    let mut ck = release_cache.lock().unwrap();
-                    *ck = ComboKey {
-                        state: LongPress,
-                        ..combo_key
-                    }
-                    .into();
+
+                let key: &str = key.into();
+                let key_cache = release_cache.0.to_string();
+                if key == key_cache.as_str() {
+                    // 如果持续500毫秒,释放缓存键和传入的按键相同，则释放的缓存状态为长按
+                    release_cache.1.store(true, Ordering::Relaxed);
                 }
             });
     }

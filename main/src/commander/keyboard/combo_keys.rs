@@ -85,8 +85,7 @@ impl From<Vec<Keys>> for ComboKey {
             }
         }
 
-        // Todo State default Idle
-        ComboKey::new(main, mdf, State::SinglePress)
+        ComboKey::new(main, mdf, State::Idle)
     }
 }
 
