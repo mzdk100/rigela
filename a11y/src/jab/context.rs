@@ -78,6 +78,13 @@ impl<'lib> AccessibleContext<'lib> {
     }
 
     /**
+     * 获取唯一ID。
+     * */
+    pub fn get_unique_id(&self) -> i32 {
+        self._ac as i32
+    }
+
+    /**
      * 查询窗口可访问上下文的对象或鼠标指针下的对象。
      * `x` X坐标。
      * `y` Y坐标。
@@ -768,6 +775,8 @@ impl<'lib> PartialEq for AccessibleContext<'lib> {
         self._lib.is_same_object(self._vm_id, self._ac, other._ac)
     }
 }
+
+impl<'lib> Eq for AccessibleContext<'lib> {}
 
 impl<'lib> Drop for AccessibleContext<'lib> {
     fn drop(&mut self) {

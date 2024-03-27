@@ -174,10 +174,21 @@ impl UiAutomationElement {
         None
     }
 
-    /// 获取元素的坐标
-    pub fn get_rect(&self) -> RECT {
+    /**
+     * 获取元素的矩形框
+     */
+    pub fn get_bounding_rectangle(&self) -> RECT {
         unsafe { self._current.CurrentBoundingRectangle() }
             .expect("Can't get the location of element.")
+    }
+
+    /**
+     * 获取元素的当前自动化ID。
+     * */
+    pub fn get_automation_id(&self) -> String {
+        unsafe { self._current.CurrentAutomationId() }
+            .unwrap_or(BSTR::new())
+            .to_string()
     }
 
     /**
