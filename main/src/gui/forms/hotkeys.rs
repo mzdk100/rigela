@@ -12,9 +12,10 @@
  */
 
 use crate::commander::keyboard::combo_keys::ComboKey;
+use crate::gui::utils::set_hook;
 use crate::{
     configs::config_operations::{get_hotkeys, save_hotkeys},
-    gui::{forms::settings_form::SettingsForm, utils::set_hook},
+    gui::forms::settings_form::SettingsForm,
 };
 use nwd::NwgPartial;
 use nwg::{modal_message, InsertListViewItem, MessageParams};
@@ -225,6 +226,11 @@ impl SettingsForm {
         self.hook.take().unwrap().unhook();
 
         let combo_key = self.hotkeys.lock().unwrap().clone();
+        if combo_key.is_none() {
+            return;
+        }
+        let combo_key = combo_key.unwrap();
+
         let key_str = combo_key.to_string();
         self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
@@ -283,7 +289,7 @@ impl SettingsForm {
             self.hotkeys_ui.finish_custom.sender(),
             self.hotkeys_ui.cancel_custom.sender(),
         ];
-        *self.hook.borrow_mut() = Some(set_hook(self.hotkeys.clone(), &senders));
+        *self.hook.borrow_mut() = Some(set_hook(context.clone(), self.hotkeys.clone(), &senders));
     }
 
     // 获取当前列表项选中索引
