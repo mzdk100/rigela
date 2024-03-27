@@ -474,37 +474,33 @@ pub(crate) fn set_hook_simple(
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
         let info: &KbdLlHookStruct = l_param.to();
         let is_extended = info.flags.contains(LLKHF_EXTENDED);
-        let key = (info.vkCode, is_extended).into();
-
-        // 转换RigelA键
-        let cur_key = match key {
-            Keys::VkNumPad0 | Keys::VkCapital | Keys::VkInsert => Keys::VkRigelA,
-            _ => key,
-        };
+        let key: Keys = (info.vkCode, is_extended).into();
+        let cur_key = key.trans_rigela();
 
         {
-            key_track.lock().unwrap().insert(cur_key, pressed);
+            key_track.lock().unwrap().insert(cur_key.clone(), pressed);
         }
 
         // 当前已经按下的键位
-        let keys = key_track
+        let keys: ComboKey = key_track
             .lock()
             .unwrap()
             .iter()
             .filter(|(k, p)| **k == cur_key || **p)
             .map(|(x, _)| *x)
-            .collect::<Vec<Keys>>();
+            .collect::<Vec<Keys>>()
+            .into();
 
-        // 有一个键位松开，完成读取
+        // 有一个非辅助见键位松开，完成读取
         let cancel_keys = [Keys::VkEscape, Keys::VkReturn];
-        if !pressed {
-            match keys.len() {
-                1 if cancel_keys.contains(&keys[0]) => cancel_sender.notice(),
+        if !pressed && !cur_key.is_modifierkey() {
+            match cancel_keys.contains(&cur_key) {
+                true => cancel_sender.notice(),
 
-                _ => {
+                false => {
                     // 读取已经按下键位到存储缓冲
                     let mut hotkeys = hotkeys.lock().unwrap();
-                    *hotkeys = keys.into();
+                    *hotkeys = keys;
 
                     finish_sender.notice();
                 }

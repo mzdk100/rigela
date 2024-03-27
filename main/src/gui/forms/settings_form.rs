@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::keys::Keys;
 use crate::{
     bring_window_front,
     commander::keyboard::combo_keys::ComboKey,
@@ -268,8 +269,7 @@ impl SettingsForm {
             return;
         }
 
-        // Todo
-        // add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
+        add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys.into());
 
         self.general_ui
             .ck_add_desktop_shortcut

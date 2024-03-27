@@ -90,6 +90,14 @@ impl From<Vec<Keys>> for ComboKey {
     }
 }
 
+impl Into<Vec<Keys>> for ComboKey {
+    fn into(self) -> Vec<Keys> {
+        let mut keys: Vec<Keys> = self.modify_keys.into();
+        keys.push(self.main_key);
+        keys
+    }
+}
+
 impl fmt::Display for ComboKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let state = match self.state {
