@@ -11,12 +11,15 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::Arc,
+};
 use crate::performer::Speakable;
 use a11y::{
     ia2::{object::Accessible2Object, relation::AccessibleRelation},
     jab::context::AccessibleContext,
 };
-use std::sync::Arc;
 use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
 
 /**
@@ -94,8 +97,33 @@ impl<'a> UiElement<'a> {
                     bottom: r.1 + r.3,
                 })
             }
-            Self::UIA(x) => Some(x.get_rect()),
+            Self::UIA(x) => Some(x.get_bounding_rectangle()),
         }
+    }
+}
+
+impl<'a> Hash for UiElement<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let unique_id = match self {
+            Self::IA2(Some(x), _) => format!("ia2:{}", x.unique_id().unwrap_or(0)),
+            Self::JAB(x) => format!("jab:{}", x.get_unique_id()),
+            Self::MSAA(x, y) => {
+                let (x, y, w, h) = x.location(*y);
+                format!("msaa:{},{},{},{}", x, y, w, h)
+            }
+            Self::UIA(x) => format!("uia:{}", x.get_automation_id()),
+            _ => "None".to_string()
+        };
+        state.write(unique_id.as_bytes())
+    }
+}
+
+impl<'a> Eq for UiElement<'a> {}
+
+impl<'a> PartialEq for UiElement<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher) == other.hash(&mut hasher)
     }
 }
 

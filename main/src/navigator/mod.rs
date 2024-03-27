@@ -14,10 +14,10 @@
 pub(crate) mod element;
 pub(crate) mod linear;
 
-use std::sync::Weak;
 use std::{
+    collections::HashSet,
     fmt::{Debug, Formatter},
-    sync::Arc,
+    sync::{Arc, Weak},
 };
 
 use tokio::sync::Mutex;
@@ -31,7 +31,7 @@ pub(crate) struct UiNavigator {
     /// 最后访问的元素
     last_visit: Mutex<Option<Weak<UiElement<'static>>>>,
     /// 控件元素容器
-    container: Mutex<Vec<Arc<UiElement<'static>>>>,
+    container: Mutex<HashSet<Arc<UiElement<'static>>>>,
 }
 
 #[allow(dead_code)]
@@ -39,7 +39,7 @@ impl UiNavigator {
     pub(crate) fn new() -> Self {
         Self {
             last_visit: None.into(),
-            container: Vec::new().into(),
+            container: HashSet::new().into(),
         }
     }
 
@@ -60,7 +60,7 @@ impl UiNavigator {
         let mut container = self.container.lock().await;
         for i in 0..root.get_child_count() {
             if let Some(c) = root.get_child(i) {
-                container.push(c.into());
+                container.insert(c.into());
             }
         }
     }
@@ -71,7 +71,16 @@ impl UiNavigator {
      * */
     pub(crate) async fn put(&self, element: UiElement<'static>) {
         let mut container = self.container.lock().await;
-        container.push(element.into());
+        container.insert(element.into());
+    }
+
+    /**
+     * 移除一个元素。
+     * `element` 要移除的元素。
+     * */
+    pub(crate) async fn remove(&self, element: UiElement<'static>) {
+        let mut container = self.container.lock().await;
+        container.remove(&element);
     }
 
     /**

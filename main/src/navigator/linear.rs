@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use tokio::sync::MutexGuard;
@@ -21,7 +22,7 @@ static mut INDEX: i32 = 0;
 
 /// 移动当前索引
 async fn move_cur_index<'a>(
-    container: &'a MutexGuard<'a, Vec<Arc<UiElement<'static>>>>,
+    container: &'a MutexGuard<'a, HashSet<Arc<UiElement<'static>>>>,
     diff: i32,
 ) -> bool {
     let len = container.len() as i32;
@@ -55,8 +56,10 @@ impl LinearNavigator for UiNavigator {
             return None;
         }
         let index = unsafe { INDEX };
-        if let Some(c) = container.get(index as usize) {
-            return Some(c.clone());
+        for (i, j) in container.iter().enumerate() {
+            if (i as i32) == index {
+                return Some(j.clone());
+            }
         }
         None
     }
