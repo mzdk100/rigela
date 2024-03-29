@@ -98,7 +98,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     combo_key = match pv.get_talent_by_combo_key(&ck_long) {
                         Some(talent) => {
                             talent_cache = Some(talent);
-                            mng.process_combo_key(context.clone(), &ck, pressed)
+                            mng.process_combo_key(&ck, pressed)
                         }
                         None => None,
                     };
@@ -133,7 +133,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
 
                     // 如果程序技能存在双击的热键组，发送到热键组管理检测当前按键按下是否为双击组合热键
                     combo_key = match pv.get_talent_by_combo_key(&ck_double) {
-                        Some(_) => mng.process_combo_key(context.clone(), &ck, pressed),
+                        Some(_) => mng.process_combo_key(&ck, pressed),
                         None => Some(ck_single),
                     }
                 }

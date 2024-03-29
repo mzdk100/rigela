@@ -20,6 +20,8 @@ use crate::{
     context::Context,
     performer::text_processing::transform_single_char,
 };
+use arc_swap::ArcSwapAny;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     collections::HashMap,
@@ -28,7 +30,7 @@ use std::{
     time::Duration,
 };
 use tokio::{
-    sync::{Mutex, OnceCell, RwLock},
+    sync::{OnceCell, RwLock},
     time::sleep,
 };
 
@@ -81,7 +83,7 @@ pub(crate) struct Tts {
     default_engine: OnceCell<String>,
     is_cancelled: AtomicBool,
     all_engines: RwLock<HashMap<String, Arc<dyn TtsEngine + Sync + Send>>>,
-    all_voices: Mutex<Vec<VoiceInfo>>,
+    all_voices: ArcSwapAny<Arc<Vec<VoiceInfo>>>,
     context: Weak<Context>,
 }
 
@@ -92,7 +94,7 @@ impl Tts {
             default_engine: OnceCell::new(),
             is_cancelled: false.into(),
             all_engines: HashMap::new().into(),
-            all_voices: vec![].into(),
+            all_voices: ArcSwapAny::from(Arc::new(Vec::new())),
             context,
         }
     }
@@ -236,10 +238,10 @@ impl Tts {
 
             TtsPropertyItem::Voice => {
                 let (engine, id) = config.voice;
-                let lock = self.all_voices.lock().await;
-                match lock.iter().find(|v| v.engine == engine && v.id == id) {
+                let all_voices = self.all_voices.load();
+                match all_voices.iter().find(|v| v.engine == engine && v.id == id) {
                     Some(v) => TtsProperty::Voice(v.clone()),
-                    None => TtsProperty::Voice(lock.first().unwrap().clone()),
+                    None => TtsProperty::Voice(all_voices.first().unwrap().clone()),
                 }
             }
         }
@@ -268,13 +270,15 @@ impl Tts {
     where
         T: TtsEngine + Sync + Send + 'static,
     {
+        let mut all_voices = self.all_voices.load().deref().deref().clone();
         for (id, name) in engine.get_all_voices().await.iter() {
-            self.all_voices.lock().await.push(VoiceInfo {
+            all_voices.push(VoiceInfo {
                 engine: engine.get_name(),
                 id: id.clone(),
                 name: name.clone(),
             });
         }
+        self.all_voices.store(Arc::new(all_voices));
 
         {
             self.all_engines
@@ -336,7 +340,11 @@ impl Tts {
         id: String,
         value_change: ValueChange,
     ) -> VoiceInfo {
-        let mut voices = { self.all_voices.lock().await.clone() };
+        let all_voices = self.all_voices.load();
+        let mut voices = vec![];
+        for v in all_voices.iter() {
+            voices.push(v.clone());
+        }
         if let ValueChange::Decrement = &value_change {
             voices.reverse();
         }
@@ -354,7 +362,7 @@ impl Tts {
     }
 
     pub(crate) async fn get_all_voiceinfo(&self) -> Vec<VoiceInfo> {
-        self.all_voices.lock().await.clone()
+        self.all_voices.load().deref().deref().clone()
     }
 }
 
