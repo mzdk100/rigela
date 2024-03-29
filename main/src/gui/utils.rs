@@ -14,6 +14,7 @@
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::commander::keyboard::keys::Keys;
 use crate::context::Context;
+use arc_swap::ArcSwap;
 use log::error;
 use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
@@ -391,7 +392,7 @@ pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
 /// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
 pub(crate) fn set_hook(
     context: Weak<Context>,
-    keys: Arc<Mutex<Option<ComboKey>>>,
+    keys: Arc<ArcSwap<Option<ComboKey>>>,
     senders: &[NoticeSender; 2],
 ) -> WindowsHook {
     let hotkeys = keys.clone();
@@ -441,8 +442,7 @@ pub(crate) fn set_hook(
                     is_started.store(true, Ordering::Relaxed);
                 }
 
-                let mut hotkeys = hotkeys.lock().unwrap();
-                *hotkeys = mng.process_combo_key(&keys, pressed);
+                hotkeys.store(Arc::new(mng.process_combo_key(&keys, pressed)));
 
                 if cancel_keys.contains(&cur_key) {
                     cancel_sender.notice()
@@ -462,7 +462,7 @@ pub(crate) fn set_hook(
 /// @param keys 产生好的键位列表
 /// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
 pub(crate) fn set_hook_simple(
-    keys: Arc<Mutex<ComboKey>>,
+    keys: Arc<ArcSwap<ComboKey>>,
     senders: &[NoticeSender; 2],
 ) -> WindowsHook {
     let hotkeys = keys.clone();
@@ -498,10 +498,7 @@ pub(crate) fn set_hook_simple(
                 true => cancel_sender.notice(),
 
                 false => {
-                    // 读取已经按下键位到存储缓冲
-                    let mut hotkeys = hotkeys.lock().unwrap();
-                    *hotkeys = keys;
-
+                    hotkeys.store(Arc::new(keys));
                     finish_sender.notice();
                 }
             }

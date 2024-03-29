@@ -35,6 +35,7 @@ use crate::{
     },
     performer::tts::{TtsProperty, VoiceInfo},
 };
+use arc_swap::{ArcSwap, Guard};
 use nwd::{NwgPartial, NwgUi};
 use nwg::{
     modal_message,
@@ -51,7 +52,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     path::PathBuf,
-    sync::{Arc, Mutex, OnceLock, Weak},
+    sync::{Arc, OnceLock, Weak},
 };
 use win_wrap::hook::WindowsHook;
 
@@ -67,10 +68,10 @@ pub struct SettingsForm {
 
     pub(crate) talent_ids: RefCell<Vec<String>>,
     pub(crate) custom_combo_keys: RefCell<HashMap<String, ComboKey>>,
-    pub(crate) hotkeys: Arc<Mutex<Option<ComboKey>>>,
+    pub(crate) hotkeys: Arc<ArcSwap<Option<ComboKey>>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 
-    all_voices: Arc<Mutex<Vec<String>>>,
+    all_voices: Arc<ArcSwap<Vec<String>>>,
     voice: Arc<AStr>,
     speed: Arc<AtomicI32>,
     pitch: Arc<AtomicI32>,
@@ -257,7 +258,8 @@ impl SettingsForm {
 
     fn on_finish_program_hotkeys_hook(&self) {
         self.general_ui.hook.borrow_mut().take().unwrap().unhook();
-        let keys = self.general_ui.program_hotkeys.lock().unwrap().clone();
+        let keys: Guard<Arc<ComboKey>> = self.general_ui.program_hotkeys.load();
+        let keys: Arc<ComboKey> = keys.clone();
 
         let keys_str = format!("{keys}");
         let info = format!("您确定要将{keys_str}用作程序启动的热键吗？");
@@ -272,7 +274,7 @@ impl SettingsForm {
             return;
         }
 
-        let keys: Vec<Keys> = keys.into();
+        let keys: Vec<Keys> = (*keys).clone().into();
         add_desktop_shortcut_cmd(self.context.get().unwrap().clone(), true, &keys);
 
         self.general_ui
@@ -305,7 +307,7 @@ impl SettingsForm {
 
     fn on_role_changed(&self, ctrl: &VoiceUi) {
         let index = ctrl.cb_role.selection().unwrap();
-        let all_voice = self.all_voices.lock().unwrap().clone();
+        let all_voice = self.all_voices.load();
         let mut info = all_voice[index].split("_");
         set_voice_cmd(
             self.context.get().unwrap().clone(),
@@ -404,12 +406,13 @@ impl SettingsForm {
         let update_voice_sender = self.voice_ui.update_voice_notice.sender().clone();
 
         unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-            *all_voice.lock().unwrap() = tts
+            let voices = tts
                 .get_all_voiceinfo()
                 .await
                 .iter()
                 .map(|v| format_voice_info(v))
                 .collect();
+            all_voice.store(Arc::new(voices));
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Voice)).await;
             if let TtsProperty::Voice(v) = voiceinfo {
                 voice.0.replace(format_voice_info(&v));
@@ -457,8 +460,8 @@ impl SettingsForm {
     }
 
     fn update_voice_notice(&self) {
-        let items = self.all_voices.lock().unwrap().clone();
-        self.voice_ui.cb_role.set_collection(items.clone());
+        let items = self.all_voices.load();
+        self.voice_ui.cb_role.set_collection((**items).clone());
 
         let item_str = self.voice.0.to_string();
         let index = items.iter().position(|v| v == &item_str).unwrap();
@@ -478,7 +481,7 @@ impl SettingsForm {
 
 #[derive(Default, NwgPartial)]
 pub struct GeneralUi {
-    program_hotkeys: Arc<Mutex<ComboKey>>,
+    program_hotkeys: Arc<ArcSwap<ComboKey>>,
     hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]

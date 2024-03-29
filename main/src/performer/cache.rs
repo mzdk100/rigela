@@ -12,20 +12,21 @@
  */
 
 use crate::context::Context;
+use arc_swap::ArcSwapAny;
 use log::error;
 use rust_i18n::AtomicStr;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex, Weak},
+    sync::{Arc, Weak},
 };
 use tokio::io::AsyncReadExt;
 
 /// 缓冲区
 pub(crate) struct Cache {
     data: AtomicStr,
-    char_list: Mutex<Vec<char>>,
+    char_list: ArcSwapAny<Arc<Vec<char>>>,
     index: AtomicI64,
     word_map: Arc<HashMap<String, String>>,
 }
@@ -63,7 +64,7 @@ impl Cache {
 
     /// 更新缓冲区
     pub(crate) fn update(&self, value: String) {
-        self.char_list.lock().unwrap().clear();
+        self.char_list.store(Arc::new(vec![]));
         self.index.store(-1, Ordering::Release);
         self.data.replace(value);
     }
@@ -74,7 +75,8 @@ impl Cache {
         match index {
             -1 => self.get_first_char().into(),
             _ => {
-                let len = self.char_list.lock().unwrap().len();
+                let list = self.char_list.load();
+                let len = list.len();
 
                 let new_index = match direction {
                     Direction::Forward if index as usize == len - 1 => index,
@@ -85,7 +87,6 @@ impl Cache {
                 };
 
                 self.index.store(new_index, Ordering::Release);
-                let list = { self.char_list.lock().unwrap() };
                 list.get(new_index as usize).unwrap().clone().into()
             }
         }
@@ -100,9 +101,10 @@ impl Cache {
     fn get_first_char(&self) -> char {
         self.index.store(0, Ordering::Release);
 
-        let mut list = { self.char_list.lock().unwrap() };
+        let mut list = vec![];
         let data = self.data.to_string().clone();
         data.char_indices().for_each(|(_, ch)| list.push(ch));
+        self.char_list.store(Arc::new(list.clone()));
 
         list.first().unwrap().clone()
     }

@@ -25,10 +25,8 @@ use a11y::ia2::{
     WinEventSourceExt,
 };
 use log::error;
-use std::{
-    sync::{Mutex, OnceLock, Weak},
-    time::Duration,
-};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::{sync::Weak, time::Duration};
 use win_wrap::{
     control::{edit::Edit, WindowControl},
     msaa::object::OBJID_CARET,
@@ -125,13 +123,12 @@ async fn subscribe_uia_events(context: Weak<Context>) {
     // group.add_changes_listener(|| {});
 
     group.add_text_selection_changed_listener(move |element| {
-        {
-            *editor_key_handle().lock().unwrap() = true;
-        }
+        EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
         let Some(caret) = element.get_caret() else {
             return;
         };
+
         match commander.get_last_pressed_key() {
             Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
@@ -169,58 +166,57 @@ async fn subscribe_ia2_events(context: Weak<Context>) {
     let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    unsafe { &*context.as_ptr() }.ia2.add_on_text_caret_moved_listener(move |src| {
-        let text = match src.get_text() {
-            Ok(t) => t,
-            Err(e) => {
-                error!("{}", e);
-                return;
-            }
-        };
+    unsafe { &*context.as_ptr() }
+        .ia2
+        .add_on_text_caret_moved_listener(move |src| {
+            let text = match src.get_text() {
+                Ok(t) => t,
+                Err(e) => {
+                    error!("{}", e);
+                    return;
+                }
+            };
 
-        {
-            *editor_key_handle().lock().unwrap() = true;
-        }
+            EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-        let caret = text.caret_offset().unwrap_or(0);
-        let (_, _, text) = match commander.get_last_pressed_key() {
-            Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
-            _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
-        };
+            let caret = text.caret_offset().unwrap_or(0);
+            let (_, _, text) = match commander.get_last_pressed_key() {
+                Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+                _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
+            };
 
-        let event_core = event_core.clone();
-        let performer = performer.clone();
+            let event_core = event_core.clone();
+            let performer = performer.clone();
 
-        work_runtime.spawn(async move {
-            if event_core
-                .should_ignore(text.clone(), Duration::from_millis(50))
-                .await
-            {
-                return;
-            }
-            performer.speak(&text).await;
-        });
-    })
+            work_runtime.spawn(async move {
+                if event_core
+                    .should_ignore(text.clone(), Duration::from_millis(50))
+                    .await
+                {
+                    return;
+                }
+                performer.speak(&text).await;
+            });
+        })
 }
 
-pub(crate) fn editor_key_handle() -> &'static Mutex<bool> {
-    static INSTANCE: OnceLock<Mutex<bool>> = OnceLock::new();
-    INSTANCE.get_or_init(|| Mutex::new(false))
-}
+/// 编辑框边缘光标按键是否处理
+pub(crate) static EDITOR_EDGE_KEY_HANDLE: AtomicBool = AtomicBool::new(false);
 
 /// 处理编辑框的光标键播报
 pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     let ctx = context.clone();
     let cb_uia = move |key: Keys, pressed| {
-        let Ok(ctrl) = unsafe { &*ctx.as_ptr() }.ui_automation.get_focused_element() else {
+        let Ok(ctrl) = unsafe { &*ctx.as_ptr() }
+            .ui_automation
+            .get_focused_element()
+        else {
             return;
         };
         match pressed {
-            true => {
-                *editor_key_handle().lock().unwrap() = false;
-            }
+            true => EDITOR_EDGE_KEY_HANDLE.store(false, Ordering::SeqCst),
             false => {
-                if !*editor_key_handle().lock().unwrap() {
+                if !EDITOR_EDGE_KEY_HANDLE.load(Ordering::Relaxed) {
                     let Some(caret) = ctrl.get_caret() else {
                         return;
                     };
@@ -247,11 +243,9 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
         if let Ok(acc_obj) = unsafe { &*ctx.as_ptr() }.msaa.get_focus_object() {
             if let Ok(text) = AccessibleText::from_accessible_object(acc_obj) {
                 match pressed {
-                    true => {
-                        *editor_key_handle().lock().unwrap() = false;
-                    }
+                    true => EDITOR_EDGE_KEY_HANDLE.store(false, Ordering::SeqCst),
                     false => {
-                        if !*editor_key_handle().lock().unwrap() {
+                        if !EDITOR_EDGE_KEY_HANDLE.load(Ordering::Relaxed) {
                             let caret = text.caret_offset().unwrap_or(0);
                             let (_, _, text) = match key {
                                 Keys::VkUp | Keys::VkDown => {
@@ -273,6 +267,10 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     };
 
     let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
-    unsafe { &*context.as_ptr() }.commander.add_key_event_listener(&keys, cb_uia);
-    unsafe { &*context.as_ptr() }.commander.add_key_event_listener(&keys, cb_ia2);
+    unsafe { &*context.as_ptr() }
+        .commander
+        .add_key_event_listener(&keys, cb_uia);
+    unsafe { &*context.as_ptr() }
+        .commander
+        .add_key_event_listener(&keys, cb_ia2);
 }

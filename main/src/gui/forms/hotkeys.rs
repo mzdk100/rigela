@@ -17,6 +17,7 @@ use crate::{
     configs::config_operations::{get_hotkeys, save_hotkeys},
     gui::forms::settings_form::SettingsForm,
 };
+use arc_swap::access::{DynAccess, DynGuard};
 use nwd::NwgPartial;
 use nwg::{modal_message, InsertListViewItem, MessageParams};
 
@@ -225,7 +226,7 @@ impl SettingsForm {
     pub(crate) fn on_finish_custom(&self) {
         self.hook.take().unwrap().unhook();
 
-        let combo_key = self.hotkeys.lock().unwrap().clone();
+        let combo_key: DynGuard<Option<ComboKey>> = self.hotkeys.load();
         if combo_key.is_none() {
             return;
         }

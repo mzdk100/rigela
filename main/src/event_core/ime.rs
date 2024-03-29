@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::sync::atomic::Ordering;
 use std::sync::Weak;
 
 use peeper::model::CandidateList;
 use win_wrap::input::{IME_CMODE_ALPHANUMERIC, IME_CMODE_FULLSHAPE, IME_CMODE_NATIVE};
 
 use crate::{
-    context::Context, event_core::editor::editor_key_handle,
+    context::Context, event_core::editor::EDITOR_EDGE_KEY_HANDLE,
     performer::sound::SoundArgument::Single,
 };
 
@@ -79,10 +80,8 @@ pub(crate) async fn subscribe_ime_events(context: Weak<Context>) {
 fn handle_ime_candidate(context: Weak<Context>, candidate_list: CandidateList) {
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
 
-    {
-        // 关闭编辑框键盘事件朗读
-        *editor_key_handle().lock().unwrap() = true;
-    }
+    // 关闭编辑框键盘事件朗读
+    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
     unsafe { &*context.as_ptr() }.task_manager.push(
         "ime",
