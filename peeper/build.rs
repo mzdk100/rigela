@@ -31,16 +31,23 @@ fn copy_deps(target: &str) {
         .join("rustlib")
         .join(target)
         .join("lib");
-    let lib_dir = read_dir(&lib_path).unwrap();
-    let target_dir = Path::new(&env::var("USERPROFILE").unwrap())
-        .join(".rigela")
-        .join("libs");
+
+    // 创建必要的目录
+    let target_dir = Path::new(&env::var("USERPROFILE").unwrap()).join(".rigela");
     if !target_dir.exists() {
         if let Err(e) = create_dir(&target_dir) {
             panic!("Unable to create necessary directory `{}`. ({})", target_dir.display(), e);
         }
     }
-    for i in lib_dir {
+    let target_dir = target_dir.join("libs");
+    if !target_dir.exists() {
+        if let Err(e) = create_dir(&target_dir) {
+            panic!("Unable to create necessary directory `{}`. ({})", target_dir.display(), e);
+        }
+    }
+
+    // 复制文件
+    for i in read_dir(&lib_path).unwrap() {
         let i = i.unwrap();
         let f = i.file_name().into_string().unwrap().to_lowercase();
         if f.ends_with(".dll") && f.starts_with("std") {
