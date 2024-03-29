@@ -98,6 +98,9 @@ zip = "0.6.6"
 # 位操作
 bitflags = { version = "2.5.0", features = ["serde"] }
 
+# 跨线程去锁传输数据
+arc-swap = "1.7.1"
+
 [dependencies.reqwest]
 # 网络请求
 version = "0.12.2"

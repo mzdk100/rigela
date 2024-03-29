@@ -15,6 +15,8 @@ use crate::configs::{
     general::GeneralConfig, hotkeys::HotKeysConfig, mouse::MouseConfig,
     navigation::NavigationConfig, tts::TtsConfig,
 };
+use arc_swap::access::{DynAccess, DynGuard};
+use arc_swap::ArcSwap;
 use log::{error as err_log, info};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -22,7 +24,7 @@ use std::{
     fs::{read_to_string, File},
     io::Write,
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::Arc,
     thread::{sleep, spawn},
     time::Duration,
 };
@@ -43,7 +45,7 @@ pub(crate) struct ConfigManager {
     // 配置文件的路径
     pub(crate) path: PathBuf,
     // 当前的配置
-    config: Arc<Mutex<ConfigRoot>>,
+    config: Arc<ArcSwap<ConfigRoot>>,
     // 更新配置的操作时间,不要求过于精确，时间戳就可以，Instant是纳秒级别的
     update_time: Arc<AtomicU64>,
     // 延时写入是否完成
@@ -65,7 +67,7 @@ impl ConfigManager {
 
     /// 初始化当前配置，从配置文件获取配置信息
     pub(crate) fn apply(&self) {
-        *self.config.lock().unwrap() = self.read();
+        self.config.store(Arc::new(self.read()));
 
         // 设置当前程序显示语言
         let lang: String = self.get_config().general_config.lang.clone().into();
@@ -75,12 +77,13 @@ impl ConfigManager {
 
     /// 获取当前的配置
     pub(crate) fn get_config(&self) -> ConfigRoot {
-        self.config.lock().unwrap().clone()
+        let cfg: DynGuard<ConfigRoot> = self.config.load();
+        cfg.clone()
     }
 
     /// 修改当前的配置，修改完写入配置文件
     pub(crate) fn set_config(&self, config: &ConfigRoot) {
-        *self.config.lock().unwrap() = config.clone();
+        self.config.store(Arc::new(config.clone()));
 
         self.update_time.store(get_time_stamp(), Ordering::Relaxed);
         self.write();
@@ -124,7 +127,7 @@ impl ConfigManager {
             }
 
             // 开始执行配置写入
-            let cfg = config.lock().unwrap().clone();
+            let cfg = config.load();
             _write_config(&path, &cfg).unwrap_or_else(|_| err_log!("Can't write the config file."));
 
             write_finished.store(true, Ordering::SeqCst);
@@ -137,7 +140,7 @@ impl ConfigManager {
         let config = self.config.clone();
 
         let _job = spawn(move || {
-            let cfg = config.lock().unwrap().clone();
+            let cfg = config.load();
             _write_config(&path, &cfg).unwrap_or_else(|_| err_log!("写入配置文件失败"));
         })
         .join();
