@@ -12,12 +12,12 @@
  */
 
 use crate::commander::keyboard::keys::Keys;
-use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-bitflags! {
-    #[derive(Serialize, Deserialize)]
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, Serialize, Deserialize, Hash, PartialEq, Eq)]
+    #[serde(transparent)]
     pub(crate) struct ModifierKeys: u8 {
         const RIGELA = 0b0000_0001;
         const CTRL = 0b0000_0010;
