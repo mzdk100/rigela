@@ -45,6 +45,8 @@ use nwg::{
     CheckBox, CheckBoxState, MessageParams, NoticeSender,
 };
 use rigela_macros::GuiFormImpl;
+use rust_i18n::AtomicStr;
+use std::sync::atomic::{AtomicI32, Ordering};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -53,6 +55,7 @@ use std::{
 };
 use win_wrap::hook::WindowsHook;
 
+const FORM_SIZE: (u32, u32) = (800, 600);
 const FRAME_SIZE: Size<D> = Size {
     width: D::Percent(1.0),
     height: D::Auto,
@@ -62,18 +65,18 @@ const FRAME_SIZE: Size<D> = Size {
 pub struct SettingsForm {
     pub(crate) context: OnceLock<Weak<Context>>,
 
-    pub(crate) talent_ids: RefCell<Arc<Vec<String>>>,
+    pub(crate) talent_ids: RefCell<Vec<String>>,
     pub(crate) custom_combo_keys: RefCell<HashMap<String, ComboKey>>,
     pub(crate) hotkeys: Arc<Mutex<Option<ComboKey>>>,
     pub(crate) hook: RefCell<Option<WindowsHook>>,
 
     all_voices: Arc<Mutex<Vec<String>>>,
-    voice: Arc<Mutex<String>>,
-    speed: Arc<Mutex<i32>>,
-    pitch: Arc<Mutex<i32>>,
-    volume: Arc<Mutex<i32>>,
+    voice: Arc<AStr>,
+    speed: Arc<AtomicI32>,
+    pitch: Arc<AtomicI32>,
+    volume: Arc<AtomicI32>,
 
-    #[nwg_control(size: (800, 600), position: (200, 200), title: & t ! ("settings.title"))]
+    #[nwg_control(size: (0, 0), position: (200, 200), title: & t ! ("settings.title"))]
     #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
     pub(crate) window: nwg::Window,
 
@@ -356,8 +359,6 @@ impl SettingsForm {
     }
 
     fn on_show_notice(&self) {
-        bring_window_front!(&self.window);
-
         // 更新桌面快捷显示
         let state = match get_desktop_shortcut_path().exists() {
             true => CheckBoxState::Checked,
@@ -411,19 +412,19 @@ impl SettingsForm {
                 .collect();
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Voice)).await;
             if let TtsProperty::Voice(v) = voiceinfo {
-                *voice.lock().unwrap() = format_voice_info(&v);
+                voice.0.replace(format_voice_info(&v));
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Speed)).await;
             if let TtsProperty::Speed(v) = voiceinfo {
-                *speed.lock().unwrap() = v;
+                speed.store(v, Ordering::Release);
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Pitch)).await;
             if let TtsProperty::Pitch(v) = voiceinfo {
-                *pitch.lock().unwrap() = v;
+                pitch.store(v, Ordering::Release);
             }
             let voiceinfo = tts.get_tts_prop_value(Some(TtsPropertyItem::Volume)).await;
             if let TtsProperty::Volume(v) = voiceinfo {
-                *volume.lock().unwrap() = v;
+                volume.store(v, Ordering::Release);
             }
 
             update_voice_sender.notice();
@@ -436,6 +437,8 @@ impl SettingsForm {
         };
         self.mouse_ui.ck_mouse_read.set_check_state(state);
 
+        bring_window_front!(&self.window);
+        self.window.set_size(FORM_SIZE.0, FORM_SIZE.1);
         self.window.set_visible(true);
         self.menu.set_focus();
         self.menu.set_selection(Some(0));
@@ -446,30 +449,30 @@ impl SettingsForm {
     }
 
     fn on_show_hotkeys_notice(&self) {
+        self.on_show_notice();
+
         self.menu.set_selection(Some(2));
         self.change_interface();
         self.hotkeys_ui.data_view.set_focus();
-        bring_window_front!(&self.window);
-        self.window.set_visible(true);
     }
 
     fn update_voice_notice(&self) {
         let items = self.all_voices.lock().unwrap().clone();
         self.voice_ui.cb_role.set_collection(items.clone());
 
-        let item_str = self.voice.lock().unwrap().clone();
+        let item_str = self.voice.0.to_string();
         let index = items.iter().position(|v| v == &item_str).unwrap();
         self.voice_ui.cb_role.set_selection(Some(index));
 
         self.voice_ui
             .cb_speed
-            .set_selection(Some((100 - self.speed.lock().unwrap().clone()) as usize));
+            .set_selection(Some((100 - self.speed.load(Ordering::Acquire)) as usize));
         self.voice_ui
             .cb_pitch
-            .set_selection(Some((100 - self.pitch.lock().unwrap().clone()) as usize));
+            .set_selection(Some((100 - self.pitch.load(Ordering::Acquire)) as usize));
         self.voice_ui
             .cb_volume
-            .set_selection(Some((100 - self.volume.lock().unwrap().clone()) as usize));
+            .set_selection(Some((100 - self.volume.load(Ordering::Acquire)) as usize));
     }
 }
 
@@ -617,4 +620,11 @@ pub struct AdvancedUi {
     #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
     btn_close: nwg::Button,
+}
+
+struct AStr(AtomicStr);
+impl Default for AStr {
+    fn default() -> Self {
+        Self(AtomicStr::new(""))
+    }
 }

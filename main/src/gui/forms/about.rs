@@ -17,11 +17,13 @@ use nwg::{EventData, NoticeSender};
 use rigela_macros::GuiFormImpl;
 use std::sync::{OnceLock, Weak};
 
+const SIZE: (u32, u32) = (320, 240);
+
 #[derive(Default, NwgUi, GuiFormImpl)]
 pub struct AboutForm {
     context: OnceLock<Weak<Context>>,
 
-    #[nwg_control(title: & t ! ("about.title"), size: (320, 240), position: (300, 300), flags: "WINDOW|VISIBLE")]
+    #[nwg_control(title: & t ! ("about.title"), size: (0, 0), position: (300, 300), flags: "WINDOW|VISIBLE")]
     #[nwg_events(OnWindowClose: [AboutForm::on_exit], OnInit: [AboutForm::on_init])]
     window: nwg::Window,
 
@@ -68,6 +70,7 @@ impl AboutForm {
 
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
+        self.window.set_size(SIZE.0, SIZE.1);
         self.window.set_visible(true)
     }
 

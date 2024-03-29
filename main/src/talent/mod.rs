@@ -118,7 +118,6 @@ impl TalentProvider {
         let talent_ids = make_talents!(
             talents,
             combo_key_map,
-
             // 常用能力
             ExitTalent,
             CurrentTimeTalent,

@@ -73,6 +73,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         map.insert(key, pressed);
 
         let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+        let mut talent_cache: Option<Talent> = None;
         let mng = unsafe { &*context.as_ptr() }
             .commander
             .combo_key_manager
@@ -88,19 +89,21 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
             // 松开按键，需要排除大写锁定键，由后面的大写锁定键代码专门处理
             false if info.vkCode as u16 != VK_CAPITAL.0 => {
                 if !key.is_modifierkey() {
+                    // 松开按键，检测组合热键的长按
                     let ck_long = ComboKey {
                         state: State::LongPress,
                         ..ck
                     };
+                    // 如果程序技能存在长按的热键组，发送到热键组管理检测当前按键松开是否为长按组合热键
                     combo_key = match pv.get_talent_by_combo_key(&ck_long) {
-                        Some(_) => mng.process_combo_key(context.clone(), &ck, pressed),
+                        Some(talent) => {
+                            talent_cache = Some(talent);
+                            mng.process_combo_key(context.clone(), &ck, pressed)
+                        }
                         None => None,
                     };
-
-                    if let Some(combo_key) = combo_key {
-                        if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
-                            return execute(context.clone(), talent);
-                        }
+                    if combo_key.is_some() {
+                        return execute(context.clone(), talent_cache.unwrap());
                     }
                 }
 
@@ -118,6 +121,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     .set_last_pressed_key(&key);
 
                 if !key.is_modifierkey() {
+                    // 键位按下时，检测组合热键是单机还是双击
                     let ck_single = ComboKey {
                         state: State::SinglePress,
                         ..ck
@@ -127,6 +131,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                         ..ck
                     };
 
+                    // 如果程序技能存在双击的热键组，发送到热键组管理检测当前按键按下是否为双击组合热键
                     combo_key = match pv.get_talent_by_combo_key(&ck_double) {
                         Some(_) => mng.process_combo_key(context.clone(), &ck, pressed),
                         None => Some(ck_single),
@@ -143,8 +148,8 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
             }
         }
 
-        let key_count = map.values().filter(|i| **i).count();
         // 大写锁定键处理
+        let key_count = map.values().filter(|i| **i).count();
         if info.vkCode as u16 == VK_CAPITAL.0 {
             match pressed {
                 true => {
