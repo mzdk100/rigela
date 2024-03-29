@@ -36,7 +36,9 @@ fn copy_deps(target: &str) {
         .join(".rigela")
         .join("libs");
     if !target_dir.exists() {
-        create_dir(&target_dir).unwrap_or(());
+        if let Err(e) = create_dir(&target_dir) {
+            panic!("Unable to create necessary directory `{}`. ({})", target_dir.display(), e);
+        }
     }
     for i in lib_dir {
         let i = i.unwrap();
@@ -47,7 +49,9 @@ fn copy_deps(target: &str) {
                 continue;
             }
             println!("cargo:rerun-if-changed={}", t.display());
-            copy(i.path(), t).unwrap();
+            if let Err(e) = copy(i.path(), &t) {
+                panic!("Unable to copy the file `{}` from `{}`. ({})", i.path().display(), t.display(), e);
+            }
         }
     }
 }
