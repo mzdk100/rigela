@@ -442,7 +442,7 @@ pub(crate) fn set_hook(
                 }
 
                 let mut hotkeys = hotkeys.lock().unwrap();
-                *hotkeys = mng.process_combo_key(context.clone(), &keys, pressed);
+                *hotkeys = mng.process_combo_key(&keys, pressed);
 
                 if cancel_keys.contains(&cur_key) {
                     cancel_sender.notice()

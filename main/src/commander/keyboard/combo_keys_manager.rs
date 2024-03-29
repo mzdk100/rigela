@@ -11,27 +11,23 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::keyboard::combo_keys::{
+    ComboKey,
+    State::{DoublePress, LongPress, SinglePress},
+};
 use crate::commander::keyboard::keys::Keys;
 use crate::commander::keyboard::keys::Keys::VkNone;
-use crate::{
-    commander::keyboard::combo_keys::{
-        ComboKey,
-        State::{DoublePress, LongPress, SinglePress},
-    },
-    context::Context,
-};
 use rust_i18n::AtomicStr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{
-    sync::{Arc, Weak},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
+use tokio::runtime::{Builder, Runtime};
 use tokio::time::sleep;
 
 pub(crate) struct ComboKeysManage {
     // 元组包含： 按键键名， 是否按下
     pressed_cache: Arc<(AtomicStr, AtomicBool)>,
     release_cache: Arc<(AtomicStr, AtomicBool)>,
+    tokio_rt: Runtime,
 }
 
 #[allow(unused)]
@@ -41,17 +37,14 @@ impl ComboKeysManage {
         ComboKeysManage {
             pressed_cache: (AtomicStr::from(key), AtomicBool::new(false)).into(),
             release_cache: (AtomicStr::from(key), AtomicBool::new(false)).into(),
+            tokio_rt: Builder::new_multi_thread().build().unwrap(),
         }
     }
 
     /// 组合键处理
-    pub(crate) fn process_combo_key(
-        &self,
-        context: Weak<Context>,
-        key: &ComboKey,
-        pressed: bool,
-    ) -> Option<ComboKey> {
+    pub(crate) fn process_combo_key(&self, key: &ComboKey, pressed: bool) -> Option<ComboKey> {
         let main_key: &str = key.main_key.into();
+
         match pressed {
             true if main_key.to_string() == self.pressed_cache.0.to_string().clone()
                 && self.pressed_cache.1.load(Ordering::Acquire) =>
@@ -76,9 +69,9 @@ impl ComboKeysManage {
                 self.release_cache.1.store(false, Ordering::Relaxed);
 
                 //  200毫秒后， 按压状态松开
-                self.pressed_delay(context.clone());
+                self.pressed_delay();
                 // 500毫秒后， 释放状态为长按
-                self.release_delay(context.clone(), &key.main_key);
+                self.release_delay(&key.main_key);
 
                 Some(ComboKey {
                     state: SinglePress,
@@ -112,35 +105,30 @@ impl ComboKeysManage {
     }
 
     // 按键按下延时处理
-    fn pressed_delay(&self, context: Weak<Context>) {
+    fn pressed_delay(&self) {
         let pressed_cache = self.pressed_cache.clone();
 
-        unsafe { &*context.as_ptr() }
-            .work_runtime
-            .spawn(async move {
-                sleep(Duration::from_millis(200)).await;
-
-                // 延时200毫秒后， 取消双击
-                pressed_cache.1.store(false, Ordering::Relaxed);
-            });
+        self.tokio_rt.spawn(async move {
+            // 延时200毫秒后， 取消双击
+            sleep(Duration::from_millis(200)).await;
+            pressed_cache.1.store(false, Ordering::Relaxed);
+        });
     }
 
     // 按键释放延时处理
-    fn release_delay(&self, context: Weak<Context>, key: &Keys) {
+    fn release_delay(&self, key: &Keys) {
         let release_cache = self.release_cache.clone();
         let key = key.clone();
 
-        unsafe { &*context.as_ptr() }
-            .work_runtime
-            .spawn(async move {
-                sleep(Duration::from_millis(500)).await;
+        self.tokio_rt.spawn(async move {
+            sleep(Duration::from_millis(500)).await;
 
-                let key: &str = key.into();
-                let key_cache = release_cache.0.to_string();
-                if key == key_cache.as_str() {
-                    // 如果持续500毫秒,释放缓存键和传入的按键相同，则释放的缓存状态为长按
-                    release_cache.1.store(true, Ordering::Relaxed);
-                }
-            });
+            let key: &str = key.into();
+            let key_cache = release_cache.0.to_string();
+            if key == key_cache.as_str() {
+                // 如果持续500毫秒,释放缓存键和传入的按键相同，则释放的缓存状态为长按
+                release_cache.1.store(true, Ordering::Relaxed);
+            }
+        });
     }
 }
