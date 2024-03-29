@@ -19,15 +19,17 @@ library = ["fs"]
 logger = ["log4rs"]
 pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/io-util", "tokio/time"]
 
-[dependencies]
+[dependencies.log]
 # 输出日志
-log = "0.4.21"
+workspace = true
 
 [dependencies.clipboard]
+# 剪贴板操作
 version = "0.5.0"
 optional = true
 
 [dependencies.encoding_rs]
+# 字符串编解码
 version = "0.8.33"
 optional = true
 
@@ -37,12 +39,12 @@ optional = true
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
-version = "1.0.197"
+workspace = true
 optional = true
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
-version = "1.36.0"
+workspace = true
 optional = true
 
 [dependencies.serde_json_bytes]

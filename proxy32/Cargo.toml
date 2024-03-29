@@ -14,17 +14,18 @@ default = ["server"]
 client = ["model", "rigela-utils/pipe", "tokio/net"]
 model = ["serde/derive"]
 process = ["client"]
-server = ["model", "rigela-utils/ibmeci", "tokio/net", "peeper/default"]
+server = ["model", "rigela-utils/ibmeci", "tokio/net", "peeper/default", "log/std"]
 
 [dependencies.tokio]
-version = "1.36.0"
+workspace = true
 optional = true
 
 [dependencies.log]
-version = "0.4.21"
+workspace = true
+optional = true
 
 [dependencies.serde]
-version = "1.0.197"
+workspace = true
 optional = true
 
 [target.'cfg(target_arch = "x86")'.dependencies.peeper]

@@ -11,15 +11,16 @@ repository.workspace = true
 
 [features]
 default = ["win-wrap/common", "win-wrap/hook"]
-client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync", "rigela-utils/pipe"]
+client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync", "rigela-utils/pipe", "log/std"]
 dll = ["client", "handler", "win-wrap/common", "win-wrap/ext", "win-wrap/hook"]
 handler = ["win-wrap/input"]
 model = ["serde/derive"]
-server = ["model", "utils", "tokio/rt-multi-thread", "rigela-utils/pipe"]
+server = ["model", "utils", "tokio/rt-multi-thread", "rigela-utils/pipe", "log/std"]
 utils = []
 
-[dependencies]
-log = "0.4.21"
+[dependencies.log]
+workspace = true
+optional = true
 
 [dependencies.retour]
 version = "0.3.1"
@@ -34,15 +35,15 @@ path = "../utils"
 optional = true
 
 [dependencies.windows]
-version = "0.54.0"
+workspace = true
 optional = true
 
 [dependencies.serde]
-version = "1.0.197"
+workspace = true
 optional = true
 
 [dependencies.tokio]
-version = "1.36.0"
+workspace = true
 optional = true
 
 [build-dependencies.cargo-rigela]

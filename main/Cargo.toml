@@ -38,7 +38,7 @@ features = ["uia", "registry", "tts", "pth", "control", "shell"]
 
 [dependencies.tokio]
 # 异步运行时（携程框架）
-version = "1.36.0"
+workspace = true
 features = [
     "rt-multi-thread",
     "sync",
@@ -70,7 +70,7 @@ features = ["bass", "killer", "ibmeci", "logger", "clip"]
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
-version = "1.0.197"
+workspace = true
 features = ["derive"]
 
 [dependencies.toml]
@@ -78,13 +78,10 @@ version = "0.8.12"
 
 [dependencies]
 # 查看日期和时间
-chrono = "0.4.35"
+chrono = "0.4.37"
 
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.1"
-
-# 日志库
-log = "0.4.21"
 
 # 异步trait
 async-trait = "0.1.79"
@@ -95,11 +92,17 @@ select = "0.6.0"
 # 压缩解压
 zip = "0.6.6"
 
-# 位操作
-bitflags = { version = "2.5.0", features = ["serde"] }
-
 # 跨线程去锁传输数据
 arc-swap = "1.7.1"
+
+[dependencies.bitflags]
+# 位操作
+version = "2.5.0"
+features = ["serde"]
+
+[dependencies.log]
+# 日志库
+workspace = true
 
 [dependencies.reqwest]
 # 网络请求

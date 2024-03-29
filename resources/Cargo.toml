@@ -13,7 +13,9 @@ repository.workspace = true
 bitar = "0.11.0"
 blake2 = "0.11.0-pre.3"
 url = "2.5.0"
-log = "0.4.21"
+
+[dependencies.log]
+workspace = true
 
 [dependencies.futures-util]
 version = "0.3.30"
@@ -21,7 +23,7 @@ default-features = false
 features = ["std"]
 
 [dependencies.tokio]
-version = "1.36.0"
+workspace = true
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies]
@@ -32,7 +34,7 @@ version = "0.11.0"
 features = ["compress"]
 
 [build-dependencies.tokio]
-version = "1.36.0"
+workspace = true
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies.futures-util]

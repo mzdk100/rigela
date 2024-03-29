@@ -28,5 +28,5 @@ uia = ["com", "msaa", "windows/Win32_UI_Accessibility", "windows/implement"]
 
 [dependencies.windows]
 # windows的所有API
-version = "0.54.0"
+workspace = true
 optional = true

@@ -15,6 +15,18 @@ edition = "2021"
 readme = "README.md"
 repository = "https://gitcode.net/mzdk100/rigela.git"
 
+[workspace.dependencies.log]
+version = "0.4.21"
+
+[workspace.dependencies.tokio]
+version = "1.37.0"
+
+[workspace.dependencies.serde]
+version = "1.0.197"
+
+[workspace.dependencies.windows]
+version = "0.54.0"
+
 [workspace]
 members = [
     'a11y',

@@ -13,11 +13,10 @@ repository.workspace = true
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.78"
+proc-macro2 = "1.0.79"
 quote = "1.0.35"
-heck = "0.5.0-rc.1"
-async-trait = "0.1.77"
+heck = "0.5.0"
 
 [dependencies.syn]
-version = "2.0.52"
+version = "2.0.55"
 features = ["full"]
