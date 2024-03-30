@@ -15,23 +15,16 @@ pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::combo_keys_manager::ComboKeysManage;
-use crate::commander::keyboard::keys::Keys::VkNone;
+use crate::commander::keyboard::Manager;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
-    talent::Talented,
 };
-use keyboard::keys::Keys;
-use rust_i18n::AtomicStr;
 use std::{
     fmt::{Debug, Formatter},
-    sync::{Arc, Mutex, OnceLock, Weak},
+    sync::{Arc, OnceLock, Weak},
 };
 use win_wrap::hook::WindowsHook;
-
-type Talent = Arc<dyn Talented + Send + Sync>;
-type KeyCallbackFn = Arc<dyn Fn(Keys, bool) + Send + Sync>;
 
 /**
  * 命令类型枚举。
@@ -49,13 +42,10 @@ pub(crate) enum CommandType {
 /**
  * 指挥官结构。
  * */
-#[allow(unused)]
 pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
-    last_pressed_key: AtomicStr,
-    key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
-    pub(crate) combo_key_manager: Arc<ComboKeysManage>,
+    keyboard_manager: Arc<Manager>,
 }
 
 impl Commander {
@@ -64,13 +54,10 @@ impl Commander {
      * 负责收集用户的操作请求，例如快捷键、触摸动作、语音命令等，之后把这些命令调度给具体的任务。
      * */
     pub(crate) fn new() -> Self {
-        let key_none: &str = VkNone.into();
         Self {
             keyboard_hook: Default::default(),
             mouse_hook: Default::default(),
-            last_pressed_key: AtomicStr::from(key_none),
-            key_callback_fns: Mutex::new(Vec::new()),
-            combo_key_manager: ComboKeysManage::new().into(),
+            keyboard_manager: Manager::new().into(),
         }
     }
 
@@ -88,44 +75,16 @@ impl Commander {
             .unwrap_or(());
     }
 
-    /**
-     * 清理环境，后续不可以重复使用。
-     * */
-    pub(crate) fn dispose(&self) {
+    /// 获取键盘管理器
+    pub(crate) fn get_keyboard_manager(&self) -> Arc<Manager> {
+        self.keyboard_manager.clone()
+    }
+}
+
+impl Drop for Commander {
+    fn drop(&mut self) {
         self.keyboard_hook.get().unwrap().unhook();
         self.mouse_hook.get().unwrap().unhook();
-    }
-
-    /**
-     * 获取最后一次按下的键。
-     * */
-    pub(crate) fn get_last_pressed_key(&self) -> Keys {
-        let text = self.last_pressed_key.to_string();
-        text.as_str().into()
-    }
-
-    /**
-     * 设置最后一次按下的键。
-     * `key` 键盘枚举。
-     * */
-    pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
-        let key: &str = key.clone().into();
-        self.last_pressed_key.replace(key);
-    }
-
-    pub(crate) fn add_key_event_listener(
-        &self,
-        keys: &[Keys],
-        listener: impl Fn(Keys, bool) + Sync + Send + 'static,
-    ) {
-        self.key_callback_fns
-            .lock()
-            .unwrap()
-            .push((Vec::from(keys), Arc::new(listener)));
-    }
-
-    pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
-        self.key_callback_fns.lock().unwrap().clone()
     }
 }
 

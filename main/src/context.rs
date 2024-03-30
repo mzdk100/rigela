@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::Commander;
+use crate::configs::ConfigManager;
+use crate::gui::GuiProvider;
 use crate::{
-    commander::Commander, configs::config_manager::ConfigManager, event_core, gui::GuiProvider,
-    navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
+    event_core, navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
     talent::TalentProvider, tasks::TaskManager, terminator::Terminator,
 };
 use a11y::{ia2::Ia2, jab::Jab};
@@ -80,7 +82,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-            let proxy32process = Proxy32Process::new();
+        let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -151,7 +153,6 @@ impl Context {
      * 清理环境。
      * */
     pub(crate) fn dispose(&self) {
-        self.commander.dispose();
         self.event_core.shutdown();
         self.jab.remove_all_listeners();
         self.msaa.remove_all_listeners();

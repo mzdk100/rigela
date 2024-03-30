@@ -18,7 +18,7 @@ mod tts;
 
 use crate::{
     commander::{keyboard::combo_keys::ComboKey, CommandType},
-    configs::config_operations::get_hotkeys,
+    configs::operations::get_hotkeys,
     context::Context,
     talent::{
         mouse::{ClickTalent, ReadMouseTalent, RightClickTalent},

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::items::navigation::NavigationMode;
 use crate::{
     combo_key,
     commander::keyboard::{
@@ -18,7 +19,6 @@ use crate::{
         keys::Keys::*,
         modify_keys::ModifierKeys,
     },
-    configs::navigation::NavigationMode,
     context::Context,
     navigator::linear::LinearNavigator,
     performer::sound::SoundArgument::Single,
@@ -120,7 +120,7 @@ async fn mode_next(context: Weak<Context>) {
         NavigationMode::Plane => t!("navigator.plane"),
         NavigationMode::Tree => t!("navigator.tree"),
     }
-        .to_string();
+    .to_string();
     context.performer.speak(&text).await;
 }
 
@@ -147,6 +147,6 @@ async fn mode_prev(context: Weak<Context>) {
             t!("navigator.tree")
         }
     }
-        .to_string();
+    .to_string();
     context.performer.speak(&text).await;
 }

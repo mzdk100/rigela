@@ -437,7 +437,7 @@ pub(crate) fn set_hook(
 
         let mng = unsafe { &*context.as_ptr() }
             .commander
-            .combo_key_manager
+            .get_keyboard_manager()
             .clone();
         let cancel_keys = [Keys::VkEscape, Keys::VkReturn];
         match pressed {

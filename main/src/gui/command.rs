@@ -11,15 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::configs::items::general::Lang;
+use crate::configs::items::tts::TtsConfig;
+use crate::configs::ConfigRoot;
 use crate::{
     commander::keyboard::keys::Keys,
-    configs::{
-        config_manager::ConfigRoot,
-        config_operations::{
-            apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
-        },
-        general::Lang,
-        tts::TtsConfig,
+    configs::operations::{
+        apply_mouse_config, save_auto_check_update, save_lang, save_run_on_startup,
     },
     context::Context,
     gui::utils::{
@@ -218,7 +216,7 @@ pub(crate) fn set_lang_cmd(context: Weak<Context>, index: usize) {
         Lang::En => t!("command.msg_switch_to_en"),
         _ => t!("command.msg_switch_to_follow_system"),
     }
-        .to_string();
+    .to_string();
     let pf = unsafe { &*context.as_ptr() }.performer.clone();
     unsafe { &*context.as_ptr() }
         .work_runtime

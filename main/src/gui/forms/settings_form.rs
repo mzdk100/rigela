@@ -12,15 +12,13 @@
  */
 
 use crate::commander::keyboard::keys::Keys;
+use crate::configs::items::general::Lang;
+use crate::configs::items::tts::TtsPropertyItem;
 use crate::{
     bring_window_front,
     commander::keyboard::combo_keys::ComboKey,
-    configs::{
-        config_operations::{
-            get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
-        },
-        general::Lang,
-        tts::TtsPropertyItem,
+    configs::operations::{
+        get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
     },
     context::Context,
     gui::{

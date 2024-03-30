@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::config_operations::get_auto_check_update;
+use crate::configs::operations::get_auto_check_update;
 use crate::{
     context::Context,
     gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd},

@@ -14,7 +14,7 @@
 use crate::commander::keyboard::combo_keys::ComboKey;
 use crate::gui::utils::set_hook;
 use crate::{
-    configs::config_operations::{get_hotkeys, save_hotkeys},
+    configs::operations::{get_hotkeys, save_hotkeys},
     gui::forms::settings_form::SettingsForm,
 };
 use arc_swap::access::{DynAccess, DynGuard};

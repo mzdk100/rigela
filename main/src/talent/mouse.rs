@@ -17,7 +17,7 @@ use crate::commander::keyboard::combo_keys::State;
 #[allow(unused_imports)]
 use crate::commander::keyboard::keys::Keys::*;
 use crate::commander::keyboard::modify_keys::ModifierKeys;
-use crate::configs::config_operations::apply_mouse_config;
+use crate::configs::operations::apply_mouse_config;
 use crate::context::Context;
 use async_trait::async_trait;
 use rigela_macros::talent;
