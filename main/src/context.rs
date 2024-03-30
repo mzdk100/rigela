@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use crate::commander::Commander;
+use crate::configs::ConfigManager;
+use crate::gui::GuiProvider;
 use crate::{
-    commander::Commander, configs::config_manager::ConfigManager, event_core, gui::GuiProvider,
-    navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
+    event_core, navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
     talent::TalentProvider, tasks::TaskManager, terminator::Terminator,
 };
 use a11y::{ia2::Ia2, jab::Jab};

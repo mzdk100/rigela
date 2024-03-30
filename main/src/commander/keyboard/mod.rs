@@ -84,10 +84,7 @@ impl Manager {
                 // 500毫秒后， 释放状态为长按
                 self.release_delay(&key.main_key);
 
-                Some(ComboKey {
-                    state: SinglePress,
-                    ..key.clone()
-                })
+                Some(key.change_state(SinglePress))
             }
 
             false => {
@@ -117,6 +114,7 @@ impl Manager {
         self.last_pressed_key.replace(key);
     }
 
+    /// 添加键盘事件监听器
     pub(crate) fn add_key_event_listener(
         &self,
         keys: &[Keys],
@@ -128,6 +126,7 @@ impl Manager {
             .push((Vec::from(keys), Arc::new(listener)));
     }
 
+    /// 获取键盘事件监听器
     pub(crate) fn get_key_callback_fns(&self) -> Vec<(Vec<Keys>, KeyCallbackFn)> {
         self.key_callback_fns.lock().unwrap().clone()
     }

@@ -16,7 +16,7 @@ use crate::commander::keyboard::keys::Keys;
 use crate::commander::keyboard::Manager;
 use crate::talent::Talent;
 use crate::{
-    configs::config_operations::get_mouse_read_state, context::Context, talent::mouse::mouse_read,
+    configs::operations::get_mouse_read_state, context::Context, talent::mouse::mouse_read,
 };
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::{

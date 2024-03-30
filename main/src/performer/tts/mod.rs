@@ -15,11 +15,8 @@ pub(crate) mod sapi5;
 //noinspection SpellCheckingInspection
 pub(crate) mod vvtts;
 
-use crate::{
-    configs::tts::{TtsConfig, TtsPropertyItem},
-    context::Context,
-    performer::text_processing::transform_single_char,
-};
+use crate::configs::items::tts::{TtsConfig, TtsPropertyItem};
+use crate::{context::Context, performer::text_processing::transform_single_char};
 use arc_swap::ArcSwapAny;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};

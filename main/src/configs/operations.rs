@@ -11,14 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    commander::keyboard::combo_keys::ComboKey,
-    configs::{
-        general::{GeneralConfig, Lang},
-        mouse::MouseConfig,
-    },
-    context::Context,
-};
+use crate::configs::items::general::{GeneralConfig, Lang};
+use crate::configs::items::mouse::MouseConfig;
+use crate::{commander::keyboard::combo_keys::ComboKey, context::Context};
 use std::{collections::HashMap, sync::Weak};
 
 macro_rules! get_cfg {
