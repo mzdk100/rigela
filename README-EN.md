@@ -44,7 +44,7 @@ language, it is highly recommended to learn from official documents or authorita
     ```shell
     git clone https://github.com/mzdk100/rigela.git
     ```
-3. Build the project
+3. Build the debug version and run it
     ```shell
     cd rigela
     cargo mkenv
@@ -62,6 +62,12 @@ language, it is highly recommended to learn from official documents or authorita
     ```
    The first line means building the 32-bit target first, because the second line needs to rely on it. These two lines
    of commands cannot be written in reverse, so to simplify writing, we created a short command `dev`.
+4. Build the released version
+   The released version of the program has a smaller volume and runs faster than the debug version, but the build speed
+   is slower:
+    ```shell
+    cargo rel
+    ```
 
 ## Development documentation
 
@@ -70,8 +76,8 @@ development documentation is constantly being improved. If you want to contribut
 next section.
 
 1. Development documents provided by this project:
-    - [Implementation Reference Document for Non Microsoft Official Accessibility Technology](a11y/A11Y.md)
-    - [Reference document for implementing internationalization support](I18N.md)
+    - [Reference document for screen reader main program module](main/README.md)
+    - [Implementation Reference Document for Non Microsoft Official Accessibility Technology](a11y/README)
     - [Proxy module reference document for 32-bit applications](proxy32/README.md)
     - [RigelA resource incremental update reference document](resources/README.md)
     - [Implementation Reference Document for Windows API Advanced Wrapping](win-wrap/README.md)

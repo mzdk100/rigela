@@ -24,8 +24,8 @@ use std::{
 };
 use tokio::{fs::File, io::AsyncWriteExt};
 
-const UPDATE_LOG_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/update_log.txt?format=json&viewer=simple";
+const CHANGELOGS_URL: &str =
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/user/changelogs.md?format=json&viewer=simple";
 
 const BIN_URL: &str = "/rigela_x64/rigela-main.exe";
 const BIN_NAME: &str = "RigelA_main.exe";
@@ -36,8 +36,8 @@ pub(crate) fn bin_path() -> PathBuf {
 }
 
 /// 获取更新日志
-pub(crate) async fn get_update_log() -> Result<String, Box<dyn std::error::Error>> {
-    let text = parse_html_node(UPDATE_LOG_URL, "blob-content").await;
+pub(crate) async fn get_changelogs() -> Result<String, Box<dyn std::error::Error>> {
+    let text = parse_html_node(CHANGELOGS_URL, "blob-content").await;
     Ok(text.replace("\n", "\r\n").trim_start().to_string())
 }
 

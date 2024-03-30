@@ -11,18 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::keys::Keys;
-use crate::context::Context;
+use crate::{
+    commander::keyboard::{combo_keys::ComboKey, keys::Keys},
+    context::Context,
+};
+//noinspection RsUnresolvedPath
 use arc_swap::ArcSwap;
 use log::error;
 use nwg::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Weak;
-use std::time::Duration;
 use std::{
     collections::HashMap,
     env::{args, current_exe},
@@ -30,7 +29,11 @@ use std::{
     fs::File,
     io::{copy, Read, Write},
     path::{Path, PathBuf},
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex, Weak,
+    },
+    time::Duration,
 };
 use tokio::time::sleep;
 use win_wrap::{
@@ -48,13 +51,13 @@ use zip::{write::FileOptions, CompressionMethod, ZipArchive, ZipWriter};
 
 const HELP_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/help.txt?format=json&viewer=simple";
-const UPDATE_LOG_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/update_log.txt?format=json&viewer=simple";
+const CHANGELOGS_URL: &str =
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/user/changelogs.md?format=json&viewer=simple";
 //noinspection HttpUrlsUsage
-const UPDATE_BIN_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/updater.exe";
+const UPDATER_BIN_URL: &str = "http://api.zhumang.vip:8080/rigela/rigela_x64/updater.exe";
 
 pub(crate) const HELP_DIR: &str = "resources/RigelA 帮助文档.txt";
-pub(crate) const UPDATE_LOG_DIR: &str = "resources/RigelA 更新日志.txt";
+pub(crate) const CHANGELOGS_DIR: &str = "resources/RigelA 更新日志.txt";
 const DOCS_MD5_FILE: &str = "resources/docs_md5.toml";
 pub(crate) const UPDATE_BIN_DIR: &str = "libs/update.exe";
 
@@ -62,7 +65,7 @@ pub(crate) const UPDATE_BIN_DIR: &str = "libs/update.exe";
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct DocsMd5 {
     help_md5: String,
-    update_log_md5: String,
+    changelogs_md5: String,
 }
 
 pub(crate) enum UpdateState {
@@ -101,7 +104,7 @@ pub(crate) async fn check_update() -> UpdateState {
     };
 
     // 如果更新日志有变动，立即返回可以更新
-    if old_md5.update_log_md5 != newest_md5.update_log_md5 {
+    if old_md5.changelogs_md5 != newest_md5.changelogs_md5 {
         // 检查当前进程是否被更新器调用，如果更新器成功更新了主程序，会使用--updated命令行参数调用
         if !args().find(|i| i == "--updated").is_none() {
             save_docs(false).await;
@@ -130,17 +133,17 @@ pub(crate) async fn get_newest_docs_md5() -> DocsMd5 {
             String::new()
         }
     };
-    let update_log_md5 = match get_gitcode_data(UPDATE_LOG_URL).await {
+    let changelogs_md5 = match get_gitcode_data(CHANGELOGS_URL).await {
         Ok(x) => x.last_commit_sha,
         Err(e) => {
-            error!("Can't get update_log data. {}", e);
+            error!("Can't get changelogs data. {}", e);
             String::new()
         }
     };
 
     DocsMd5 {
         help_md5,
-        update_log_md5,
+        changelogs_md5,
     }
 }
 
@@ -158,10 +161,10 @@ pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
 }
 
 /// 保存最新的文档。
-pub(crate) async fn save_docs(help_or_update_log: bool) {
-    let (path, url) = match help_or_update_log {
+pub(crate) async fn save_docs(help_or_changelogs: bool) {
+    let (path, url) = match help_or_changelogs {
         true => (get_program_directory().join(HELP_DIR), HELP_URL),
-        false => (get_program_directory().join(UPDATE_LOG_DIR), UPDATE_LOG_URL),
+        false => (get_program_directory().join(CHANGELOGS_DIR), CHANGELOGS_URL),
     };
 
     write_file(&path, parse_html_node(url, "blob-content").await.as_bytes())
@@ -188,18 +191,20 @@ async fn parse_html_node(url: &str, node: &str) -> String {
         .join("\n")
 }
 
+//noinspection RsUnresolvedPath
 /// 确认更新器存在
 pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn Error>> {
     let path = get_program_directory().join(UPDATE_BIN_DIR);
     if path.exists() {
         Ok(())
     } else {
-        let resp = reqwest::get(UPDATE_BIN_URL).await?;
+        let resp = reqwest::get(UPDATER_BIN_URL).await?;
         write_file(&path, &resp.bytes().await?).await?;
         Ok(())
     }
 }
 
+//noinspection RsUnresolvedPath
 /// 备份数据
 pub(crate) fn backup_data(target: &PathBuf) -> Result<(), Box<dyn Error>> {
     let zip_file_path = Path::new(target.to_str().unwrap());
@@ -280,9 +285,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
-    else {
-        return false;
-    };
+        else {
+            return false;
+        };
     let Some(key) = key.get_code() else {
         return false;
     };

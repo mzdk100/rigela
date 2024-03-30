@@ -41,7 +41,7 @@
     ```shell
     git clone https://github.com/mzdk100/rigela.git
     ```
-3. 构建项目
+3. 构建调试版本并运行
     ```shell
     cd rigela
     cargo mkenv
@@ -56,14 +56,19 @@
     cargo run --target x86_64-pc-windows-msvc
     ```
    其中第一行表示先构建32位的目标，因为第二行需要依赖他，这两行命令不可以反过来写，因此为了简化书写，我们创建了一个dev的短命令。
+4. 构建发布版本
+   发布版本的程序比调试版本的程序体积更小，运行更快，但构建速度较慢：
+    ```shell
+    cargo rel
+    ```
 
 ## 开发文档
 
 我们呼吁对开源读屏项目感兴趣的开发者踊跃参与进来，开发文档也不断完善中，如果您想参与本项目的贡献，请参考下一节。
 
 1. 本项目提供的开发文档：
-    - [用于非微软官方提供的辅助功能技术的实现参考文档](a11y/A11Y.md)
-    - [用于实现国际化支持的参考文档](I18N.md)
+    - [读屏主程序模块参考文档](main/README.md)
+    - [用于非微软官方提供的辅助功能技术的实现参考文档](a11y/README)
     - [用于32位应用的代理模块参考文档](proxy32/README.md)
     - [RigelA资源增量更新参考文档](resources/README.md)
     - [Windows API高级封装的实现参考文档](win-wrap/README.md)

@@ -30,8 +30,8 @@ pub struct App {
     info: AStr,
     progress: Arc<Mutex<u32>>,
 
-    #[nwg_control( title: TITLE, size: (480, 320), position: (300,300))]
-    #[nwg_events( OnWindowClose: [nwg::stop_thread_dispatch()   ], OnInit: [App::on_init] )]
+    #[nwg_control(title: TITLE, size: (480, 320), position: (300, 300))]
+    #[nwg_events(OnWindowClose: [nwg::stop_thread_dispatch()   ], OnInit: [App::on_init])]
     window: nwg::Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
@@ -84,7 +84,7 @@ impl App {
         let info = self.info.0.clone();
         let sender = self.get_info_notice.sender();
         self.handler.get().unwrap().spawn(async move {
-            let text = utils::get_update_log()
+            let text = utils::get_changelogs()
                 .await
                 .unwrap_or("网络异常".to_string());
             info.replace(text);
