@@ -72,6 +72,14 @@ impl ComboKey {
             state,
         }
     }
+
+    pub(crate) fn change_state(self, state: State) -> Self {
+        ComboKey {
+            main_key: self.main_key,
+            modify_keys: self.modify_keys,
+            state,
+        }
+    }
 }
 
 impl From<Vec<Keys>> for ComboKey {

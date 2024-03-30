@@ -77,7 +77,10 @@ async fn subscribe_msaa_events(context: Weak<Context>) {
 
 #[allow(unused_variables)]
 async fn subscribe_jab_events(context: Weak<Context>) {
-    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let mng = unsafe { &*context.as_ptr() }
+        .commander
+        .get_keyboard_manager()
+        .clone();
     let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
     let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
@@ -89,7 +92,7 @@ async fn subscribe_jab_events(context: Weak<Context>) {
                 return;
             };
 
-            let commander = commander.clone();
+            let commander = mng.clone();
             let event_core = event_core.clone();
             let performer = performer.clone();
 
@@ -113,7 +116,10 @@ async fn subscribe_uia_events(context: Weak<Context>) {
     let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
     let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
-    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let mng = unsafe { &*context.as_ptr() }
+        .commander
+        .get_keyboard_manager()
+        .clone();
     let ui_automation = unsafe { &*context.as_ptr() }.ui_automation.clone();
     let root = ui_automation.get_root_element();
 
@@ -129,7 +135,7 @@ async fn subscribe_uia_events(context: Weak<Context>) {
             return;
         };
 
-        match commander.get_last_pressed_key() {
+        match mng.get_last_pressed_key() {
             Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
@@ -161,7 +167,10 @@ async fn subscribe_uia_events(context: Weak<Context>) {
 }
 
 async fn subscribe_ia2_events(context: Weak<Context>) {
-    let commander = unsafe { &*context.as_ptr() }.commander.clone();
+    let mng = unsafe { &*context.as_ptr() }
+        .commander
+        .get_keyboard_manager()
+        .clone();
     let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
     let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
     let performer = unsafe { &*context.as_ptr() }.performer.clone();
@@ -180,7 +189,7 @@ async fn subscribe_ia2_events(context: Weak<Context>) {
             EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
             let caret = text.caret_offset().unwrap_or(0);
-            let (_, _, text) = match commander.get_last_pressed_key() {
+            let (_, _, text) = match mng.get_last_pressed_key() {
                 Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
                 _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
             };
@@ -267,10 +276,11 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     };
 
     let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
-    unsafe { &*context.as_ptr() }
+    let mng = unsafe { &*context.as_ptr() }
         .commander
-        .add_key_event_listener(&keys, cb_uia);
-    unsafe { &*context.as_ptr() }
-        .commander
-        .add_key_event_listener(&keys, cb_ia2);
+        .get_keyboard_manager()
+        .clone();
+
+    mng.add_key_event_listener(&keys, cb_uia);
+    mng.add_key_event_listener(&keys, cb_ia2);
 }

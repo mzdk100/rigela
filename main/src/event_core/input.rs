@@ -71,7 +71,9 @@ pub(crate) async fn subscribe_lock_key_events(context: Weak<Context>) {
             performer.speak(&info.to_string()).await;
         });
     };
+
     unsafe { &*context.as_ptr() }
         .commander
+        .get_keyboard_manager()
         .add_key_event_listener(&vec![VkScroll, VkNumlock], handle);
 }
