@@ -13,3 +13,12 @@ dev = ["rigela", "run"]
 dev32 = ["run", "--target", "i686-pc-windows-msvc"]
 # 发布模式
 rel = ["rigela", "build", "--release"]
+
+[env]
+
+[env.PROTOC]
+value = "tools/protoc.exe"
+relative = true
+
+[env.RUST_BACKTRACE]
+value = "1"
