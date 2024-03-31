@@ -300,7 +300,9 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::DragIsGrabbed => UIA_DragIsGrabbedPropertyId,
             Self::DropTargetDropTargetEffect => UIA_DropTargetDropTargetEffectPropertyId,
             Self::DropTargetDropTargetEffects => UIA_DropTargetDropTargetEffectsPropertyId,
-            Self::ExpandCollapseExpandCollapseState => UIA_ExpandCollapseExpandCollapseStatePropertyId,
+            Self::ExpandCollapseExpandCollapseState => {
+                UIA_ExpandCollapseExpandCollapseStatePropertyId
+            }
             Self::FillColor => UIA_FillColorPropertyId,
             Self::FillType => UIA_FillTypePropertyId,
             Self::FlowsFrom => UIA_FlowsFromPropertyId,
@@ -320,20 +322,26 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::IsAnnotationPatternAvailable => UIA_IsAnnotationPatternAvailablePropertyId,
             Self::IsContentElement => UIA_IsContentElementPropertyId,
             Self::IsControlElement => UIA_IsControlElementPropertyId,
-            Self::IsCustomNavigationPatternAvailable => UIA_IsCustomNavigationPatternAvailablePropertyId,
+            Self::IsCustomNavigationPatternAvailable => {
+                UIA_IsCustomNavigationPatternAvailablePropertyId
+            }
             Self::IsDataValidForForm => UIA_IsDataValidForFormPropertyId,
             Self::IsDialog => UIA_IsDialogPropertyId,
             Self::IsDockPatternAvailable => UIA_IsDockPatternAvailablePropertyId,
             Self::IsDragPatternAvailable => UIA_IsDragPatternAvailablePropertyId,
             Self::IsDropTargetPatternAvailable => UIA_IsDropTargetPatternAvailablePropertyId,
             Self::IsEnabled => UIA_IsEnabledPropertyId,
-            Self::IsExpandCollapsePatternAvailable => UIA_IsExpandCollapsePatternAvailablePropertyId,
+            Self::IsExpandCollapsePatternAvailable => {
+                UIA_IsExpandCollapsePatternAvailablePropertyId
+            }
             Self::IsGridItemPatternAvailable => UIA_IsGridItemPatternAvailablePropertyId,
             Self::IsGridPatternAvailable => UIA_IsGridPatternAvailablePropertyId,
             Self::IsInvokePatternAvailable => UIA_IsInvokePatternAvailablePropertyId,
             Self::IsItemContainerPatternAvailable => UIA_IsItemContainerPatternAvailablePropertyId,
             Self::IsKeyboardFocusable => UIA_IsKeyboardFocusablePropertyId,
-            Self::IsLegacyIAccessiblePatternAvailable => UIA_IsLegacyIAccessiblePatternAvailablePropertyId,
+            Self::IsLegacyIAccessiblePatternAvailable => {
+                UIA_IsLegacyIAccessiblePatternAvailablePropertyId
+            }
             Self::IsMultipleViewPatternAvailable => UIA_IsMultipleViewPatternAvailablePropertyId,
             Self::IsObjectModelPatternAvailable => UIA_IsObjectModelPatternAvailablePropertyId,
             Self::IsOffscreen => UIA_IsOffscreenPropertyId,
@@ -346,10 +354,14 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::IsSelectionItemPatternAvailable => UIA_IsSelectionItemPatternAvailablePropertyId,
             Self::IsSelectionPattern2Available => UIA_IsSelectionPattern2AvailablePropertyId,
             Self::IsSelectionPatternAvailable => UIA_IsSelectionPatternAvailablePropertyId,
-            Self::IsSpreadsheetItemPatternAvailable => UIA_IsSpreadsheetItemPatternAvailablePropertyId,
+            Self::IsSpreadsheetItemPatternAvailable => {
+                UIA_IsSpreadsheetItemPatternAvailablePropertyId
+            }
             Self::IsSpreadsheetPatternAvailable => UIA_IsSpreadsheetPatternAvailablePropertyId,
             Self::IsStylesPatternAvailable => UIA_IsStylesPatternAvailablePropertyId,
-            Self::IsSynchronizedInputPatternAvailable => UIA_IsSynchronizedInputPatternAvailablePropertyId,
+            Self::IsSynchronizedInputPatternAvailable => {
+                UIA_IsSynchronizedInputPatternAvailablePropertyId
+            }
             Self::IsTableItemPatternAvailable => UIA_IsTableItemPatternAvailablePropertyId,
             Self::IsTablePatternAvailable => UIA_IsTablePatternAvailablePropertyId,
             Self::IsTextChildPatternAvailable => UIA_IsTextChildPatternAvailablePropertyId,
@@ -360,7 +372,9 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::IsTransformPattern2Available => UIA_IsTransformPattern2AvailablePropertyId,
             Self::IsTransformPatternAvailable => UIA_IsTransformPatternAvailablePropertyId,
             Self::IsValuePatternAvailable => UIA_IsValuePatternAvailablePropertyId,
-            Self::IsVirtualizedItemPatternAvailable => UIA_IsVirtualizedItemPatternAvailablePropertyId,
+            Self::IsVirtualizedItemPatternAvailable => {
+                UIA_IsVirtualizedItemPatternAvailablePropertyId
+            }
             Self::IsWindowPatternAvailable => UIA_IsWindowPatternAvailablePropertyId,
             Self::ItemStatus => UIA_ItemStatusPropertyId,
             Self::ItemType => UIA_ItemTypePropertyId,
@@ -370,7 +384,9 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::LegacyIAccessibleDefaultAction => UIA_LegacyIAccessibleDefaultActionPropertyId,
             Self::LegacyIAccessibleDescription => UIA_LegacyIAccessibleDescriptionPropertyId,
             Self::LegacyIAccessibleHelp => UIA_LegacyIAccessibleHelpPropertyId,
-            Self::LegacyIAccessibleKeyboardShortcut => UIA_LegacyIAccessibleKeyboardShortcutPropertyId,
+            Self::LegacyIAccessibleKeyboardShortcut => {
+                UIA_LegacyIAccessibleKeyboardShortcutPropertyId
+            }
             Self::LegacyIAccessibleName => UIA_LegacyIAccessibleNamePropertyId,
             Self::LegacyIAccessibleRole => UIA_LegacyIAccessibleRolePropertyId,
             Self::LegacyIAccessibleSelection => UIA_LegacyIAccessibleSelectionPropertyId,
@@ -416,7 +432,9 @@ impl Into<UIA_PROPERTY_ID> for UiaPropertyId {
             Self::SelectionSelection => UIA_SelectionSelectionPropertyId,
             Self::SizeOfSet => UIA_SizeOfSetPropertyId,
             Self::Size => UIA_SizePropertyId,
-            Self::SpreadsheetItemAnnotationObjects => UIA_SpreadsheetItemAnnotationObjectsPropertyId,
+            Self::SpreadsheetItemAnnotationObjects => {
+                UIA_SpreadsheetItemAnnotationObjectsPropertyId
+            }
             Self::SpreadsheetItemAnnotationTypes => UIA_SpreadsheetItemAnnotationTypesPropertyId,
             Self::SpreadsheetItemFormula => UIA_SpreadsheetItemFormulaPropertyId,
             Self::StylesExtendedProperties => UIA_StylesExtendedPropertiesPropertyId,

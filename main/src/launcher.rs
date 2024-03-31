@@ -161,8 +161,8 @@ fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。
     #[cfg(not(debug_assertions))]
-        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
+    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/release/peeper.dll");
     #[cfg(debug_assertions)]
-        let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
+    let peeper_dll = include_bytes!("../../target/x86_64-pc-windows-msvc/debug/peeper.dll");
     setup_library("peeper.dll", peeper_dll);
 }

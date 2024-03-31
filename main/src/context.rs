@@ -80,7 +80,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-            let proxy32process = Proxy32Process::new();
+        let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();

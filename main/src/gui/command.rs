@@ -203,7 +203,7 @@ pub(crate) fn set_lang_cmd(context: Weak<Context>, index: usize) {
         Lang::En => t!("command.msg_switch_to_en"),
         _ => t!("command.msg_switch_to_follow_system"),
     }
-        .to_string();
+    .to_string();
 
     let ctx = context.clone();
     context.get_work_runtime().spawn(async move {

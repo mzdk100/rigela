@@ -36,13 +36,21 @@ fn copy_deps(target: &str) {
     let target_dir = Path::new(&env::var("USERPROFILE").unwrap()).join(".rigela");
     if !target_dir.exists() {
         if let Err(e) = create_dir(&target_dir) {
-            panic!("Unable to create necessary directory `{}`. ({})", target_dir.display(), e);
+            panic!(
+                "Unable to create necessary directory `{}`. ({})",
+                target_dir.display(),
+                e
+            );
         }
     }
     let target_dir = target_dir.join("libs");
     if !target_dir.exists() {
         if let Err(e) = create_dir(&target_dir) {
-            panic!("Unable to create necessary directory `{}`. ({})", target_dir.display(), e);
+            panic!(
+                "Unable to create necessary directory `{}`. ({})",
+                target_dir.display(),
+                e
+            );
         }
     }
 
@@ -57,7 +65,12 @@ fn copy_deps(target: &str) {
             }
             println!("cargo:rerun-if-changed={}", t.display());
             if let Err(e) = copy(i.path(), &t) {
-                panic!("Unable to copy the file `{}` from `{}`. ({})", i.path().display(), t.display(), e);
+                panic!(
+                    "Unable to copy the file `{}` from `{}`. ({})",
+                    i.path().display(),
+                    t.display(),
+                    e
+                );
             }
         }
     }

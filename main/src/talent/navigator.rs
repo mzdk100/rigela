@@ -106,7 +106,7 @@ async fn mode_next(context: Weak<Context>) {
         NavigationMode::Plane => t!("navigator.plane"),
         NavigationMode::Tree => t!("navigator.tree"),
     }
-        .to_string();
+    .to_string();
     context.get_performer().speak(&text).await;
 }
 
@@ -131,6 +131,6 @@ async fn mode_prev(context: Weak<Context>) {
             t!("navigator.tree")
         }
     }
-        .to_string();
+    .to_string();
     context.get_performer().speak(&text).await;
 }

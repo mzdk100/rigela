@@ -254,7 +254,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
