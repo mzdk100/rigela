@@ -25,18 +25,21 @@ pub(crate) trait UiAutomationElementExt {
 
 impl UiAutomationElementExt for UiAutomationElement {
     fn get_caret(&self) -> Option<UiAutomationTextRange> {
-        let caret = if let Ok(pattern) = UiAutomationTextPattern2::obtain(self) {
-            let (_, caret) = pattern.get_caret_range();
-            caret
+        if let Ok(pattern) = UiAutomationTextPattern2::obtain(self) {
+            if let Some((_, caret)) = pattern.get_caret_range() {
+                Some(caret)
+            } else {
+                None
+            }
         } else if let Ok(pattern) = UiAutomationTextPattern::obtain(self) {
             let selection = pattern.get_selection();
-            let Some(caret) = selection.first() else {
-                return None;
-            };
-            caret.clone()
+            if let Some(caret) = selection.first() {
+                Some(caret.clone())
+            } else {
+                None
+            }
         } else {
             return None;
-        };
-        Some(caret)
+        }
     }
 }

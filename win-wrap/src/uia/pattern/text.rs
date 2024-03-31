@@ -151,11 +151,13 @@ impl UiAutomationTextPattern2 {
      * `is_active` 如果包含插入符号的基于文本的控件具有键盘焦点，则为 true，否则为 false。如果 is_active 为 false，则属于基于文本的控件的插入符号可能与系统插入符号位于同一位置。
      * `range` 接收一个文本范围，该范围表示属于基于文本的控件的插入符号的当前位置。
      * */
-    pub fn get_caret_range(&self) -> (bool, UiAutomationTextRange) {
+    pub fn get_caret_range(&self) -> Option<(bool, UiAutomationTextRange)> {
         unsafe {
             let mut active = std::mem::zeroed();
-            let range = self.0.GetCaretRange(&mut active).unwrap();
-            (active.as_bool(), UiAutomationTextRange::obtain(&range))
+            if let Ok(range) = self.0.GetCaretRange(&mut active) {
+                return Some((active.as_bool(), UiAutomationTextRange::obtain(&range)));
+            }
+            None
         }
     }
 
@@ -252,7 +254,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
