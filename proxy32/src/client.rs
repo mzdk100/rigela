@@ -14,12 +14,16 @@
 use crate::model::{IbmeciVoiceParams, Proxy32Data, Proxy32Packet};
 use log::error;
 use rigela_utils::pipe::{client_connect, PipeStream, PipeStreamError};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicU32, Ordering::SeqCst},
+};
 use tokio::{net::windows::named_pipe::NamedPipeClient, sync::Mutex};
 
 #[derive(Debug)]
 pub struct Proxy32Client {
-    cached: Mutex<(HashMap<u32, Proxy32Data>, u32)>,
+    task_id: AtomicU32,
+    cached: Mutex<HashMap<u32, Proxy32Data>>,
     stream: Mutex<PipeStream<Proxy32Packet, NamedPipeClient>>,
 }
 
@@ -30,30 +34,29 @@ impl Proxy32Client {
     pub async fn new(pipe_name: &str) -> Self {
         let stream = client_connect(pipe_name).await;
         Self {
-            cached: (HashMap::new(), 0).into(),
+            task_id: AtomicU32::new(0),
+            cached: HashMap::new().into(),
             stream: stream.into(),
         }
     }
 
     async fn exec(&self, data: &Proxy32Data) -> Option<Proxy32Data> {
-        let id = {
-            let mut lock = self.cached.lock().await;
-            lock.1 += 1;
-            lock.1
-        };
+        self.task_id.fetch_add(1, SeqCst);
+        let id = self.task_id.load(SeqCst);
         let packet = Proxy32Packet {
-            id: id,
+            id,
             data: data.clone(),
         };
         {
             if let Err(e) = self.stream.lock().await.send(&packet).await {
-                error!("{}", e);
+                error!("Can't send `{}`. {}", data, e);
+                return None;
             }
         }
         let res = loop {
             let lock = self.cached.lock().await;
 
-            match lock.0.get(&id) {
+            match lock.get(&id) {
                 None => {
                     drop(lock);
                     let res = self.stream.lock().await.recv().await;
@@ -61,7 +64,7 @@ impl Proxy32Client {
                         Err(PipeStreamError::ReadEof) => return None,
                         Ok(p) if p.id == id => return Some(p.data),
                         Ok(p) => {
-                            self.cached.lock().await.0.insert(p.id, p.data);
+                            self.cached.lock().await.insert(p.id, p.data);
                         }
                         _ => {}
                     }
@@ -69,7 +72,7 @@ impl Proxy32Client {
                 Some(x) => break x.clone(),
             }
         };
-        self.cached.lock().await.0.remove(&id);
+        self.cached.lock().await.remove(&id);
         Some(res)
     }
 
@@ -124,8 +127,8 @@ impl Proxy32Client {
      * 获取vvtts发音人列表。
      * */
     pub async fn eci_get_voices(&self) -> Vec<(u32, String)> {
-        if let Some(Proxy32Data::EciGetVoicesResponse(r)) =
-            self.exec(&Proxy32Data::EciGetVoicesRequest).await
+        if let Some(Proxy32Data::EciGetVoiceListResponse(r)) =
+            self.exec(&Proxy32Data::EciGetVoiceListRequest).await
         {
             return r;
         }

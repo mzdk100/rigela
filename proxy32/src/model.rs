@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use std::fmt::{Debug, Display, Formatter};
 use serde::{Deserialize, Serialize};
 
 //noinspection SpellCheckingInspection
@@ -58,13 +59,19 @@ pub enum Proxy32Data {
     // vvtts设置发音人请求
     EciSetVoiceResponse(()),
     // vvtts设置发音人响应
-    EciGetVoicesRequest,
+    EciGetVoiceListRequest,
     // vvtts获取发音人列表请求
-    EciGetVoicesResponse(Vec<(u32, String)>),
+    EciGetVoiceListResponse(Vec<(u32, String)>),
     // vvtts获取发音人列表响应
     EciSynthRequest(String),
     // vvtts合成请求
     EciSynthResponse(Vec<u8>), // vvtts合成响应
+}
+
+impl Display for Proxy32Data {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self, f)
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]

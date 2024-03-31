@@ -74,8 +74,8 @@ impl Proxy32Server {
             Proxy32Data::EciSetVoiceRequest(v) => {
                 Proxy32Data::EciSetVoiceResponse(self.eci_set_voice(v.clone()).await)
             }
-            Proxy32Data::EciGetVoicesRequest => {
-                Proxy32Data::EciGetVoicesResponse(self.eci_get_voices().await)
+            Proxy32Data::EciGetVoiceListRequest => {
+                Proxy32Data::EciGetVoiceListResponse(self.eci_get_voices().await)
             }
             _ => data.clone(),
         }
