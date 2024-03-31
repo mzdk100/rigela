@@ -18,7 +18,7 @@ use crate::{
         keys::Keys::*,
         modify_keys::ModifierKeys,
     },
-    context::Context,
+    context::{Context, ContextAccessor},
     event_core::editor::EDITOR_EDGE_KEY_HANDLE,
     performer::{
         cache::Direction as CacheDirection,
@@ -29,61 +29,57 @@ use crate::{
 use async_trait::async_trait;
 use rigela_macros::talent;
 use rigela_utils::clip::set_clipboard_text;
-use std::sync::atomic::Ordering;
-#[allow(unused_imports)]
-use std::sync::Weak;
+use std::sync::{atomic::Ordering, Weak};
 
 //noinspection RsUnresolvedPath
 #[talent(doc = "语音属性值增加", key = combo_key!("RigelA_Ctrl", VkUp))]
 async fn increase(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.set_tts_prop_value(ValueChange::Increment).await;
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "语音属性值降低", key = combo_key!("RigelA_Ctrl", VkDown))]
 async fn reduce(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.set_tts_prop_value(ValueChange::Decrement).await;
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "语音下一属性", key = combo_key!("RigelA_Ctrl", VkRight))]
 async fn next_prop(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.move_tts_prop(Direction::Next).await;
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "语音上一属性", key = combo_key!("RigelA_Ctrl", VkLeft))]
 async fn prev_prop(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let tts = unsafe { &*context.as_ptr() }.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.move_tts_prop(Direction::Prev).await;
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区上一字符", key = combo_key!("RigelA", VkLeft))]
 async fn prev_cache_char(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let context = unsafe { &*context.as_ptr() };
-    let Some(cache) = context.performer.get_cache() else {
+    let Some(cache) = context.get_performer().get_cache() else {
         return;
     };
     let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Backward);
-    let tts = context.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.stop().await;
     tts.speak(text).await;
 }
@@ -93,12 +89,11 @@ async fn prev_cache_char(context: Weak<Context>) {
 async fn next_cache_char(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let context = unsafe { &*context.as_ptr() };
-    let Some(cache) = context.performer.get_cache() else {
+    let Some(cache) = context.get_performer().get_cache() else {
         return;
     };
     let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Forward);
-    let tts = context.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.stop().await;
     tts.speak(text).await;
 }
@@ -108,14 +103,13 @@ async fn next_cache_char(context: Weak<Context>) {
 async fn trans_cache_char(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let context = unsafe { &*context.as_ptr() };
-    let Some(cache) = context.performer.get_cache() else {
+    let Some(cache) = context.get_performer().get_cache() else {
         return;
     };
     let text = unsafe { &*cache.as_ptr() }.get(CacheDirection::Current);
     // Todo: 查字典
 
-    let tts = context.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.stop().await;
     tts.speak(text).await;
 }
@@ -125,22 +119,19 @@ async fn trans_cache_char(context: Weak<Context>) {
 async fn make_word_cache_char(context: Weak<Context>) {
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    let context = unsafe { &*context.as_ptr() };
-    let Some(cache) = context.performer.get_cache() else {
+    let Some(cache) = context.get_performer().get_cache() else {
         return;
     };
-    let tts = context.performer.get_tts();
+    let tts = context.get_performer().get_tts();
     tts.stop().await;
     let words = unsafe { &*cache.as_ptr() }.get_current_char_words();
     tts.speak(words).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "拷贝缓冲区", key = combo_key!("RigelA", VkC))]
 async fn cache_to_clipboard(context: Weak<Context>) {
-    let context = unsafe { &*context.as_ptr() };
-
-    let Some(cache) = context.performer.get_cache() else {
+    let Some(cache) = context.get_performer().get_cache() else {
         return;
     };
     let text = unsafe { &*cache.as_ptr() }.get_data();
@@ -149,8 +140,7 @@ async fn cache_to_clipboard(context: Weak<Context>) {
 }
 
 async fn speak_tts_prop(context: Weak<Context>) {
-    let context = unsafe { &*context.as_ptr() };
-    let tts = context.performer.get_tts();
+    let tts = context.get_performer().get_tts();
 
     let info = match tts.get_tts_prop_value(None).await {
         TtsProperty::Speed(v) => t!("tts.speed_info", value = v),
@@ -158,5 +148,5 @@ async fn speak_tts_prop(context: Weak<Context>) {
         TtsProperty::Volume(v) => t!("tts.volume_info", value = v),
         TtsProperty::Voice(v) => t!("tts.role", value = format!("{}_{}", v.engine, v.name)),
     };
-    context.performer.speak(&info).await;
+    context.get_performer().speak(&info).await;
 }

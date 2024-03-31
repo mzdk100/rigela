@@ -11,11 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::Commander;
-use crate::configs::ConfigManager;
-use crate::gui::GuiProvider;
 use crate::{
-    event_core, navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
+    commander::Commander, configs::ConfigManager, event_core::EventCore, gui::GuiProvider,
+    navigator::UiNavigator, performer::Performer, resources::ResourceProvider,
     talent::TalentProvider, tasks::TaskManager, terminator::Terminator,
 };
 use a11y::{ia2::Ia2, jab::Jab};
@@ -24,7 +22,7 @@ use peeper::server::PeeperServer;
 #[cfg(target_arch = "x86_64")]
 use rigela_proxy32::process::Proxy32Process;
 use rigela_utils::fs::get_program_directory;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use tokio::runtime::Runtime;
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
 
@@ -33,24 +31,24 @@ const CONFIG_FILE_NAME: &str = "config.toml";
 /// 核心上下文对象，通过此对象可以访问整个读屏框架的API
 #[derive(Debug)]
 pub(crate) struct Context {
-    pub(crate) commander: Arc<Commander>,
-    pub(crate) config_manager: Arc<ConfigManager>,
-    pub(crate) event_core: Arc<event_core::EventCore>,
-    pub(crate) gui_provider: Arc<GuiProvider>,
-    pub(crate) jab: Arc<Jab>,
-    pub(crate) msaa: Arc<Msaa>,
-    pub(crate) ia2: Arc<Ia2>,
-    pub(crate) work_runtime: &'static Runtime,
-    pub(crate) resource_provider: Arc<ResourceProvider>,
-    pub(crate) peeper_server: Arc<PeeperServer>,
-    pub(crate) performer: Arc<Performer>,
+    commander: Arc<Commander>,
+    config_manager: Arc<ConfigManager>,
+    event_core: Arc<EventCore>,
+    gui_provider: Arc<GuiProvider>,
+    jab: Arc<Jab>,
+    msaa: Arc<Msaa>,
+    ia2: Arc<Ia2>,
+    work_runtime: &'static Runtime,
+    resource_provider: Arc<ResourceProvider>,
+    peeper_server: Arc<PeeperServer>,
+    performer: Arc<Performer>,
     #[cfg(target_arch = "x86_64")]
-    pub(crate) proxy32process: Arc<Proxy32Process>,
-    pub(crate) talent_provider: Arc<TalentProvider>,
-    pub(crate) task_manager: Arc<TaskManager>,
-    pub(crate) terminator: Arc<Terminator>,
-    pub(crate) ui_automation: Arc<UiAutomation>,
-    pub(crate) ui_navigator: Arc<UiNavigator>,
+    proxy32process: Arc<Proxy32Process>,
+    talent_provider: Arc<TalentProvider>,
+    task_manager: Arc<TaskManager>,
+    terminator: Arc<Terminator>,
+    ui_automation: Arc<UiAutomation>,
+    ui_navigator: Arc<UiNavigator>,
 }
 
 impl Context {
@@ -82,7 +80,7 @@ impl Context {
 
         // 用于兼容32位进程访问
         #[cfg(target_arch = "x86_64")]
-        let proxy32process = Proxy32Process::new();
+            let proxy32process = Proxy32Process::new();
 
         // 创建资源提供者
         let resource_provider = ResourceProvider::new();
@@ -97,7 +95,7 @@ impl Context {
         let ui_automation = UiAutomation::new();
 
         // 事件处理中心
-        let event_core = event_core::EventCore::new();
+        let event_core = EventCore::new();
 
         // 窗口浏览器
         let form_browser = UiNavigator::new();
@@ -187,5 +185,186 @@ impl Clone for Context {
             ui_navigator: self.ui_navigator.clone(),
             gui_provider: self.gui_provider.clone(),
         }
+    }
+}
+
+/// 用于访问Context中的私有字段
+pub(crate) trait ContextAccessor {
+    /// 获取指挥官对象
+    fn get_commander(&self) -> &Commander;
+    /// 获取配置管理器对象
+    fn get_config_manager(&self) -> &ConfigManager;
+    /// 获取事件中心对象
+    fn get_event_core(&self) -> &EventCore;
+    /// 获取GUI提供者对象
+    fn get_gui_provider(&self) -> &GuiProvider;
+    /// 获取Java Access Bridge对象
+    fn get_jab(&self) -> &Jab;
+    /// 获取Microsoft Active Accessibility对象
+    fn get_msaa(&self) -> &Msaa;
+    /// 获取IAccessible2管理器对象
+    fn get_ia2(&self) -> &Ia2;
+    /// 获取亏叹气服务端对象
+    fn get_peeper_server(&self) -> &PeeperServer;
+    /// 获取表演者对象
+    fn get_performer(&self) -> &Performer;
+    /// 获取32位的代理进程对象
+    #[cfg(target_arch = "x86_64")]
+    fn get_proxy32process(&self) -> &Proxy32Process;
+    /// 获取资源提供者对象
+    fn get_resource_provider(&self) -> &ResourceProvider;
+    /// 获取能力提供者对象
+    fn get_talent_provider(&self) -> &TalentProvider;
+    /// 获取任务管理器对象
+    fn get_task_manager(&self) -> &TaskManager;
+    /// 获取终结者对象
+    fn get_terminator(&self) -> &Terminator;
+    /// 获取Ui自动化对象
+    fn get_ui_automation(&self) -> &UiAutomation;
+    /// 获取UI导航器对象
+    fn get_ui_navigator(&self) -> &UiNavigator;
+    /// 获取工作线程运行时对象
+    fn get_work_runtime(&self) -> &Runtime;
+}
+
+impl ContextAccessor for Weak<Context> {
+    fn get_commander(&self) -> &Commander {
+        unsafe { &*self.as_ptr() }.commander.as_ref()
+    }
+
+    fn get_config_manager(&self) -> &ConfigManager {
+        unsafe { &*self.as_ptr() }.config_manager.as_ref()
+    }
+
+    fn get_event_core(&self) -> &EventCore {
+        unsafe { &*self.as_ptr() }.event_core.as_ref()
+    }
+
+    fn get_gui_provider(&self) -> &GuiProvider {
+        unsafe { &*self.as_ptr() }.gui_provider.as_ref()
+    }
+
+    fn get_jab(&self) -> &Jab {
+        unsafe { &*self.as_ptr() }.jab.as_ref()
+    }
+
+    fn get_msaa(&self) -> &Msaa {
+        unsafe { &*self.as_ptr() }.msaa.as_ref()
+    }
+
+    fn get_ia2(&self) -> &Ia2 {
+        unsafe { &*self.as_ptr() }.ia2.as_ref()
+    }
+
+    fn get_peeper_server(&self) -> &PeeperServer {
+        unsafe { &*self.as_ptr() }.peeper_server.as_ref()
+    }
+
+    fn get_performer(&self) -> &Performer {
+        unsafe { &*self.as_ptr() }.performer.as_ref()
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn get_proxy32process(&self) -> &Proxy32Process {
+        unsafe { &*self.as_ptr() }.proxy32process.as_ref()
+    }
+
+    fn get_resource_provider(&self) -> &ResourceProvider {
+        unsafe { &*self.as_ptr() }.resource_provider.as_ref()
+    }
+
+    fn get_talent_provider(&self) -> &TalentProvider {
+        unsafe { &*self.as_ptr() }.talent_provider.as_ref()
+    }
+
+    fn get_task_manager(&self) -> &TaskManager {
+        unsafe { &*self.as_ptr() }.task_manager.as_ref()
+    }
+
+    fn get_terminator(&self) -> &Terminator {
+        unsafe { &*self.as_ptr() }.terminator.as_ref()
+    }
+
+    fn get_ui_automation(&self) -> &UiAutomation {
+        unsafe { &*self.as_ptr() }.ui_automation.as_ref()
+    }
+
+    fn get_ui_navigator(&self) -> &UiNavigator {
+        unsafe { &*self.as_ptr() }.ui_navigator.as_ref()
+    }
+
+    fn get_work_runtime(&self) -> &Runtime {
+        unsafe { &*self.as_ptr() }.work_runtime
+    }
+}
+
+impl ContextAccessor for Arc<Context> {
+    fn get_commander(&self) -> &Commander {
+        self.commander.as_ref()
+    }
+
+    fn get_config_manager(&self) -> &ConfigManager {
+        self.config_manager.as_ref()
+    }
+
+    fn get_event_core(&self) -> &EventCore {
+        self.event_core.as_ref()
+    }
+
+    fn get_gui_provider(&self) -> &GuiProvider {
+        self.gui_provider.as_ref()
+    }
+
+    fn get_jab(&self) -> &Jab {
+        self.jab.as_ref()
+    }
+
+    fn get_msaa(&self) -> &Msaa {
+        self.msaa.as_ref()
+    }
+
+    fn get_ia2(&self) -> &Ia2 {
+        self.ia2.as_ref()
+    }
+
+    fn get_peeper_server(&self) -> &PeeperServer {
+        self.peeper_server.as_ref()
+    }
+
+    fn get_performer(&self) -> &Performer {
+        self.performer.as_ref()
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn get_proxy32process(&self) -> &Proxy32Process {
+        self.proxy32process.as_ref()
+    }
+
+    fn get_resource_provider(&self) -> &ResourceProvider {
+        self.resource_provider.as_ref()
+    }
+
+    fn get_talent_provider(&self) -> &TalentProvider {
+        self.talent_provider.as_ref()
+    }
+
+    fn get_task_manager(&self) -> &TaskManager {
+        self.task_manager.as_ref()
+    }
+
+    fn get_terminator(&self) -> &Terminator {
+        self.terminator.as_ref()
+    }
+
+    fn get_ui_automation(&self) -> &UiAutomation {
+        self.ui_automation.as_ref()
+    }
+
+    fn get_ui_navigator(&self) -> &UiNavigator {
+        self.ui_navigator.as_ref()
+    }
+
+    fn get_work_runtime(&self) -> &Runtime {
+        self.work_runtime
     }
 }

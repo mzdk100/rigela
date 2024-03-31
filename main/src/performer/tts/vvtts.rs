@@ -17,11 +17,11 @@ use rigela_utils::bass::BassChannelOutputStream;
 #[cfg(target_arch = "x86")]
 use rigela_utils::ibmeci::Ibmeci;
 
-#[allow(unused)]
-use crate::{
-    context::Context,
-    performer::tts::{TtsEngine, TtsProperty},
-};
+#[cfg(target_arch = "x86_64")]
+use crate::context::ContextAccessor;
+#[cfg(target_arch = "x86_64")]
+use crate::performer::tts::TtsProperty;
+use crate::{context::Context, performer::tts::TtsEngine};
 
 //noinspection SpellCheckingInspection
 /// VVTTS语音库封装
@@ -49,8 +49,7 @@ impl VvttsEngine {
 
     #[cfg(target_arch = "x86_64")]
     async fn set_value_by_prop(&self, prop: TtsProperty) {
-        let ctx = self.context.upgrade().unwrap();
-        let proxy32 = ctx.proxy32process.as_ref().await;
+        let proxy32 = self.context.get_proxy32process().await;
         let mut params = proxy32.eci_get_voice_params().await;
 
         match prop {
@@ -85,9 +84,9 @@ impl VvttsEngine {
 impl TtsEngine for VvttsEngine {
     async fn speak(&self, text: &str) {
         self.output_stream.start();
-        let data = unsafe { &*self.context.as_ptr() }
-            .proxy32process
-            .as_ref()
+        let data = self
+            .context
+            .get_proxy32process()
             .await
             .eci_synth(text)
             .await;
@@ -108,9 +107,8 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn get_all_voices(&self) -> Vec<(String, String)> {
-        unsafe { &*self.context.as_ptr() }
-            .proxy32process
-            .as_ref()
+        self.context
+            .get_proxy32process()
             .await
             .eci_get_voices()
             .await
@@ -132,9 +130,8 @@ impl TtsEngine for VvttsEngine {
     }
 
     async fn set_voice(&self, id: String) {
-        unsafe { &*self.context.as_ptr() }
-            .proxy32process
-            .as_ref()
+        self.context
+            .get_proxy32process()
             .await
             .eci_set_voice(u32::from_str(id.as_str()).unwrap_or(0))
             .await

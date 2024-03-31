@@ -13,7 +13,7 @@
 
 use crate::{
     commander::keyboard::keys::Keys,
-    context::Context,
+    context::{Context, ContextAccessor},
     ext::element::UiAutomationElementExt,
     performer::sound::SoundArgument::{Single, WithFreq},
 };
@@ -25,8 +25,13 @@ use a11y::ia2::{
     WinEventSourceExt,
 };
 use log::error;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::{sync::Weak, time::Duration};
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Weak,
+    },
+    time::Duration,
+};
 use win_wrap::{
     control::{edit::Edit, WindowControl},
     msaa::object::OBJID_CARET,
@@ -48,14 +53,10 @@ pub(crate) async fn subscribe_editor_events(context: Weak<Context>) {
 
 #[allow(unused_variables)]
 async fn subscribe_msaa_events(context: Weak<Context>) {
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-
-    unsafe { &*context.as_ptr() }
-        .msaa
+    let ctx = context.clone();
+    context
+        .get_msaa()
         .add_on_object_location_change_listener(move |src| {
-            let performer = performer.clone();
-
             if OBJID_CARET.0 != src.id_object {
                 return;
             }
@@ -65,10 +66,12 @@ async fn subscribe_msaa_events(context: Weak<Context>) {
             let Some(obj) = obj.parent() else {
                 return;
             };
-            work_runtime.spawn(async move {
+
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
                 let control = WindowControl::from(obj.window());
                 let (start, end) = control.get_sel();
-                performer
+                ctx2.get_performer()
                     .play_sound(WithFreq("progress.wav", (start * 10 + 400) as f32))
                     .await;
             });
@@ -77,35 +80,30 @@ async fn subscribe_msaa_events(context: Weak<Context>) {
 
 #[allow(unused_variables)]
 async fn subscribe_jab_events(context: Weak<Context>) {
-    let mng = unsafe { &*context.as_ptr() }
-        .commander
-        .get_keyboard_manager()
-        .clone();
-    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
+    let ctx = context.clone();
+    let mng = context.get_commander().get_keyboard_manager().clone();
 
-    unsafe { &*context.as_ptr() }
-        .jab
+    context
+        .get_jab()
         .add_on_property_caret_change_listener(move |src, old, new| {
             let Some((char, word, line)) = src.get_text_items(new) else {
                 return;
             };
 
+            let ctx2 = ctx.clone();
             let commander = mng.clone();
-            let event_core = event_core.clone();
-            let performer = performer.clone();
 
-            work_runtime.spawn(async move {
-                if event_core
+            ctx.get_work_runtime().spawn(async move {
+                if ctx2
+                    .get_event_core()
                     .should_ignore(char.to_string(), Duration::from_millis(50))
                     .await
                 {
                     return;
                 }
                 match commander.get_last_pressed_key() {
-                    Keys::VkUp | Keys::VkDown => performer.speak(&line).await,
-                    _ => performer.speak(&char).await,
+                    Keys::VkUp | Keys::VkDown => ctx2.get_performer().speak(&line).await,
+                    _ => ctx2.get_performer().speak(&char).await,
                 };
             });
         });
@@ -113,17 +111,11 @@ async fn subscribe_jab_events(context: Weak<Context>) {
 
 #[allow(dead_code)]
 async fn subscribe_uia_events(context: Weak<Context>) {
-    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-    let mng = unsafe { &*context.as_ptr() }
-        .commander
-        .get_keyboard_manager()
-        .clone();
-    let ui_automation = unsafe { &*context.as_ptr() }.ui_automation.clone();
-    let root = ui_automation.get_root_element();
+    let ctx = context.clone();
+    let mng = context.get_commander().get_keyboard_manager().clone();
+    let root = context.get_ui_automation().get_root_element();
 
-    let group = ui_automation.create_event_handler_group();
+    let group = context.get_ui_automation().create_event_handler_group();
     // group.add_active_text_position_changed_listener(|element, range| {});
     // group.add_text_edit_text_changed_listener(|element| {});
     // group.add_changes_listener(|| {});
@@ -140,48 +132,45 @@ async fn subscribe_uia_events(context: Weak<Context>) {
             _ => caret.expand_to_enclosing_unit(TextUnit::Character),
         }
 
-        let event_core = event_core.clone();
-        let performer = performer.clone();
-
-        work_runtime.spawn(async move {
-            if event_core
+        let ctx2 = ctx.clone();
+        ctx.get_work_runtime().spawn(async move {
+            if ctx2
+                .get_event_core()
                 .should_ignore(caret.get_text(-1), Duration::from_millis(50))
                 .await
             {
                 return;
             }
-            performer.speak(&caret).await;
+            ctx2.get_performer().speak(&caret).await;
         });
     });
 
-    if ui_automation
+    if context
+        .get_ui_automation()
         .add_event_handler_group(&root, &group)
         .is_err()
     {
         error!("Add the event handler group of the uia is failed.");
     }
 
-    unsafe { &*context.as_ptr() }
-        .terminator
-        .add_exiting_listener(move || ui_automation.remove_event_handler_group(&root, &group));
+    let ctx = context.clone();
+    context.get_terminator().add_exiting_listener(move || {
+        ctx.get_ui_automation()
+            .remove_event_handler_group(&root, &group)
+    });
 }
 
 async fn subscribe_ia2_events(context: Weak<Context>) {
-    let mng = unsafe { &*context.as_ptr() }
-        .commander
-        .get_keyboard_manager()
-        .clone();
-    let event_core = unsafe { &*context.as_ptr() }.event_core.clone();
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
+    let ctx = context.clone();
+    let mng = context.get_commander().get_keyboard_manager().clone();
 
-    unsafe { &*context.as_ptr() }
-        .ia2
+    context
+        .get_ia2()
         .add_on_text_caret_moved_listener(move |src| {
             let text = match src.get_text() {
                 Ok(t) => t,
                 Err(e) => {
-                    error!("{}", e);
+                    error!("Can't get the text. ({})", e);
                     return;
                 }
             };
@@ -194,17 +183,16 @@ async fn subscribe_ia2_events(context: Weak<Context>) {
                 _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
             };
 
-            let event_core = event_core.clone();
-            let performer = performer.clone();
-
-            work_runtime.spawn(async move {
-                if event_core
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
+                if ctx2
+                    .get_event_core()
                     .should_ignore(text.clone(), Duration::from_millis(50))
                     .await
                 {
                     return;
                 }
-                performer.speak(&text).await;
+                ctx2.get_performer().speak(&text).await;
             });
         })
 }
@@ -216,10 +204,7 @@ pub(crate) static EDITOR_EDGE_KEY_HANDLE: AtomicBool = AtomicBool::new(false);
 pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     let ctx = context.clone();
     let cb_uia = move |key: Keys, pressed| {
-        let Ok(ctrl) = unsafe { &*ctx.as_ptr() }
-            .ui_automation
-            .get_focused_element()
-        else {
+        let Ok(ctrl) = ctx.get_ui_automation().get_focused_element() else {
             return;
         };
         match pressed {
@@ -237,10 +222,10 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
                         _ => {}
                     }
 
-                    let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
-                    unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-                        performer.play_sound(Single("edge.wav")).await;
-                        performer.speak(&caret).await;
+                    let ctx2 = ctx.clone();
+                    ctx.get_work_runtime().spawn(async move {
+                        ctx2.get_performer().play_sound(Single("edge.wav")).await;
+                        ctx2.get_performer().speak(&caret).await;
                     });
                 }
             }
@@ -249,7 +234,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
 
     let ctx = context.clone();
     let cb_ia2 = move |key: Keys, pressed| {
-        if let Ok(acc_obj) = unsafe { &*ctx.as_ptr() }.msaa.get_focus_object() {
+        if let Ok(acc_obj) = ctx.get_msaa().get_focus_object() {
             if let Ok(text) = AccessibleText::from_accessible_object(acc_obj) {
                 match pressed {
                     true => EDITOR_EDGE_KEY_HANDLE.store(false, Ordering::SeqCst),
@@ -263,10 +248,10 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
                                 _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
                             };
 
-                            let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
-                            unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-                                performer.play_sound(Single("edge.wav")).await;
-                                performer.speak(&text).await;
+                            let ctx2 = ctx.clone();
+                            ctx.get_work_runtime().spawn(async move {
+                                ctx2.get_performer().play_sound(Single("edge.wav")).await;
+                                ctx2.get_performer().speak(&text).await;
                             });
                         }
                     }
@@ -276,10 +261,7 @@ pub(crate) async fn subscribe_cusor_key_events(context: Weak<Context>) {
     };
 
     let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
-    let mng = unsafe { &*context.as_ptr() }
-        .commander
-        .get_keyboard_manager()
-        .clone();
+    let mng = context.get_commander().get_keyboard_manager().clone();
 
     mng.add_key_event_listener(&keys, cb_uia);
     mng.add_key_event_listener(&keys, cb_ia2);

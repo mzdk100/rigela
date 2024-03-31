@@ -15,7 +15,7 @@ pub(crate) mod hooks;
 pub(crate) mod keyboard;
 
 use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::Manager;
+use crate::commander::keyboard::KeyboardManager;
 use crate::{
     commander::hooks::{set_keyboard_hook, set_mouse_hook},
     context::Context,
@@ -45,7 +45,7 @@ pub(crate) enum CommandType {
 pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
-    keyboard_manager: Arc<Manager>,
+    keyboard_manager: Arc<KeyboardManager>,
 }
 
 impl Commander {
@@ -57,7 +57,7 @@ impl Commander {
         Self {
             keyboard_hook: Default::default(),
             mouse_hook: Default::default(),
-            keyboard_manager: Manager::new().into(),
+            keyboard_manager: KeyboardManager::new().into(),
         }
     }
 
@@ -66,6 +66,7 @@ impl Commander {
      * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
      * */
     pub(crate) fn apply(&self, context: Weak<Context>) {
+        self.keyboard_manager.apply(context.clone());
         self.keyboard_hook
             .set(set_keyboard_hook(context.clone()))
             .unwrap_or(());
@@ -76,7 +77,7 @@ impl Commander {
     }
 
     /// 获取键盘管理器
-    pub(crate) fn get_keyboard_manager(&self) -> Arc<Manager> {
+    pub(crate) fn get_keyboard_manager(&self) -> Arc<KeyboardManager> {
         self.keyboard_manager.clone()
     }
 }

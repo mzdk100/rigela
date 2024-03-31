@@ -11,15 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::context::Context;
+use crate::context::{Context, ContextAccessor};
 use arc_swap::ArcSwapAny;
 use log::error;
 use rust_i18n::AtomicStr;
-use std::fmt::Debug;
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::{
     collections::HashMap,
-    sync::{Arc, Weak},
+    fmt::Debug,
+    sync::{
+        atomic::{AtomicI64, Ordering},
+        Arc, Weak,
+    },
 };
 use tokio::io::AsyncReadExt;
 
@@ -35,8 +37,7 @@ impl Cache {
     //noinspection DuplicatedCode
     /// 创建缓存对象
     pub(crate) async fn build(context: Weak<Context>) -> Self {
-        let res = context.upgrade().unwrap().resource_provider.clone();
-        let word_map = match res.open("words.txt").await {
+        let word_map = match context.get_resource_provider().open("words.txt").await {
             Ok(mut f) => {
                 let mut data: String = Default::default();
                 if f.read_to_string(&mut data).await.is_err() {

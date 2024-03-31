@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{context::Context, performer::sound::SoundArgument::WithFreq};
+use crate::{
+    context::{Context, ContextAccessor},
+    performer::sound::SoundArgument::WithFreq,
+};
 use std::sync::Weak;
 use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
 
@@ -21,11 +24,9 @@ use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
  * `context` 读屏框架的上下文环境。
  * */
 pub(crate) async fn subscribe_progress_events(context: Weak<Context>) {
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-
-    unsafe { &*context.as_ptr() }
-        .msaa
+    let ctx = context.clone();
+    context
+        .get_msaa()
         .add_on_object_value_change_listener(move |src| {
             let Ok((obj, child)) = src.get_object() else {
                 return;
@@ -37,13 +38,13 @@ pub(crate) async fn subscribe_progress_events(context: Weak<Context>) {
                 .get_value(child)
                 .trim_matches(|c| c == '%' || c == ' ')
                 .parse::<u32>()
-                else {
-                    return;
-                };
-            let performer = performer.clone();
+            else {
+                return;
+            };
 
-            work_runtime.spawn(async move {
-                performer
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
+                ctx2.get_performer()
                     .play_sound(WithFreq("progress.wav", 2000f32 + 460f32 * (value as f32)))
                     .await;
             });

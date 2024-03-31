@@ -232,6 +232,14 @@ welcome.btn_close:
   zh-CN: 关闭 (&C)
 
 
+command.added_desktop_shortcut:
+  en: The desktop shortcut is added
+  zh-CN: 已添加桌面快捷方式
+
+command.deleted_desktop_shortcut:
+  en: The desktop shortcut is deleted
+  zh-CN: 已删除桌面快捷方式
+
 command.msg_auto_check_off:
   en: Turn off auto update
   zh-CN: 已关闭自动更新！

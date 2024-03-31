@@ -12,15 +12,17 @@
  */
 
 use crate::{
-    context::Context, ext::dialog::AccessibleDialogExt, performer::sound::SoundArgument::Single,
+    context::{Context, ContextAccessor},
+    ext::dialog::AccessibleDialogExt,
+    performer::sound::SoundArgument::Single,
 };
 use std::{sync::Weak, time::Duration};
 use tokio::time::sleep;
 use win_wrap::msaa::{event::WinEventSource, object::AccessibleObject};
 
 pub(crate) fn handle_dialog_events(context: Weak<Context>, src: WinEventSource) {
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-    unsafe { &*context.as_ptr() }.work_runtime.spawn(async move {
+    let ctx = context.clone();
+    context.get_work_runtime().spawn(async move {
         // 延迟朗读，防止被焦点元素打断。
         sleep(Duration::from_millis(500)).await;
 
@@ -31,8 +33,8 @@ pub(crate) fn handle_dialog_events(context: Weak<Context>, src: WinEventSource) 
             },
             Ok(o) => o.0,
         };
-        performer.play_sound(Single("dialog.wav")).await;
-        performer.speak(&obj.get_dialog_content()).await;
+        ctx.get_performer().play_sound(Single("dialog.wav")).await;
+        ctx.get_performer().speak(&obj.get_dialog_content()).await;
     });
 }
 
@@ -43,19 +45,21 @@ pub(crate) fn handle_dialog_events(context: Weak<Context>, src: WinEventSource) 
  * */
 pub(crate) async fn subscribe_dialog_events(context: Weak<Context>) {
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .msaa
+    context
+        .get_msaa()
         .add_on_system_alert_listener(move |src| handle_dialog_events(ctx.clone(), src));
 
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .msaa
+    context
+        .get_msaa()
         .add_on_system_dialog_start_listener(move |src| handle_dialog_events(ctx.clone(), src));
-    let ctx = context.clone();
 
-    unsafe { &*context.as_ptr() }.msaa.add_on_system_foreground_listener(move |src| {
-        if src.get_class_name() == "#32770" {
-            handle_dialog_events(ctx.clone(), src)
-        }
-    });
+    let ctx = context.clone();
+    context
+        .get_msaa()
+        .add_on_system_foreground_listener(move |src| {
+            if src.get_class_name() == "#32770" {
+                handle_dialog_events(ctx.clone(), src)
+            }
+        });
 }

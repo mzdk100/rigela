@@ -11,3 +11,19 @@ ime.fullshape_input:
 ime.alpha_numeric_input:
   en: Alpha and numeric input
   zh-CN: 字母数字输入
+
+input.numlock_on:
+  en: Num lock is on
+  zh-CN: 数字键打开
+
+input.numlock_off:
+  en: Num lock is off
+  zh-CN: 数字键关闭
+
+input.scroll_on:
+  en: Scroll is on
+  zh-CN: 滚动键打开
+
+input.scroll_off:
+  en: Scroll is off
+  zh-CN: 滚动键关闭

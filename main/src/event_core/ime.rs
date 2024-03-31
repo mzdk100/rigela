@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::sync::atomic::Ordering;
-use std::sync::Weak;
+use std::sync::{atomic::Ordering, Weak};
 
 use peeper::model::CandidateList;
 use win_wrap::input::{IME_CMODE_ALPHANUMERIC, IME_CMODE_FULLSHAPE, IME_CMODE_NATIVE};
 
 use crate::{
-    context::Context, event_core::editor::EDITOR_EDGE_KEY_HANDLE,
+    context::{Context, ContextAccessor},
+    event_core::editor::EDITOR_EDGE_KEY_HANDLE,
     performer::sound::SoundArgument::Single,
 };
 
@@ -28,15 +28,17 @@ pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 pub(crate) async fn subscribe_ime_events(context: Weak<Context>) {
     // 订阅通用的输入法候选事件
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .peeper_server
+    context
+        .get_peeper_server()
         .add_on_ime_candidate_list_listener(move |candidate_list| {
             handle_ime_candidate(ctx.clone(), candidate_list);
         })
         .await;
+
+    // 订阅输入法模式转换事件
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .peeper_server
+    context
+        .get_peeper_server()
         .add_on_ime_conversion_mode_listener(move |conversion_mode| {
             // https://learn.microsoft.com/zh-cn/windows/win32/intl/ime-conversion-mode-values
             let mode = if conversion_mode & IME_CMODE_NATIVE.0 == IME_CMODE_NATIVE.0 {
@@ -48,18 +50,17 @@ pub(crate) async fn subscribe_ime_events(context: Weak<Context>) {
             } else {
                 return;
             };
-            let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
 
-            unsafe { &*ctx.as_ptr() }
-                .work_runtime
-                .spawn(async move { performer.speak(&mode).await });
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime()
+                .spawn(async move { ctx2.get_performer().speak(&mode).await });
         })
         .await;
 
     // 订阅微软输入法的候选事件
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }
-        .msaa
+    context
+        .get_msaa()
         .add_on_object_selection_listener(move |src| {
             if src.get_class_name() != MS_IME_CLASS_NAME {
                 // 此类事件不属于输入法事件
@@ -78,35 +79,32 @@ pub(crate) async fn subscribe_ime_events(context: Weak<Context>) {
 }
 
 fn handle_ime_candidate(context: Weak<Context>, candidate_list: CandidateList) {
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-
     // 关闭编辑框键盘事件朗读
     EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
 
-    unsafe { &*context.as_ptr() }.task_manager.push(
+    let ctx = context.clone();
+    context.get_task_manager().push(
         "ime",
-        unsafe { &*context.as_ptr() }
-            .work_runtime
-            .spawn(async move {
-                let candidate = candidate_list.list[candidate_list.selection as usize]
-                    .clone()
-                    .trim_end()
-                    .to_string();
-                if candidate.is_empty() {
-                    return;
-                }
-                if !performer.speak(&candidate_list.clone()).await {
-                    // 如果语音被打断就不继续朗读候选的解释词
-                    return;
-                }
-                let Some(cache) = performer.get_cache() else {
-                    return;
-                };
-                if let Some(x) = unsafe { &*cache.as_ptr() }.make_word(&candidate) {
-                    performer.play_sound(Single("tip.wav")).await;
-                    // 朗读候选文字的解释词
-                    performer.speak(x).await;
-                }
-            }),
+        context.get_work_runtime().spawn(async move {
+            let candidate = candidate_list.list[candidate_list.selection as usize]
+                .clone()
+                .trim_end()
+                .to_string();
+            if candidate.is_empty() {
+                return;
+            }
+            if !ctx.get_performer().speak(&candidate_list.clone()).await {
+                // 如果语音被打断就不继续朗读候选的解释词
+                return;
+            }
+            let Some(cache) = ctx.get_performer().get_cache() else {
+                return;
+            };
+            if let Some(x) = unsafe { &*cache.as_ptr() }.make_word(&candidate) {
+                ctx.get_performer().play_sound(Single("tip.wav")).await;
+                // 朗读候选文字的解释词
+                ctx.get_performer().speak(x).await;
+            }
+        }),
     );
 }

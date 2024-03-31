@@ -15,15 +15,19 @@ pub(crate) mod sapi5;
 //noinspection SpellCheckingInspection
 pub(crate) mod vvtts;
 
-use crate::configs::items::tts::{TtsConfig, TtsPropertyItem};
-use crate::{context::Context, performer::text_processing::transform_single_char};
+use crate::{
+    configs::items::tts::{TtsConfig, TtsPropertyItem},
+    context::{Context, ContextAccessor},
+    performer::text_processing::transform_single_char,
+};
 use arc_swap::ArcSwapAny;
-use std::ops::Deref;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
-    sync::{Arc, Weak},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Weak,
+    },
     time::Duration,
 };
 use tokio::{
@@ -129,8 +133,7 @@ impl Tts {
     }
 
     async fn get_engine(&self) -> Weak<dyn TtsEngine + Sync + Send> {
-        let ctx = unsafe { &*self.context.as_ptr() };
-        let ttc_cfg = ctx.config_manager.get_config().tts_config;
+        let ttc_cfg = self.context.get_config_manager().get_config().tts_config;
         let engine_name = ttc_cfg.voice.0.clone();
 
         match { self.all_engines.read().await.get(&engine_name) } {
@@ -154,10 +157,14 @@ impl Tts {
      * */
     pub(crate) async fn stop(&self) {
         self.is_cancelled.store(true, Ordering::Release);
-        let Some(ctx) = self.context.upgrade() else {
-            return;
-        };
-        let engine = ctx.config_manager.get_config().tts_config.voice.0.clone();
+        let engine = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .voice
+            .0
+            .clone();
 
         let lock = self.all_engines.read().await;
         if let Some(x) = lock.get(&engine) {
@@ -187,8 +194,6 @@ impl Tts {
 
     /// 设置当前TTS属性的值
     pub(crate) async fn set_tts_prop_value(&self, value_change: ValueChange) {
-        let ctx = self.context.upgrade().unwrap();
-
         let set_val = |x| match value_change {
             ValueChange::Increment if x < 99 => x + 1,
             ValueChange::Increment => 100,
@@ -202,9 +207,19 @@ impl Tts {
             volume,
             voice: (engine, id),
             item,
-        } = ctx.config_manager.get_config().tts_config.clone();
+        } = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .clone();
 
-        let mut cfg = ctx.config_manager.get_config().tts_config.clone();
+        let mut cfg = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .clone();
         match item {
             TtsPropertyItem::Speed => cfg.speed = set_val(speed),
             TtsPropertyItem::Pitch => cfg.pitch = set_val(pitch),
@@ -218,15 +233,19 @@ impl Tts {
 
         self.apply_config(&cfg).await;
 
-        let mut root = ctx.config_manager.get_config();
+        let mut root = self.context.get_config_manager().get_config();
         root.tts_config = cfg;
-        ctx.config_manager.set_config(&root);
+        self.context.get_config_manager().set_config(&root);
     }
 
     /// 获取当前TTS属性值
     pub(crate) async fn get_tts_prop_value(&self, item: Option<TtsPropertyItem>) -> TtsProperty {
-        let ctx = self.context.upgrade().unwrap();
-        let config = ctx.config_manager.get_config().tts_config.clone();
+        let config = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .clone();
 
         match item.map(|x| x).unwrap_or(config.item) {
             TtsPropertyItem::Speed => TtsProperty::Speed(config.speed),
@@ -267,7 +286,7 @@ impl Tts {
     where
         T: TtsEngine + Sync + Send + 'static,
     {
-        let mut all_voices = self.all_voices.load().deref().deref().clone();
+        let mut all_voices = self.all_voices.load().as_ref().clone();
         for (id, name) in engine.get_all_voices().await.iter() {
             all_voices.push(VoiceInfo {
                 engine: engine.get_name(),
@@ -283,9 +302,12 @@ impl Tts {
                 .await
                 .insert(engine.get_name(), Arc::new(engine));
         }
-
-        let ctx = self.context.upgrade().unwrap();
-        let cfg = ctx.config_manager.get_config().tts_config.clone();
+        let cfg = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .clone();
         self.apply_config(&cfg).await;
 
         self
@@ -306,9 +328,12 @@ impl Tts {
     }
 
     pub(crate) async fn move_tts_prop(&self, direction: Direction) {
-        let ctx = self.context.upgrade().unwrap();
-
-        let mut cfg = ctx.config_manager.get_config().tts_config.clone();
+        let mut cfg = self
+            .context
+            .get_config_manager()
+            .get_config()
+            .tts_config
+            .clone();
         cfg.item = match direction {
             Direction::Next => match cfg.item {
                 TtsPropertyItem::Speed => TtsPropertyItem::Pitch,
@@ -326,9 +351,9 @@ impl Tts {
 
         self.apply_config(&cfg).await;
 
-        let mut root = ctx.config_manager.get_config();
+        let mut root = self.context.get_config_manager().get_config();
         root.tts_config = cfg;
-        ctx.config_manager.set_config(&root);
+        self.context.get_config_manager().set_config(&root);
     }
 
     async fn switch_voice(
@@ -359,7 +384,7 @@ impl Tts {
     }
 
     pub(crate) async fn get_all_voiceinfo(&self) -> Vec<VoiceInfo> {
-        self.all_voices.load().deref().deref().clone()
+        self.all_voices.load().as_ref().clone()
     }
 }
 

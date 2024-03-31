@@ -11,14 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::{
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::Arc,
-};
 use crate::performer::Speakable;
 use a11y::{
     ia2::{object::Accessible2Object, relation::AccessibleRelation},
     jab::context::AccessibleContext,
+};
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::Arc,
 };
 use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
 
@@ -112,7 +112,7 @@ impl<'a> Hash for UiElement<'a> {
                 format!("msaa:{},{},{},{}", x, y, w, h)
             }
             Self::UIA(x) => format!("uia:{}", x.get_automation_id()),
-            _ => "None".to_string()
+            _ => "None".to_string(),
         };
         state.write(unique_id.as_bytes())
     }

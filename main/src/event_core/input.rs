@@ -13,7 +13,7 @@
 
 use crate::{
     commander::keyboard::keys::Keys::{VkNumlock, VkScroll},
-    context::Context,
+    context::{Context, ContextAccessor},
 };
 use std::sync::Weak;
 use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};
@@ -28,14 +28,14 @@ pub(crate) async fn subscribe_input_events(context: Weak<Context>) {
 
     subscribe_lock_key_events(context.clone()).await;
 
-    unsafe { &*context.as_ptr() }
-        .peeper_server
+    context
+        .get_peeper_server()
         .add_on_input_char_listener(move |c| {
-            unsafe { &*ctx.as_ptr() }.task_manager.abort("ime");
-            let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
+            let ctx2 = ctx.clone();
+            ctx.get_task_manager().abort("ime");
 
-            unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-                performer.speak(&c).await;
+            ctx.get_work_runtime().spawn(async move {
+                ctx2.get_performer().speak(&c).await;
             });
         })
         .await;
@@ -53,27 +53,27 @@ pub(crate) async fn subscribe_lock_key_events(context: Weak<Context>) {
             VkScroll => {
                 let (_, state) = get_key_state(VK_SCROLL);
                 match state {
-                    true => "滚动",
-                    false => "滚动锁定",
+                    true => t!("input.scroll_off"),
+                    false => t!("input.scroll_on"),
                 }
             }
             VkNumlock => {
                 let (_, state) = get_key_state(VK_NUMLOCK);
                 match state {
-                    true => "热键",
-                    false => "数字",
+                    true => t!("input.numlock_off"),
+                    false => t!("input.numlock_on"),
                 }
             }
             _ => unreachable!(),
         };
-        let performer = unsafe { &*ctx.as_ptr() }.performer.clone();
-        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-            performer.speak(&info.to_string()).await;
+        let ctx2 = ctx.clone();
+        ctx.get_work_runtime().spawn(async move {
+            ctx2.get_performer().speak(&info.to_string()).await;
         });
     };
 
-    unsafe { &*context.as_ptr() }
-        .commander
+    context
+        .get_commander()
         .get_keyboard_manager()
         .add_key_event_listener(&vec![VkScroll, VkNumlock], handle);
 }

@@ -11,14 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::combo_key;
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::commander::keyboard::combo_keys::State;
-#[allow(unused_imports)]
-use crate::commander::keyboard::keys::Keys::*;
-use crate::commander::keyboard::modify_keys::ModifierKeys;
-use crate::configs::operations::apply_mouse_config;
-use crate::context::Context;
+use crate::{
+    combo_key,
+    commander::keyboard::{
+        combo_keys::{ComboKey, State},
+        keys::Keys::*,
+        modify_keys::ModifierKeys,
+    },
+    configs::operations::apply_mouse_config,
+    context::{Context, ContextAccessor},
+};
 use async_trait::async_trait;
 use rigela_macros::talent;
 #[allow(unused_imports)]
@@ -30,28 +32,25 @@ use win_wrap::input::{click, get_cur_mouse_point, right_click};
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
-    unsafe { &*context.as_ptr() }
-        .performer
-        .speak(&t!("mouse.click"))
-        .await;
+    context.get_performer().speak(&t!("mouse.click")).await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标右击", key = combo_key!(VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
-    unsafe { &*context.as_ptr() }
-        .performer
+    context
+        .get_performer()
         .speak(&t!("mouse.right_click"))
         .await;
 }
 
-//noinspection RsUnresolvedReference
+//noinspection RsUnresolvedPath
 #[talent(doc = "鼠标朗读", key = combo_key!("RigelA", VkM))]
 async fn read_mouse(context: Weak<Context>) {
-    let is_read = !unsafe { &*context.as_ptr() }
-        .config_manager
+    let is_read = !context
+        .get_config_manager()
         .get_config()
         .mouse_config
         .is_read;
@@ -60,12 +59,11 @@ async fn read_mouse(context: Weak<Context>) {
         true => t!("mouse.state_on"),
         false => t!("mouse.state_off"),
     };
-    unsafe { &*context.as_ptr() }.performer.speak(&state).await;
+    context.get_performer().speak(&state).await;
 }
 
 async fn get_point(context: Weak<Context>) -> (i32, i32) {
-    let context = unsafe { &*context.as_ptr() };
-    let ele = match context.ui_navigator.get_last_visit().await {
+    let ele = match context.get_ui_navigator().get_last_visit().await {
         None => None,
         e => e,
     };
@@ -83,9 +81,12 @@ async fn get_point(context: Weak<Context>) -> (i32, i32) {
 
 /// 朗读鼠标元素
 pub(crate) fn mouse_read(context: Weak<Context>, x: i32, y: i32) {
-    let uia = unsafe { &*context.as_ptr() }.ui_automation.clone();
-    let ele = uia.element_from_point(x, y).unwrap();
-    let performer = unsafe { &*context.as_ptr() }.performer.clone();
-    let work_runtime = unsafe { &*context.as_ptr() }.work_runtime;
-    work_runtime.spawn(async move { performer.speak(&ele).await });
+    let ele = context
+        .get_ui_automation()
+        .element_from_point(x, y)
+        .unwrap();
+    let ctx = context.clone();
+    context
+        .get_work_runtime()
+        .spawn(async move { ctx.get_performer().speak(&ele).await });
 }

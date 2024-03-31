@@ -13,7 +13,7 @@
 
 use crate::{
     commander::keyboard::{combo_keys::ComboKey, keys::Keys},
-    context::Context,
+    context::{Context, ContextAccessor},
 };
 //noinspection RsUnresolvedPath
 use arc_swap::ArcSwap;
@@ -50,7 +50,7 @@ use win_wrap::{
 use zip::{write::FileOptions, CompressionMethod, ZipArchive, ZipWriter};
 
 const HELP_URL: &str =
-    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/help.txt?format=json&viewer=simple";
+    "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/user/help.md?format=json&viewer=simple";
 const CHANGELOGS_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/user/changelogs.md?format=json&viewer=simple";
 //noinspection HttpUrlsUsage
@@ -285,9 +285,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
-        else {
-            return false;
-        };
+    else {
+        return false;
+    };
     let Some(key) = key.get_code() else {
         return false;
     };
@@ -406,12 +406,10 @@ pub(crate) fn set_hook(
     let is_started = AtomicBool::new(false);
 
     fn start(context: Weak<Context>, sender: NoticeSender) {
-        unsafe { &*context.as_ptr() }
-            .work_runtime
-            .spawn(async move {
-                sleep(Duration::from_secs(1)).await;
-                sender.notice();
-            });
+        context.get_work_runtime().spawn(async move {
+            sleep(Duration::from_secs(1)).await;
+            sender.notice();
+        });
     }
 
     let key_track = Arc::new(Mutex::new(HashMap::<Keys, bool>::new()));
@@ -435,10 +433,7 @@ pub(crate) fn set_hook(
             .collect::<Vec<Keys>>()
             .into();
 
-        let mng = unsafe { &*context.as_ptr() }
-            .commander
-            .get_keyboard_manager()
-            .clone();
+        let mng = context.get_commander().get_keyboard_manager().clone();
         let cancel_keys = [Keys::VkEscape, Keys::VkReturn];
         match pressed {
             true if !cur_key.is_modifierkey() => {

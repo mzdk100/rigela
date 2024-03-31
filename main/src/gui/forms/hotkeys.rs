@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::ComboKey;
-use crate::gui::utils::set_hook;
 use crate::{
+    commander::keyboard::combo_keys::ComboKey,
     configs::operations::{get_hotkeys, save_hotkeys},
-    gui::forms::settings_form::SettingsForm,
+    context::ContextAccessor,
+    gui::{forms::settings_form::SettingsForm, utils::set_hook},
 };
 use arc_swap::access::{DynAccess, DynGuard};
 use nwd::NwgPartial;
@@ -93,10 +93,11 @@ impl SettingsForm {
 
     // 初始化数据
     fn init_data(&self) {
-        let context = self.context.get().unwrap().clone();
-        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+        let Some(context) = self.context.get() else {
+            return;
+        };
 
-        *self.talent_ids.borrow_mut() = pv.get_talent_ids().into();
+        *self.talent_ids.borrow_mut() = context.get_talent_provider().get_talent_ids().into();
         *self.custom_combo_keys.borrow_mut() = get_hotkeys(context.clone());
     }
 
@@ -105,12 +106,13 @@ impl SettingsForm {
         let dv = &self.hotkeys_ui.data_view;
         dv.clear();
 
-        let context = self.context.get().unwrap();
-        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+        let Some(context) = self.context.get() else {
+            return;
+        };
 
         let ids = self.talent_ids.borrow().clone();
         for (i, id) in ids.iter().enumerate() {
-            let talent = pv.get_talent_by_id(id).unwrap();
+            let talent = context.get_talent_provider().get_talent_by_id(id).unwrap();
             dv.insert_item(talent.get_doc());
 
             let custom_talents = self.custom_combo_keys.borrow().clone();
@@ -191,14 +193,14 @@ impl SettingsForm {
             return;
         }
 
+        let Some(context) = self.context.get() else {
+            return;
+        };
         {
-            let context = self.context.get().unwrap().clone();
-            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
-
             let ids = self.talent_ids.borrow().clone();
             let id = ids.get(index.unwrap()).unwrap();
 
-            let talent = pv.get_talent_by_id(id).unwrap();
+            let talent = context.get_talent_provider().get_talent_by_id(id).unwrap();
             let doc = talent.get_doc();
             let info = t!("hotkeys.confirm_clear", value = doc).to_string();
 
@@ -215,7 +217,9 @@ impl SettingsForm {
             self.custom_combo_keys.borrow_mut().remove(id);
             save_hotkeys(context.clone(), self.custom_combo_keys.borrow().clone());
 
-            pv.update_custom_combo_key_map(context.clone());
+            context
+                .get_talent_provider()
+                .update_custom_combo_key_map(context.clone());
         }
 
         self.init_data();
@@ -235,15 +239,15 @@ impl SettingsForm {
         let key_str = combo_key.to_string();
         self.hotkeys_ui.tb_keys_info.set_text(&key_str);
 
+        let Some(context) = self.context.get() else {
+            return;
+        };
         // 这里需要包裹，不然调用init_data会闪退
         {
-            let context = self.context.get().unwrap().clone();
-            let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
-
             let ids = self.talent_ids.borrow().clone();
             let id = ids.get(self.get_list_sel_index().unwrap()).unwrap();
 
-            let talent = pv.get_talent_by_id(id).unwrap();
+            let talent = context.get_talent_provider().get_talent_by_id(id).unwrap();
             let doc = talent.get_doc();
             let info = t!("hotkeys.confirm_apply_keys", keys = key_str, value = doc).to_string();
 
@@ -262,7 +266,9 @@ impl SettingsForm {
                 .insert(id.clone(), combo_key);
             save_hotkeys(context.clone(), self.custom_combo_keys.borrow().clone());
 
-            pv.update_custom_combo_key_map(context.clone());
+            context
+                .get_talent_provider()
+                .update_custom_combo_key_map(context.clone());
         }
 
         self.init_data();
@@ -276,15 +282,15 @@ impl SettingsForm {
 
     // 开始自定义热键
     fn start_custom_hotkey(&self) {
-        let context = self.context.get().unwrap().clone();
+        let Some(context) = self.context.get() else {
+            return;
+        };
 
-        let pf = unsafe { &*context.as_ptr() }.performer.clone();
-        unsafe { &*context.as_ptr() }
-            .work_runtime
-            .spawn(async move {
-                let info = t!("hotkeys.please_input_info").to_string();
-                pf.speak(&info).await;
-            });
+        let ctx = context.clone();
+        context.get_work_runtime().spawn(async move {
+            let info = t!("hotkeys.please_input_info").to_string();
+            ctx.get_performer().speak(&info).await;
+        });
 
         let senders = [
             self.hotkeys_ui.finish_custom.sender(),

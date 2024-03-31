@@ -11,17 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::combo_keys::{ComboKey, State};
-use crate::commander::keyboard::keys::Keys;
-use crate::commander::keyboard::Manager;
-use crate::talent::Talent;
 use crate::{
-    configs::operations::get_mouse_read_state, context::Context, talent::mouse::mouse_read,
+    commander::keyboard::{
+        combo_keys::{ComboKey, State},
+        keys::Keys,
+    },
+    configs::operations::get_mouse_read_state,
+    context::{Context, ContextAccessor},
+    talent::{mouse::mouse_read, Talent},
 };
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::{
     collections::HashMap,
-    sync::{RwLock, Weak},
+    sync::{
+        atomic::{AtomicBool, AtomicU32, Ordering},
+        RwLock, Weak,
+    },
 };
 use win_wrap::{
     common::LRESULT,
@@ -35,7 +39,7 @@ use win_wrap::{
 
 /// 设置键盘钩子
 pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
-    let context = context.clone();
+    let ctx = context.clone();
     // 跟踪每一个键的按下状态
     let key_track: RwLock<HashMap<Keys, bool>> = RwLock::new(HashMap::new());
     // 暂停键盘钩子
@@ -56,11 +60,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         let key = (info.vkCode, is_extended).into();
         let pressed = w_param.0 == WM_KEYDOWN as usize || w_param.0 == WM_SYSKEYDOWN as usize;
 
-        let mng = unsafe { &*context.as_ptr() }
-            .commander
-            .keyboard_manager
-            .clone();
-        let pv = unsafe { &*context.as_ptr() }.talent_provider.clone();
+        let mng = context.get_commander().keyboard_manager.clone();
 
         // 调用已在指挥器注册过的回调函数
         let fns = mng.get_key_callback_fns();
@@ -94,7 +94,10 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                         ..cur_combo_key
                     };
                     // 如果程序技能存在长按的热键组，发送到热键组管理检测当前按键松开是否为长按组合热键
-                    combo_key = match pv.get_talent_by_combo_key(&ck_long) {
+                    combo_key = match context
+                        .get_talent_provider()
+                        .get_talent_by_combo_key(&ck_long)
+                    {
                         Some(talent) => {
                             talent_cache = Some(talent);
                             mng.process_combo_key(&cur_combo_key, pressed)
@@ -129,7 +132,10 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     };
 
                     // 如果程序技能存在双击的热键组，发送到热键组管理检测当前按键按下是否为双击组合热键
-                    combo_key = match pv.get_talent_by_combo_key(&ck_double) {
+                    combo_key = match context
+                        .get_talent_provider()
+                        .get_talent_by_combo_key(&ck_double)
+                    {
                         Some(_) => mng.process_combo_key(&cur_combo_key, pressed),
                         None => Some(ck_single),
                     }
@@ -140,7 +146,10 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         }
 
         if let Some(combo_key) = combo_key {
-            if let Some(talent) = pv.get_talent_by_combo_key(&combo_key) {
+            if let Some(talent) = context
+                .get_talent_provider()
+                .get_talent_by_combo_key(&combo_key)
+            {
                 return execute(context.clone(), talent);
             }
         }
@@ -162,7 +171,9 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
                     // 松开按键时，检测是否允许改变状态，如果允许，关闭钩子处理，模拟发送锁定键并播报状态
                     if ignore_capital_key.load(Ordering::Relaxed) == false {
                         let state = capital_key_state.load(Ordering::Relaxed);
-                        Manager::capital_handle(context.clone(), state, &ignore_hook);
+                        ctx.get_commander()
+                            .get_keyboard_manager()
+                            .capital_handle(state, &ignore_hook);
                     }
                 }
             }
@@ -211,11 +222,9 @@ pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
 fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
     let ctx = context.clone();
     let id = talent.get_id();
-    unsafe { &*context.as_ptr() }
-        .work_runtime
-        .spawn(async move {
-            talent.perform(ctx.clone()).await;
-        });
+    context.get_work_runtime().spawn(async move {
+        talent.perform(ctx.clone()).await;
+    });
     if id == "stop_tts_output" {
         // 打断语音的能力不需要拦截键盘事件
         return LRESULT(0);

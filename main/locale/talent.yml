@@ -8,6 +8,14 @@ program.current_cpu_usage:
   en: "CPU: %{value}%"
   zh-CN: "CPU: %{value}%"
 
+program.current_date:
+  en: "%d/%m/%Y"
+  zh-CN: "%Y年%m月%d日"
+
+program.current_time:
+  en: "%H:%M:%S"
+  zh-CN: "%H时%M分%S秒"
+
 mouse.click:
   en: Click
   zh-CN: 单击

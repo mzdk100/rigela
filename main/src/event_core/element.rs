@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-
+use crate::context::{Context, ContextAccessor};
 use std::sync::Weak;
-use crate::context::Context;
 
 //noinspection SpellCheckingInspection
 /**
@@ -22,24 +21,24 @@ use crate::context::Context;
  * */
 pub(crate) async fn subscribe_element_events(context: Weak<Context>) {
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }.msaa.add_on_object_show_listener(move |src| {
+    context.get_msaa().add_on_object_show_listener(move |src| {
         let Ok(obj) = src.get_object() else {
             return;
         };
-        let navigator = unsafe { &*ctx.as_ptr() }.ui_navigator.clone();
-        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-            navigator.put(obj.into()).await;
+        let ctx2 = ctx.clone();
+        ctx.get_work_runtime().spawn(async move {
+            ctx2.get_ui_navigator().put(obj.into()).await;
         });
     });
 
     let ctx = context.clone();
-    unsafe { &*context.as_ptr() }.msaa.add_on_object_hide_listener(move |src| {
+    context.get_msaa().add_on_object_hide_listener(move |src| {
         let Ok(obj) = src.get_object() else {
             return;
         };
-        let navigator = unsafe { &*ctx.as_ptr() }.ui_navigator.clone();
-        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
-            navigator.remove(obj.into()).await;
+        let ctx2 = ctx.clone();
+        ctx.get_work_runtime().spawn(async move {
+            ctx2.get_ui_navigator().remove(obj.into()).await;
         });
     });
 }

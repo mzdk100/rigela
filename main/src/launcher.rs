@@ -12,20 +12,20 @@
  */
 
 use crate::{
-    context::Context, ext::window::AccessibleWindowExt, performer::sound::SoundArgument::Single,
-    talent::Talented, terminator::Terminator,
+    context::{Context, ContextAccessor},
+    ext::window::AccessibleWindowExt,
+    performer::sound::SoundArgument::Single,
+    talent::Talented,
+    terminator::Terminator,
 };
 use a11y::{get_ia2_lib_path, setup};
 use log::{error, info};
 use rigela_utils::{killer::wait_until_killed, library::setup_library};
 use std::sync::{Arc, Weak};
-use tokio::{
-    process::Command,
-    runtime::Runtime,
-};
+use tokio::{process::Command, runtime::Runtime};
 use win_wrap::{com::co_initialize_multi_thread, msaa::object::AccessibleObject};
 
-/// 启动器对象
+/// 发射台对象
 pub(crate) struct Launcher {
     context: Arc<Context>,
 }
@@ -44,7 +44,10 @@ impl Launcher {
         setup();
 
         // 上下文对象的创建，需要传入终结器，上下文对象通过终结器对象响应终结消息
-        let context = Context::new(unsafe { &*work_runtime.as_ptr() }, terminator.upgrade().unwrap());
+        let context = Context::new(
+            unsafe { &*work_runtime.as_ptr() },
+            terminator.upgrade().unwrap(),
+        );
         let context = Arc::new(context);
         // 调用上下文对象的应用到每一个组件的方法
         context.apply();
@@ -59,63 +62,62 @@ impl Launcher {
     pub(crate) async fn launch(&self) {
         // 监听外部进程请求主程序退出，这是一种安全杀死主进程的方案
         let ctx = Arc::downgrade(&self.context);
-        self.context.work_runtime.spawn(async move {
+        self.context.get_work_runtime().spawn(async move {
             wait_until_killed().await;
-            unsafe { &*ctx.as_ptr() }
-                .talent_provider
+            ctx.get_talent_provider()
                 .get_exit_talent()
                 .perform(ctx)
                 .await;
         });
 
         // 播放启动时的音效
-        let performer = self.context.performer.clone();
-        self.context.work_runtime.spawn(async move {
-            performer.play_sound(Single("launch.wav")).await;
+        let ctx = self.context.clone();
+        self.context.get_work_runtime().spawn(async move {
+            ctx.get_performer().play_sound(Single("launch.wav")).await;
         });
 
         // 注册com组件库
-        self.context.work_runtime.spawn(async move {
+        self.context.get_work_runtime().spawn(async move {
             register_service((&get_ia2_lib_path()).to_str().unwrap()).await;
         });
 
         // peeper 可以监控远进程中的信息
         put_peeper();
         peeper::mount();
-        let peeper_server = self.context.peeper_server.clone();
-        self.context.work_runtime.spawn(async move {
-            peeper_server.run().await;
+        let ctx = self.context.clone();
+        self.context.get_work_runtime().spawn(async move {
+            ctx.get_peeper_server().run().await;
         });
 
         #[cfg(target_arch = "x86_64")]
         {
             // 加载32位的主程序代理模块（为了启动速度，此模块可以延迟加载）
-            let proxy32process = self.context.proxy32process.clone();
-            self.context.work_runtime.spawn(async move {
-                proxy32process.spawn().await;
+            let ctx = self.context.clone();
+            self.context.get_work_runtime().spawn(async move {
+                ctx.get_proxy32process().spawn().await;
             });
         }
 
         // 朗读当前桌面
         self.context
-            .performer
-            .speak(&self.context.ui_automation.get_root_element())
+            .get_performer()
+            .speak(&self.context.get_ui_automation().get_root_element())
             .await;
 
         // 朗读当前前景窗口
         if let Ok(o) = AccessibleObject::from_foreground_window() {
-            self.context.performer.speak(&(o, 0)).await;
+            self.context.get_performer().speak(&(o, 0)).await;
         }
 
         // 启动事件监听
         self.context
-            .event_core
+            .get_event_core()
             .run(Arc::downgrade(&self.context))
             .await;
 
         // 更新自定义热键, 这个调用放在apply里面不会生效
         self.context
-            .talent_provider
+            .get_talent_provider()
             .update_custom_combo_key_map(Arc::downgrade(&self.context));
     }
 
@@ -126,10 +128,13 @@ impl Launcher {
     pub(crate) async fn exit(&self) {
         // 杀死32位代理模块
         #[cfg(target_arch = "x86_64")]
-        self.context.proxy32process.kill().await.wait().await;
+        self.context.get_proxy32process().kill().await.wait().await;
 
         // 播放退出音效
-        self.context.performer.play_sound(Single("exit.wav")).await;
+        self.context
+            .get_performer()
+            .play_sound(Single("exit.wav"))
+            .await;
 
         // 清理上下文
         self.context.dispose();

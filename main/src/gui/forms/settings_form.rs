@@ -11,16 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::keys::Keys;
-use crate::configs::items::general::Lang;
-use crate::configs::items::tts::TtsPropertyItem;
 use crate::{
     bring_window_front,
-    commander::keyboard::combo_keys::ComboKey,
-    configs::operations::{
-        get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup,
+    commander::keyboard::{combo_keys::ComboKey, keys::Keys},
+    configs::{
+        items::{general::Lang, tts::TtsPropertyItem},
+        operations::{get_auto_check_update, get_lang, get_mouse_read_state, get_run_on_startup},
     },
-    context::Context,
+    context::{Context, ContextAccessor},
     gui::{
         command::{
             add_desktop_shortcut_cmd, check_update_cmd, export_config_cmd,
@@ -45,12 +43,14 @@ use nwg::{
 };
 use rigela_macros::GuiFormImpl;
 use rust_i18n::AtomicStr;
-use std::sync::atomic::{AtomicI32, Ordering};
 use std::{
     cell::RefCell,
     collections::HashMap,
     path::PathBuf,
-    sync::{Arc, OnceLock, Weak},
+    sync::{
+        atomic::{AtomicI32, Ordering},
+        Arc, OnceLock, Weak,
+    },
 };
 use win_wrap::hook::WindowsHook;
 
@@ -222,7 +222,9 @@ impl SettingsForm {
     }
 
     fn on_add_desktop_shortcut(&self, ctrl: &GeneralUi) {
-        let context = self.context.get().unwrap().clone();
+        let Some(context) = self.context.get() else {
+            return;
+        };
 
         match ctrl.ck_add_desktop_shortcut.check_state() {
             // 先取消掉选择，等热键确定好在勾选上
@@ -237,12 +239,12 @@ impl SettingsForm {
                     self.general_ui.cancel_program_hotkeys_notice.sender(),
                 ];
 
-                let pf = unsafe { &*context.as_ptr() }.performer.clone();
-                unsafe { &*context.as_ptr() }
-                    .work_runtime
-                    .spawn(async move {
-                        pf.speak(&t!("settings.def_shortcut_hotkey")).await;
-                    });
+                let ctx = context.clone();
+                context.get_work_runtime().spawn(async move {
+                    ctx.get_performer()
+                        .speak(&t!("settings.def_shortcut_hotkey"))
+                        .await;
+                });
 
                 let mut hook = self.general_ui.hook.borrow_mut();
                 *hook = Some(set_hook_simple(keys, &senders));
@@ -395,7 +397,7 @@ impl SettingsForm {
         let format_voice_info = |v: &VoiceInfo| format!("{}_{}", v.engine, v.name);
 
         let ctx = self.context.get().unwrap().clone();
-        let tts = unsafe { &*ctx.as_ptr() }.performer.get_tts();
+        let tts = ctx.get_performer().get_tts();
         let all_voice = self.all_voices.clone();
         let voice = self.voice.clone();
         let speed = self.speed.clone();
@@ -403,7 +405,7 @@ impl SettingsForm {
         let volume = self.volume.clone();
         let update_voice_sender = self.voice_ui.update_voice_notice.sender().clone();
 
-        unsafe { &*ctx.as_ptr() }.work_runtime.spawn(async move {
+        ctx.get_work_runtime().spawn(async move {
             let voices = tts
                 .get_all_voiceinfo()
                 .await
@@ -624,6 +626,7 @@ pub struct AdvancedUi {
 }
 
 struct AStr(AtomicStr);
+
 impl Default for AStr {
     fn default() -> Self {
         Self(AtomicStr::new(""))
