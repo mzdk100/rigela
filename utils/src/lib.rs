@@ -15,6 +15,8 @@
 pub mod bass;
 #[cfg(feature = "clip")]
 pub mod clip;
+#[cfg(feature = "color")]
+pub mod color;
 #[cfg(feature = "fs")]
 pub mod fs;
 //noinspection SpellCheckingInspection

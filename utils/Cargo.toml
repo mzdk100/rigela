@@ -12,6 +12,7 @@ repository.workspace = true
 [features]
 bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
+color = []
 fs = ["win-wrap/shell", "tokio/fs", "tokio/io-util"]
 ibmeci = ["encoding_rs/fast-gb-hanzi-encode"]
 killer = ["pipe"]
