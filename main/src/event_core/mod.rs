@@ -27,12 +27,12 @@ use std::{
 
 use tokio::sync::Mutex;
 
+use crate::event_core::editor::Editor;
 use crate::{
     context::Context,
     event_core::{
-        dialog::subscribe_dialog_events, editor::subscribe_editor_events,
-        element::subscribe_element_events, focus::subscribe_focus_events,
-        ime::subscribe_ime_events, input::subscribe_input_events,
+        dialog::subscribe_dialog_events, element::subscribe_element_events,
+        focus::subscribe_focus_events, ime::subscribe_ime_events, input::subscribe_input_events,
         progress::subscribe_progress_events,
     },
 };
@@ -48,12 +48,14 @@ pub(crate) struct EventItem {
 #[derive(Clone)]
 pub(crate) struct EventCore {
     filter: Arc<Mutex<Vec<EventItem>>>,
+    pub(crate) editor: Arc<Editor>,
 }
 
 impl EventCore {
     pub(crate) fn new() -> Self {
         Self {
             filter: Arc::new(vec![].into()),
+            editor: Arc::new(Editor::new()),
         }
     }
 
@@ -102,7 +104,7 @@ impl EventCore {
         subscribe_ime_events(context.clone()).await;
 
         // 订阅编辑框事件
-        subscribe_editor_events(context.clone()).await;
+        self.editor.subscribe_events(context.clone()).await;
 
         // 订阅进度栏事件
         subscribe_progress_events(context.clone()).await;
