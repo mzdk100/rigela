@@ -19,6 +19,7 @@ killer = ["pipe"]
 library = ["fs"]
 logger = ["log4rs"]
 pipe = ["serde_json_bytes", "serde/derive", "tokio/net", "tokio/io-util", "tokio/time"]
+screen = ["win-wrap/graphic", "png"]
 
 [dependencies.log]
 # 输出日志
@@ -54,4 +55,8 @@ optional = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
+optional = true
+
+[dependencies.png]
+version = "0.17.13"
 optional = true

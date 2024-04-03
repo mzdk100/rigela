@@ -30,6 +30,8 @@ pub mod library;
 pub mod logger;
 #[cfg(feature = "pipe")]
 pub mod pipe;
+#[cfg(feature = "screen")]
+pub mod screen;
 
 //noinspection HttpUrlsUsage
 pub const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
