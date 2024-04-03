@@ -49,6 +49,19 @@ impl LParamExt for LPARAM {
 }
 
 /**
+ * 把引用类型转换到bytes。
+ * */
+pub trait ToBytesExt {
+    type Input;
+    fn to_bytes(&self) -> &[u8] {
+        unsafe {
+            let ptr = self as *const Self as *const u8;
+            std::slice::from_raw_parts(ptr, std::mem::size_of::<Self::Input>())
+        }
+    }
+}
+
+/**
  * 对字符串的扩展操作。
  * */
 pub trait StringExt {
