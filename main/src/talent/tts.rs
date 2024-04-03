@@ -12,14 +12,13 @@
  */
 
 use crate::{
-    combo_key,
+    cancel_edge_handle, combo_key,
     commander::keyboard::{
         combo_keys::{ComboKey, State},
         keys::Keys::*,
         modify_keys::ModifierKeys,
     },
     context::{Context, ContextAccessor},
-    event_core::editor::EDITOR_EDGE_KEY_HANDLE,
     performer::{
         cache::Direction as CacheDirection,
         tts::{Direction, TtsProperty, ValueChange},
@@ -34,7 +33,7 @@ use std::sync::{atomic::Ordering, Weak};
 //noinspection RsUnresolvedPath
 #[talent(doc = "语音属性值增加", key = combo_key!("RigelA_Ctrl", VkUp))]
 async fn increase(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let tts = context.get_performer().get_tts();
     tts.set_tts_prop_value(ValueChange::Increment).await;
@@ -44,7 +43,7 @@ async fn increase(context: Weak<Context>) {
 //noinspection RsUnresolvedPath
 #[talent(doc = "语音属性值降低", key = combo_key!("RigelA_Ctrl", VkDown))]
 async fn reduce(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let tts = context.get_performer().get_tts();
     tts.set_tts_prop_value(ValueChange::Decrement).await;
@@ -54,7 +53,7 @@ async fn reduce(context: Weak<Context>) {
 //noinspection RsUnresolvedPath
 #[talent(doc = "语音下一属性", key = combo_key!("RigelA_Ctrl", VkRight))]
 async fn next_prop(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let tts = context.get_performer().get_tts();
     tts.move_tts_prop(Direction::Next).await;
@@ -64,7 +63,7 @@ async fn next_prop(context: Weak<Context>) {
 //noinspection RsUnresolvedPath
 #[talent(doc = "语音上一属性", key = combo_key!("RigelA_Ctrl", VkLeft))]
 async fn prev_prop(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let tts = context.get_performer().get_tts();
     tts.move_tts_prop(Direction::Prev).await;
@@ -73,7 +72,7 @@ async fn prev_prop(context: Weak<Context>) {
 
 #[talent(doc = "缓冲区上一字符", key = combo_key!("RigelA", VkLeft))]
 async fn prev_cache_char(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let Some(cache) = context.get_performer().get_cache() else {
         return;
@@ -87,7 +86,7 @@ async fn prev_cache_char(context: Weak<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区下一字符", key = combo_key!("RigelA", VkRight))]
 async fn next_cache_char(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let Some(cache) = context.get_performer().get_cache() else {
         return;
@@ -101,7 +100,7 @@ async fn next_cache_char(context: Weak<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "解释缓冲区当前字符", key = combo_key!("RigelA", VkUp))]
 async fn trans_cache_char(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let Some(cache) = context.get_performer().get_cache() else {
         return;
@@ -117,7 +116,7 @@ async fn trans_cache_char(context: Weak<Context>) {
 //noinspection RsUnresolvedReference
 #[talent(doc = "缓冲区当前字符组词", key = combo_key!("RigelA", VkDown))]
 async fn make_word_cache_char(context: Weak<Context>) {
-    EDITOR_EDGE_KEY_HANDLE.store(true, Ordering::SeqCst);
+    cancel_edge_handle!(context);
 
     let Some(cache) = context.get_performer().get_cache() else {
         return;

@@ -23,6 +23,7 @@ use windows::{
     Win32::{Foundation::S_FALSE, System::Com::IServiceProvider, UI::Accessibility::IAccessible},
 };
 
+#[derive(Clone)]
 pub struct AccessibleText {
     _iat: IAccessibleText,
     _iat2: Option<IAccessibleText2>,
