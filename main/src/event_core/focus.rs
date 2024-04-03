@@ -59,13 +59,17 @@ pub(crate) async fn subscribe_focus_events(context: Weak<Context>) {
             Err(_) => return,
             Ok(o) => o,
         };
+
+        // 清除编辑框的焦点
+        ctx.get_event_core().editor.clear_focus_control();
+
         match obj.get_role(child) {
             ROLE_SYSTEM_LISTITEM | ROLE_SYSTEM_LIST => (),
             ROLE_SYSTEM_ALERT | ROLE_SYSTEM_DIALOG => {
                 handle_dialog_events(ctx.clone(), src);
                 return;
             }
-            _ => return,
+            _ => return
         };
 
         let ctx2 = ctx.clone();

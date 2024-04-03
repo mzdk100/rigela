@@ -50,6 +50,7 @@ enum Control {
 }
 
 unsafe impl Send for Control {}
+
 unsafe impl Sync for Control {}
 
 pub(crate) struct Editor {
@@ -82,6 +83,14 @@ impl Editor {
 
     pub(crate) fn cancel_edge_handle(&self) {
         self.edge_handled.store(true, Ordering::SeqCst);
+    }
+
+    /**
+     * 清除编辑框的焦点。
+     * */
+    pub(crate) fn clear_focus_control(&self) {
+        let control = self.control.clone();
+        control.store(Control::None.into());
     }
 
     async fn subscribe_msaa_events(&self) {
