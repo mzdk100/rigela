@@ -11,16 +11,19 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::performer::Speakable;
+use std::{
+    fmt::{Debug, Formatter},
+    hash::{Hash, Hasher},
+    sync::Arc,
+};
+
 use a11y::{
     ia2::{object::Accessible2Object, relation::AccessibleRelation},
     jab::context::AccessibleContext,
 };
-use std::{
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::Arc,
-};
 use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
+
+use crate::performer::Speakable;
 
 /**
  * UI元素。
@@ -47,6 +50,10 @@ impl<'a> UiElement<'a> {
             Self::UIA(x) => x.get_child_count(),
         }
     }
+
+    /**
+     * 获取子元素。
+     * */
     pub(crate) fn get_child(&self, index: i32) -> Option<Arc<Self>> {
         let child = match self {
             Self::IA2(Some(x), _) => match x.relation(index) {
@@ -61,7 +68,10 @@ impl<'a> UiElement<'a> {
             },
             Self::MSAA(x, _) => match x.get_child(index) {
                 Ok(y) => Some(Self::MSAA(y, 0)),
-                Err(_) => None,
+                Err(_) => match x.children(index as u32, 1) {
+                    Ok(cr) => Some(Self::MSAA(cr.first().unwrap().clone(), 0)),
+                    Err(_) => None
+                }
             },
             Self::UIA(x) => match x.get_child(index) {
                 None => None,
@@ -73,6 +83,10 @@ impl<'a> UiElement<'a> {
             Some(x) => Some(x.into()),
         }
     }
+
+    /**
+     * 获取元素的矩形区域。
+     * */
     pub(crate) fn get_rect(&self) -> Option<RECT> {
         match self {
             Self::IA2(_, _) => None,
@@ -100,21 +114,36 @@ impl<'a> UiElement<'a> {
             Self::UIA(x) => Some(x.get_bounding_rectangle()),
         }
     }
+
+    /**
+     * 获取唯一ID。
+     * */
+    pub(crate) fn get_unique_id(&self) -> String {
+        if let Self::IA2(Some(x), _) = self {
+            format!("ia2:{}", x.unique_id().unwrap_or(0))
+        } else if let Self::JAB(x) = self {
+            format!("jab:{}", x.get_unique_id())
+        } else if let Self::MSAA(x, y) = self {
+            // 对于MSAA没有可靠的生成对象ID的方法
+            let id = match Accessible2Object::from_accessible_object(x.clone()) {
+                Ok(x) => x.unique_id().unwrap_or(-1),
+                Err(_) => -1
+            };
+            if id == -1 {
+                return format!("msaa:{},{},{}", x.get_name(*y), x.get_role(*y), y);
+            }
+            format!("msaa:{},{}", id, y)
+        } else if let Self::UIA(x) = self {
+            format!("uia:{}", x.get_automation_id())
+        } else {
+            "None".to_string()
+        }
+    }
 }
 
 impl<'a> Hash for UiElement<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let unique_id = match self {
-            Self::IA2(Some(x), _) => format!("ia2:{}", x.unique_id().unwrap_or(0)),
-            Self::JAB(x) => format!("jab:{}", x.get_unique_id()),
-            Self::MSAA(x, y) => {
-                let (x, y, w, h) = x.location(*y);
-                format!("msaa:{},{},{},{}", x, y, w, h)
-            }
-            Self::UIA(x) => format!("uia:{}", x.get_automation_id()),
-            _ => "None".to_string(),
-        };
-        state.write(unique_id.as_bytes())
+        state.write(self.get_unique_id().as_bytes())
     }
 }
 
@@ -122,8 +151,13 @@ impl<'a> Eq for UiElement<'a> {}
 
 impl<'a> PartialEq for UiElement<'a> {
     fn eq(&self, other: &Self) -> bool {
-        let mut hasher = DefaultHasher::new();
-        self.hash(&mut hasher) == other.hash(&mut hasher)
+        self.get_unique_id() == other.get_unique_id()
+    }
+}
+
+impl<'a> Debug for UiElement<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "UiElement(id:{})", self.get_unique_id())
     }
 }
 

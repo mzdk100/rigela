@@ -84,6 +84,15 @@ impl UiNavigator {
     }
 
     /**
+     * 按条件移除元素。
+     * `f` 一个闭包，返回true表示需要移除。
+     * */
+    pub(crate) async fn remove_by(&self, f: impl Fn(&UiElement<'static>) -> bool) {
+        let mut container = self.container.lock().await;
+        container.retain(|i| !f(i.as_ref()));
+    }
+
+    /**
      * 获取最后访问的元素。
      * */
     pub(crate) async fn get_last_visit(&self) -> Option<&UiElement> {
