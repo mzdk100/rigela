@@ -218,10 +218,7 @@ impl Editor {
             .add_on_text_caret_moved_listener(move |src| {
                 let text = match src.get_text() {
                     Ok(t) => t,
-                    Err(e) => {
-                        error!("Can't get the text. ({})", e);
-                        return;
-                    }
+                    Err(_) => return
                 };
 
                 control.store(Arc::new(Control::Ia2(text.clone())));
