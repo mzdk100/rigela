@@ -11,12 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{common::Result, ext::VecExt};
-use std::fmt::Debug;
 use std::{
-    fmt::{Display, Formatter},
-    sync::Arc,
+    fmt::{Debug, Display, Formatter},
+    sync::Weak,
 };
+
 use windows::{
     core::BSTR,
     Win32::{
@@ -41,10 +40,12 @@ use windows::{
     },
 };
 
+use crate::{common::Result, ext::VecExt};
+
 /// UiAutomationElement 的本地封装
 #[derive(Clone)]
 pub struct UiAutomationElement {
-    _automation: Arc<IUIAutomation6>,
+    _automation: Weak<IUIAutomation6>,
     _current: IUIAutomationElement,
 }
 
@@ -55,11 +56,15 @@ impl UiAutomationElement {
     pub(crate) fn get_raw(&self) -> &IUIAutomationElement {
         &self._current
     }
-    pub(crate) fn get_aut(&self) -> Arc<IUIAutomation6> {
+    pub fn get_aut(&self) -> Weak<IUIAutomation6> {
         self._automation.clone()
     }
 
-    pub(crate) fn obtain(automation: Arc<IUIAutomation6>, element: IUIAutomationElement) -> Self {
+    pub(crate) fn get_aut_ref(&self) -> &IUIAutomation6 {
+        unsafe { &*self._automation.as_ptr() }
+    }
+
+    pub(crate) fn obtain(automation: Weak<IUIAutomation6>, element: IUIAutomationElement) -> Self {
         Self {
             _automation: automation,
             _current: element,
@@ -120,7 +125,7 @@ impl UiAutomationElement {
     pub fn get_supported_patterns(&self) -> Result<(Vec<i32>, Vec<String>)> {
         unsafe {
             let (mut ids, mut names) = std::mem::zeroed();
-            if let Err(e) = self._automation.PollForPotentialSupportedPatterns(
+            if let Err(e) = self.get_aut_ref().PollForPotentialSupportedPatterns(
                 &self._current,
                 &mut ids,
                 &mut names,
@@ -148,7 +153,7 @@ impl UiAutomationElement {
         if let Ok(children) = unsafe {
             self._current.FindAll(
                 TreeScope_Children,
-                &self._automation.CreateTrueCondition().unwrap(),
+                &self.get_aut_ref().CreateTrueCondition().unwrap(),
             )
         } {
             return unsafe { children.Length() }.unwrap();
@@ -164,7 +169,7 @@ impl UiAutomationElement {
         if let Ok(children) = unsafe {
             self._current.FindAll(
                 TreeScope_Children,
-                &self._automation.CreateTrueCondition().unwrap(),
+                &self.get_aut_ref().CreateTrueCondition().unwrap(),
             )
         } {
             if let Ok(el) = unsafe { children.GetElement(index) } {

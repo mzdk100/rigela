@@ -61,6 +61,9 @@ impl AccessibleObject {
     pub fn get_raw(&self) -> &IAccessible {
         &self.0
     }
+    pub fn get_child_id(&self) -> i32 {
+        self.1
+    }
 
     /**
      * 从窗口获取对象。
