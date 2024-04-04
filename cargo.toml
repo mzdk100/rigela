@@ -9,7 +9,7 @@ authors = [
 ]
 description = "RigelA screen reader (rsr)."
 license = "Apache-2.0"
-keywords = ["读屏软件", "无障碍"]
+keywords = ["screen-reader", "accessibility"]
 version = "0.1.0"
 edition = "2021"
 readme = "README.md"

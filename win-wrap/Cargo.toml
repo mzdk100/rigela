@@ -1,8 +1,10 @@
 [package]
 name = "win-wrap"
+description = "Windows API的高级封装（由RigelA项目成员维护）"
 license.workspace = true
 version.workspace = true
 edition.workspace = true
+repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
