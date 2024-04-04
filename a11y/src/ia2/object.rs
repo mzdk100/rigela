@@ -243,14 +243,14 @@ impl Accessible2Object {
      * 为了方便起见，MSAA角色也通过此方法传递，因此AT不必也通过MSAA的get_role获取角色。
      * %IAccessible2角色不应通过MSAA的get_accRole传递。
      * 为了与未启用IAccessible2的AT兼容，IAccessible 2应用程序还应添加对get_accRole的支持，以返回最接近的MSAA角色或role_SYSTEM_CLIENT（MSAA定义的默认角色）（如果不匹配）。
-     * 此方法在IDL中缺少[propget]前缀。结果是该方法在生成的C++代码中被命名为role，而不是get_role。
+     * 此方法在IDL中缺少`[propget]`前缀。结果是该方法在生成的C++代码中被命名为role，而不是get_role。
      * */
     pub fn role(&self) -> i32 {
         unsafe {
             let mut role = std::mem::zeroed();
             self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
         }
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     //noinspection StructuralWrap

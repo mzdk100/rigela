@@ -103,7 +103,7 @@ pub(crate) unsafe trait IAccessibleValue: IUnknown {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

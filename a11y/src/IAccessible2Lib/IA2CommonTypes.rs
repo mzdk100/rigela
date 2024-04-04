@@ -13,94 +13,94 @@
 
 /** These constants control the scrolling of an object or substring into a window.
 
- This enum is used in IAccessible2::scrollTo and IAccessibleText::scrollSubstringTo.
-*/
+This enum is used in IAccessible2::scrollTo and IAccessibleText::scrollSubstringTo.
+ */
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum IA2ScrollType {
     /** Scroll the top left corner of the object or substring such that the top left
-     corner (and as much as possible of the rest of the object or substring) is within
-     the top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        corner (and as much as possible of the rest of the object or substring) is within
+        the top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_TOP_LEFT,
 
     /** Scroll the bottom right corner of the object or substring such that the bottom right
-     corner (and as much as possible of the rest of the object or substring) is within
-     the top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        corner (and as much as possible of the rest of the object or substring) is within
+        the top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_BOTTOM_RIGHT,
 
     /** Scroll the top edge of the object or substring such that the top edge
-     (and as much as possible of the rest of the object or substring) is within the
-     top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        (and as much as possible of the rest of the object or substring) is within the
+        top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_TOP_EDGE,
 
     /** Scroll the bottom edge of the object or substring such that the bottom edge
-     (and as much as possible of the rest of the object or substring) is within the
-     top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        (and as much as possible of the rest of the object or substring) is within the
+        top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_BOTTOM_EDGE,
 
     /** Scroll the left edge of the object or substring such that the left edge
-     (and as much as possible of the rest of the object or substring) is within the
-     top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        (and as much as possible of the rest of the object or substring) is within the
+        top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_LEFT_EDGE,
 
     /** Scroll the right edge of the object or substring such that the right edge
-     (and as much as possible of the rest of the object or substring) is within the
-     top level window.  In cases where the entire object or substring fits within
-     the top level window, the placement of the object or substring is dependent on
-     the application.  For example, the object or substring may be scrolled to the
-     closest edge, the furthest edge, or midway between those two edges.  In cases
-     where there is a hierarchy of nested scrollable controls, more than one control
-     may have to be scrolled.
-    */
+        (and as much as possible of the rest of the object or substring) is within the
+        top level window.  In cases where the entire object or substring fits within
+        the top level window, the placement of the object or substring is dependent on
+        the application.  For example, the object or substring may be scrolled to the
+        closest edge, the furthest edge, or midway between those two edges.  In cases
+        where there is a hierarchy of nested scrollable controls, more than one control
+        may have to be scrolled.
+     */
     IA2_SCROLL_TYPE_RIGHT_EDGE,
 
     /** Scroll the object or substring such that as much as possible of the
-     object or substring is within the top level window.  The placement of
-     the object is dependent on the application.  For example, the object or
-     substring may be scrolled to the closest edge, the furthest edge, or midway
-     between those two edges.
-    */
+        object or substring is within the top level window.  The placement of
+        the object is dependent on the application.  For example, the object or
+        substring may be scrolled to the closest edge, the furthest edge, or midway
+        between those two edges.
+     */
     IA2_SCROLL_TYPE_ANYWHERE,
 }
 
 //noinspection SpellCheckingInspection
 /** These constants define which coordinate system a point is located in.
 
- This enum is used in IAccessible2::scrollToPoint, IAccessibleImage::imagePosition,
- IAccessibleText::characterExtents, and IAccessibleText::offsetAtPoint, and
- IAccessibleText::scrollSubstringToPoint.
-*/
+This enum is used in IAccessible2::scrollToPoint, IAccessibleImage::imagePosition,
+IAccessibleText::characterExtents, and IAccessibleText::offsetAtPoint, and
+IAccessibleText::scrollSubstringToPoint.
+ */
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -124,10 +124,10 @@ pub enum IA2CoordinateType {
 #[repr(C)]
 pub(crate) enum IA2TextSpecialOffsets {
     /**< This offset is equivalent to the length of the string.  It eliminates
-    the need to call IAccessibleText::nCharacters. */
+        the need to call IAccessibleText::nCharacters. */
     IA2_TEXT_OFFSET_LENGTH = -1,
     /**< This offset signifies that the text related to the physical location
-    of the caret should be used. */
+        of the caret should be used. */
     IA2_TEXT_OFFSET_CARET = -2,
 }
 
@@ -140,7 +140,8 @@ pub(crate) enum IA2TextSpecialOffsets {
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub(crate) enum IA2TableModelChangeType {
-    IA2_TABLE_MODEL_CHANGE_INSERT, // = 0;
+    IA2_TABLE_MODEL_CHANGE_INSERT,
+    // = 0;
     IA2_TABLE_MODEL_CHANGE_DELETE,
     IA2_TABLE_MODEL_CHANGE_UPDATE,
 }
@@ -157,10 +158,14 @@ pub(crate) enum IA2TableModelChangeType {
  * */
 #[allow(dead_code)]
 pub(crate) struct IA2TableModelChange {
-    r#type: IA2TableModelChangeType, // insert, delete, update
-    firstRow: i32,                   // 0 based, inclusive
-    lastRow: i32,                    // 0 based, inclusive
-    firstColumn: i32,                // 0 based, inclusive
+    r#type: IA2TableModelChangeType,
+    // insert, delete, update
+    firstRow: i32,
+    // 0 based, inclusive
+    lastRow: i32,
+    // 0 based, inclusive
+    firstColumn: i32,
+    // 0 based, inclusive
     lastColumn: i32,                 // 0 based, inclusive
 }
 
@@ -209,7 +214,7 @@ pub(crate) struct IA2TableModelChange {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

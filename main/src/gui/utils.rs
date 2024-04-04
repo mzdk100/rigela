@@ -285,9 +285,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
-    else {
-        return false;
-    };
+        else {
+            return false;
+        };
     let Some(key) = key.get_code() else {
         return false;
     };
@@ -392,9 +392,11 @@ pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
     Ok(())
 }
 
-/// 设置键盘钩子
-/// @param keys 产生好的键位列表
-/// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
+/**
+ * 设置键盘钩子
+ * `keys` 产生好的键位列表
+ * `senders` 通知发送者，`senders[0]`为完成的通知，`senders[1]`为取消
+ * */
 pub(crate) fn set_hook(
     context: Weak<Context>,
     keys: Arc<ArcSwap<Option<ComboKey>>>,
@@ -458,9 +460,11 @@ pub(crate) fn set_hook(
     })
 }
 
-/// 设置键盘钩子简化版
-/// @param keys 产生好的键位列表
-/// @param senders 通知发送者， senders[0] 为完成的通知， senders[1] 为取消
+/**
+ * 设置键盘钩子简化版
+ * `keys` 产生好的键位列表。
+ * `senders` 通知发送者，`senders[0]`为完成的通知，`senders[1]`为取消
+ * */
 pub(crate) fn set_hook_simple(
     keys: Arc<ArcSwap<ComboKey>>,
     senders: &[NoticeSender; 2],

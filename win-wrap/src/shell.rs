@@ -105,7 +105,7 @@ pub fn get_known_folder_path(
 /// 公开用于创建、修改和解析 Shell 链接的方法。
 pub struct ShellLink(IShellLinkW);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ishelllinkw
+/// <https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-ishelllinkw>
 impl ShellLink {
     /**
      * 创建一个快捷连接对象。
@@ -272,7 +272,7 @@ impl ShellLink {
                 self.0.SetIDList(std::ptr::null())
             }
         }
-        .unwrap_or(());
+            .unwrap_or(());
         self
     }
 

@@ -39,7 +39,7 @@ pub(crate) unsafe trait IAccessibleImage: IUnknown {
      * `coordinateType` Specifies whether the returned coordinates should be relative to the screen or the parent object.
      * `x` `y` */
     fn imagePosition(&self, coordinateType: IA2CoordinateType, x: *mut i32, y: *mut i32)
-        -> HRESULT;
+                     -> HRESULT;
 
     /**
      * Returns the size of the image in units specified by parent's coordinate system.
@@ -92,7 +92,7 @@ pub(crate) unsafe trait IAccessibleImage: IUnknown {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

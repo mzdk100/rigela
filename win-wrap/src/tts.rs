@@ -42,7 +42,7 @@ impl Sapi5TtsSynthesizer {
      * 设置语速。
      * 某些语音的最低语速快于 0.5，最大语速低于 6.0。
      * 说话率不能直接转换为每分钟单词数，因为每种语音和语言的默认语速可能不同。
-     * https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate
+     * <https://learn.microsoft.com/zh-cn/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-22621#windows-media-speechsynthesis-speechsynthesizeroptions-speakingrate>
      * */
     pub fn set_speed(&self, speed: f64) {
         let options = self.synth.Options().unwrap();

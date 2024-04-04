@@ -9,6 +9,11 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
+
 [features]
 jab = ["JabLib"]
 ia2 = ["IAccessible2Lib", "win-wrap/msaa"]

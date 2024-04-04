@@ -36,7 +36,7 @@ pub struct UiAutomationItemContainerPattern(
 );
 
 //noinspection StructuralWrap
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationitemcontainerpattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationitemcontainerpattern>
 impl UiAutomationItemContainerPattern {
     /**
      * 从UI元素获取此模式。

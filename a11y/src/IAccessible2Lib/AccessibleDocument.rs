@@ -23,7 +23,9 @@ use windows::core::{IUnknown, IUnknown_Vtbl};
 pub(crate) unsafe trait IAccessibleDocument: IUnknown {
     /**
      * Returns the most recently used anchor target within a document.
-     * A document's most recently targeted in-page anchor is returned.  A typical use of this method is to fetch the anchor target within an HTML document.  In this case, anchor targets are those that have been defined with the <a> tag.  
+     * A document's most recently targeted in-page anchor is returned.
+     * A typical use of this method is to fetch the anchor target within an HTML document.
+     * In this case, anchor targets are those that have been defined with the <a></a> tag.
      * `accessible` retrieval S_FALSE if there are no existing valid anchor targets, [out] value is NULL.
      * */
     fn anchorTarget(&self, accessible: *mut *mut IUnknown) -> HRESULT;
@@ -72,7 +74,7 @@ pub(crate) unsafe trait IAccessibleDocument: IUnknown {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

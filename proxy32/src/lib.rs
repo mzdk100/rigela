@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#![doc = include_str!("../README.md")]
+
 #[cfg(feature = "client")]
 pub mod client;
 #[cfg(feature = "model")]

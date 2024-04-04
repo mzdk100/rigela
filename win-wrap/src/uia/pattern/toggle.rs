@@ -26,7 +26,7 @@ use windows::{
  * */
 pub struct UiAutomationTogglePattern(IUIAutomationTogglePattern);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtogglepattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtogglepattern>
 impl UiAutomationTogglePattern {
     /**
      * 从UI元素获取此模式。

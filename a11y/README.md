@@ -8,7 +8,7 @@
 其中IA2自2013年以来已经没有新的变化或改进，使用UIA技术作为替代方案是最佳选择。
 JAB技术基于Open JDK的WindowsAccessBridge.dll动态库实现，Open JDK有很多的发行版本，具体接口可能有所差异，如果当前JAB的实现无法满足需求，请提交相关Issue给我们。
 IA2技术在一些古老的应用程序上表现的较好，例如IE浏览器，而JAB是针对由Java编写的应用程序提供辅助功能支持的接口，例如可以支持一些编程工具（Android
-Studio,IntelliJ IDEA...)、抓包工具Charles等UI界面的朗读。
+Studio,IntelliJ IDEA...)、抓包工具Charles等UI界面的信息获取。
 很多应用程序使用的GUI框架和库没有实现AT（[Assistive Technology，辅助技术](https://en.wikipedia.org/wiki/Assistive_technology)
 ），因此无论是哪一种辅助功能API都是无效的，例如python使用的TCL/TK图形化界面。
 在这种情况下，我们将尝试探索更多的可能，例如针对某些GUI框架进行单独适配，或者实现一个更通用的AT接口和标准，持续拓展和改进UI界面可访问的能力，这也是本箱子的主要功能。

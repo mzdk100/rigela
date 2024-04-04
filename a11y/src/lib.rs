@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#![doc = include_str!("../README.md")]
+
 #[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
 use rigela_utils::library::{get_library_path, setup_library};
 #[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
@@ -18,15 +20,19 @@ use std::path::PathBuf;
 
 //noinspection RsModuleNaming
 #[cfg(feature = "IAccessible2Lib")]
+#[doc(hidden)]
 pub(crate) mod IAccessible2Lib;
 //noinspection RsModuleNaming
 #[cfg(feature = "JabLib")]
 #[allow(non_snake_case)]
+#[doc(hidden)]
 pub(crate) mod JabLib;
 
 #[cfg(feature = "ia2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ia2")))]
 pub mod ia2;
 #[cfg(feature = "jab")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jab")))]
 pub mod jab;
 
 #[cfg(feature = "IAccessible2Lib")]

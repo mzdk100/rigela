@@ -31,9 +31,10 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
      * `name`
      * `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
      * retrieval E_INVALIDARG if bad [in] passed.
-     * @note The output value is a VARIANT.  Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.  Refer to the <a href=
-     * "http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2">
-     * Object Attributes specification</a> for more information.
+     * @note The output value is a VARIANT.
+     * Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.
+     * Refer to the [ Object Attributes specification](http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2)
+     * for more information.
      * */
     pub(crate) fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
 
@@ -111,7 +112,7 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

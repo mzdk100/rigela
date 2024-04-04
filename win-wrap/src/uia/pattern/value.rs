@@ -22,7 +22,7 @@ use windows::{
 /// 提供对控件的访问，该控件包含一个值，该值不跨越范围，并且可以表示为字符串。此字符串可能是可编辑的，也可能是不可编辑的，具体取决于控件及其设置。
 pub struct UiAutomationValuePattern(IUIAutomationValuePattern);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationvaluepattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationvaluepattern>
 impl UiAutomationValuePattern {
     /// 从UI元素获取此模式。
     pub fn obtain(value: &UiAutomationElement) -> Result<Self, String> {

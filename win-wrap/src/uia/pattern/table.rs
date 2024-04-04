@@ -35,7 +35,7 @@ pub struct UiAutomationTablePattern {
     _pattern: IUIAutomationTablePattern,
 }
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtablepattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtablepattern>
 impl UiAutomationTablePattern {
     /**
      * 从UI元素获取此模式。
@@ -101,7 +101,7 @@ pub enum RowOrColumnMajor {
 /// 支持此接口的元素还必须支持 UiAutomationGridItemPattern，以提供不特定于表的属性。
 pub struct UiAutomationTableItemPattern(Weak<IUIAutomation6>, IUIAutomationTableItemPattern);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtableitempattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtableitempattern>
 impl UiAutomationTableItemPattern {
     /**
      * 从UI元素获取此模式。

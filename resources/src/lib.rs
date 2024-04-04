@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+#![doc = include_str!("../README.md")]
+
 use bitar::{archive_reader::HttpReader, Archive, ChunkIndex, CloneOutput, HashSum, VerifiedChunk};
 use blake2::{Blake2b512, Digest};
 use futures_util::StreamExt;
@@ -152,7 +154,7 @@ pub async fn clone_resource(resource_url: String, save_path: &PathBuf) -> Result
                 url,
                 expected_checksum
             )
-            .as_str(),
+                .as_str(),
         ));
     }
     info!(

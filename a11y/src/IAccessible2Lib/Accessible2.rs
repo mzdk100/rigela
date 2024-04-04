@@ -38,7 +38,7 @@ use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessib
  * IAccessibleHyperlink\n
  * IAccessibleImage\n
  * IAccessibleRelation\n
- * IAccessibleTable [Deprecated]\n
+ * IAccessibleTable (Deprecated)\n
  * IAccessibleTable2\n
  * IAccessibleTableCell\n
  * IAccessibleText\n
@@ -104,7 +104,7 @@ use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessib
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * This BSD License conforms to the Open Source Initiative "Simplified
  * BSD License" as published at:
- * http://www.opensource.org/licenses/bsd-license.php
+ * <http://www.opensource.org/licenses/bsd-license.php>
  *
  * %IAccessible2 is a trademark of the Linux Foundation.
  * The %IAccessible2 mark may be used in accordance with
@@ -139,27 +139,27 @@ use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessib
  * S_FALSE is used when there is no failure,
  * but there was nothing valid to return, e.g.,
  * in IAccessible2::attributes when there are no attributes.
- * When S_FALSE is returned [out] pointer types should be NULL, and [out] longs should generally be 0,
+ * When S_FALSE is returned `[out]` pointer types should be NULL, and `[out]` longs should generally be 0,
  * but sometimes -1 is used such as IAccessible2::indexInParent,
  * IAccessibleText::caretOffset, and IAccessibleHypertext::hyperlinkIndex.
  *
- * Note that for BSTR [out] variables common COM practice is
+ * Note that for BSTR `[out]` variables common COM practice is
  * that the server does the SysAllocString and the client does the SysFreeString.
  * Also note that when NULL is returned, there is no need for the client to call SysFreeString.
  * Please refer to the documentation for each method for more details regarding error handling.
  *
  * @section _memory Memory Management
  * The following memory management issues should be considered:
- * @li Although [out] BSTR variables are declared by the client,
+ * @li Although `[out]` BSTR variables are declared by the client,
  * their space is allocated by the server.
  * They need to be freed with SysFreeString by the client at the end of life;
  * the same is true when BSTRs are used in structs or arrays which are passed to the server.
- * @li If there is no valid [out] BSTR to return,
+ * @li If there is no valid `[out]` BSTR to return,
  * the server should return S_FALSE and assign NULL to the output,
  * e.g. `*theOutBSTR = NULL;`.
  * @li At the end of life,
  * COM interfaces need to be referenced with AddRef when used and dereferenced with Release.
- * @li Single [out] longs, HWNDs, booleans,
+ * @li Single `[out]` longs, HWNDs, booleans,
  * and structs are declared by the caller and passed by reference.
  * The marshaler does all the memory management.
  *
@@ -197,7 +197,7 @@ use windows::Win32::UI::Accessibility::{IAccessible, IAccessible_Impl, IAccessib
  * Also, the IDL for IAccessible2::extendedStates, IAccessible2::localizedExtendedStates,
  * IAccessibleAction::keyBinding, IAccessibleTable::selectedChildren,
  * IAccessibleTable::selectedColumns,
- * and IAccessibleTable::selectedRows includes an extraneous [in] parameter
+ * and IAccessibleTable::selectedRows includes an extraneous `[in]` parameter
  * for the caller to specify the max size of the array.
  * This parameter will be ignored by the COM server.
  *
@@ -643,7 +643,7 @@ pub(crate) unsafe trait IAccessible2: IAccessible {
  *   
  *  This BSD License conforms to the Open Source Initiative "Simplified
  *  BSD License" as published at:
- *  http://www.opensource.org/licenses/bsd-license.php
+ *  <http://www.opensource.org/licenses/bsd-license.php>
  *   
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark

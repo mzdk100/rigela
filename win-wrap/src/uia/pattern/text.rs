@@ -31,7 +31,7 @@ use windows::{
  * */
 pub struct UiAutomationTextPattern(IUIAutomationTextPattern);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern>
 impl UiAutomationTextPattern {
     /**
      * 从UI元素获取此模式。
@@ -126,7 +126,7 @@ impl UiAutomationTextPattern {
 /// 扩展 UiAutomationTextPattern。
 pub struct UiAutomationTextPattern2(IUIAutomationTextPattern2);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern2
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextpattern2>
 impl UiAutomationTextPattern2 {
     /**
      * 从UI元素获取此模式。
@@ -204,7 +204,7 @@ impl TextRangeArray for IUIAutomationTextRangeArray {
 #[derive(Clone, Debug)]
 pub struct UiAutomationTextRange(IUIAutomationTextRange);
 
-/// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextrange
+/// <https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtextrange>
 impl UiAutomationTextRange {
     /* 获取一个实例。 */
     pub(crate) fn obtain(range: &IUIAutomationTextRange) -> Self {
@@ -254,7 +254,7 @@ impl UiAutomationTextRange {
             self.0
                 .CompareEndpoints(src_endpoint, &range.0, target_endpoint)
         }
-        .unwrap_or(0)
+            .unwrap_or(0)
     }
 
     //noinspection StructuralWrap
