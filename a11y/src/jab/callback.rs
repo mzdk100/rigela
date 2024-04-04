@@ -14,7 +14,7 @@
 use crate::jab::context::AccessibleContext;
 use std::sync::Arc;
 
-pub(crate) type AccessibleContextType = Arc<AccessibleContext<'static>>;
+pub type AccessibleContextType = Arc<AccessibleContext<'static>>;
 
 pub(crate) enum AccessibleCallback {
     CaretUpdate(Box<dyn Fn(AccessibleContextType) + Sync + Send>),

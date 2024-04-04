@@ -24,6 +24,7 @@ use a11y::ia2::{
     },
     WinEventSourceExt,
 };
+use a11y::jab::callback::AccessibleContextType;
 use arc_swap::ArcSwap;
 use log::error;
 use std::ops::Deref;
@@ -47,6 +48,7 @@ enum Control {
     None,
     Uia(UiAutomationElement),
     Ia2(AccessibleText),
+    Jab(AccessibleContextType, i32),
 }
 
 unsafe impl Send for Control {}
@@ -125,16 +127,20 @@ impl Editor {
         let context = self.context.get().unwrap();
         let ctx = context.clone();
         let mng = context.get_commander().get_keyboard_manager().clone();
+        let edge_handled = self.edge_handled.clone();
+        let control = self.control.clone();
 
         context
             .get_jab()
             .add_on_property_caret_change_listener(move |src, _old, new| {
+                control.store(Control::Jab(src.clone(), new).into());
                 let Some((char, _word, line)) = src.get_text_items(new) else {
                     return;
                 };
 
                 let ctx2 = ctx.clone();
-                let commander = mng.clone();
+                let edge_handled = edge_handled.clone();
+                let mng = mng.clone();
 
                 ctx.get_work_runtime().spawn(async move {
                     if ctx2
@@ -144,7 +150,10 @@ impl Editor {
                     {
                         return;
                     }
-                    match commander.get_last_pressed_key() {
+
+                    edge_handled.store(true, Ordering::SeqCst);
+
+                    match mng.get_last_pressed_key() {
                         Keys::VkUp | Keys::VkDown => ctx2.get_performer().speak(&line).await,
                         _ => ctx2.get_performer().speak(&char).await,
                     };
@@ -321,11 +330,49 @@ impl Editor {
             }
         };
 
+        let ctx = context.clone();
+        let edge_handled = self.edge_handled.clone();
+        let control = self.control.clone();
+
+        let cb_jab = move |key: Keys, pressed| {
+            let control = control.load().deref().deref().clone();
+            if let Control::Jab(src, pos) = control {
+                match pressed {
+                    true => edge_handled.store(false, Ordering::SeqCst),
+                    false => {
+                        if !edge_handled.load(Ordering::Relaxed) {
+                            let Some((char, _word, line)) = src.get_text_items(pos) else {
+                                return;
+                            };
+
+                            let ctx2 = ctx.clone();
+                            ctx.get_work_runtime().spawn(async move {
+                                if ctx2
+                                    .get_event_core()
+                                    .should_ignore(char.to_string(), Duration::from_millis(50))
+                                    .await
+                                {
+                                    return;
+                                }
+                                match key {
+                                    Keys::VkUp | Keys::VkDown => {
+                                        ctx2.get_performer().speak(&line).await
+                                    }
+                                    _ => ctx2.get_performer().speak(&char).await,
+                                };
+                            });
+                        }
+                    }
+                }
+            }
+        };
+
         let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
         let mng = context.get_commander().get_keyboard_manager().clone();
 
         mng.add_key_event_listener(&keys, cb_uia);
         mng.add_key_event_listener(&keys, cb_ia2);
+        mng.add_key_event_listener(&keys, cb_jab);
     }
 }
 
