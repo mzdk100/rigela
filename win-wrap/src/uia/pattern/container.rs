@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::uia::{element::UiAutomationElement, property::UiaPropertyId};
 use std::{
     fmt::{Debug, Formatter},
-    sync::Arc,
+    sync::Weak,
 };
+
 use windows::{
     core::{Interface, VARIANT},
     Win32::UI::Accessibility::{
@@ -23,12 +23,17 @@ use windows::{
     },
 };
 
+use crate::uia::{element::UiAutomationElement, property::UiaPropertyId};
+
 //noinspection StructuralWrap
 /**
  * 公开从容器（如虚拟列表）检索项的方法。
  * 此接口不限于虚拟化容器使用。任何可以实现高效名称查找的容器都可以支持此控件模式，使客户端能够比使用find_first等方法更快地查找名称，后者必须遍历Microsoft UI自动化树。
  * */
-pub struct UiAutomationItemContainerPattern(Arc<IUIAutomation6>, IUIAutomationItemContainerPattern);
+pub struct UiAutomationItemContainerPattern(
+    Weak<IUIAutomation6>,
+    IUIAutomationItemContainerPattern,
+);
 
 //noinspection StructuralWrap
 /// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationitemcontainerpattern
@@ -68,8 +73,8 @@ impl UiAutomationItemContainerPattern {
         property_id: UiaPropertyId,
         value: T,
     ) -> Option<UiAutomationElement>
-    where
-        VARIANT: From<T>,
+        where
+            VARIANT: From<T>,
     {
         unsafe {
             let Ok(r) = (match start_after {

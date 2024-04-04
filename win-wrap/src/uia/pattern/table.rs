@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{ext::VecExt, uia::element::UiAutomationElement};
 use std::{
     fmt::{Debug, Formatter},
-    sync::Arc,
+    sync::Weak,
 };
+
 use windows::{
     core::Interface,
     Win32::UI::Accessibility::{
@@ -25,11 +25,13 @@ use windows::{
     },
 };
 
+use crate::{ext::VecExt, uia::element::UiAutomationElement};
+
 /**
  * 提供对控件的访问，该控件充当子元素集合的容器。此元素的子元素支持 UiAutomationTableItemPattern，并按行和列遍历的二维逻辑坐标系进行组织。
  * */
 pub struct UiAutomationTablePattern {
-    _automation: Arc<IUIAutomation6>,
+    _automation: Weak<IUIAutomation6>,
     _pattern: IUIAutomationTablePattern,
 }
 
@@ -97,7 +99,7 @@ pub enum RowOrColumnMajor {
 
 /// 提供对支持 UiAutomationTablePattern 的容器中的子元素的访问。
 /// 支持此接口的元素还必须支持 UiAutomationGridItemPattern，以提供不特定于表的属性。
-pub struct UiAutomationTableItemPattern(Arc<IUIAutomation6>, IUIAutomationTableItemPattern);
+pub struct UiAutomationTableItemPattern(Weak<IUIAutomation6>, IUIAutomationTableItemPattern);
 
 /// https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationtableitempattern
 impl UiAutomationTableItemPattern {

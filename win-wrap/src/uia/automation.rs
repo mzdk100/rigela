@@ -13,6 +13,7 @@
 
 use crate::{
     common::Result,
+    msaa::object::AccessibleObject,
     uia::{
         element::UiAutomationElement,
         event::{OnFocusChangedCallback, UiAutomationEventHandlerGroup},
@@ -43,11 +44,32 @@ impl UiAutomation {
     }
 
     /**
+     * 从MSAA的Accessible对象获取UI元素。
+     * `obj` 一个MSAA的Accessible对象。
+     * */
+    pub fn get_element_from_accessible_object(
+        &self,
+        obj: &AccessibleObject,
+    ) -> Result<UiAutomationElement> {
+        let element = match unsafe {
+            self.0
+                .ElementFromIAccessible(obj.get_raw(), obj.get_child_id())
+        } {
+            Ok(o) => o,
+            Err(e) => return Err(e),
+        };
+        Ok(UiAutomationElement::obtain(
+            Arc::downgrade(&self.0),
+            element,
+        ))
+    }
+
+    /**
      * 获取UI根元素。
      * */
     pub fn get_root_element(&self) -> UiAutomationElement {
         let el = unsafe { self.0.GetRootElement() }.expect("Can't get the root element.");
-        UiAutomationElement::obtain(self.0.clone(), el)
+        UiAutomationElement::obtain(Arc::downgrade(&self.0), el)
     }
 
     /**
@@ -58,7 +80,7 @@ impl UiAutomation {
             Err(e) => return Err(e),
             Ok(o) => o,
         };
-        Ok(UiAutomationElement::obtain(self.0.clone(), el))
+        Ok(UiAutomationElement::obtain(Arc::downgrade(&self.0), el))
     }
 
     /// 根据窗口句柄获取ui元素
@@ -67,7 +89,10 @@ impl UiAutomation {
         if el.is_err() {
             return None;
         }
-        Some(UiAutomationElement::obtain(self.0.clone(), el.unwrap()))
+        Some(UiAutomationElement::obtain(
+            Arc::downgrade(&self.0),
+            el.unwrap(),
+        ))
     }
 
     /// 根据坐标获取ui元素
@@ -77,7 +102,7 @@ impl UiAutomation {
                 .ElementFromPoint(POINT { x, y })
                 .expect("Can't get the element from point.")
         };
-        Some(UiAutomationElement::obtain(self.0.clone(), el))
+        Some(UiAutomationElement::obtain(Arc::downgrade(&self.0), el))
     }
 
     /**
@@ -86,7 +111,7 @@ impl UiAutomation {
     pub fn create_event_handler_group(&self) -> UiAutomationEventHandlerGroup {
         unsafe {
             UiAutomationEventHandlerGroup::obtain(
-                self.0.clone(),
+                Arc::downgrade(&self.0),
                 &self.0.CreateEventHandlerGroup().unwrap(),
             )
         }
@@ -115,11 +140,11 @@ impl UiAutomation {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_focus_changed_listener<CB>(&self, func: CB)
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+        where
+            CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationFocusChangedEventHandler =
-            OnFocusChangedCallback::new(func, self.0.clone()).into();
+            OnFocusChangedCallback::new(func, Arc::downgrade(&self.0)).into();
         unsafe { self.0.AddFocusChangedEventHandler(None, &handler) }
             .expect("Can't add the focus changed listener.")
     }
@@ -145,7 +170,7 @@ impl UiAutomation {
             self.0
                 .RemoveEventHandlerGroup(element.get_raw(), group.get_raw())
         }
-        .unwrap_or(())
+            .unwrap_or(())
     }
 }
 
