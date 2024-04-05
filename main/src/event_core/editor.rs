@@ -12,37 +12,40 @@
  */
 
 use crate::{
-    commander::keyboard::keys::Keys,
+    commander::keyboard::keys::Keys::{self, VkDown, VkLeft, VkRight, VkUp},
     context::{Context, ContextAccessor},
     ext::element::UiAutomationElementExt,
-    performer::sound::SoundArgument::{Single, WithFreq},
+    performer::sound::SoundArgument::{self, Single},
 };
-use a11y::ia2::{
-    text::{
-        AccessibleText,
-        IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
+use a11y::{
+    ia2::{
+        text::{
+            AccessibleText,
+            IA2TextBoundaryType::{IA2_TEXT_BOUNDARY_CHAR, IA2_TEXT_BOUNDARY_LINE},
+        },
+        WinEventSourceExt,
     },
-    WinEventSourceExt,
+    jab::callback::AccessibleContextType,
 };
-use a11y::jab::callback::AccessibleContextType;
 use arc_swap::ArcSwap;
 use log::error;
-use std::ops::Deref;
-use std::sync::{Arc, OnceLock};
 use std::{
+    ops::Deref,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Weak,
+        Arc, OnceLock, Weak,
     },
     time::Duration,
 };
-use win_wrap::uia::element::UiAutomationElement;
 use win_wrap::{
     control::{edit::Edit, WindowControl},
-    msaa::object::OBJID_CARET,
-    uia::pattern::text::TextUnit,
+    msaa::{event::WinEventSource, object::OBJID_CARET},
+    uia::{element::UiAutomationElement, pattern::text::TextUnit},
 };
 
+const DURATION: Duration = Duration::from_millis(50);
+
+/// 编辑器控件的缓冲
 #[derive(Debug, Clone)]
 enum Control {
     None,
@@ -55,6 +58,8 @@ unsafe impl Send for Control {}
 
 unsafe impl Sync for Control {}
 
+/// 编辑器
+#[derive(Debug, Clone)]
 pub(crate) struct Editor {
     control: Arc<ArcSwap<Control>>,
     edge_handled: Arc<AtomicBool>,
@@ -73,7 +78,7 @@ impl Editor {
     /// 订阅编辑器事件。
     /// `context` 读屏框架的上下文环境。
     pub(crate) async fn subscribe_events(&self, context: Weak<Context>) {
-        self.context.set(context).unwrap();
+        self.context.set(context).unwrap_or(());
 
         self.subscribe_uia_events().await;
         self.subscribe_ia2_events().await;
@@ -83,6 +88,7 @@ impl Editor {
         self.subscribe_edge_cursor_events().await;
     }
 
+    /// 取消编辑器边缘按键处理
     pub(crate) fn cancel_edge_handle(&self) {
         self.edge_handled.store(true, Ordering::SeqCst);
     }
@@ -95,72 +101,70 @@ impl Editor {
         control.store(Control::None.into());
     }
 
+    // 订阅 msaa 编辑器事件
     async fn subscribe_msaa_events(&self) {
         let context = self.context.get().unwrap();
+
         let ctx = context.clone();
+        let cb = move |src: WinEventSource| {
+            if OBJID_CARET.0 != src.id_object {
+                return;
+            }
+            let Ok((obj, _)) = src.get_object() else {
+                return;
+            };
+            let Some(obj) = obj.parent() else {
+                return;
+            };
+            let control = WindowControl::from(obj.window());
+            let (start, _end) = control.get_sel();
+            let sound = SoundArgument::WithFreq("progress.wav", (start * 10 + 400) as f32);
 
-        context
-            .get_msaa()
-            .add_on_object_location_change_listener(move |src| {
-                if OBJID_CARET.0 != src.id_object {
-                    return;
-                }
-                let Ok((obj, _)) = src.get_object() else {
-                    return;
-                };
-                let Some(obj) = obj.parent() else {
-                    return;
-                };
-
-                let ctx2 = ctx.clone();
-                ctx.get_work_runtime().spawn(async move {
-                    let control = WindowControl::from(obj.window());
-                    let (start, _end) = control.get_sel();
-                    ctx2.get_performer()
-                        .play_sound(WithFreq("progress.wav", (start * 10 + 400) as f32))
-                        .await;
-                });
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
+                ctx2.get_performer().play_sound(sound).await;
             });
+        };
+
+        let msaa = context.get_msaa();
+        msaa.add_on_object_location_change_listener(cb);
     }
 
+    // 订阅 jab 编辑器事件
     async fn subscribe_jab_events(&self) {
         let context = self.context.get().unwrap();
+
         let ctx = context.clone();
         let mng = context.get_commander().get_keyboard_manager().clone();
-        let edge_handled = self.edge_handled.clone();
         let control = self.control.clone();
+        let edge_handled = self.edge_handled.clone();
+        let cb = move |src: AccessibleContextType, _, new| {
+            control.store(Control::Jab(src.clone(), new).into());
 
-        context
-            .get_jab()
-            .add_on_property_caret_change_listener(move |src, _old, new| {
-                control.store(Control::Jab(src.clone(), new).into());
-                let Some((char, _word, line)) = src.get_text_items(new) else {
+            let Some((char, _word, line)) = src.get_text_items(new) else {
+                return;
+            };
+            edge_handled.store(true, Ordering::SeqCst);
+
+            let ctx2 = ctx.clone();
+            let mng = mng.clone();
+            ctx.get_work_runtime().spawn(async move {
+                let ec = ctx2.get_event_core();
+                if ec.should_ignore(char.to_string(), DURATION).await {
                     return;
+                }
+
+                match mng.get_last_pressed_key() {
+                    VkUp | VkDown => ctx2.get_performer().speak(&line).await,
+                    _ => ctx2.get_performer().speak(&char).await,
                 };
-
-                let ctx2 = ctx.clone();
-                let edge_handled = edge_handled.clone();
-                let mng = mng.clone();
-
-                ctx.get_work_runtime().spawn(async move {
-                    if ctx2
-                        .get_event_core()
-                        .should_ignore(char.to_string(), Duration::from_millis(50))
-                        .await
-                    {
-                        return;
-                    }
-
-                    edge_handled.store(true, Ordering::SeqCst);
-
-                    match mng.get_last_pressed_key() {
-                        Keys::VkUp | Keys::VkDown => ctx2.get_performer().speak(&line).await,
-                        _ => ctx2.get_performer().speak(&char).await,
-                    };
-                });
             });
+        };
+
+        context.get_jab().add_on_property_caret_change_listener(cb);
     }
 
+    // 订阅 uia 编辑器事件
     async fn subscribe_uia_events(&self) {
         let context = self.context.get().unwrap();
         let ctx = context.clone();
@@ -183,17 +187,14 @@ impl Editor {
             };
 
             match mng.get_last_pressed_key() {
-                Keys::VkUp | Keys::VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
                 _ => caret.expand_to_enclosing_unit(TextUnit::Character),
             }
 
             let ctx2 = ctx.clone();
             ctx.get_work_runtime().spawn(async move {
-                if ctx2
-                    .get_event_core()
-                    .should_ignore(caret.get_text(-1), Duration::from_millis(50))
-                    .await
-                {
+                let ec = ctx2.get_event_core();
+                if ec.should_ignore(caret.get_text(-1), DURATION).await {
                     return;
                 }
                 ctx2.get_performer().speak(&caret).await;
@@ -215,156 +216,146 @@ impl Editor {
         });
     }
 
+    // 订阅 ia2 编辑器事件
     async fn subscribe_ia2_events(&self) {
         let context = self.context.get().unwrap();
+
         let ctx = context.clone();
         let control = self.control.clone();
         let edge_handled = self.edge_handled.clone();
         let mng = context.get_commander().get_keyboard_manager().clone();
+        let cb = move |src: WinEventSource| {
+            let text = match src.get_text() {
+                Ok(t) => t,
+                Err(_) => return,
+            };
 
-        context
-            .get_ia2()
-            .add_on_text_caret_moved_listener(move |src| {
-                let text = match src.get_text() {
-                    Ok(t) => t,
-                    Err(_) => return
-                };
+            control.store(Arc::new(Control::Ia2(text.clone())));
+            edge_handled.store(true, Ordering::SeqCst);
 
-                control.store(Arc::new(Control::Ia2(text.clone())));
-                edge_handled.store(true, Ordering::SeqCst);
+            let caret = text.caret_offset().unwrap_or(0);
+            let (_, _, text) = match mng.get_last_pressed_key() {
+                VkUp | VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+                _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
+            };
 
-                let caret = text.caret_offset().unwrap_or(0);
-                let (_, _, text) = match mng.get_last_pressed_key() {
-                    Keys::VkUp | Keys::VkDown => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
-                    _ => text.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
-                };
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
+                let ec = ctx2.get_event_core();
+                if ec.should_ignore(text.clone(), DURATION).await {
+                    return;
+                }
+                ctx2.get_performer().speak(&text).await;
+            });
+        };
 
-                let ctx2 = ctx.clone();
-                ctx.get_work_runtime().spawn(async move {
-                    if ctx2
-                        .get_event_core()
-                        .should_ignore(text.clone(), Duration::from_millis(50))
-                        .await
-                    {
-                        return;
-                    }
-                    ctx2.get_performer().speak(&text).await;
-                });
-            })
+        context.get_ia2().add_on_text_caret_moved_listener(cb);
     }
 
     /// 处理编辑框的光标键播报
     pub(crate) async fn subscribe_edge_cursor_events(&self) {
         let context = self.context.get().unwrap();
+
         let ctx = context.clone();
         let control = self.control.clone();
         let edge_handled = self.edge_handled.clone();
-
         let cb_uia = move |key: Keys, pressed| {
             let control: Control = control.load().deref().deref().clone();
-            if let Control::Uia(ctrl) = control {
-                match pressed {
-                    true => edge_handled.store(false, Ordering::SeqCst),
-                    false => {
-                        if !edge_handled.load(Ordering::Relaxed) {
-                            let Some(caret) = ctrl.get_caret() else {
-                                return;
-                            };
-                            match key {
-                                Keys::VkLeft | Keys::VkRight => {
-                                    caret.expand_to_enclosing_unit(TextUnit::Character)
-                                }
-                                Keys::VkUp | Keys::VkDown => {
-                                    caret.expand_to_enclosing_unit(TextUnit::Line)
-                                }
-                                _ => {}
-                            }
+            let Control::Uia(ctrl) = control else {
+                return;
+            };
 
-                            let ctx2 = ctx.clone();
-                            ctx.get_work_runtime().spawn(async move {
-                                ctx2.get_performer().play_sound(Single("edge.wav")).await;
-                                ctx2.get_performer().speak(&caret).await;
-                            });
-                        }
+            match pressed {
+                true => edge_handled.store(false, Ordering::SeqCst),
+
+                false if !edge_handled.load(Ordering::Relaxed) => {
+                    let Some(caret) = ctrl.get_caret() else {
+                        return;
+                    };
+                    match key {
+                        VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                        _ => caret.expand_to_enclosing_unit(TextUnit::Character),
                     }
+
+                    let ctx2 = ctx.clone();
+                    ctx.get_work_runtime().spawn(async move {
+                        ctx2.get_performer().play_sound(Single("edge.wav")).await;
+                        ctx2.get_performer().speak(&caret).await;
+                    });
                 }
+
+                _ => {}
             }
         };
 
         let ctx = context.clone();
         let edge_handled = self.edge_handled.clone();
         let control = self.control.clone();
-
         let cb_ia2 = move |key: Keys, pressed| {
             let control = control.load().deref().deref().clone();
-            if let Control::Ia2(ctrl) = control {
-                match pressed {
-                    true => edge_handled.store(false, Ordering::SeqCst),
-                    false => {
-                        if !edge_handled.load(Ordering::Relaxed) {
-                            let caret = ctrl.caret_offset().unwrap_or(0);
-                            let (_, _, text) = match key {
-                                Keys::VkUp | Keys::VkDown => {
-                                    ctrl.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE)
-                                }
-                                _ => ctrl.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
-                            };
+            let Control::Ia2(ctrl) = control else {
+                return;
+            };
 
-                            let ctx2 = ctx.clone();
-                            ctx.get_work_runtime().spawn(async move {
-                                if ctx2
-                                    .get_event_core()
-                                    .should_ignore(text.clone(), Duration::from_millis(50))
-                                    .await
-                                {
-                                    return;
-                                }
-                                ctx2.get_performer().speak(&text).await;
-                            });
+            match pressed {
+                true => edge_handled.store(false, Ordering::SeqCst),
+
+                false if !edge_handled.load(Ordering::Relaxed) => {
+                    let caret = ctrl.caret_offset().unwrap_or(0);
+                    let (_, _, text) = match key {
+                        VkUp | VkDown => ctrl.text_at_offset(caret, IA2_TEXT_BOUNDARY_LINE),
+                        _ => ctrl.text_at_offset(caret, IA2_TEXT_BOUNDARY_CHAR),
+                    };
+
+                    let ctx2 = ctx.clone();
+                    ctx.get_work_runtime().spawn(async move {
+                        let ec = ctx2.get_event_core();
+                        if ec.should_ignore(text.clone(), DURATION).await {
+                            return;
                         }
-                    }
+                        ctx2.get_performer().speak(&text).await;
+                    });
                 }
+
+                _ => {}
             }
         };
 
         let ctx = context.clone();
         let edge_handled = self.edge_handled.clone();
         let control = self.control.clone();
-
         let cb_jab = move |key: Keys, pressed| {
             let control = control.load().deref().deref().clone();
-            if let Control::Jab(src, pos) = control {
-                match pressed {
-                    true => edge_handled.store(false, Ordering::SeqCst),
-                    false => {
-                        if !edge_handled.load(Ordering::Relaxed) {
-                            let Some((char, _word, line)) = src.get_text_items(pos) else {
-                                return;
-                            };
+            let Control::Jab(src, pos) = control else {
+                return;
+            };
 
-                            let ctx2 = ctx.clone();
-                            ctx.get_work_runtime().spawn(async move {
-                                if ctx2
-                                    .get_event_core()
-                                    .should_ignore(char.to_string(), Duration::from_millis(50))
-                                    .await
-                                {
-                                    return;
-                                }
-                                match key {
-                                    Keys::VkUp | Keys::VkDown => {
-                                        ctx2.get_performer().speak(&line).await
-                                    }
-                                    _ => ctx2.get_performer().speak(&char).await,
-                                };
-                            });
+            match pressed {
+                true => edge_handled.store(false, Ordering::SeqCst),
+
+                false if !edge_handled.load(Ordering::Relaxed) => {
+                    let Some((char, _word, line)) = src.get_text_items(pos) else {
+                        return;
+                    };
+
+                    let ctx2 = ctx.clone();
+                    ctx.get_work_runtime().spawn(async move {
+                        let ec = ctx2.get_event_core();
+                        if ec.should_ignore(char.to_string(), DURATION).await {
+                            return;
                         }
-                    }
+                        match key {
+                            VkUp | VkDown => ctx2.get_performer().speak(&line).await,
+                            _ => ctx2.get_performer().speak(&char).await,
+                        };
+                    });
                 }
+
+                _ => {}
             }
         };
 
-        let keys = [Keys::VkUp, Keys::VkDown, Keys::VkLeft, Keys::VkRight];
+        let keys = [VkUp, VkDown, VkLeft, VkRight];
         let mng = context.get_commander().get_keyboard_manager().clone();
 
         mng.add_key_event_listener(&keys, cb_uia);
