@@ -186,8 +186,16 @@ impl Editor {
                 return;
             };
 
+            let mut is_blank_line = false;
+
             match mng.get_last_pressed_key() {
-                VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                VkUp | VkDown => {
+                    caret.expand_to_enclosing_unit(TextUnit::Line);
+                    let text = caret.get_text(-1);
+                    if ["\r", "\n", "\r\n"].contains(&text.as_str()) || text.is_empty() {
+                        is_blank_line = true;
+                    }
+                }
                 _ => caret.expand_to_enclosing_unit(TextUnit::Character),
             }
 
@@ -197,7 +205,15 @@ impl Editor {
                 if ec.should_ignore(caret.get_text(-1), DURATION).await {
                     return;
                 }
-                ctx2.get_performer().speak(&caret).await;
+
+                match is_blank_line {
+                    true => {
+                        ctx2.get_performer().speak(&("空航".to_string())).await;
+                    }
+                    false => {
+                        ctx2.get_performer().speak(&caret).await;
+                    }
+                }
             });
         });
 
@@ -272,15 +288,29 @@ impl Editor {
                     let Some(caret) = ctrl.get_caret() else {
                         return;
                     };
+                    let mut is_blank_line = false;
                     match key {
-                        VkUp | VkDown => caret.expand_to_enclosing_unit(TextUnit::Line),
+                        VkUp | VkDown => {
+                            caret.expand_to_enclosing_unit(TextUnit::Line);
+                            let text = caret.get_text(-1);
+                            if ["\r", "\n", "\r\n"].contains(&text.as_str()) || text.is_empty() {
+                                is_blank_line = true;
+                            }
+                        }
                         _ => caret.expand_to_enclosing_unit(TextUnit::Character),
                     }
 
                     let ctx2 = ctx.clone();
                     ctx.get_work_runtime().spawn(async move {
                         ctx2.get_performer().play_sound(Single("edge.wav")).await;
-                        ctx2.get_performer().speak(&caret).await;
+                        match is_blank_line {
+                            true => {
+                                ctx2.get_performer().speak(&"空航".to_string()).await;
+                            }
+                            false => {
+                                ctx2.get_performer().speak(&caret).await;
+                            }
+                        }
                     });
                 }
 
