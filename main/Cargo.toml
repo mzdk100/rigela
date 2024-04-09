@@ -66,7 +66,7 @@ path = "../resources"
 
 [dependencies.rigela-utils]
 path = "../utils"
-features = ["bass", "killer", "ibmeci", "logger", "clip"]
+features = ["bass", "killer", "ibmeci", "logger", "clip", "screen", "color"]
 
 [dependencies.serde]
 # 用于数据序列化和反序列化
@@ -106,7 +106,7 @@ workspace = true
 
 [dependencies.reqwest]
 # 网络请求
-version = "0.12.2"
+version = "0.12.3"
 features = ["json"]
 
 [dependencies.nwd]

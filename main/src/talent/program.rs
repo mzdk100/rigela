@@ -36,21 +36,21 @@ use win_wrap::{
 };
 
 //noinspection RsUnresolvedPath
-#[talent( doc =  t!("program.exit").to_string(), key = combo_key!("RigelA", VkEscape) )]
+#[talent(doc = t ! ("program.exit_doc").to_string(), key = combo_key ! ("RigelA", VkEscape))]
 async fn exit(context: Weak<Context>) {
     context.get_performer().speak(&t!("program.exit")).await;
     context.get_terminator().exit();
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("当前时间"), key = combo_key!("RigelA", VkF12))]
+#[talent(doc = t ! ("program.current_time_doc").to_string(), key = combo_key ! ("RigelA", VkF12))]
 async fn current_time(context: Weak<Context>) {
     let msg = Local::now().format(&t!("program.current_time")).to_string();
     context.get_performer().speak(&msg).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("当前日期"), key = combo_key!("RigelA", VkF12, double))]
+#[talent(doc = t ! ("program.current_date_doc").to_string(), key = combo_key ! ("RigelA", VkF12, double))]
 async fn current_date(context: Weak<Context>) {
     let msg = Local::now().format(&t!("program.current_date")).to_string();
     context.get_performer().speak(&msg).await;
@@ -62,12 +62,12 @@ impl Speakable for &PdhCounter {
             "program.current_cpu_usage",
             value = self.get_value().1.round()
         )
-        .to_string()
+            .to_string()
     }
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("查看CPU使用率"), key = combo_key!("RigelA", VkQ))]
+#[talent(doc = t ! ("program.current_cpu_usage_doc").to_string(), key = combo_key ! ("RigelA", VkQ))]
 async fn current_cpu_usage(context: Weak<Context>) {
     static CPU_QUERY: OnceLock<(PdhCounter, PdhQuery)> = OnceLock::new();
     let (counter, query) = CPU_QUERY.get_or_init(|| {
@@ -85,19 +85,19 @@ async fn current_cpu_usage(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("弹出菜单"), key = combo_key!("RigelA", VkR))]
+#[talent(doc = t ! ("program.popup_menu_doc").to_string(), key = combo_key ! ("RigelA", VkR))]
 async fn popup_menu(context: Weak<Context>) {
     context.get_gui_provider().show_popup_menu();
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("自定义热键"), key = combo_key!("RigelA", VkK))]
+#[talent(doc = t ! ("program.hotkeys_doc").to_string(), key = combo_key ! ("RigelA", VkK))]
 async fn hotkeys(context: Weak<Context>) {
     context.get_gui_provider().show_hotkeys_form();
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("查看前景窗口标题"), key = combo_key!("RigelA", VkT))]
+#[talent(doc = t ! ("program.view_window_title_doc").to_string(), key = combo_key ! ("RigelA", VkT))]
 async fn view_window_title(context: Weak<Context>) {
     match AccessibleObject::from_foreground_window() {
         Ok(o) => {
@@ -117,7 +117,7 @@ async fn view_window_title(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("查看当前焦点"), key = combo_key!("RigelA", VkTab))]
+#[talent(doc = t ! ("program.view_focus_doc").to_string(), key = combo_key ! ("RigelA", VkTab))]
 async fn view_focus(context: Weak<Context>) {
     let Ok(focused) = context.get_ui_automation().get_focused_element() else {
         return;
@@ -126,7 +126,7 @@ async fn view_focus(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("停止正在输出的语音"), key = combo_key!("Ctrl", VkSpace))]
+#[talent(doc = t ! ("program.stop_tts_output_doc").to_string(), key = combo_key ! ("Ctrl", VkSpace))]
 async fn stop_tts_output(context: Weak<Context>) {
     context.get_performer().get_tts().stop_all().await;
 }

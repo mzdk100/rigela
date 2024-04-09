@@ -1,0 +1,3466 @@
+_version: 2
+
+color:
+  air_force_blue_raf:
+    en: AirForceBlue(Raf)
+    zh-CN: 空军蓝（Raf）
+
+  air_force_blue_usaf:
+    en: AirForceBlue(Usaf)
+    zh-CN: 空军蓝（Usaf）
+
+  air_superiority_blue:
+    en: AirSuperiorityBlue
+    zh-CN: 空优蓝
+
+  alabama_crimson:
+    en: AlabamaCrimson
+    zh-CN: 阿拉巴马州深红
+
+  alice_blue:
+    en: AliceBlue
+    zh-CN: 爱丽丝蓝
+
+  alizarin_crimson:
+    en: AlizarinCrimson
+    zh-CN: 茜草红
+
+  alloy_orange:
+    en: AlloyOrange
+    zh-CN: 合金橙
+
+  almond:
+    en: Almond
+    zh-CN: 杏仁色
+
+  amaranth:
+    en: Amaranth
+    zh-CN: 苋菜红
+
+  amber:
+    en: Amber
+    zh-CN: 琥珀色
+
+  amber_sae_ece:
+    en: Amber(Sae/Ece)
+    zh-CN: 琥珀色（Sae/Ece）
+
+  american_rose:
+    en: AmericanRose
+    zh-CN: 美国玫瑰红
+
+  amethyst:
+    en: Amethyst
+    zh-CN: 紫水晶色
+
+  android_green:
+    en: AndroidGreen
+    zh-CN: 安卓绿
+
+  anti_flash_white:
+    en: Anti-FlashWhite
+    zh-CN: 反闪光白
+
+  antique_brass:
+    en: AntiqueBrass
+    zh-CN: 古铜色
+
+  antique_fuchsia:
+    en: AntiqueFuchsia
+    zh-CN: 古紫红色
+
+  antique_ruby:
+    en: AntiqueRuby
+    zh-CN: 古红宝石色
+
+  antique_white:
+    en: AntiqueWhite
+    zh-CN: 古董白
+
+  ao_english:
+    en: Ao(English)
+    zh-CN: 青（英式）
+
+  apple_green:
+    en: AppleGreen
+    zh-CN: 苹果绿
+
+  apricot:
+    en: Apricot
+    zh-CN: 杏黄色
+
+  aqua:
+    en: Aqua
+    zh-CN: 水绿色
+
+  aquamarine:
+    en: Aquamarine
+    zh-CN: 碧绿色
+
+  army_green:
+    en: ArmyGreen
+    zh-CN: 军绿色
+
+  arsenic:
+    en: Arsenic
+    zh-CN: 砷色
+
+  arylide_yellow:
+    en: ArylideYellow
+    zh-CN: 芳基黄
+
+  ash_grey:
+    en: AshGrey
+    zh-CN: 灰烬色
+
+  asparagus:
+    en: Asparagus
+    zh-CN: 芦笋绿
+
+  atomic_tangerine:
+    en: AtomicTangerine
+    zh-CN: 原子橘
+
+  auburn:
+    en: Auburn
+    zh-CN: 赤褐色
+
+  aureolin:
+    en: Aureolin
+    zh-CN: 金黄色
+
+  aurometalsaurus:
+    en: Aurometalsaurus
+    zh-CN: 金麒麟色
+
+  avocado:
+    en: Avocado
+    zh-CN: 牛油果绿
+
+  azure:
+    en: Azure
+    zh-CN: 天蓝
+
+  azure_mist_web:
+    en: AzureMist/Web
+    zh-CN: 天蓝薄雾（网络）
+
+  baby_blue:
+    en: BabyBlue
+    zh-CN: 浅蓝色
+
+  baby_blue_eyes:
+    en: BabyBlueEyes
+    zh-CN: 婴儿蓝眼
+
+  baby_pink:
+    en: BabyPink
+    zh-CN: 浅粉红色
+
+  ball_blue:
+    en: BallBlue
+    zh-CN: 球蓝
+
+  banana_mania:
+    en: BananaMania
+    zh-CN: 香蕉狂热
+
+  banana_yellow:
+    en: BananaYellow
+    zh-CN: 香蕉黄
+
+  barn_red:
+    en: BarnRed
+    zh-CN: 谷仓红
+
+  battleship_grey:
+    en: BattleshipGrey
+    zh-CN: 战舰灰
+
+  bazaar:
+    en: Bazaar
+    zh-CN: 巴扎
+
+  beau_blue:
+    en: BeauBlue
+    zh-CN: 宝蓝
+
+  beaver:
+    en: Beaver
+    zh-CN: 海狸色
+
+  beige:
+    en: Beige
+    zh-CN: 米色
+
+  big_dip_o_ruby:
+    en: BigDipO’Ruby
+    zh-CN: 深红宝石色
+
+  bisque:
+    en: Bisque
+    zh-CN: 赭色
+
+  bistre:
+    en: Bistre
+    zh-CN: 淡褐色
+
+  bittersweet:
+    en: Bittersweet
+    zh-CN: 苦甜巧克力色
+
+  bittersweet_shimmer:
+    en: BittersweetShimmer
+    zh-CN: 苦甜巧克力闪光色
+
+  black:
+    en: Black
+    zh-CN: 黑色
+
+  black_bean:
+    en: BlackBean
+    zh-CN: 黑豆色
+
+  black_leather_jacket:
+    en: BlackLeatherJacket
+    zh-CN: 黑色皮革夹克
+
+  black_olive:
+    en: BlackOlive
+    zh-CN: 黑橄榄色
+
+  blanched_almond:
+    en: BlanchedAlmond
+    zh-CN: 漂白杏仁色
+
+  blast_off_bronze:
+    en: Blast-OffBronze
+    zh-CN: 起飞铜色
+
+  bleu_de_france:
+    en: BleuDeFrance
+    zh-CN: 法国蓝
+
+  blizzard_blue:
+    en: BlizzardBlue
+    zh-CN: 暴风雪蓝
+
+  blond:
+    en: Blond
+    zh-CN: 金色
+
+  blue:
+    en: Blue
+    zh-CN: 蓝色
+
+  blue_bell:
+    en: BlueBell
+    zh-CN: 蓝色风铃
+
+  blue_crayola:
+    en: Blue(Crayola)
+    zh-CN: 蜡笔蓝
+
+  blue_gray:
+    en: BlueGray
+    zh-CN: 蓝灰色
+
+  blue_green:
+    en: Blue-Green
+    zh-CN: 蓝绿色
+
+  blue_munsell:
+    en: Blue(Munsell)
+    zh-CN: 蒙塞尔蓝
+
+  blue_ncs:
+    en: Blue(Ncs)
+    zh-CN: NCS蓝
+
+  blue_pigment:
+    en: Blue(Pigment)
+    zh-CN: 颜料蓝
+
+  blue_ryb:
+    en: Blue(Ryb)
+    zh-CN: RYB蓝
+
+  blue_sapphire:
+    en: BlueSapphire
+    zh-CN: 蓝宝石色
+
+  blue_violet:
+    en: Blue-Violet
+    zh-CN: 蓝紫色
+
+  blush:
+    en: Blush
+    zh-CN: 腮红
+
+  bole:
+    en: Bole
+    zh-CN: 树干色
+
+  bondi_blue:
+    en: BondiBlue
+    zh-CN: 邦迪蓝
+
+  bone:
+    en: Bone
+    zh-CN: 骨色
+
+  boston_university_red:
+    en: BostonUniversityRed
+    zh-CN: 波士顿大学红
+
+  bottle_green:
+    en: BottleGreen
+    zh-CN: 瓶绿
+
+  boysenberry:
+    en: Boysenberry
+    zh-CN: 蓝莓李果色
+
+  brandeis_blue:
+    en: BrandeisBlue
+    zh-CN: 布兰代斯蓝
+
+  brass:
+    en: Brass
+    zh-CN: 黄铜色
+
+  brick_red:
+    en: BrickRed
+    zh-CN: 砖红色
+
+  bright_cerulean:
+    en: BrightCerulean
+    zh-CN: 亮天蓝
+
+  bright_green:
+    en: BrightGreen
+    zh-CN: 亮绿色
+
+  bright_lavender:
+    en: BrightLavender
+    zh-CN: 亮薰衣草色
+
+  bright_maroon:
+    en: BrightMaroon
+    zh-CN: 亮褐红色
+
+  bright_pink:
+    en: BrightPink
+    zh-CN: 亮粉红色
+
+  bright_turquoise:
+    en: BrightTurquoise
+    zh-CN: 亮绿松石色
+
+  bright_ube:
+    en: BrightUbe
+    zh-CN: 亮紫色
+
+  brilliant_lavender:
+    en: BrilliantLavender
+    zh-CN: 亮薰衣草色
+
+  brilliant_rose:
+    en: BrilliantRose
+    zh-CN: 艳玫瑰色
+
+  brink_pink:
+    en: BrinkPink
+    zh-CN: 布林克粉红色
+
+  british_racing_green:
+    en: BritishRacingGreen
+    zh-CN: 英国赛车绿
+
+  bronze:
+    en: Bronze
+    zh-CN: 古铜色
+
+  brown_traditional:
+    en: Brown(Traditional)
+    zh-CN: 传统棕色
+
+  brown_web:
+    en: Brown(Web)
+    zh-CN: 网络棕色
+
+  bubble_gum:
+    en: BubbleGum
+    zh-CN: 泡泡糖色
+
+  bubbles:
+    en: Bubbles
+    zh-CN: 泡沫色
+
+  buff:
+    en: Buff
+    zh-CN: 浅黄色
+
+  bulgarian_rose:
+    en: BulgarianRose
+    zh-CN: 保加利亚玫瑰色
+
+  burgundy:
+    en: Burgundy
+    zh-CN: 红葡萄酒色
+
+  burlywood:
+    en: Burlywood
+    zh-CN: 赤杨木色
+
+  burnt_orange:
+    en: BurntOrange
+    zh-CN: 烧焦橙色
+
+  burnt_sienna:
+    en: BurntSienna
+    zh-CN: 烧焦赭色
+
+  burnt_umber:
+    en: BurntUmber
+    zh-CN: 烧焦土褐色
+
+  byzantine:
+    en: Byzantine
+    zh-CN: 拜占庭色
+
+  byzantium:
+    en: Byzantium
+    zh-CN: 拜占庭色
+
+  cadet:
+    en: Cadet
+    zh-CN: 卡德特色
+
+  cadet_blue:
+    en: CadetBlue
+    zh-CN: 卡德特蓝
+
+  cadet_grey:
+    en: CadetGrey
+    zh-CN: 卡德特灰
+
+  cadmium_green:
+    en: CadmiumGreen
+    zh-CN: 镉绿色
+
+  cadmium_orange:
+    en: CadmiumOrange
+    zh-CN: 镉橙色
+
+  cadmium_red:
+    en: CadmiumRed
+    zh-CN: 镉红色
+
+  cadmium_yellow:
+    en: CadmiumYellow
+    zh-CN: 镉黄色
+
+  cafe_au_lait:
+    en: CaféAuLait
+    zh-CN: 拿铁咖啡色
+
+  cafe_noir:
+    en: CaféNoir
+    zh-CN: 黑咖啡色
+
+  cal_poly_green:
+    en: CalPolyGreen
+    zh-CN: 加州理工学院绿
+
+  cambridge_blue:
+    en: CambridgeBlue
+    zh-CN: 剑桥蓝
+
+  camel:
+    en: Camel
+    zh-CN: 骆驼色
+
+  cameo_pink:
+    en: CameoPink
+    zh-CN: 胭脂红
+
+  camouflage_green:
+    en: CamouflageGreen
+    zh-CN: 迷彩绿
+
+  canary_yellow:
+    en: CanaryYellow
+    zh-CN: 金丝雀黄
+
+  candy_apple_red:
+    en: CandyAppleRed
+    zh-CN: 糖果苹果红
+
+  candy_pink:
+    en: CandyPink
+    zh-CN: 糖果粉
+
+  capri:
+    en: Capri
+    zh-CN: 卡布里色
+
+  caput_mortuum:
+    en: CaputMortuum
+    zh-CN: 死亡之头
+
+  cardinal:
+    en: Cardinal
+    zh-CN: 枢机主教红
+
+  caribbean_green:
+    en: CaribbeanGreen
+    zh-CN: 加勒比海绿
+
+  carmine:
+    en: Carmine
+    zh-CN: 洋红
+
+  carmine_m_p:
+    en: Carmine(M&P)
+    zh-CN: M&P洋红
+
+  carmine_pink:
+    en: CarminePink
+    zh-CN: 洋红粉
+
+  carmine_red:
+    en: CarmineRed
+    zh-CN: 洋红红
+
+  carnation_pink:
+    en: CarnationPink
+    zh-CN: 康乃馨粉
+
+  carnelian:
+    en: Carnelian
+    zh-CN: 红玉髓
+
+  carolina_blue:
+    en: CarolinaBlue
+    zh-CN: 卡罗莱纳蓝
+
+  carrot_orange:
+    en: CarrotOrange
+    zh-CN: 胡萝卜橙
+
+  catalina_blue:
+    en: CatalinaBlue
+    zh-CN: 卡塔琳娜蓝
+
+  ceil:
+    en: Ceil
+    zh-CN: 天蓝
+
+  celadon:
+    en: Celadon
+    zh-CN: 青瓷
+
+  celadon_blue:
+    en: CeladonBlue
+    zh-CN: 青瓷蓝
+
+  celadon_green:
+    en: CeladonGreen
+    zh-CN: 青瓷绿
+
+  celeste_colour:
+    en: Celeste(Colour)
+    zh-CN: 天蓝（颜色）
+
+  celestial_blue:
+    en: CelestialBlue
+    zh-CN: 天蓝
+
+  cerise:
+    en: Cerise
+    zh-CN: 樱桃红
+
+  cerise_pink:
+    en: CerisePink
+    zh-CN: 樱桃粉
+
+  cerulean:
+    en: Cerulean
+    zh-CN: 天蓝
+
+  cerulean_blue:
+    en: CeruleanBlue
+    zh-CN: 天蓝
+
+  cerulean_frost:
+    en: CeruleanFrost
+    zh-CN: 天蓝霜
+
+  cg_blue:
+    en: CgBlue
+    zh-CN: CG蓝
+
+  cg_red:
+    en: CgRed
+    zh-CN: CG红
+
+  chamoisee:
+    en: Chamoisee
+    zh-CN: 驼色
+
+  champagne:
+    en: Champagne
+    zh-CN: 香槟色
+
+  charcoal:
+    en: Charcoal
+    zh-CN: 炭色
+
+  charm_pink:
+    en: CharmPink
+    zh-CN: 魅力粉
+
+  chartreuse_traditional:
+    en: Chartreuse(Traditional)
+    zh-CN: 传统黄绿色
+
+  chartreuse_web:
+    en: Chartreuse(Web)
+    zh-CN: 网络黄绿色
+
+  cherry:
+    en: Cherry
+    zh-CN: 樱桃色
+
+  cherry_blossom_pink:
+    en: CherryBlossomPink
+    zh-CN: 樱花粉
+
+  chestnut:
+    en: Chestnut
+    zh-CN: 栗色
+
+  china_pink:
+    en: ChinaPink
+    zh-CN: 中国粉
+
+  china_rose:
+    en: ChinaRose
+    zh-CN: 中国玫瑰
+
+  chinese_red:
+    en: ChineseRed
+    zh-CN: 中国红
+
+  chocolate_traditional:
+    en: Chocolate(Traditional)
+    zh-CN: 传统巧克力色
+
+  chocolate_web:
+    en: Chocolate(Web)
+    zh-CN: 网络巧克力色
+
+  chrome_yellow:
+    en: ChromeYellow
+    zh-CN: 铬黄色
+
+  cinereous:
+    en: Cinereous
+    zh-CN: 苍白色
+
+  cinnabar:
+    en: Cinnabar
+    zh-CN: 朱砂
+
+  cinnamon:
+    en: Cinnamon
+    zh-CN: 肉桂色
+
+  citrine:
+    en: Citrine
+    zh-CN: 黄水晶
+
+  classic_rose:
+    en: ClassicRose
+    zh-CN: 古典玫瑰色
+
+  cobalt:
+    en: Cobalt
+    zh-CN: 钴蓝色
+
+  cocoa_brown:
+    en: CocoaBrown
+    zh-CN: 可可棕
+
+  coffee:
+    en: Coffee
+    zh-CN: 咖啡色
+
+  columbia_blue:
+    en: ColumbiaBlue
+    zh-CN: 哥伦比亚蓝
+
+  congo_pink:
+    en: CongoPink
+    zh-CN: 刚果粉
+
+  cool_black:
+    en: CoolBlack
+    zh-CN: 冷黑色
+
+  cool_grey:
+    en: CoolGrey
+    zh-CN: 冷灰色
+
+  copper:
+    en: Copper
+    zh-CN: 铜色
+
+  copper_crayola:
+    en: Copper(Crayola)
+    zh-CN: Crayola铜色
+
+  copper_penny:
+    en: CopperPenny
+    zh-CN: 铜币色
+
+  copper_red:
+    en: CopperRed
+    zh-CN: 铜红色
+
+  copper_rose:
+    en: CopperRose
+    zh-CN: 铜玫瑰色
+
+  coquelicot:
+    en: Coquelicot
+    zh-CN: 罂粟红
+
+  coral:
+    en: Coral
+    zh-CN: 珊瑚色
+
+  coral_pink:
+    en: CoralPink
+    zh-CN: 珊瑚粉
+
+  coral_red:
+    en: CoralRed
+    zh-CN: 珊瑚红
+
+  cordovan:
+    en: Cordovan
+    zh-CN: 科尔多瓦色
+
+  corn:
+    en: Corn
+    zh-CN: 玉米色
+
+  cornell_red:
+    en: CornellRed
+    zh-CN: 康奈尔红
+
+  cornflower_blue:
+    en: CornflowerBlue
+    zh-CN: 矢车菊蓝
+
+  cornsilk:
+    en: Cornsilk
+    zh-CN: 玉米丝色
+
+  cosmic_latte:
+    en: CosmicLatte
+    zh-CN: 宇宙拿铁
+
+  cotton_candy:
+    en: CottonCandy
+    zh-CN: 棉花糖色
+
+  cream:
+    en: Cream
+    zh-CN: 奶油色
+
+  crimson:
+    en: Crimson
+    zh-CN: 深红色
+
+  crimson_glory:
+    en: CrimsonGlory
+    zh-CN: 绯红荣耀
+
+  cyan:
+    en: Cyan
+    zh-CN: 青色
+
+  cyan_process:
+    en: Cyan(Process)
+    zh-CN: 加工青色
+
+  daffodil:
+    en: Daffodil
+    zh-CN: 黄水仙
+
+  dandelion:
+    en: Dandelion
+    zh-CN: 蒲公英黄
+
+  dark_blue:
+    en: DarkBlue
+    zh-CN: 深蓝色
+
+  dark_brown:
+    en: DarkBrown
+    zh-CN: 深棕色
+
+  dark_byzantium:
+    en: DarkByzantium
+    zh-CN: 深拜占庭色
+
+  dark_candy_apple_red:
+    en: DarkCandyAppleRed
+    zh-CN: 深糖果苹果红
+
+  dark_cerulean:
+    en: DarkCerulean
+    zh-CN: 深天蓝
+
+  dark_chestnut:
+    en: DarkChestnut
+    zh-CN: 深栗色
+
+  dark_coral:
+    en: DarkCoral
+    zh-CN: 深珊瑚色
+
+  dark_cyan:
+    en: DarkCyan
+    zh-CN: 深青色
+
+  dark_electric_blue:
+    en: DarkElectricBlue
+    zh-CN: 深电蓝色
+
+  dark_goldenrod:
+    en: DarkGoldenrod
+    zh-CN: 深金色
+
+  dark_gray:
+    en: DarkGray
+    zh-CN: 深灰色
+
+  dark_green:
+    en: DarkGreen
+    zh-CN: 深绿色
+
+  dark_imperial_blue:
+    en: DarkImperialBlue
+    zh-CN: 深宝石蓝
+
+  dark_jungle_green:
+    en: DarkJungleGreen
+    zh-CN: 深丛林绿
+
+  dark_khaki:
+    en: DarkKhaki
+    zh-CN: 深卡其色
+
+  dark_lava:
+    en: DarkLava
+    zh-CN: 深熔岩色
+
+  dark_lavender:
+    en: DarkLavender
+    zh-CN: 深薰衣草色
+
+  dark_magenta:
+    en: DarkMagenta
+    zh-CN: 深洋红色
+
+  dark_midnight_blue:
+    en: DarkMidnightBlue
+    zh-CN: 深午夜蓝
+
+  dark_olive_green:
+    en: DarkOliveGreen
+    zh-CN: 深橄榄绿
+
+  dark_orange:
+    en: DarkOrange
+    zh-CN: 深橙色
+
+  dark_orchid:
+    en: DarkOrchid
+    zh-CN: 深兰花紫
+
+  dark_pastel_blue:
+    en: DarkPastelBlue
+    zh-CN: 深浅蓝色
+
+  dark_pastel_green:
+    en: DarkPastelGreen
+    zh-CN: 深浅绿色
+
+  dark_pastel_purple:
+    en: DarkPastelPurple
+    zh-CN: 深浅紫色
+
+  dark_pastel_red:
+    en: DarkPastelRed
+    zh-CN: 深浅红色
+
+  dark_pink:
+    en: DarkPink
+    zh-CN: 深粉色
+
+  dark_powder_blue:
+    en: DarkPowderBlue
+    zh-CN: 深粉末蓝
+
+  dark_raspberry:
+    en: DarkRaspberry
+    zh-CN: 深覆盆子色
+
+  dark_red:
+    en: DarkRed
+    zh-CN: 深红色
+
+  dark_salmon:
+    en: DarkSalmon
+    zh-CN: 深鲑鱼色
+
+  dark_scarlet:
+    en: DarkScarlet
+    zh-CN: 深猩红色
+
+  dark_sea_green:
+    en: DarkSeaGreen
+    zh-CN: 深海洋绿
+
+  dark_sienna:
+    en: DarkSienna
+    zh-CN: 深赭色
+
+  dark_slate_blue:
+    en: DarkSlateBlue
+    zh-CN: 深板岩蓝
+
+  dark_slate_gray:
+    en: DarkSlateGray
+    zh-CN: 深板岩灰
+
+  dark_spring_green:
+    en: DarkSpringGreen
+    zh-CN: 深春绿
+
+  dark_tan:
+    en: DarkTan
+    zh-CN: 深棕褐色
+
+  dark_tangerine:
+    en: DarkTangerine
+    zh-CN: 深柑橘色
+
+  dark_taupe:
+    en: DarkTaupe
+    zh-CN: 深土褐色
+
+  dark_terracotta:
+    en: DarkTerraCotta
+    zh-CN: 深赭红色
+
+  dark_turquoise:
+    en: DarkTurquoise
+    zh-CN: 深绿松石色
+
+  dark_violet:
+    en: DarkViolet
+    zh-CN: 深紫色
+
+  dark_yellow:
+    en: DarkYellow
+    zh-CN: 深黄色
+
+  dartmouth_green:
+    en: DartmouthGreen
+    zh-CN: 达特茅斯绿
+
+  davy_s_grey:
+    en: Davy'SGrey
+    zh-CN: 戴维灰
+
+  debian_red:
+    en: DebianRed
+    zh-CN: 德比安红
+
+  deep_carmine:
+    en: DeepCarmine
+    zh-CN: 深洋红
+
+  deep_carmine_pink:
+    en: DeepCarminePink
+    zh-CN: 深洋红粉
+
+  deep_carrot_orange:
+    en: DeepCarrotOrange
+    zh-CN: 深胡萝卜橙
+
+  deep_cerise:
+    en: DeepCerise
+    zh-CN: 深樱桃红
+
+  deep_champagne:
+    en: DeepChampagne
+    zh-CN: 深香槟色
+
+  deep_chestnut:
+    en: DeepChestnut
+    zh-CN: 深栗色
+
+  deep_coffee:
+    en: DeepCoffee
+    zh-CN: 深咖啡色
+
+  deep_fuchsia:
+    en: DeepFuchsia
+    zh-CN: 深紫红色
+
+  deep_jungle_green:
+    en: DeepJungleGreen
+    zh-CN: 深丛林绿
+
+  deep_lilac:
+    en: DeepLilac
+    zh-CN: 深淡紫色
+
+  deep_magenta:
+    en: DeepMagenta
+    zh-CN: 深洋红色
+
+  deep_peach:
+    en: DeepPeach
+    zh-CN: 深桃色
+
+  deep_pink:
+    en: DeepPink
+    zh-CN: 深粉色
+
+  deep_ruby:
+    en: DeepRuby
+    zh-CN: 深宝石红
+
+  deep_saffron:
+    en: DeepSaffron
+    zh-CN: 深藏红花色
+
+  deep_sky_blue:
+    en: DeepSkyBlue
+    zh-CN: 深天蓝
+
+  deep_tuscan_red:
+    en: DeepTuscanRed
+    zh-CN: 深托斯卡纳红
+
+  denim:
+    en: Denim
+    zh-CN: 牛仔蓝
+
+  desert:
+    en: Desert
+    zh-CN: 沙漠色
+
+  desert_sand:
+    en: DesertSand
+    zh-CN: 沙漠沙色
+
+  dim_gray:
+    en: DimGray
+    zh-CN: 暗灰色
+
+  dodger_blue:
+    en: DodgerBlue
+    zh-CN: 道奇蓝
+
+  dogwood_rose:
+    en: DogwoodRose
+    zh-CN: 山茱萸玫瑰
+
+  dollar_bill:
+    en: DollarBill
+    zh-CN: 美元钞票色
+
+  drab:
+    en: Drab
+    zh-CN: 土褐色
+
+  duke_blue:
+    en: DukeBlue
+    zh-CN: 杜克蓝
+
+  earth_yellow:
+    en: EarthYellow
+    zh-CN: 土黄色
+
+  ebony:
+    en: Ebony
+    zh-CN: 乌木色
+
+  ecru:
+    en: Ecru
+    zh-CN: 淡褐色
+
+  eggplant:
+    en: Eggplant
+    zh-CN: 茄子色
+
+  eggshell:
+    en: Eggshell
+    zh-CN: 蛋壳白色
+
+  egyptian_blue:
+    en: EgyptianBlue
+    zh-CN: 埃及蓝
+
+  electric_blue:
+    en: ElectricBlue
+    zh-CN: 电蓝色
+
+  electric_crimson:
+    en: ElectricCrimson
+    zh-CN: 电深红色
+
+  electric_cyan:
+    en: ElectricCyan
+    zh-CN: 电青色
+
+  electric_green:
+    en: ElectricGreen
+    zh-CN: 电绿色
+
+  electric_indigo:
+    en: ElectricIndigo
+    zh-CN: 电靛蓝色
+
+  electric_lavender:
+    en: ElectricLavender
+    zh-CN: 电薰衣草色
+
+  electric_lime:
+    en: ElectricLime
+    zh-CN: 电酸橙色
+
+  electric_purple:
+    en: ElectricPurple
+    zh-CN: 电紫色
+
+  electric_ultramarine:
+    en: ElectricUltramarine
+    zh-CN: 电群青色
+
+  electric_violet:
+    en: ElectricViolet
+    zh-CN: 电紫色
+
+  electric_yellow:
+    en: ElectricYellow
+    zh-CN: 电黄色
+
+  emerald:
+    en: Emerald
+    zh-CN: 翡翠绿
+
+  english_lavender:
+    en: EnglishLavender
+    zh-CN: 英国薰衣草色
+
+  eton_blue:
+    en: EtonBlue
+    zh-CN: 伊顿蓝
+
+  fallow:
+    en: Fallow
+    zh-CN: 苍白色
+
+  falu_red:
+    en: FaluRed
+    zh-CN: 法鲁红
+
+  fandango:
+    en: Fandango
+    zh-CN: 扇形舞
+
+  fashion_fuchsia:
+    en: FashionFuchsia
+    zh-CN: 时尚紫红色
+
+  fawn:
+    en: Fawn
+    zh-CN: 淡褐色
+
+  feldgrau:
+    en: Feldgrau
+    zh-CN: 田野灰
+
+  fern_green:
+    en: FernGreen
+    zh-CN: 蕨菜绿
+
+  ferrari_red:
+    en: FerrariRed
+    zh-CN: 法拉利红
+
+  field_drab:
+    en: FieldDrab
+    zh-CN: 田野土褐色
+
+  fire_engine_red:
+    en: FireEngineRed
+    zh-CN: 消防车红
+
+  firebrick:
+    en: Firebrick
+    zh-CN: 火砖色
+
+  flame:
+    en: Flame
+    zh-CN: 火焰色
+
+  flamingo_pink:
+    en: FlamingoPink
+    zh-CN: 火烈鸟粉
+
+  flavescent:
+    en: Flavescent
+    zh-CN: 淡黄色
+
+  flax:
+    en: Flax
+    zh-CN: 亚麻色
+
+  floral_white:
+    en: FloralWhite
+    zh-CN: 花白色
+
+  fluorescent_orange:
+    en: FluorescentOrange
+    zh-CN: 荧光橙色
+
+  fluorescent_pink:
+    en: FluorescentPink
+    zh-CN: 荧光粉色
+
+  fluorescent_yellow:
+    en: FluorescentYellow
+    zh-CN: 荧光黄色
+
+  folly:
+    en: Folly
+    zh-CN: 轻浮
+
+  forest_green_traditional:
+    en: ForestGreen(Traditional)
+    zh-CN: 传统森林绿
+
+  forest_green_web:
+    en: ForestGreen(Web)
+    zh-CN: 网络森林绿
+
+  french_beige:
+    en: FrenchBeige
+    zh-CN: 法国米色
+
+  french_blue:
+    en: FrenchBlue
+    zh-CN: 法国蓝
+
+  french_lilac:
+    en: FrenchLilac
+    zh-CN: 法国淡紫色
+
+  french_lime:
+    en: FrenchLime
+    zh-CN: 法国酸橙色
+
+  french_raspberry:
+    en: FrenchRaspberry
+    zh-CN: 法国覆盆子色
+
+  french_rose:
+    en: FrenchRose
+    zh-CN: 法国玫瑰色
+
+  fuchsia:
+    en: Fuchsia
+    zh-CN: 紫红色
+
+  fuchsia_crayola:
+    en: Fuchsia(Crayola)
+    zh-CN: 蜡笔紫红色
+
+  fuchsia_pink:
+    en: FuchsiaPink
+    zh-CN: 紫红色粉色
+
+  fuchsia_rose:
+    en: FuchsiaRose
+    zh-CN: 玫瑰紫红色
+
+  fulvous:
+    en: Fulvous
+    zh-CN: 赤褐色
+
+  futurama_deep_space_blue:
+    en: FuturamaDeepSpaceBlue
+    zh-CN: 《星际迷航》深空蓝
+
+  fuzzy_wuzzy:
+    en: FuzzyWuzzy
+    zh-CN: 模糊色
+
+  gainsboro:
+    en: Gainsboro
+    zh-CN: 浅灰色
+
+  gamboge:
+    en: Gamboge
+    zh-CN: 藤黄
+
+  ghost_white:
+    en: GhostWhite
+    zh-CN: 幽灵白
+
+  ginger:
+    en: Ginger
+    zh-CN: 姜黄色
+
+  glaucous:
+    en: Glaucous
+    zh-CN: 天蓝绿色
+
+  glitter:
+    en: Glitter
+    zh-CN: 闪光色
+
+  gold_metallic:
+    en: Gold(Metallic)
+    zh-CN: 金属金色
+
+  gold_web_golden:
+    en: Gold(Web)(Golden)
+    zh-CN: 网络金色（金色）
+
+  golden_brown:
+    en: GoldenBrown
+    zh-CN: 金褐色
+
+  golden_poppy:
+    en: GoldenPoppy
+    zh-CN: 金色罂粟
+
+  golden_yellow:
+    en: GoldenYellow
+    zh-CN: 金黄色
+
+  goldenrod:
+    en: Goldenrod
+    zh-CN: 金麒麟色
+
+  granny_smith_apple:
+    en: GrannySmithApple
+    zh-CN: 史密斯奶奶苹果绿
+
+  gray:
+    en: Gray
+    zh-CN: 灰色
+
+  gray_asparagus:
+    en: Gray-Asparagus
+    zh-CN: 芦笋灰
+
+  gray_html_css_gray:
+    en: Gray(Html/CssGray)
+    zh-CN: HTML/CSS灰色
+
+  gray_x11_gray:
+    en: Gray(X11Gray)
+    zh-CN: X11灰色
+
+  green_color_wheel_x11_green:
+    en: Green(ColorWheel)(X11Green)
+    zh-CN: 颜色轮绿色（X11绿色）
+
+  green_crayola:
+    en: Green(Crayola)
+    zh-CN: 蜡笔绿
+
+  green_html_css_green:
+    en: Green(Html/CssGreen)
+    zh-CN: HTML/CSS绿
+
+  green_munsell:
+    en: Green(Munsell)
+    zh-CN: 蒙塞尔绿
+
+  green_ncs:
+    en: Green(Ncs)
+    zh-CN: NCS绿
+
+  green_pigment:
+    en: Green(Pigment)
+    zh-CN: 颜料绿
+
+  green_ryb:
+    en: Green(Ryb)
+    zh-CN: RYB绿
+
+  green_yellow:
+    en: Green-Yellow
+    zh-CN: 绿黄色
+
+  grullo:
+    en: Grullo
+    zh-CN: 灰色马色
+
+  guppie_green:
+    en: GuppieGreen
+    zh-CN: 葛培绿
+
+  halayaube:
+    en: HalayàúBe
+    zh-CN: 哈拉尤贝
+
+  han_blue:
+    en: HanBlue
+    zh-CN: 汉蓝
+
+  han_purple:
+    en: HanPurple
+    zh-CN: 汉紫
+
+  hansa_yellow:
+    en: HansaYellow
+    zh-CN: 汉莎黄
+
+  harlequin:
+    en: Harlequin
+    zh-CN: 哈勒金
+
+  harvard_crimson:
+    en: HarvardCrimson
+    zh-CN: 哈佛深红
+
+  harvest_gold:
+    en: HarvestGold
+    zh-CN: 秋收金
+
+  heart_gold:
+    en: HeartGold
+    zh-CN: 心形金
+
+  heliotrope:
+    en: Heliotrope
+    zh-CN: 天芥菜
+
+  hollywood_cerise:
+    en: HollywoodCerise
+    zh-CN: 好莱坞酒红
+
+  honeydew:
+    en: Honeydew
+    zh-CN: 蜜瓜色
+
+  honolulu_blue:
+    en: HonoluluBlue
+    zh-CN: 火奴鲁鲁蓝
+
+  hooker_s_green:
+    en: Hooker'SGreen
+    zh-CN: 胡克绿
+
+  hot_magenta:
+    en: HotMagenta
+    zh-CN: 热烈品红
+
+  hot_pink:
+    en: HotPink
+    zh-CN: 热烈粉红
+
+  hunter_green:
+    en: HunterGreen
+    zh-CN: 猎人绿
+
+  iceberg:
+    en: Iceberg
+    zh-CN: 冰山
+
+  icterine:
+    en: Icterine
+    zh-CN: 鹬鸵黄
+
+  imperial_blue:
+    en: ImperialBlue
+    zh-CN: 皇室蓝
+
+  inchworm:
+    en: Inchworm
+    zh-CN: 孑孓
+
+  india_green:
+    en: IndiaGreen
+    zh-CN: 印度绿
+
+  indian_red:
+    en: IndianRed
+    zh-CN: 印度红
+
+  indian_yellow:
+    en: IndianYellow
+    zh-CN: 印度黄
+
+  indigo:
+    en: Indigo
+    zh-CN: 靛蓝
+
+  indigo_dye:
+    en: Indigo(Dye)
+    zh-CN: 靛蓝（染料）
+
+  indigo_web:
+    en: Indigo(Web)
+    zh-CN: 网络靛蓝
+
+  international_klein_blue:
+    en: InternationalKleinBlue
+    zh-CN: 国际克莱因蓝
+
+  international_orange_aerospace:
+    en: InternationalOrange(Aerospace)
+    zh-CN: 国际橙色（航空航天）
+
+  international_orange_engineering:
+    en: InternationalOrange(Engineering)
+    zh-CN: 国际橙色（工程）
+
+  international_orange_goldengatebridge:
+    en: InternationalOrange(GoldenGateBridge)
+    zh-CN: 国际橙色（金门大桥）
+
+  iris:
+    en: Iris
+    zh-CN: 鸢尾紫
+
+  isabelline:
+    en: Isabelline
+    zh-CN: 淡黄褐色
+
+  islamic_green:
+    en: IslamicGreen
+    zh-CN: 伊斯兰绿
+
+  ivory:
+    en: Ivory
+    zh-CN: 象牙白
+
+  jade:
+    en: Jade
+    zh-CN: 玉绿
+
+  jasmine:
+    en: Jasmine
+    zh-CN: 茉莉
+
+  jasper:
+    en: Jasper
+    zh-CN: 碧玉
+
+  jazzberry_jam:
+    en: JazzberryJam
+    zh-CN: 爵士莓酱
+
+  jet:
+    en: Jet
+    zh-CN: 黑玉色
+
+  jonquil:
+    en: Jonquil
+    zh-CN: 洋水仙黄
+
+  june_bud:
+    en: JuneBud
+    zh-CN: 六月芽
+
+  jungle_green:
+    en: JungleGreen
+    zh-CN: 丛林绿
+
+  kelly_green:
+    en: KellyGreen
+    zh-CN: 凯利绿
+
+  kenyan_copper:
+    en: KenyanCopper
+    zh-CN: 肯尼亚铜色
+
+  khaki_html_css_khaki:
+    en: Khaki(Html/Css)(Khaki)
+    zh-CN: 卡其（HTML/CSS）（卡其）
+
+  khaki_x11_lightkhaki:
+    en: Khaki(X11)(LightKhaki)
+    zh-CN: 卡其（X11）（浅卡其）
+
+  ku_crimson:
+    en: KuCrimson
+    zh-CN: 库克里松红
+
+  la_salle_green:
+    en: LaSalleGreen
+    zh-CN: 拉塞尔绿
+
+  languid_lavender:
+    en: LanguidLavender
+    zh-CN: 倦怠薰衣草
+
+  lapis_lazuli:
+    en: LapisLazuli
+    zh-CN: 天青石蓝
+
+  laser_lemon:
+    en: LaserLemon
+    zh-CN: 激光柠檬黄
+
+  laurel_green:
+    en: LaurelGreen
+    zh-CN: 月桂绿
+
+  lava:
+    en: Lava
+    zh-CN: 熔岩色
+
+  lavender_blue:
+    en: LavenderBlue
+    zh-CN: 薰衣草蓝
+
+  lavender_blush:
+    en: LavenderBlush
+    zh-CN: 淡紫色
+
+  lavender_floral:
+    en: Lavender(Floral)
+    zh-CN: 薰衣草（花香）
+
+  lavender_gray:
+    en: LavenderGray
+    zh-CN: 薰衣草灰
+
+  lavender_indigo:
+    en: LavenderIndigo
+    zh-CN: 薰衣草靛蓝
+
+  lavender_magenta:
+    en: LavenderMagenta
+    zh-CN: 薰衣草品红
+
+  lavender_mist:
+    en: LavenderMist
+    zh-CN: 薰衣草薄雾
+
+  lavender_pink:
+    en: LavenderPink
+    zh-CN: 薰衣草粉
+
+  lavender_purple:
+    en: LavenderPurple
+    zh-CN: 薰衣草紫
+
+  lavender_rose:
+    en: LavenderRose
+    zh-CN: 薰衣草玫瑰
+
+  lavender_web:
+    en: Lavender(Web)
+    zh-CN: 网络薰衣草
+
+  lawn_green:
+    en: LawnGreen
+    zh-CN: 草坪绿
+
+  lemon:
+    en: Lemon
+    zh-CN: 柠檬黄
+
+  lemon_chiffon:
+    en: LemonChiffon
+    zh-CN: 柠檬绸色
+
+  lemon_lime:
+    en: LemonLime
+    zh-CN: 柠檬石灰
+
+  licorice:
+    en: Licorice
+    zh-CN: 利口酒色
+
+  light_apricot:
+    en: LightApricot
+    zh-CN: 浅杏色
+
+  light_blue:
+    en: LightBlue
+    zh-CN: 浅蓝色
+
+  light_brown:
+    en: LightBrown
+    zh-CN: 浅棕色
+
+  light_carmine_pink:
+    en: LightCarminePink
+    zh-CN: 浅胭脂粉
+
+  light_coral:
+    en: LightCoral
+    zh-CN: 浅珊瑚色
+
+  light_cornflower_blue:
+    en: LightCornflowerBlue
+    zh-CN: 浅矢车菊蓝
+
+  light_crimson:
+    en: LightCrimson
+    zh-CN: 浅猩红色
+
+  light_cyan:
+    en: LightCyan
+    zh-CN: 浅青色
+
+  light_fuchsia_pink:
+    en: LightFuchsiaPink
+    zh-CN: 浅紫红粉
+
+  light_goldenrod_yellow:
+    en: LightGoldenrodYellow
+    zh-CN: 浅金黄色
+
+  light_gray:
+    en: LightGray
+    zh-CN: 浅灰色
+
+  light_green:
+    en: LightGreen
+    zh-CN: 浅绿色
+
+  light_khaki:
+    en: LightKhaki
+    zh-CN: 浅卡其色
+
+  light_pastel_purple:
+    en: LightPastelPurple
+    zh-CN: 浅紫色
+
+  light_pink:
+    en: LightPink
+    zh-CN: 浅粉色
+
+  light_red_ochre:
+    en: LightRedOchre
+    zh-CN: 浅红赭色
+
+  light_salmon:
+    en: LightSalmon
+    zh-CN: 浅鲜肉色
+
+  light_salmon_pink:
+    en: LightSalmonPink
+    zh-CN: 浅鲜橙粉色
+
+  light_sea_green:
+    en: LightSeaGreen
+    zh-CN: 浅海洋绿
+
+  light_sky_blue:
+    en: LightSkyBlue
+    zh-CN: 浅天蓝
+
+  light_slate_gray:
+    en: LightSlateGray
+    zh-CN: 浅石板灰
+
+  light_taupe:
+    en: LightTaupe
+    zh-CN: 浅土褐色
+
+  light_thulian_pink:
+    en: LightThulianPink
+    zh-CN: 浅朱红粉
+
+  light_yellow:
+    en: LightYellow
+    zh-CN: 浅黄色
+
+  lilac:
+    en: Lilac
+    zh-CN: 淡紫色
+
+  lime_color_wheel:
+    en: Lime(ColorWheel)
+    zh-CN: 色彩轮上的青柠绿
+
+  lime_green:
+    en: LimeGreen
+    zh-CN: 青柠绿
+
+  lime_web_x11green:
+    en: Lime(Web)(X11Green)
+    zh-CN: 网络/X11青柠绿
+
+  limerick:
+    en: Limerick
+    zh-CN: 利默里克绿
+
+  lincoln_green:
+    en: LincolnGreen
+    zh-CN: 林肯绿
+
+  linen:
+    en: Linen
+    zh-CN: 亚麻色
+
+  lion:
+    en: Lion
+    zh-CN: 狮子色
+
+  little_boy_blue:
+    en: LittleBoyBlue
+    zh-CN: 小男孩蓝
+
+  liver:
+    en: Liver
+    zh-CN: 肝色
+
+  lust:
+    en: Lust
+    zh-CN: 欲望色
+
+  magenta:
+    en: Magenta
+    zh-CN: 洋红
+
+  magenta_dye:
+    en: Magenta(Dye)
+    zh-CN: 染料洋红
+
+  magenta_process:
+    en: Magenta(Process)
+    zh-CN: 工艺洋红
+
+  magic_mint:
+    en: MagicMint
+    zh-CN: 魔法薄荷色
+
+  magnolia:
+    en: Magnolia
+    zh-CN: 木兰花色
+
+  mahogany:
+    en: Mahogany
+    zh-CN: 红木色
+
+  maize:
+    en: Maize
+    zh-CN: 玉米色
+
+  majorelle_blue:
+    en: MajorelleBlue
+    zh-CN: 马若雷勒蓝
+
+  malachite:
+    en: Malachite
+    zh-CN: 孔雀石绿
+
+  manatee:
+    en: Manatee
+    zh-CN: 海牛色
+
+  mango_tango:
+    en: MangoTango
+    zh-CN: 芒果探戈色
+
+  mantis:
+    en: Mantis
+    zh-CN: 螳螂色
+
+  mardi_gras:
+    en: MardiGras
+    zh-CN: 狂欢节色
+
+  maroon_crayola:
+    en: Maroon(Crayola)
+    zh-CN: 克莱奥拉红褐色
+
+  maroon_html_css:
+    en: Maroon(Html/Css)
+    zh-CN: HTML/CSS红褐色
+
+  maroon_x11:
+    en: Maroon(X11)
+    zh-CN: X11红褐色
+
+  mauve:
+    en: Mauve
+    zh-CN: 淡紫色
+
+  mauve_taupe:
+    en: MauveTaupe
+    zh-CN: 紫灰色
+
+  mauvelous:
+    en: Mauvelous
+    zh-CN: 美丽的淡紫色
+
+  maya_blue:
+    en: MayaBlue
+    zh-CN: 马雅蓝
+
+  meat_brown:
+    en: MeatBrown
+    zh-CN: 肉棕色
+
+  medium_aquamarine:
+    en: MediumAquamarine
+    zh-CN: 中度水绿色
+
+  medium_blue:
+    en: MediumBlue
+    zh-CN: 中度蓝色
+
+  medium_candy_apple_red:
+    en: MediumCandyAppleRed
+    zh-CN: 中度糖果苹果红
+
+  medium_carmine:
+    en: MediumCarmine
+    zh-CN: 中度洋红
+
+  medium_champagne:
+    en: MediumChampagne
+    zh-CN: 中度香槟色
+
+  medium_electric_blue:
+    en: MediumElectricBlue
+    zh-CN: 中度电蓝色
+
+  medium_jungle_green:
+    en: MediumJungleGreen
+    zh-CN: 中度丛林绿
+
+  medium_lavender_magenta:
+    en: MediumLavenderMagenta
+    zh-CN: 中度薰衣草洋红
+
+  medium_orchid:
+    en: MediumOrchid
+    zh-CN: 中度兰花紫
+
+  medium_persian_blue:
+    en: MediumPersianBlue
+    zh-CN: 中度波斯蓝
+
+  medium_purple:
+    en: MediumPurple
+    zh-CN: 中度紫色
+
+  medium_red_violet:
+    en: MediumRed-Violet
+    zh-CN: 中度红紫色
+
+  medium_ruby:
+    en: MediumRuby
+    zh-CN: 中度宝石红
+
+  medium_sea_green:
+    en: MediumSeaGreen
+    zh-CN: 中度海洋绿
+
+  medium_slate_blue:
+    en: MediumSlateBlue
+    zh-CN: 中度板岩蓝
+
+  medium_spring_bud:
+    en: MediumSpringBud
+    zh-CN: 中度春芽绿
+
+  medium_spring_green:
+    en: MediumSpringGreen
+    zh-CN: 中度春绿
+
+  medium_taupe:
+    en: MediumTaupe
+    zh-CN: 中度土褐色
+
+  medium_turquoise:
+    en: MediumTurquoise
+    zh-CN: 中度绿松石蓝
+
+  medium_tuscan_red:
+    en: MediumTuscanRed
+    zh-CN: 中度托斯卡纳红
+
+  medium_vermilion:
+    en: MediumVermilion
+    zh-CN: 中度朱红
+
+  medium_violet_red:
+    en: MediumViolet-Red
+    zh-CN: 中度紫罗兰红
+
+  mellow_apricot:
+    en: MellowApricot
+    zh-CN: 柔和杏色
+
+  mellow_yellow:
+    en: MellowYellow
+    zh-CN: 柔和黄色
+
+  melon:
+    en: Melon
+    zh-CN: 甜瓜色
+
+  midnight_blue:
+    en: MidnightBlue
+    zh-CN: 午夜蓝
+
+  midnight_green_eagle_green:
+    en: MidnightGreen(EagleGreen)
+    zh-CN: 午夜绿（鹰绿）
+
+  mikado_yellow:
+    en: MikadoYellow
+    zh-CN: 米卡多黄
+
+  mint:
+    en: Mint
+    zh-CN: 薄荷色
+
+  mint_cream:
+    en: MintCream
+    zh-CN: 薄荷奶油色
+
+  mint_green:
+    en: MintGreen
+    zh-CN: 薄荷绿
+
+  misty_rose:
+    en: MistyRose
+    zh-CN: 雾玫瑰色
+
+  moccasin:
+    en: Moccasin
+    zh-CN: 鹿皮鞋色
+
+  mode_beige:
+    en: ModeBeige
+    zh-CN: 摩登米色
+
+  moonstone_blue:
+    en: MoonstoneBlue
+    zh-CN: 月光石蓝
+
+  mordant_red_19:
+    en: MordantRed19
+    zh-CN: 酸性红19
+
+  moss_green:
+    en: MossGreen
+    zh-CN: 苔藓绿
+
+  mountain_meadow:
+    en: MountainMeadow
+    zh-CN: 山地牧场色
+
+  mountbatten_pink:
+    en: MountbattenPink
+    zh-CN: 蒙巴顿粉红
+
+  msu_green:
+    en: MsuGreen
+    zh-CN: MSU绿
+
+  mulberry:
+    en: Mulberry
+    zh-CN: 桑葚色
+
+  mustard:
+    en: Mustard
+    zh-CN: 芥末色
+
+  myrtle:
+    en: Myrtle
+    zh-CN: 桃金娘色
+
+  nadeshiko_pink:
+    en: NadeshikoPink
+    zh-CN: 菫色
+
+  napier_green:
+    en: NapierGreen
+    zh-CN: 奈皮尔绿
+
+  naples_yellow:
+    en: NaplesYellow
+    zh-CN: 那不勒斯黄
+
+  navajo_white:
+    en: NavajoWhite
+    zh-CN: 纳瓦霍白
+
+  navy_blue:
+    en: NavyBlue
+    zh-CN: 海军蓝
+
+  neon_carrot:
+    en: NeonCarrot
+    zh-CN: 霓虹胡萝卜色
+
+  neon_fuchsia:
+    en: NeonFuchsia
+    zh-CN: 霓虹灯笼海棠色
+
+  neon_green:
+    en: NeonGreen
+    zh-CN: 霓虹绿
+
+  new_york_pink:
+    en: NewYorkPink
+    zh-CN: 纽约粉
+
+  non_photo_blue:
+    en: Non-PhotoBlue
+    zh-CN: 非照片蓝
+
+  north_texas_green:
+    en: NorthTexasGreen
+    zh-CN: 北德克萨斯绿
+
+  ocean_boat_blue:
+    en: OceanBoatBlue
+    zh-CN: 海洋船蓝
+
+  ochre:
+    en: Ochre
+    zh-CN: 赭色
+
+  office_green:
+    en: OfficeGreen
+    zh-CN: 办公室绿
+
+  old_gold:
+    en: OldGold
+    zh-CN: 旧金色
+
+  old_lace:
+    en: OldLace
+    zh-CN: 旧蕾丝
+
+  old_lavender:
+    en: OldLavender
+    zh-CN: 旧薰衣草色
+
+  old_mauve:
+    en: OldMauve
+    zh-CN: 旧浅紫色
+
+  old_rose:
+    en: OldRose
+    zh-CN: 旧玫瑰色
+
+  olive:
+    en: Olive
+    zh-CN: 橄榄色
+
+  olive_drab_7:
+    en: OliveDrab#7
+    zh-CN: 橄榄土褐色#7
+
+  olive_drab_web_olive_drab_3:
+    en: OliveDrab(Web)(OliveDrab#3)
+    zh-CN: 橄榄土褐色（网页）（橄榄土褐色#3）
+
+  olivine:
+    en: Olivine
+    zh-CN: 橄榄石绿
+
+  onyx:
+    en: Onyx
+    zh-CN: 黑曜石色
+
+  opera_mauve:
+    en: OperaMauve
+    zh-CN: 歌剧浅紫色
+
+  orange_color_wheel:
+    en: Orange(ColorWheel)
+    zh-CN: 色轮橙
+
+  orange_peel:
+    en: OrangePeel
+    zh-CN: 橙子皮色
+
+  orange_red:
+    en: Orange-Red
+    zh-CN: 橙红色
+
+  orange_ryb:
+    en: Orange(Ryb)
+    zh-CN: 橙（RYB）
+
+  orange_web_color:
+    en: Orange(WebColor)
+    zh-CN: 网页橙色
+
+  orchid:
+    en: Orchid
+    zh-CN: 兰花紫
+
+  otter_brown:
+    en: OtterBrown
+    zh-CN: 水獭棕
+
+  ou_crimson_red:
+    en: OuCrimsonRed
+    zh-CN: 深猩红色
+
+  outer_space:
+    en: OuterSpace
+    zh-CN: 外太空
+
+  outrageous_orange:
+    en: OutrageousOrange
+    zh-CN: 惊人之橙
+
+  oxford_blue:
+    en: OxfordBlue
+    zh-CN: 牛津蓝
+
+  pakistan_green:
+    en: PakistanGreen
+    zh-CN: 巴基斯坦绿
+
+  palatinate_blue:
+    en: PalatinateBlue
+    zh-CN: 帕拉廷蓝
+
+  palatinate_purple:
+    en: PalatinatePurple
+    zh-CN: 帕拉廷紫
+
+  pale_aqua:
+    en: PaleAqua
+    zh-CN: 淡水绿
+
+  pale_blue:
+    en: PaleBlue
+    zh-CN: 淡蓝色
+
+  pale_brown:
+    en: PaleBrown
+    zh-CN: 淡棕色
+
+  pale_carmine:
+    en: PaleCarmine
+    zh-CN: 淡洋红
+
+  pale_cerulean:
+    en: PaleCerulean
+    zh-CN: 淡天蓝
+
+  pale_chestnut:
+    en: PaleChestnut
+    zh-CN: 淡栗色
+
+  pale_copper:
+    en: PaleCopper
+    zh-CN: 淡铜色
+
+  pale_cornflower_blue:
+    en: PaleCornflowerBlue
+    zh-CN: 淡矢车菊蓝
+
+  pale_gold:
+    en: PaleGold
+    zh-CN: 淡金色
+
+  pale_goldenrod:
+    en: PaleGoldenrod
+    zh-CN: 淡金色杆
+
+  pale_green:
+    en: PaleGreen
+    zh-CN: 淡绿色
+
+  pale_lavender:
+    en: PaleLavender
+    zh-CN: 淡薰衣草色
+
+  pale_magenta:
+    en: PaleMagenta
+    zh-CN: 淡洋红
+
+  pale_pink:
+    en: PalePink
+    zh-CN: 淡粉色
+
+  pale_plum:
+    en: PalePlum
+    zh-CN: 淡李色
+
+  pale_red_violet:
+    en: PaleRed-Violet
+    zh-CN: 淡红紫色
+
+  pale_robin_egg_blue:
+    en: PaleRobinEggBlue
+    zh-CN: 淡知更鸟蛋蓝
+
+  pale_silver:
+    en: PaleSilver
+    zh-CN: 淡银色
+
+  pale_spring_bud:
+    en: PaleSpringBud
+    zh-CN: 淡春芽色
+
+  pale_taupe:
+    en: PaleTaupe
+    zh-CN: 淡土褐色
+
+  pale_violet_red:
+    en: PaleViolet-Red
+    zh-CN: 淡紫罗兰红
+
+  pansy_purple:
+    en: PansyPurple
+    zh-CN: 三色堇紫
+
+  papaya_whip:
+    en: PapayaWhip
+    zh-CN: 木瓜搅打
+
+  paris_green:
+    en: ParisGreen
+    zh-CN: 巴黎绿
+
+  pastel_blue:
+    en: PastelBlue
+    zh-CN: 淡蓝彩
+
+  pastel_brown:
+    en: PastelBrown
+    zh-CN: 淡棕彩
+
+  pastel_gray:
+    en: PastelGray
+    zh-CN: 淡灰彩
+
+  pastel_green:
+    en: PastelGreen
+    zh-CN: 淡绿彩
+
+  pastel_magenta:
+    en: PastelMagenta
+    zh-CN: 淡洋红彩
+
+  pastel_orange:
+    en: PastelOrange
+    zh-CN: 淡橙彩
+
+  pastel_pink:
+    en: PastelPink
+    zh-CN: 淡粉彩
+
+  pastel_purple:
+    en: PastelPurple
+    zh-CN: 淡紫彩
+
+  pastel_red:
+    en: PastelRed
+    zh-CN: 淡红彩
+
+  pastel_violet:
+    en: PastelViolet
+    zh-CN: 淡紫罗兰彩
+
+  pastel_yellow:
+    en: PastelYellow
+    zh-CN: 淡黄彩
+
+  patriarch:
+    en: Patriarch
+    zh-CN: 族长
+
+  payne_s_grey:
+    en: Payne'SGrey
+    zh-CN: 佩恩灰
+
+  peach:
+    en: Peach
+    zh-CN: 桃色
+
+  peach_crayola:
+    en: Peach(Crayola)
+    zh-CN: 蜡笔桃色
+
+  peach_orange:
+    en: Peach-Orange
+    zh-CN: 桃橙色
+
+  peach_puff:
+    en: PeachPuff
+    zh-CN: 桃色绒毛
+
+  peach_yellow:
+    en: Peach-Yellow
+    zh-CN: 桃黄色
+
+  pear:
+    en: Pear
+    zh-CN: 梨色
+
+  pearl:
+    en: Pearl
+    zh-CN: 珍珠色
+
+  pearl_aqua:
+    en: PearlAqua
+    zh-CN: 珍珠水绿
+
+  pearly_purple:
+    en: PearlyPurple
+    zh-CN: 珍珠紫
+
+  peridot:
+    en: Peridot
+    zh-CN: 橄榄绿
+
+  periwinkle:
+    en: Periwinkle
+    zh-CN: 紫罗兰色
+
+  persian_blue:
+    en: PersianBlue
+    zh-CN: 波斯蓝
+
+  persian_green:
+    en: PersianGreen
+    zh-CN: 波斯绿
+
+  persian_indigo:
+    en: PersianIndigo
+    zh-CN: 波斯靛蓝
+
+  persian_orange:
+    en: PersianOrange
+    zh-CN: 波斯橙
+
+  persian_pink:
+    en: PersianPink
+    zh-CN: 波斯粉
+
+  persian_plum:
+    en: PersianPlum
+    zh-CN: 波斯李色
+
+  persian_red:
+    en: PersianRed
+    zh-CN: 波斯红
+
+  persian_rose:
+    en: PersianRose
+    zh-CN: 波斯玫瑰
+
+  persimmon:
+    en: Persimmon
+    zh-CN: 柿子色
+
+  peru:
+    en: Peru
+    zh-CN: 秘鲁色
+
+  phlox:
+    en: Phlox
+    zh-CN: 菲洛克斯
+
+  phthalo_blue:
+    en: PhthaloBlue
+    zh-CN: 酞菁蓝
+
+  phthalo_green:
+    en: PhthaloGreen
+    zh-CN: 酞菁绿
+
+  piggy_pink:
+    en: PiggyPink
+    zh-CN: 小猪粉
+
+  pine_green:
+    en: PineGreen
+    zh-CN: 松绿
+
+  pink:
+    en: Pink
+    zh-CN: 粉色
+
+  pink_lace:
+    en: PinkLace
+    zh-CN: 粉色蕾丝
+
+  pink_orange:
+    en: Pink-Orange
+    zh-CN: 橙粉色
+
+  pink_pearl:
+    en: PinkPearl
+    zh-CN: 珍珠粉
+
+  pink_sherbet:
+    en: PinkSherbet
+    zh-CN: 雪碧粉
+
+  pistachio:
+    en: Pistachio
+    zh-CN: 开心果色
+
+  platinum:
+    en: Platinum
+    zh-CN: 铂金色
+
+  plum_traditional:
+    en: Plum(Traditional)
+    zh-CN: 传统李色
+
+  plum_web:
+    en: Plum(Web)
+    zh-CN: 网络李色
+
+  portland_orange:
+    en: PortlandOrange
+    zh-CN: 波特兰橙
+
+  powder_blue_web:
+    en: PowderBlue(Web)
+    zh-CN: 网络淡蓝
+
+  princeton_orange:
+    en: PrincetonOrange
+    zh-CN: 普林斯顿橙
+
+  prune:
+    en: Prune
+    zh-CN: 深李色
+
+  prussian_blue:
+    en: PrussianBlue
+    zh-CN: 普鲁士蓝
+
+  psychedelic_purple:
+    en: PsychedelicPurple
+    zh-CN: 迷幻紫
+
+  puce:
+    en: Puce
+    zh-CN: 紫色土褐色
+
+  pumpkin:
+    en: Pumpkin
+    zh-CN: 南瓜色
+
+  purple_heart:
+    en: PurpleHeart
+    zh-CN: 紫心色
+
+  purple_html_css:
+    en: Purple(Html/Css)
+    zh-CN: Html/Css定义的紫色
+
+  purple_mountain_majesty:
+    en: PurpleMountainMajesty
+    zh-CN: 紫色山岳庄严
+
+  purple_munsell:
+    en: Purple(Munsell)
+    zh-CN: Munsell定义的紫色
+
+  purple_pizzazz:
+    en: PurplePizzazz
+    zh-CN: 披萨紫
+
+  purple_taupe:
+    en: PurpleTaupe
+    zh-CN: 紫土褐色
+
+  purple_x11:
+    en: Purple(X11)
+    zh-CN: X11定义的紫色
+
+  quartz:
+    en: Quartz
+    zh-CN: 石英色
+
+  rackley:
+    en: Rackley
+    zh-CN: 拉克利
+
+  radical_red:
+    en: RadicalRed
+    zh-CN: 激进红
+
+  rajah:
+    en: Rajah
+    zh-CN: 拉贾
+
+  raspberry:
+    en: Raspberry
+    zh-CN: 覆盆子
+
+  raspberry_glace:
+    en: RaspberryGlace
+    zh-CN: 覆盆子糖霜
+
+  raspberry_pink:
+    en: RaspberryPink
+    zh-CN: 覆盆子粉
+
+  raspberry_rose:
+    en: RaspberryRose
+    zh-CN: 覆盆子玫瑰
+
+  raw_umber:
+    en: RawUmber
+    zh-CN: 生乌姆伯
+
+  razzle_dazzle_rose:
+    en: RazzleDazzleRose
+    zh-CN: 炫彩玫瑰
+
+  razzmatazz:
+    en: Razzmatazz
+    zh-CN: 拉兹马塔兹
+
+  red:
+    en: Red
+    zh-CN: 红色
+
+  red_brown:
+    en: Red-Brown
+    zh-CN: 红棕色
+
+  red_devil:
+    en: RedDevil
+    zh-CN: 恶魔红
+
+  red_munsell:
+    en: Red(Munsell)
+    zh-CN: 孟塞尔红
+
+  red_ncs:
+    en: Red(Ncs)
+    zh-CN: NCS红
+
+  red_orange:
+    en: Red-Orange
+    zh-CN: 红橙色
+
+  red_pigment:
+    en: Red(Pigment)
+    zh-CN: 颜料红
+
+  red_ryb:
+    en: Red(Ryb)
+    zh-CN: RYB红
+
+  red_violet:
+    en: Red-Violet
+    zh-CN: 红紫色
+
+  redwood:
+    en: Redwood
+    zh-CN: 红木色
+
+  regalia:
+    en: Regalia
+    zh-CN: 皇家紫色
+
+  resolution_blue:
+    en: ResolutionBlue
+    zh-CN: 分辨率蓝
+
+  rich_black:
+    en: RichBlack
+    zh-CN: 浓黑色
+
+  rich_brilliant_lavender:
+    en: RichBrilliantLavender
+    zh-CN: 富贵亮薰衣草色
+
+  rich_carmine:
+    en: RichCarmine
+    zh-CN: 富贵猩红色
+
+  rich_electric_blue:
+    en: RichElectricBlue
+    zh-CN: 富贵电蓝色
+
+  rich_lavender:
+    en: RichLavender
+    zh-CN: 富贵薰衣草色
+
+  rich_lilac:
+    en: RichLilac
+    zh-CN: 富贵淡紫色
+
+  rich_maroon:
+    en: RichMaroon
+    zh-CN: 富贵栗色
+
+  rifle_green:
+    en: RifleGreen
+    zh-CN: 步枪绿
+
+  robin_egg_blue:
+    en: RobinEggBlue
+    zh-CN: 知更鸟蛋蓝
+
+  rose:
+    en: Rose
+    zh-CN: 玫瑰色
+
+  rose_bonbon:
+    en: RoseBonbon
+    zh-CN: 玫瑰棒棒糖色
+
+  rose_ebony:
+    en: RoseEbony
+    zh-CN: 玫瑰乌木色
+
+  rose_gold:
+    en: RoseGold
+    zh-CN: 玫瑰金色
+
+  rose_madder:
+    en: RoseMadder
+    zh-CN: 胭脂红
+
+  rose_pink:
+    en: RosePink
+    zh-CN: 玫瑰粉
+
+  rose_quartz:
+    en: RoseQuartz
+    zh-CN: 玫瑰石英色
+
+  rose_taupe:
+    en: RoseTaupe
+    zh-CN: 玫瑰土褐色
+
+  rose_vale:
+    en: RoseVale
+    zh-CN: 玫瑰谷色
+
+  rosewood:
+    en: Rosewood
+    zh-CN: 玫瑰木色
+
+  rosso_corsa:
+    en: RossoCorsa
+    zh-CN: 赛车红
+
+  rosy_brown:
+    en: RosyBrown
+    zh-CN: 玫瑰棕色
+
+  royal_azure:
+    en: RoyalAzure
+    zh-CN: 皇家天蓝
+
+  royal_blue_traditional:
+    en: RoyalBlue(Traditional)
+    zh-CN: 传统皇家蓝
+
+  royal_blue_web:
+    en: RoyalBlue(Web)
+    zh-CN: 网络皇家蓝
+
+  royal_fuchsia:
+    en: RoyalFuchsia
+    zh-CN: 皇家芙蓉色
+
+  royal_purple:
+    en: RoyalPurple
+    zh-CN: 皇家紫色
+
+  royal_yellow:
+    en: RoyalYellow
+    zh-CN: 皇家黄色
+
+  rubine_red:
+    en: RubineRed
+    zh-CN: 红宝石红色
+
+  ruby:
+    en: Ruby
+    zh-CN: 宝石红
+
+  ruby_red:
+    en: RubyRed
+    zh-CN: 红宝石色
+
+  ruddy:
+    en: Ruddy
+    zh-CN: 红润的
+
+  ruddy_brown:
+    en: RuddyBrown
+    zh-CN: 红褐色
+
+  ruddy_pink:
+    en: RuddyPink
+    zh-CN: 玫瑰红
+
+  rufous:
+    en: Rufous
+    zh-CN: 栗褐色
+
+  russet:
+    en: Russet
+    zh-CN: 赤褐色
+
+  rust:
+    en: Rust
+    zh-CN: 锈色
+
+  rusty_red:
+    en: RustyRed
+    zh-CN: 铁锈红
+
+  sacramento_state_green:
+    en: SacramentoStateGreen
+    zh-CN: 萨克拉门托州立大学绿
+
+  saddle_brown:
+    en: SaddleBrown
+    zh-CN: 马鞍棕
+
+  safety_orange_blaze_orange:
+    en: SafetyOrange(BlazeOrange)
+    zh-CN: 安全橙色（BlazeOrange）
+
+  saffron:
+    en: Saffron
+    zh-CN: 藏红花色
+
+  salmon:
+    en: Salmon
+    zh-CN: 鲑鱼色
+
+  salmon_pink:
+    en: SalmonPink
+    zh-CN: 鲑鱼粉
+
+  sand:
+    en: Sand
+    zh-CN: 沙色
+
+  sand_dune:
+    en: SandDune
+    zh-CN: 沙丘色
+
+  sandstorm:
+    en: Sandstorm
+    zh-CN: 沙暴色
+
+  sandy_brown:
+    en: SandyBrown
+    zh-CN: 沙棕色
+
+  sandy_taupe:
+    en: SandyTaupe
+    zh-CN: 沙土褐色
+
+  sangria:
+    en: Sangria
+    zh-CN: 桑格里亚酒红
+
+  sap_green:
+    en: SapGreen
+    zh-CN: 树液绿
+
+  sapphire:
+    en: Sapphire
+    zh-CN: 宝石蓝
+
+  sapphire_blue:
+    en: SapphireBlue
+    zh-CN: 矢车菊蓝
+
+  satin_sheen_gold:
+    en: SatinSheenGold
+    zh-CN: 缎面金色
+
+  scarlet:
+    en: Scarlet
+    zh-CN: 猩红色
+
+  scarlet_crayola:
+    en: Scarlet(Crayola)
+    zh-CN: 蜡笔猩红
+
+  school_bus_yellow:
+    en: SchoolBusYellow
+    zh-CN: 校车黄
+
+  screamin_green:
+    en: Screamin'Green
+    zh-CN: 大声叫喊绿
+
+  sea_blue:
+    en: SeaBlue
+    zh-CN: 海蓝
+
+  sea_green:
+    en: SeaGreen
+    zh-CN: 海绿
+
+  seal_brown:
+    en: SealBrown
+    zh-CN: 海豹棕
+
+  seashell:
+    en: Seashell
+    zh-CN: 海贝白
+
+  selective_yellow:
+    en: SelectiveYellow
+    zh-CN: 选择性黄
+
+  sepia:
+    en: Sepia
+    zh-CN: 棕黑色
+
+  shadow:
+    en: Shadow
+    zh-CN: 阴影色
+
+  shamrock_green:
+    en: ShamrockGreen
+    zh-CN: 三叶草绿
+
+  shocking_pink:
+    en: ShockingPink
+    zh-CN: 令人震惊的粉红色
+
+  shocking_pink_crayola:
+    en: ShockingPink(Crayola)
+    zh-CN: 蜡笔令人震惊的粉红色
+
+  sienna:
+    en: Sienna
+    zh-CN: 黄赭色
+
+  silver:
+    en: Silver
+    zh-CN: 银白色
+
+  sinopia:
+    en: Sinopia
+    zh-CN: 棕褐色
+
+  skobeloff:
+    en: Skobeloff
+    zh-CN: 斯科贝洛夫色
+
+  sky_blue:
+    en: SkyBlue
+    zh-CN: 天蓝
+
+  sky_magenta:
+    en: SkyMagenta
+    zh-CN: 天紫
+
+  slate_blue:
+    en: SlateBlue
+    zh-CN: 石板蓝
+
+  slate_gray:
+    en: SlateGray
+    zh-CN: 石板灰
+
+  smalt_dark_powder_blue:
+    en: Smalt(DarkPowderBlue)
+    zh-CN: 暗粉蓝（深粉末蓝）
+
+  smokey_topaz:
+    en: SmokeyTopaz
+    zh-CN: 烟熏黄玉色
+
+  smoky_black:
+    en: SmokyBlack
+    zh-CN: 烟熏黑色
+
+  snow:
+    en: Snow
+    zh-CN: 雪白色
+
+  spiro_disco_ball:
+    en: SpiroDiscoBall
+    zh-CN: 螺旋迪斯科球色
+
+  spring_bud:
+    en: SpringBud
+    zh-CN: 春芽色
+
+  spring_green:
+    en: SpringGreen
+    zh-CN: 春绿色
+
+  st_patrick_s_blue:
+    en: St.Patrick'SBlue
+    zh-CN: 圣帕特里克蓝
+
+  steel_blue:
+    en: SteelBlue
+    zh-CN: 钢蓝色
+
+  stil_de_grain_yellow:
+    en: StilDeGrainYellow
+    zh-CN: 禾秆黄色
+
+  stizza:
+    en: Stizza
+    zh-CN: 斯蒂扎色
+
+  stormcloud:
+    en: Stormcloud
+    zh-CN: 暴风雨云色
+
+  straw:
+    en: Straw
+    zh-CN: 稻草色
+
+  sunglow:
+    en: Sunglow
+    zh-CN: 阳光色
+
+  sunset:
+    en: Sunset
+    zh-CN: 夕阳色
+
+  tan:
+    en: Tan
+    zh-CN: 棕褐色
+
+  tangelo:
+    en: Tangelo
+    zh-CN: 橘柚色
+
+  tangerine:
+    en: Tangerine
+    zh-CN: 柑橘色
+
+  tangerine_yellow:
+    en: TangerineYellow
+    zh-CN: 柑橘黄
+
+  tango_pink:
+    en: TangoPink
+    zh-CN: 探戈粉色
+
+  taupe:
+    en: Taupe
+    zh-CN: 土褐色
+
+  taupe_gray:
+    en: TaupeGray
+    zh-CN: 土灰色
+
+  tea_green:
+    en: TeaGreen
+    zh-CN: 茶绿色
+
+  tea_rose_orange:
+    en: TeaRose(Orange)
+    zh-CN: 茶玫瑰橙
+
+  tea_rose_rose:
+    en: TeaRose(Rose)
+    zh-CN: 茶玫瑰红
+
+  teal:
+    en: Teal
+    zh-CN: 水鸭色
+
+  teal_blue:
+    en: TealBlue
+    zh-CN: 水鸭蓝
+
+  teal_green:
+    en: TealGreen
+    zh-CN: 水鸭绿
+
+  telemagenta:
+    en: Telemagenta
+    zh-CN: 远洋红紫色
+
+  tenné_tawny:
+    en: Tenné(Tawny)
+    zh-CN: 坦尼浅褐色
+
+  terra_cotta:
+    en: TerraCotta
+    zh-CN: 赤陶色
+
+  thistle:
+    en: Thistle
+    zh-CN: 蓟色
+
+  thulian_pink:
+    en: ThulianPink
+    zh-CN: 图利安粉色
+
+  tickle_me_pink:
+    en: TickleMePink
+    zh-CN: 逗趣粉
+
+  tiffany_blue:
+    en: TiffanyBlue
+    zh-CN: 蒂芙尼蓝
+
+  tiger_s_eye:
+    en: Tiger'SEye
+    zh-CN: 虎眼石色
+
+  timberwolf:
+    en: Timberwolf
+    zh-CN: 灰狼色
+
+  titanium_yellow:
+    en: TitaniumYellow
+    zh-CN: 钛黄色
+
+  tomato:
+    en: Tomato
+    zh-CN: 番茄色
+
+  toolbox:
+    en: Toolbox
+    zh-CN: 工具箱色
+
+  topaz:
+    en: Topaz
+    zh-CN: 黄玉色
+
+  tractor_red:
+    en: TractorRed
+    zh-CN: 拖拉机红色
+
+  trolley_grey:
+    en: TrolleyGrey
+    zh-CN: 手推车灰色
+
+  tropical_rain_forest:
+    en: TropicalRainForest
+    zh-CN: 热带雨林色
+
+  true_blue:
+    en: TrueBlue
+    zh-CN: 真蓝色
+
+  tufts_blue:
+    en: TuftsBlue
+    zh-CN: 簇绒蓝色
+
+  tumbleweed:
+    en: Tumbleweed
+    zh-CN: 滚草色
+
+  turkish_rose:
+    en: TurkishRose
+    zh-CN: 土耳其玫瑰色
+
+  turquoise:
+    en: Turquoise
+    zh-CN: 绿松石色
+
+  turquoise_blue:
+    en: TurquoiseBlue
+    zh-CN: 绿松石蓝色
+
+  turquoise_green:
+    en: TurquoiseGreen
+    zh-CN: 绿松石绿色
+
+  tuscan_red:
+    en: TuscanRed
+    zh-CN: 托斯卡纳红色
+
+  twilight_lavender:
+    en: TwilightLavender
+    zh-CN: 暮光薰衣草色
+
+  tyrian_purple:
+    en: TyrianPurple
+    zh-CN: 泰尔紫色
+
+  ua_blue:
+    en: UaBlue
+    zh-CN: UA蓝色
+
+  ua_red:
+    en: UaRed
+    zh-CN: UA红色
+
+  ube:
+    en: Ube
+    zh-CN: 紫山药色
+
+  ucla_blue:
+    en: UclaBlue
+    zh-CN: 加州大学蓝
+
+  ucla_gold:
+    en: UclaGold
+    zh-CN: 加州大学金色
+
+  ufo_green:
+    en: UfoGreen
+    zh-CN: 外星人绿色
+
+  ultra_pink:
+    en: UltraPink
+    zh-CN: 超粉色
+
+  ultramarine:
+    en: Ultramarine
+    zh-CN: 群青色
+
+  ultramarine_blue:
+    en: UltramarineBlue
+    zh-CN: 群青蓝色
+
+  umber:
+    en: Umber
+    zh-CN: 赭色
+
+  unbleached_silk:
+    en: UnbleachedSilk
+    zh-CN: 未漂白丝色
+
+  united_nations_blue:
+    en: UnitedNationsBlue
+    zh-CN: 联合国蓝色
+
+  university_of_california_gold:
+    en: UniversityOfCaliforniaGold
+    zh-CN: 加州大学金色
+
+  unmellow_yellow:
+    en: UnmellowYellow
+    zh-CN: 非蜜黄色
+
+  up_forest_green:
+    en: UpForestGreen
+    zh-CN: 森林绿
+
+  up_maroon:
+    en: UpMaroon
+    zh-CN: 栗色
+
+  upsdell_red:
+    en: UpsdellRed
+    zh-CN: 乌普斯德尔红色
+
+  urobilin:
+    en: Urobilin
+    zh-CN: 尿胆素色
+
+  usafa_blue:
+    en: UsafaBlue
+    zh-CN: 美国空军学院蓝色
+
+  usc_cardinal:
+    en: UscCardinal
+    zh-CN: USC深红色
+
+  usc_gold:
+    en: UscGold
+    zh-CN: USC金色
+
+  utah_crimson:
+    en: UtahCrimson
+    zh-CN: 犹他州猩红色
+
+  vanilla:
+    en: Vanilla
+    zh-CN: 香草色
+
+  vegas_gold:
+    en: VegasGold
+    zh-CN: 维加斯金色
+
+  venetian_red:
+    en: VenetianRed
+    zh-CN: 威尼斯红
+
+  verdigris:
+    en: Verdigris
+    zh-CN: 铜绿
+
+  vermilion_cinnabar:
+    en: Vermilion(Cinnabar)
+    zh-CN: 朱砂红（辰砂）
+
+  vermilion_plochere:
+    en: Vermilion(Plochere)
+    zh-CN: 朱砂红（普洛歇尔）
+
+  veronica:
+    en: Veronica
+    zh-CN: 紫罗兰色
+
+  violet:
+    en: Violet
+    zh-CN: 紫色
+
+  violet_blue:
+    en: Violet-Blue
+    zh-CN: 紫蓝色
+
+  violet_color_wheel:
+    en: Violet(ColorWheel)
+    zh-CN: 紫色（色轮）
+
+  violet_ryb:
+    en: Violet(Ryb)
+    zh-CN: 紫色（RYB色彩模型）
+
+  violet_web:
+    en: Violet(Web)
+    zh-CN: 网络紫
+
+  viridian:
+    en: Viridian
+    zh-CN: 翡翠绿
+
+  vivid_auburn:
+    en: VividAuburn
+    zh-CN: 鲜艳赤褐色
+
+  vivid_burgundy:
+    en: VividBurgundy
+    zh-CN: 鲜艳勃艮第酒红
+
+  vivid_cerise:
+    en: VividCerise
+    zh-CN: 鲜艳樱桃红
+
+  vivid_tangerine:
+    en: VividTangerine
+    zh-CN: 鲜艳橘红色
+
+  vivid_violet:
+    en: VividViolet
+    zh-CN: 鲜艳紫色
+
+  warm_black:
+    en: WarmBlack
+    zh-CN: 温暖黑色
+
+  waterspout:
+    en: Waterspout
+    zh-CN: 水龙卷色
+
+  wenge:
+    en: Wenge
+    zh-CN: 文中木色
+
+  wheat:
+    en: Wheat
+    zh-CN: 小麦色
+
+  white:
+    en: White
+    zh-CN: 白色
+
+  white_smoke:
+    en: WhiteSmoke
+    zh-CN: 白烟色
+
+  wild_blue_yonder:
+    en: WildBlueYonder
+    zh-CN: 野蓝尤德尔色
+
+  wild_strawberry:
+    en: WildStrawberry
+    zh-CN: 野生草莓色
+
+  wild_watermelon:
+    en: WildWatermelon
+    zh-CN: 野生西瓜色
+
+  wine:
+    en: Wine
+    zh-CN: 葡萄酒色
+
+  wine_dregs:
+    en: WineDregs
+    zh-CN: 酒渣色
+
+  wisteria:
+    en: Wisteria
+    zh-CN: 紫藤色
+
+  wood_brown:
+    en: WoodBrown
+    zh-CN: 木棕色
+
+  xanadu:
+    en: Xanadu
+    zh-CN: 仙纳杜色
+
+  yale_blue:
+    en: YaleBlue
+    zh-CN: 耶鲁蓝色
+
+  yellow:
+    en: Yellow
+    zh-CN: 黄色
+
+  yellow_green:
+    en: Yellow-Green
+    zh-CN: 黄绿色
+
+  yellow_munsell:
+    en: Yellow(Munsell)
+    zh-CN: 孟塞尔黄
+
+  yellow_ncs:
+    en: Yellow(Ncs)
+    zh-CN: NCS黄
+
+  yellow_orange:
+    en: YellowOrange
+    zh-CN: 黄橙色
+
+  yellow_process:
+    en: Yellow(Process)
+    zh-CN: 制程黄
+
+  yellow_ryb:
+    en: Yellow(Ryb)
+    zh-CN: RYB黄
+
+  zaffre:
+    en: Zaffre
+    zh-CN: 靛青色
+
+  zinnwaldite_brown:
+    en: ZinnwalditeBrown
+    zh-CN: 辛瓦德石色

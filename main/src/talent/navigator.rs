@@ -31,8 +31,8 @@ use std::sync::Weak;
 const WAVE: &str = "boundary.wav";
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("上一个控件"), key = combo_key!(VkNumPad7))]
-async fn prev_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_prev_doc").to_string(), key = combo_key ! (VkNumPad7))]
+async fn element_prev(context: Weak<Context>) {
     match context.get_ui_navigator().prev().await.current().await {
         Some(element) => {
             context.get_performer().speak(element.as_ref()).await;
@@ -44,8 +44,8 @@ async fn prev_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("下一个控件"), key = combo_key!(VkNumPad9))]
-async fn next_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_next_doc").to_string(), key = combo_key ! (VkNumPad9))]
+async fn element_next(context: Weak<Context>) {
     match context.get_ui_navigator().next().await.current().await {
         Some(element) => {
             context.get_performer().speak(element.as_ref()).await;
@@ -55,8 +55,8 @@ async fn next_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("当前控件"), key = combo_key!(VkNumPad8))]
-async fn curr_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_current_doc").to_string(), key = combo_key ! (VkNumPad8))]
+async fn element_current(context: Weak<Context>) {
     match context.get_ui_navigator().current().await {
         Some(element) => {
             context.get_performer().speak(element.as_ref()).await;
@@ -68,25 +68,25 @@ async fn curr_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("上一个子控件"), key = combo_key!(VkNumPad4))]
-async fn prev_child_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_prev_line_doc").to_string(), key = combo_key ! (VkNumPad4))]
+async fn element_prev_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("下一个子控件"), key = combo_key!(VkNumPad6))]
-async fn next_child_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_next_line_doc").to_string(), key = combo_key ! (VkNumPad6))]
+async fn element_next_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("当前子控件"), key = combo_key!(VkNumPad5))]
-async fn curr_child_element(context: Weak<Context>) {
+#[talent(doc = t ! ("navigator.element_current_line_doc").to_string(), key = combo_key ! (VkNumPad5))]
+async fn element_current_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("下一个模式"), key = combo_key!(VkAdd))]
+#[talent(doc = t ! ("navigator.mode_next_doc").to_string(), key = combo_key ! (VkAdd))]
 async fn mode_next(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
     config.navigation_config.mode = match config.navigation_config.mode {
@@ -106,12 +106,12 @@ async fn mode_next(context: Weak<Context>) {
         NavigationMode::Plane => t!("navigator.plane"),
         NavigationMode::Tree => t!("navigator.tree"),
     }
-    .to_string();
+        .to_string();
     context.get_performer().speak(&text).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = String::from("上一个模式"), key = combo_key!(VkSubtract))]
+#[talent(doc = t ! ("navigator.mode_prev_doc").to_string(), key = combo_key ! (VkSubtract))]
 async fn mode_prev(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
     config.navigation_config.mode = match config.navigation_config.mode {
@@ -131,6 +131,19 @@ async fn mode_prev(context: Weak<Context>) {
             t!("navigator.tree")
         }
     }
-    .to_string();
+        .to_string();
     context.get_performer().speak(&text).await;
+}
+
+//noinspection RsUnresolvedPath
+#[talent(doc = t ! ("navigator.element_color_set_doc").to_string(), key = combo_key ! (VkNumPad8, double))]
+async fn element_color_set(context: Weak<Context>) {
+    let Some(element) = context.get_ui_navigator().current().await else {
+        return;
+    };
+    let Some(color_set) = element.get_color_set() else {
+        return;
+    };
+    let info = color_set.iter().map(|i| i.name.as_str()).collect::<Vec<_>>().join(",");
+    context.get_performer().speak(&t!("navigator.element_color_set", count=color_set.len(), list=info)).await;
 }

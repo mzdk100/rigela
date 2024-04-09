@@ -1,5 +1,41 @@
 _version: 2
 
+program.exit_doc:
+  en: Exit
+  zh-CN: 退出
+
+program.current_date_doc:
+  en: View current date
+  zh-CN: 查看当前日期
+
+program.current_time_doc:
+  en: View current time
+  zh-CN: 查看当前时间
+
+program.current_cpu_usage_doc:
+  en: View current usage of cpu
+  zh-CN: 查看当前CPU使用率
+
+program.popup_menu_doc:
+  en: Show the menu of the screen reader
+  zh-CN: 显示读屏菜单
+
+program.hotkeys_doc:
+  en: Customize the hotkeys
+  zh-CN: 自定义热键
+
+program.view_window_title_doc:
+  en: View the title of foreground window
+  zh-CN: 查看前景窗口标题
+
+program.view_focus_doc:
+  en: View the focus
+  zh-CN: 查看当前焦点
+
+program.stop_tts_output_doc:
+  en: Stop the voice being output
+  zh-CN: 停止正在输出的语音
+
 program.exit:
   en: Exit screen reader
   zh-CN: 退出读屏
@@ -32,6 +68,42 @@ mouse.state_on:
   en: Mouse Reading already on
   zh-CN: 已开启鼠标朗读
 
+navigator.element_color_set_doc:
+  en: View the element color information
+  zh-CN: 查看元素颜色信息
+
+navigator.element_current_doc:
+  en: View the current element
+  zh-CN: 查看当前元素
+
+navigator.element_prev_doc:
+  en: Switch to the prev element
+  zh-CN: 切换到上一个元素
+
+navigator.element_next_doc:
+  en: Switch to the next element
+  zh-CN: 切换到下一个元素
+
+navigator.element_current_line_doc:
+  en: View the current line of the element
+  zh-CN: 查看元素当前行的文字
+
+navigator.element_prev_line_doc:
+  en: Switch to the prev line of the element
+  zh-CN: 切换到元素的上一行文字
+
+navigator.element_next_line_doc:
+  en: Switch to the next line of the element
+  zh-CN: 切换到元素的下一行文字
+
+navigator.mode_prev_doc:
+  en: Switch to the previous mode
+  zh-CN: 切换到上一个模式
+
+navigator.mode_next_doc:
+  en: Switch to the next mode
+  zh-CN: 切换到下一个模式
+
 navigator.linear:
   en: Linear navigation mode
   zh-CN: 线性导航模式
@@ -43,6 +115,10 @@ navigator.plane:
 navigator.tree:
   en: Tree navigation mode
   zh-CN: 树状导航模式
+
+navigator.element_color_set:
+  en: "The current element contains %{count} colors: %{list}"
+  zh-CN: "当前元素包含%{count}种颜色： %{list}"
 
 tts.pitch_info:
   en: "Pitch: %{value}"

@@ -12,6 +12,7 @@
  */
 
 use std::{
+    collections::HashSet,
     fmt::{Debug, Formatter},
     hash::{Hash, Hasher},
     sync::Arc,
@@ -21,9 +22,33 @@ use a11y::{
     ia2::{object::Accessible2Object, relation::AccessibleRelation},
     jab::context::AccessibleContext,
 };
-use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
+use rigela_utils::{color::get_nearest_color_name, screen::snapshot};
+use win_wrap::{
+    common::{HWND, RECT},
+    msaa::object::AccessibleObject,
+    uia::element::UiAutomationElement,
+};
 
 use crate::performer::Speakable;
+
+#[derive(Eq)]
+pub(crate) struct ColorItem {
+    #[allow(dead_code)]
+    pub(crate) rgb: [u8; 3],
+    pub(crate) name: String,
+}
+
+impl PartialEq for ColorItem {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Hash for ColorItem {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state)
+    }
+}
 
 /**
  * UI元素。
@@ -70,8 +95,8 @@ impl<'a> UiElement<'a> {
                 Ok(y) => Some(Self::MSAA(y, 0)),
                 Err(_) => match x.children(index as u32, 1) {
                     Ok(cr) => Some(Self::MSAA(cr.first().unwrap().clone(), 0)),
-                    Err(_) => None
-                }
+                    Err(_) => None,
+                },
             },
             Self::UIA(x) => match x.get_child(index) {
                 None => None,
@@ -116,6 +141,36 @@ impl<'a> UiElement<'a> {
     }
 
     /**
+     * 获取控件的颜色信息。
+     * */
+    pub(crate) fn get_color_set(&self) -> Option<HashSet<ColorItem>> {
+        let Some(rect) = self.get_rect() else {
+            return None;
+        };
+        let Some((pixels, info, _)) = snapshot(
+            HWND::default(),
+            rect.left,
+            rect.top,
+            rect.right - rect.left,
+            rect.bottom - rect.top,
+        ) else {
+            return None;
+        };
+        let mut set = HashSet::new();
+        for i in (0..info.biHeight).step_by((info.biHeight / 100 + 2) as usize) {
+            for j in (0..info.biWidth).step_by((info.biWidth / 100 + 2) as usize) {
+                let rgb = &pixels[i as usize][j as usize];
+                let name = get_nearest_color_name(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
+                set.insert(ColorItem {
+                    rgb: [rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue],
+                    name: t!(format!("color.{}", name).as_str()).to_string(),
+                });
+            }
+        }
+        Some(set)
+    }
+
+    /**
      * 获取唯一ID。
      * */
     pub(crate) fn get_unique_id(&self) -> String {
@@ -127,7 +182,7 @@ impl<'a> UiElement<'a> {
             // 对于MSAA没有可靠的生成对象ID的方法
             let id = match Accessible2Object::from_accessible_object(x.clone()) {
                 Ok(x) => x.unique_id().unwrap_or(-1),
-                Err(_) => -1
+                Err(_) => -1,
             };
             if id == -1 {
                 return format!("msaa:{},{},{}", x.get_name(*y), x.get_role(*y), y);
