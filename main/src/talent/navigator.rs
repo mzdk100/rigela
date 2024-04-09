@@ -31,7 +31,7 @@ use std::sync::Weak;
 const WAVE: &str = "boundary.wav";
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "上一个控件", key = combo_key!(VkNumPad7))]
+#[talent(doc = String::from("上一个控件"), key = combo_key!(VkNumPad7))]
 async fn prev_element(context: Weak<Context>) {
     match context.get_ui_navigator().prev().await.current().await {
         Some(element) => {
@@ -44,7 +44,7 @@ async fn prev_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "下一个控件", key = combo_key!(VkNumPad9))]
+#[talent(doc = String::from("下一个控件"), key = combo_key!(VkNumPad9))]
 async fn next_element(context: Weak<Context>) {
     match context.get_ui_navigator().next().await.current().await {
         Some(element) => {
@@ -55,7 +55,7 @@ async fn next_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "当前控件", key = combo_key!(VkNumPad8))]
+#[talent(doc = String::from("当前控件"), key = combo_key!(VkNumPad8))]
 async fn curr_element(context: Weak<Context>) {
     match context.get_ui_navigator().current().await {
         Some(element) => {
@@ -68,25 +68,25 @@ async fn curr_element(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "上一个子控件", key = combo_key!(VkNumPad4))]
+#[talent(doc = String::from("上一个子控件"), key = combo_key!(VkNumPad4))]
 async fn prev_child_element(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "下一个子控件", key = combo_key!(VkNumPad6))]
+#[talent(doc = String::from("下一个子控件"), key = combo_key!(VkNumPad6))]
 async fn next_child_element(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "当前子控件", key = combo_key!(VkNumPad5))]
+#[talent(doc = String::from("当前子控件"), key = combo_key!(VkNumPad5))]
 async fn curr_child_element(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "下一个模式", key = combo_key!(VkAdd))]
+#[talent(doc = String::from("下一个模式"), key = combo_key!(VkAdd))]
 async fn mode_next(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
     config.navigation_config.mode = match config.navigation_config.mode {
@@ -111,7 +111,7 @@ async fn mode_next(context: Weak<Context>) {
 }
 
 //noinspection RsUnresolvedPath
-#[talent(doc = "上一个模式", key = combo_key!(VkSubtract))]
+#[talent(doc = String::from("上一个模式"), key = combo_key!(VkSubtract))]
 async fn mode_prev(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
     config.navigation_config.mode = match config.navigation_config.mode {

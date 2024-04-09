@@ -22,7 +22,7 @@ use syn::{
 };
 
 struct Metadata {
-    doc: MetaNameValue,
+    doc: TokenStream,
     cmd_list: TokenStream,
 }
 
@@ -31,7 +31,7 @@ impl Parse for Metadata {
         let r = Punctuated::<MetaNameValue, Token![,]>::parse_terminated(input)?;
         let mut iter = r.iter();
 
-        let doc = iter.next().unwrap().clone();
+        let doc = iter.next().unwrap().clone().value.to_token_stream();
 
         let mut cmd_list = TokenStream::new();
         cmd_list.append(Ident::new("vec", Span::call_site()));
@@ -57,7 +57,7 @@ impl Parse for Metadata {
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
     let doc = metadata.doc;
-    let doc_raw = doc.value.clone();
+    let doc_raw = doc.clone();
     let cmd_list = metadata.cmd_list;
     let input: ItemFn = syn::parse2(item).unwrap();
     let id_raw = input.sig.ident.to_string();
@@ -66,7 +66,6 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let id2 = Ident::new(id2.as_str(), Span::call_site());
     let body = input.block.to_token_stream();
     quote! {
-        #[#doc]
         pub(crate) struct #id;
 
         #[async_trait]
@@ -89,7 +88,7 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             }
 
             fn get_doc(&self) -> String {
-                #doc_raw.to_string()
+                #doc_raw
             }
 
             async  fn perform(&self, context: Weak<Context>) {
@@ -97,7 +96,6 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             }
         }
         impl crate::talent::TalentProvider {
-            #[#doc]
             pub fn #id2(&self) -> #id {#id}
         }
     }
