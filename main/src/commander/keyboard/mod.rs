@@ -25,7 +25,6 @@ use crate::{
     },
     context::{Context, ContextAccessor},
 };
-use rust_i18n::AtomicStr;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -41,28 +40,26 @@ pub(crate) type KeyCallbackFn = Arc<dyn Fn(Keys, bool) + Send + Sync>;
 /// 键盘管理器
 pub(crate) struct KeyboardManager {
     // 元组包含： 按键键名， 是否按下
-    pressed_cache: Arc<(AtomicStr, AtomicBool)>,
-    release_cache: Arc<(AtomicStr, AtomicBool)>,
-    last_pressed_key: AtomicStr,
+    pressed_cache: Arc<(Mutex<Keys>, AtomicBool)>,
+    release_cache: Arc<(Mutex<Keys>, AtomicBool)>,
+    last_pressed_key: Mutex<Keys>,
     key_callback_fns: Mutex<Vec<(Vec<Keys>, KeyCallbackFn)>>,
     context: OnceLock<Weak<Context>>,
 }
 
 macro_rules! change_cache {
-    ($cache:expr, $key_str:expr, $state: expr) => {
-        $cache.0.replace($key_str);
-        $cache.1.store($state, Ordering::Relaxed);
+    ($cache:expr, $key_str:expr, $state: expr) => {{
+        *$cache.0.lock().unwrap() = $key_str
     };
+    $cache.1.store($state, Ordering::Relaxed);};
 }
 
 impl KeyboardManager {
     pub(crate) fn new() -> Self {
-        let key_none: &str = Keys::VkNone.into();
-
         Self {
-            pressed_cache: (AtomicStr::from(key_none), AtomicBool::new(false)).into(),
-            release_cache: (AtomicStr::from(key_none), AtomicBool::new(false)).into(),
-            last_pressed_key: AtomicStr::from(key_none),
+            pressed_cache: (Keys::VkNone.into(), AtomicBool::new(false)).into(),
+            release_cache: (Keys::VkNone.into(), AtomicBool::new(false)).into(),
+            last_pressed_key: Keys::VkNone.into(),
             key_callback_fns: Mutex::new(vec![]),
             context: OnceLock::new(),
         }
@@ -79,22 +76,19 @@ impl KeyboardManager {
 
     /// 组合键处理
     pub(crate) fn process_combo_key(&self, key: &ComboKey, pressed: bool) -> Option<ComboKey> {
-        let main_key = Into::<&str>::into(key.main_key).to_string();
-        let key_none: &str = Keys::VkNone.into();
-
         match pressed {
-            true if main_key == self.pressed_cache.0.to_string()
+            true if key.main_key == { self.pressed_cache.0.lock().unwrap().clone() }
                 && self.pressed_cache.1.load(Ordering::Acquire) =>
-            {
-                // 产生双击，把按压缓存的状态设为默认
-                change_cache!(self.pressed_cache, key_none, false);
-                Some(key.change_state(DoublePress))
-            }
+                {
+                    // 产生双击，把按压缓存的状态设为默认
+                    change_cache!(self.pressed_cache, Keys::VkNone, false);
+                    Some(key.change_state(DoublePress))
+                }
 
             true => {
                 // 第一次按下某个键， 按压缓存设为按下，释放缓存设为松开， 启动延时任务。
-                change_cache!(self.pressed_cache, main_key.clone(), true);
-                change_cache!(self.release_cache, main_key.clone(), false);
+                change_cache!(self.pressed_cache, key.main_key.clone(), true);
+                change_cache!(self.release_cache, key.main_key.clone(), false);
 
                 //  200毫秒后， 按压状态松开
                 self.pressed_delay();
@@ -106,9 +100,9 @@ impl KeyboardManager {
 
             false => {
                 // 松开任意键， 复原释放缓存
-                change_cache!(self.release_cache, key_none, false);
+                change_cache!(self.release_cache, Keys::VkNone, false);
 
-                match main_key == self.release_cache.0.to_string()
+                match key.main_key == { *self.release_cache.0.lock().unwrap() }
                     && self.release_cache.1.load(Ordering::Acquire)
                 {
                     true => Some(key.change_state(LongPress)),
@@ -120,8 +114,7 @@ impl KeyboardManager {
 
     /// 获取最后一次按下的键。
     pub(crate) fn get_last_pressed_key(&self) -> Keys {
-        let text = self.last_pressed_key.to_string();
-        text.as_str().into()
+        { *self.last_pressed_key.lock().unwrap() }.into()
     }
 
     //noinspection StructuralWrap
@@ -130,8 +123,7 @@ impl KeyboardManager {
      * `key` 键盘枚举。
      * */
     pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
-        let key: &str = key.clone().into();
-        self.last_pressed_key.replace(key);
+        *self.last_pressed_key.lock().unwrap() = key.clone();
     }
 
     /**
@@ -191,12 +183,12 @@ impl KeyboardManager {
             return;
         };
         let release_cache = self.release_cache.clone();
-        let key = Into::<&str>::into(key.clone()).to_string();
+        let key2 = key.clone();
 
         context.get_work_runtime().spawn(async move {
             sleep(Duration::from_millis(500)).await;
             // 如果持续500毫秒,释放缓存键和传入的按键相同，则释放的缓存状态为长按
-            if key == release_cache.0.to_string() {
+            if key2 == { *release_cache.0.lock().unwrap() } {
                 release_cache.1.store(true, Ordering::SeqCst);
             }
         });

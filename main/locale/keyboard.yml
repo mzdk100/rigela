@@ -1,0 +1,498 @@
+_version: 2
+
+keys:
+  rigela:
+    en: RigelA key
+    zh-CN: 雷革键
+
+  capital:
+    en: Capital lock key
+    zh-CN: 大写锁定键
+
+  numpad0:
+    en: Numpad zero
+    zh-CN: 数字键盘0
+
+  numpad1:
+    en: Numpad one
+    zh-CN: 数字键盘1
+
+  numpad2:
+    en: Numpad two
+    zh-CN: 数字键盘2
+
+  numpad3:
+    en: Numpad three
+    zh-CN: 数字键盘3
+
+  numpad4:
+    en: Numpad four
+    zh-CN: 数字键盘4
+
+  numpad5:
+    en: Numpad five
+    zh-CN: 数字键盘5
+
+  numpad6:
+    en: Numpad six
+    zh-CN: 数字键盘6
+
+  numpad7:
+    en: Numpad seven
+    zh-CN: 数字键盘7
+
+  numpad8:
+    en: Numpad eight
+    zh-CN: 数字键盘8
+
+  numpad9:
+    en: Numpad nine
+    zh-CN: 数字键盘9
+
+  numpad_dot:
+    en: Numpad dot
+    zh-CN: 数字键盘点号
+
+  numpad_return:
+    en: Numpad return
+    zh-CN: 数字键盘回车
+
+  numpad_add:
+    en: Numpad add
+    zh-CN: 数字键盘加号
+
+  numpad_subtract:
+    en: Numpad subtract
+    zh-CN: 数字键盘减号
+
+  numpad_mul:
+    en: Numpad mul
+    zh-CN: 数字键盘乘号
+
+  numpad_div:
+    en: Numpad div
+    zh-CN: 数字键盘除号
+
+  ctrl:
+    en: Ctrl
+    zh-CN: Ctrl
+
+  alt:
+    en: Alt
+    zh-CN: Alt
+
+  shift:
+    en: Shift
+    zh-CN: Shift
+
+  win:
+    en: Win
+    zh-CN: Win
+
+  space:
+    en: Space bar
+    zh-CN: 空格键
+
+  escape:
+    en: Escape
+    zh-CN: Escape
+
+  return:
+    en: Return key
+    zh-CN: 回车键
+
+  tab:
+    en: Tab key
+    zh-CN: 跳格键
+
+  apps:
+    en: Application
+    zh-CN: 应用程序
+
+  back:
+    en: Backspace
+    zh-CN: 退格键
+
+  left:
+    en: Left arrow
+    zh-CN: 左箭头
+
+  right:
+    en: Right arrow
+    zh-CN: 右箭头
+
+  up:
+    en: Up arrow
+    zh-CN: 上箭头
+
+  down:
+    en: Down arrow
+    zh-CN: 下箭头
+
+  delete:
+    en: Delete key
+    zh-CN: 删除键
+
+  insert:
+    en: Insert key
+    zh-CN: 插入件
+
+  home:
+    en: Home key
+    zh-CN: 行首键
+
+  end:
+    en: End key
+    zh-CN: 行尾键
+
+  page_up:
+    en: Page up key
+    zh-CN: 上翻页键
+
+  page_down:
+    en: Page down key
+    zh-CN: 下翻页键
+
+  apostrophe:
+    en: Apostrophe
+    zh-CN: 反撇号
+
+  minus:
+    en: Minus
+    zh-CN: 减号
+
+  equal:
+    en: Equal
+    zh-CN: 等于号
+
+  left_bracket:
+    en: Left bracket
+    zh-CN: 左中括号
+
+  right_bracket:
+    en: Right bracket
+    zh-CN: 右中括号
+
+  back_splash:
+    en: Back splash
+    zh-CN: 反斜线
+
+  semicolon:
+    en: Semicolon
+    zh-CN: 分号
+
+  single_quotation:
+    en: Single quotation mark
+    zh-CN: 单引号
+
+  comma:
+    en: Comma
+    zh-CN: 逗号
+
+  period:
+    en: Period
+    zh-CN: 句号
+
+  splash:
+    en: Splash
+    zh-CN: 斜线
+
+  snapshot:
+    en: Snapshot key
+    zh-CN: 截图键
+
+  scroll_lock:
+    en: Scroll lock key
+    zh-CN: 滚动锁定键
+
+  pause:
+    en: Pause key
+    zh-CN: 暂停键
+
+  num_lock:
+    en: Num lock key
+    zh-CN: 数字锁定键
+
+  f1:
+    en: F1 key
+    zh-CN: F1键
+
+  f2:
+    en: F2 key
+    zh-CN: F2键
+
+  f3:
+    en: F3 key
+    zh-CN: F3键
+
+  f4:
+    en: F4 key
+    zh-CN: F4键
+
+  f5:
+    en: F5 key
+    zh-CN: F5键
+
+  f6:
+    en: F6 key
+    zh-CN: F6键
+
+  f7:
+    en: F7 key
+    zh-CN: F7键
+
+  f8:
+    en: F8 key
+    zh-CN: F8键
+
+  f9:
+    en: F9 key
+    zh-CN: F9键
+
+  f10:
+    en: F10 key
+    zh-CN: F10键
+
+  f11:
+    en: F11 key
+    zh-CN: F11键
+
+  f12:
+    en: F12 key
+    zh-CN: F12键
+
+  f13:
+    en: F13 key
+    zh-CN: F13键
+
+  f14:
+    en: F14 key
+    zh-CN: F14键
+
+  f15:
+    en: F15 key
+    zh-CN: F15键
+
+  f16:
+    en: F16 key
+    zh-CN: F16键
+
+  f17:
+    en: F17 key
+    zh-CN: F17键
+
+  f18:
+    en: F18 key
+    zh-CN: F18键
+
+  f19:
+    en: F19 key
+    zh-CN: F19键
+
+  f20:
+    en: F20 key
+    zh-CN: F20键
+
+  f21:
+    en: F21 key
+    zh-CN: F21键
+
+  f22:
+    en: F22 key
+    zh-CN: F22键
+
+  f23:
+    en: F23 key
+    zh-CN: F23键
+
+  f24:
+    en: F24 key
+    zh-CN: F24键
+
+  k0:
+    en: Key 0
+    zh-CN: 键0
+
+  k1:
+    en: Key 1
+    zh-CN: 键1
+
+  k2:
+    en: Key 2
+    zh-CN: 键2
+
+  k3:
+    en: Key 3
+    zh-CN: 键3
+
+  k4:
+    en: Key 4
+    zh-CN: 键4
+
+  k5:
+    en: Key 5
+    zh-CN: 键5
+
+  k6:
+    en: Key 6
+    zh-CN: 键6
+
+  k7:
+    en: Key 7
+    zh-CN: 键7
+
+  k8:
+    en: Key 8
+    zh-CN: 键8
+
+  k9:
+    en: Key 9
+    zh-CN: 键9
+
+  ka:
+    en: Key A
+    zh-CN: 键A
+
+  kb:
+    en: Key B
+    zh-CN: 键B
+
+  kc:
+    en: Key C
+    zh-CN: 键C
+
+  kd:
+    en: Key D
+    zh-CN: 键D
+
+  ke:
+    en: Key E
+    zh-CN: 键E
+
+  kf:
+    en: Key F
+    zh-CN: 键F
+
+  kg:
+    en: Key G
+    zh-CN: 键G
+
+  kh:
+    en: Key H
+    zh-CN: 键H
+
+  ki:
+    en: Key I
+    zh-CN: 键I
+
+  kj:
+    en: Key J
+    zh-CN: 键J
+
+  kk:
+    en: Key K
+    zh-CN: 键K
+
+  kl:
+    en: Key L
+    zh-CN: 键L
+
+  km:
+    en: Key M
+    zh-CN: 键M
+
+  kn:
+    en: Key N
+    zh-CN: 键N
+
+  ko:
+    en: Key O
+    zh-CN: 键O
+
+  kp:
+    en: Key P
+    zh-CN: 键P
+
+  kq:
+    en: Key Q
+    zh-CN: 键Q
+
+  kr:
+    en: Key R
+    zh-CN: 键R
+
+  ks:
+    en: Key S
+    zh-CN: 键S
+
+  kt:
+    en: Key T
+    zh-CN: 键T
+
+  ku:
+    en: Key U
+    zh-CN: 键U
+
+  kv:
+    en: Key V
+    zh-CN: 键V
+
+  kw:
+    en: Key W
+    zh-CN: 键W
+
+  kx:
+    en: Key X
+    zh-CN: 键X
+
+  ky:
+    en: Key Y
+    zh-CN: 键Y
+
+  kz:
+    en: Key Z
+    zh-CN: 键Z
+
+  num0:
+    en: Number 0
+    zh-CN: 数字0
+
+  num1:
+    en: Number 1
+    zh-CN: 数字1
+
+  num2:
+    en: Number 2
+    zh-CN: 数字2
+
+  num3:
+    en: Number 3
+    zh-CN: 数字3
+
+  num4:
+    en: Number 4
+    zh-CN: 数字4
+
+  num5:
+    en: Number 5
+    zh-CN: 数字5
+
+  num6:
+    en: Number 6
+    zh-CN: 数字6
+
+  num7:
+    en: Number 7
+    zh-CN: 数字7
+
+  num8:
+    en: Number 8
+    zh-CN: 数字8
+
+  num9:
+    en: Number 9
+    zh-CN: 数字9
+
+  num_decimal:
+    en: Number decimal
+    zh-CN: 小数点
