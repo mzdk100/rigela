@@ -115,28 +115,21 @@ impl From<&str> for ModifierKeys {
 impl fmt::Display for ModifierKeys {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut list = vec![];
-        if self.contains(ModifierKeys::RIGELA) {
-            list.push("RigelA");
-        }
-        if self.contains(ModifierKeys::CTRL) {
-            list.push("Ctrl");
-        }
-        if self.contains(ModifierKeys::SHIFT) {
-            list.push("Alt");
-        }
-        if self.clone() & ModifierKeys::SHIFT != ModifierKeys::empty() {
-            list.push("Shift");
-        }
-        if self.contains(ModifierKeys::WIN) {
-            list.push("Win");
-        }
-        let text = if list.is_empty() {
-            String::new()
-        } else {
-            list.join(" + ")
-        };
 
-        write!(f, "{text}")
+        let list2 = [
+            (ModifierKeys::RIGELA, "RigelA"),
+            (ModifierKeys::CTRL, "Ctrl"),
+            (ModifierKeys::ALT, "Alt"),
+            (ModifierKeys::SHIFT, "Shift"),
+            (ModifierKeys::WIN, "Win"),
+        ];
+        for (k, v) in list2 {
+            if self.contains(k) {
+                list.push(v)
+            }
+        }
+
+        write!(f, "{}", list.join(" + "))
     }
 }
 

@@ -15,7 +15,7 @@ use crate::commander::keyboard::keys::Keys;
 use crate::commander::keyboard::modify_keys::ModifierKeys;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{format, Formatter};
 use std::hash::Hash;
 use std::ops::Deref;
 
@@ -113,7 +113,12 @@ impl fmt::Display for ComboKey {
             State::LongPress => "(Long)",
             _ => "",
         };
-        write!(f, "{} + {}{state}", self.modify_keys, self.main_key)
+        let modify = if self.modify_keys.is_empty() {
+            String::from("")
+        } else {
+            format!("{} +", self.modify_keys)
+        };
+        write!(f, "{modify}{}{state}", self.main_key)
     }
 }
 
