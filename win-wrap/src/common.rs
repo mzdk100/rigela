@@ -82,8 +82,8 @@ pub fn get_foreground_window() -> HWND {
  * 系统为创建前台窗口的线程分配的优先级略高于其他线程的优先级。
  * `h_wnd` 应激活并带到前台的窗口的句柄。
  * */
-pub fn set_foreground_window(h_wnd: HWND) {
-    unsafe { SetForegroundWindow(h_wnd) };
+pub fn set_foreground_window(h_wnd: HWND) -> bool {
+    unsafe { SetForegroundWindow(h_wnd) }.as_bool()
 }
 
 /**

@@ -13,68 +13,6 @@
 
 #[cfg(feature = "dll")]
 use cargo_rigela;
-use std::{
-    env,
-    fs::create_dir,
-    fs::{copy, read_dir},
-    path::Path,
-};
-
-fn copy_deps(target: &str) {
-    let cargo = env::var("CARGO").unwrap();
-    let lib_path = Path::new(&cargo)
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("lib")
-        .join("rustlib")
-        .join(target)
-        .join("lib");
-
-    // 创建必要的目录
-    let target_dir = Path::new(&env::var("USERPROFILE").unwrap()).join(".rigela");
-    if !target_dir.exists() {
-        if let Err(e) = create_dir(&target_dir) {
-            panic!(
-                "Unable to create necessary directory `{}`. ({})",
-                target_dir.display(),
-                e
-            );
-        }
-    }
-    let target_dir = target_dir.join("libs");
-    if !target_dir.exists() {
-        if let Err(e) = create_dir(&target_dir) {
-            panic!(
-                "Unable to create necessary directory `{}`. ({})",
-                target_dir.display(),
-                e
-            );
-        }
-    }
-
-    // 复制文件
-    for i in read_dir(&lib_path).unwrap() {
-        let i = i.unwrap();
-        let f = i.file_name().into_string().unwrap().to_lowercase();
-        if f.ends_with(".dll") && f.starts_with("std") {
-            let t = target_dir.join(&i.file_name());
-            if t.exists() {
-                continue;
-            }
-            println!("cargo:rerun-if-changed={}", t.display());
-            if let Err(e) = copy(i.path(), &t) {
-                panic!(
-                    "Unable to copy the file `{}` from `{}`. ({})",
-                    i.path().display(),
-                    t.display(),
-                    e
-                );
-            }
-        }
-    }
-}
 
 fn main() {
     println!("cargo:rerun-if-changed=src");
@@ -82,12 +20,4 @@ fn main() {
 
     #[cfg(feature = "dll")]
     cargo_rigela::make_version();
-
-    if env::var("DEBUG").unwrap_or("false".to_string()) != "true" {
-        return;
-    }
-
-    // 此脚本用于调试模式下构建，因为rust编译器的优化策略问题，debug版本的peeper.dll需要依赖rust标准库的dll
-    copy_deps("x86_64-pc-windows-msvc");
-    copy_deps("i686-pc-windows-msvc");
 }

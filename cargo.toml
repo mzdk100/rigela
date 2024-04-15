@@ -10,7 +10,7 @@ authors = [
 description = "RigelA screen reader (rsr)."
 license = "Apache-2.0"
 keywords = ["screen-reader", "accessibility"]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 readme = "README.md"
 repository = "https://gitcode.net/mzdk100/rigela.git"
@@ -25,7 +25,10 @@ version = "1.37.0"
 version = "1.0.197"
 
 [workspace.dependencies.windows]
-version = "0.54.0"
+version = "0.56.0"
+
+[workspace.dependencies.windows-core]
+version = "0.56.0"
 
 [workspace]
 members = [

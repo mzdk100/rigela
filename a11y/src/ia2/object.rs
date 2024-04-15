@@ -27,11 +27,14 @@ use std::{
     ffi::c_void,
     fmt::{Debug, Formatter},
 };
-use win_wrap::msaa::object::AccessibleObject;
+use win_wrap::{
+    msaa::object::AccessibleObject,
+    common::{HWND},
+};
 use windows::{
     core::{Error, IUnknown, Interface, Result, Type, BSTR, VARIANT},
     Win32::{
-        Foundation::{HWND, S_FALSE},
+        Foundation::S_FALSE,
         System::Com::{CoTaskMemFree, IServiceProvider},
         UI::Accessibility::IAccessible,
     },

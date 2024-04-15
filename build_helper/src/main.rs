@@ -84,7 +84,7 @@ fn build_peeper(cargo: &str, target: &str, release: bool) {
             "dll",
             "--target",
             target,
-            "--crate-type=dylib",
+            "--crate-type=cdylib",
         ]
     } else {
         vec![

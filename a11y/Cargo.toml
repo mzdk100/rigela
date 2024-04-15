@@ -17,20 +17,24 @@ rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 
 [features]
 jab = ["JabLib"]
-ia2 = ["IAccessible2Lib", "win-wrap/msaa"]
+ia2 = ["IAccessible2Lib", "win-wrap/msaa", "windows/Win32_Foundation"]
 JabLib = ["rigela-utils/library"]
-IAccessible2Lib = ["rigela-utils/library", "windows/windows-interface"]
+IAccessible2Lib = ["rigela-utils/library", "windows-core"]
 
 [dependencies.win-wrap]
 path = "../win-wrap"
-version = "0.1"
+version = "0.1.4"
 optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-version = "0.1"
+version = "0.1.4"
 optional = true
 
 [dependencies.windows]
+workspace = true
+optional = true
+
+[dependencies.windows-core]
 workspace = true
 optional = true
