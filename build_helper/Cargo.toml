@@ -14,5 +14,4 @@ repository.workspace = true
 version = "2.4.2"
 
 [dependencies.chrono]
-# 日期和时间
-version = "0.4.37"
+workspace = true

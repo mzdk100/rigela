@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::commander::keyboard::keys::Keys;
-use crate::commander::keyboard::modify_keys::ModifierKeys;
+use std::{
+    fmt::{Display, Formatter},
+    hash::Hash,
+};
+
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::fmt::{format, Formatter};
-use std::hash::Hash;
-use std::ops::Deref;
+
+use crate::commander::keyboard::{keys::Keys, modify_keys::ModifierKeys};
 
 /// 定义组合键
 /// Example: combo_keys!("RigelA", Keys::VkEsc), combo_keys!("RigelA", Keys::F12, double),
@@ -105,8 +106,8 @@ impl Into<Vec<Keys>> for ComboKey {
     }
 }
 
-impl fmt::Display for ComboKey {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl Display for ComboKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let state = match self.state {
             State::SinglePress => "",
             State::DoublePress => "(Double)",
@@ -136,12 +137,5 @@ impl From<ComboKey> for ComboKeyExt {
             timestamp: 0,
             count: 0,
         }
-    }
-}
-
-impl Deref for ComboKeyExt {
-    type Target = ComboKey;
-    fn deref(&self) -> &Self::Target {
-        &self.combokey
     }
 }

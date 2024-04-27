@@ -33,7 +33,7 @@ optional = true
 
 [dependencies.encoding_rs]
 # 字符串编解码
-version = "0.8.33"
+version = "0.8.34"
 optional = true
 
 [dependencies.log4rs]

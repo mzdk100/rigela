@@ -77,14 +77,11 @@ features = ["derive"]
 version = "0.8.12"
 
 [dependencies]
-# 查看日期和时间
-chrono = "0.4.37"
-
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.1"
 
 # 异步trait
-async-trait = "0.1.79"
+async-trait = "0.1.80"
 
 # 解析html
 select = "0.6.0"
@@ -94,6 +91,10 @@ zip = "0.6.6"
 
 # 跨线程去锁传输数据
 arc-swap = "1.7.1"
+
+[dependencies.chrono]
+# 查看日期和时间
+workspace = true
 
 [dependencies.bitflags]
 # 位操作
@@ -106,7 +107,7 @@ workspace = true
 
 [dependencies.reqwest]
 # 网络请求
-version = "0.12.3"
+version = "0.12.4"
 features = ["json"]
 
 [dependencies.nwd]
