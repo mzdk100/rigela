@@ -226,14 +226,24 @@ pub fn get_di_bits(
             if GetDIBits(h_dc, h_bm, start, c_lines, None, &mut bmi, usage) != 0 {
                 let ptr = heap_alloc(bmi.bmiHeader.biSizeImage as usize).unwrap();
                 ptr.write_bytes(0, bmi.bmiHeader.biSizeImage as usize);
-                let bmi_ptr = heap_alloc((bmi.bmiHeader.biSize + bmi.bmiHeader.biClrUsed) as usize * std::mem::size_of::<RGBQUAD>()).unwrap();
-                bmi_ptr.write_bytes(0, (bmi.bmiHeader.biSize + bmi.bmiHeader.biClrUsed) as usize * std::mem::size_of::<RGBQUAD>());
+                let bmi_ptr = heap_alloc(
+                    (bmi.bmiHeader.biSize + bmi.bmiHeader.biClrUsed) as usize
+                        * std::mem::size_of::<RGBQUAD>(),
+                )
+                .unwrap();
+                bmi_ptr.write_bytes(
+                    0,
+                    (bmi.bmiHeader.biSize + bmi.bmiHeader.biClrUsed) as usize
+                        * std::mem::size_of::<RGBQUAD>(),
+                );
                 let bmi_ptr2 = bmi_ptr as *mut BITMAPINFO;
                 bmi_ptr2.write(bmi);
                 let lines = GetDIBits(h_dc, h_bm, start, c_lines, Some(ptr), bmi_ptr2, usage);
                 let bmi = bmi_ptr2.read();
                 let color_table = if bmi.bmiHeader.biClrUsed > 0 {
-                    let mut bmi_ptr2 = (bmi_ptr as *const u8).wrapping_add(bmi.bmiHeader.biSize as usize) as *const RGBQUAD;
+                    let mut bmi_ptr2 = (bmi_ptr as *const u8)
+                        .wrapping_add(bmi.bmiHeader.biSize as usize)
+                        as *const RGBQUAD;
                     let mut arr = Vec::with_capacity(bmi.bmiHeader.biClrUsed as usize);
                     for _ in 0..bmi.bmiHeader.biClrUsed {
                         arr.push(bmi_ptr2.read());

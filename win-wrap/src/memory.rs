@@ -30,9 +30,14 @@ pub use windows::Win32::System::Memory::{
 use windows::Win32::System::{
     Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory},
     Memory::{VirtualAllocEx, VirtualFreeEx},
+    Threading::{PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE},
 };
+use windows_core::imp::{heap_alloc, heap_free};
 
-use crate::common::HANDLE;
+use crate::{
+    common::{close_handle, Result, HANDLE},
+    threading::open_process,
+};
 
 /**
  * 保留、提交或更改指定进程的虚拟地址空间中内存区域的状态。 函数将它分配的内存初始化为零。
@@ -49,7 +54,7 @@ use crate::common::HANDLE;
  * 页面保护必须设置为PAGE_READWRITE。virtual_free_ex 函数可以取消提交已提交页面、释放页面的存储，也可以同时取消提交和释放已提交页面。 它还可以释放保留页，使其成为免费页面。
  * 创建可执行的区域时，调用程序负责在代码设置到位后，通过适当调用 flush_instruction_cache 来确保缓存一致性。 否则，尝试在新可执行区域之外执行代码可能会产生不可预知的结果。
  * `h_process` 进程的句柄。 函数在此进程的虚拟地址空间中分配内存。句柄必须具有 PROCESS_VM_OPERATION 访问权限。 有关详细信息，请参阅 进程安全和访问权限。
- * `address` 为要分配的页面区域指定所需起始地址的指针。如果要保留内存，该函数将此地址向下舍入到分配粒度的最接近倍数。如果要提交已保留的内存，该函数会将此地址向下舍入到最近的页边界。若要确定主计算机上的页面大小和分配粒度，请使用get_system_info函数。如果 lpAddress 为NULL，则该函数确定分配区域的位置。如果此地址位于尚未通过调用 initialize_enclave 进行初始化的 enclave 内， virtual_alloc_ex 会为该地址上的 enclave 分配一个零页。 该页面必须以前未提交，并且不会使用 Intel Software Guard Extensions 编程模型的 EEXTEND 指令进行测量。如果 中的地址位于你初始化的 enclave 中，则分配操作将失败并 出现ERROR_INVALID_ADDRESS 错误。 对于不支持动态内存管理的 enclave (（即 SGX1) ）也是如此。 SGX2 enclave 将允许分配，并且页面必须在分配后被 enclave 接受。
+ * `address` 为要分配的页面区域指定所需起始地址的指针。如果要保留内存，该函数将此地址向下舍入到分配粒度的最接近倍数。如果要提交已保留的内存，该函数会将此地址向下舍入到最近的页边界。若要确定主计算机上的页面大小和分配粒度，请使用get_system_info函数。如果address为NULL，则该函数确定分配区域的位置。如果此地址位于尚未通过调用initialize_enclave进行初始化的enclave内，virtual_alloc_ex会为该地址上的enclave分配一个零页。该页面必须以前未提交，并且不会使用IntelSoftwareGuardExtensions编程模型的EEXTEND指令进行测量。如果中的地址位于你初始化的enclave中，则分配操作将失败并出现ERROR_INVALID_ADDRESS错误。对于不支持动态内存管理的enclave(（即SGX1)）也是如此。SGX2enclave将允许分配，并且页面必须在分配后被enclave接受。
  * `size` 要分配的内存区域的大小（以字节为单位）。如果address为NULL，则该函数会将size向上舍入到下一页边界。如果address不为NULL，则该函数将分配从address到address+size范围内包含一个或多个字节的所有页。例如，这意味着跨越页边界的2字节范围会导致函数分配这两个页面。
  * `allocation_type` 内存分配的类型。 此参数必须包含以下值之一。
  * - MEM_COMMIT 从指定保留内存页的磁盘) 上的总内存大小和分页文件 (分配内存费用。 函数还保证当调用方稍后最初访问内存时，内容将为零。 除非实际访问虚拟地址，否则不会分配实际物理页。若要在一个步骤中保留和提交页面，请使用 调用 virtual_alloc_ex MEM_COMMIT | MEM_RESERVE。除非已保留整个范围，否则尝试通过指定 MEM_COMMIT 而不 指定MEM_RESERVE 和非 NULL address 来提交特定地址范围。 生成的错误代码 ERROR_INVALID_ADDRESS。尝试提交已提交的页面不会导致函数失败。 这意味着可以提交页面，而无需首先确定每个页面的当前承诺状态。如果 address 指定 enclave 中的地址，则必须MEM_COMMIT allocation_type。
@@ -110,13 +115,12 @@ pub fn read_process_memory(
     base_address: *const c_void,
     buffer: *mut c_void,
     n_size: usize,
-) {
+) -> (bool, usize) {
     unsafe {
         let mut len = std::mem::zeroed();
-        ReadProcessMemory(h_process, base_address, buffer, n_size, Some(&mut len))
-            .is_err()
-            .unwrap_or(());
-        len
+        let res =
+            ReadProcessMemory(h_process, base_address, buffer, n_size, Some(&mut len)).is_ok();
+        (res, len)
     }
 }
 
@@ -142,5 +146,86 @@ pub fn write_process_memory(
         WriteProcessMemory(h_process, base_address, buffer, n_size, Some(&mut written))
             .unwrap_or(());
         written
+    }
+}
+
+/// 进程内内存操作
+pub struct InProcessMemory {
+    handle: HANDLE,
+    ptr: *mut c_void,
+    size: usize,
+}
+
+impl InProcessMemory {
+    /**
+     * 创建新实例。
+     * `pid` 进程ID。
+     * `size` 内存大小（字节数）。
+     */
+    pub fn new(pid: u32, size: usize) -> Result<Self> {
+        match open_process(
+            PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE,
+            false,
+            pid,
+        ) {
+            Ok(h) => {
+                let mem = virtual_alloc_ex(h, None, size, MEM_COMMIT, PAGE_READWRITE);
+                Ok(Self {
+                    handle: h,
+                    ptr: mem,
+                    size,
+                })
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    /**
+     * 获取目标进程内存的可变原始指针。
+     * */
+    pub fn as_ptr_mut(&self) -> *mut c_void {
+        self.ptr
+    }
+
+    /**
+     * 获取目标进程内存的原始指针。
+     * */
+    pub fn as_ptr(&self) -> *const c_void {
+        self.ptr
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 读取内存。
+     * `convert` 一个闭包函数，在内存读取之后调用，可以做数据转换。
+     * */
+    pub fn read<T: Sized>(&self, convert: impl Fn(*const c_void) -> T) -> Option<T> {
+        let Ok(mem_local) = heap_alloc(self.size + 1) else {
+            return None;
+        };
+        unsafe { mem_local.write_bytes(b'\0', self.size + 1) };
+        read_process_memory(self.handle, self.ptr, mem_local, self.size);
+        let data = convert(mem_local);
+        unsafe {
+            heap_free(mem_local);
+        }
+        Some(data)
+    }
+
+    //noinspection StructuralWrap
+    /**
+     * 写入内存数据（返回实际写入的大小）。
+     * `ptr` 要写入的数据的指针。
+     * `size` 要写入的大小（字节数）。
+     * */
+    pub fn write(&self, ptr: *const c_void, size: usize) -> usize {
+        write_process_memory(self.handle, self.ptr, ptr, size)
+    }
+}
+
+impl Drop for InProcessMemory {
+    fn drop(&mut self) {
+        virtual_free(self.handle, self.ptr, 0, MEM_RELEASE);
+        close_handle(self.handle);
     }
 }

@@ -12,7 +12,10 @@
  */
 
 use crate::common::{FARPROC, HOOKPROC, LPARAM};
-use std::intrinsics::transmute;
+use std::{
+    ffi::{c_char, CStr},
+    intrinsics::transmute,
+};
 use windows::core::PCWSTR;
 
 /**
@@ -66,24 +69,46 @@ pub trait ToBytesExt {
  * */
 pub trait StringExt {
     /**
+     * 转换到普通字符串。
+     * */
+    fn to_string(self) -> String;
+
+    /**
      * 转换到utf16字符串。
      * */
     fn to_string_utf16(self) -> String;
 }
 
 impl StringExt for *const u8 {
+    fn to_string(self) -> String {
+        unsafe {
+            CStr::from_ptr(self as *const c_char)
+                .to_str()
+                .unwrap_or("")
+                .to_string()
+        }
+    }
+
     fn to_string_utf16(self) -> String {
         (self as *const u16).to_string_utf16()
     }
 }
 
 impl StringExt for *const u16 {
+    fn to_string(self) -> String {
+        self.to_string_utf16()
+    }
+
     fn to_string_utf16(self) -> String {
         unsafe { PCWSTR(self).to_hstring().unwrap().to_string_lossy() }
     }
 }
 
 impl StringExt for &[u16] {
+    fn to_string(self) -> String {
+        self.to_string_utf16()
+    }
+
     fn to_string_utf16(self) -> String {
         let Some(p) = self.iter().position(|x| x == &0) else {
             return String::new();

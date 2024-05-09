@@ -62,8 +62,8 @@ impl UiAutomationEventHandlerGroup {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_active_text_position_changed_listener<CB>(&self, func: CB)
-        where
-            CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
+    where
+        CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
     {
         let handler: IUIAutomationActiveTextPositionChangedEventHandler =
             OnActiveTextPositionChangedCallback::new(func, self._automation.clone()).into();
@@ -71,7 +71,7 @@ impl UiAutomationEventHandlerGroup {
             self._group
                 .AddActiveTextPositionChangedEventHandler(TreeScope_Subtree, None, &handler)
         }
-            .expect("Can't add the active text position changed listener.");
+        .expect("Can't add the active text position changed listener.");
     }
 
     /**
@@ -80,8 +80,8 @@ impl UiAutomationEventHandlerGroup {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_text_edit_text_changed_listener<CB>(&self, func: CB)
-        where
-            CB: Fn(UiAutomationElement) -> () + 'static,
+    where
+        CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationTextEditTextChangedEventHandler =
             OnTextEditTextChangedCallback::new(func, self._automation.clone()).into();
@@ -93,7 +93,7 @@ impl UiAutomationEventHandlerGroup {
                 &handler,
             )
         }
-            .expect("Can't add the active text position changed listener.");
+        .expect("Can't add the active text position changed listener.");
     }
 
     //noinspection StructuralWrap
@@ -103,8 +103,8 @@ impl UiAutomationEventHandlerGroup {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_changes_listener<CB>(&self, func: CB)
-        where
-            CB: Fn() -> () + 'static,
+    where
+        CB: Fn() -> () + 'static,
     {
         let handler: IUIAutomationChangesEventHandler =
             OnChangesCallback::new(func, self._automation.clone()).into();
@@ -112,7 +112,7 @@ impl UiAutomationEventHandlerGroup {
             self._group
                 .AddChangesEventHandler(TreeScope_Subtree, &[0], None, &handler)
         }
-            .expect("Can't add the changes listener.");
+        .expect("Can't add the changes listener.");
     }
 
     //noinspection StructuralWrap
@@ -122,8 +122,8 @@ impl UiAutomationEventHandlerGroup {
      * `func` 用于接收事件的函数。
      * */
     pub fn add_text_selection_changed_listener<CB>(&self, func: CB)
-        where
-            CB: Fn(UiAutomationElement) -> () + 'static,
+    where
+        CB: Fn(UiAutomationElement) -> () + 'static,
     {
         let handler: IUIAutomationEventHandler =
             OnCallback::new(func, self._automation.clone()).into();
@@ -135,7 +135,7 @@ impl UiAutomationEventHandlerGroup {
                 &handler,
             )
         }
-            .expect("Can't add the text selection changed listener.");
+        .expect("Can't add the text selection changed listener.");
     }
 }
 
@@ -145,16 +145,16 @@ unsafe impl Sync for UiAutomationEventHandlerGroup {}
 
 #[implement(IUIAutomationFocusChangedEventHandler)]
 pub(crate) struct OnFocusChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     _automation: Weak<IUIAutomation6>,
     _cb: Box<CB>,
 }
 
 impl<CB> OnFocusChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     pub(crate) fn new(func: CB, automation: Weak<IUIAutomation6>) -> Self {
         Self {
@@ -165,8 +165,8 @@ impl<CB> OnFocusChangedCallback<CB>
 }
 
 impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     #[allow(non_snake_case)]
     fn HandleFocusChangedEvent(&self, sender: Option<&IUIAutomationElement>) -> Result<()> {
@@ -181,16 +181,16 @@ impl<CB> IUIAutomationFocusChangedEventHandler_Impl for OnFocusChangedCallback<C
 
 #[implement(IUIAutomationActiveTextPositionChangedEventHandler)]
 struct OnActiveTextPositionChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
 {
     _automation: Weak<IUIAutomation6>,
     _cb: Box<CB>,
 }
 
 impl<CB> OnActiveTextPositionChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
 {
     fn new(func: CB, automation: Weak<IUIAutomation6>) -> Self {
         Self {
@@ -201,9 +201,9 @@ impl<CB> OnActiveTextPositionChangedCallback<CB>
 }
 
 impl<CB> IUIAutomationActiveTextPositionChangedEventHandler_Impl
-for OnActiveTextPositionChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
+    for OnActiveTextPositionChangedCallback<CB>
+where
+    CB: Fn(UiAutomationElement, UiAutomationTextRange) -> () + 'static,
 {
     #[allow(non_snake_case)]
     fn HandleActiveTextPositionChangedEvent(
@@ -222,16 +222,16 @@ for OnActiveTextPositionChangedCallback<CB>
 
 #[implement(IUIAutomationTextEditTextChangedEventHandler)]
 struct OnTextEditTextChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     _automation: Weak<IUIAutomation6>,
     _cb: Box<CB>,
 }
 
 impl<CB> OnTextEditTextChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     fn new(func: CB, automation: Weak<IUIAutomation6>) -> Self {
         Self {
@@ -242,8 +242,8 @@ impl<CB> OnTextEditTextChangedCallback<CB>
 }
 
 impl<CB> IUIAutomationTextEditTextChangedEventHandler_Impl for OnTextEditTextChangedCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     #[allow(non_snake_case)]
     #[allow(unused_variables)]
@@ -261,16 +261,16 @@ impl<CB> IUIAutomationTextEditTextChangedEventHandler_Impl for OnTextEditTextCha
 //noinspection IdentifierGrammar
 #[implement(IUIAutomationChangesEventHandler)]
 struct OnChangesCallback<CB>
-    where
-        CB: Fn() -> () + 'static,
+where
+    CB: Fn() -> () + 'static,
 {
     _automation: Weak<IUIAutomation6>,
     _cb: Box<CB>,
 }
 
 impl<CB> OnChangesCallback<CB>
-    where
-        CB: Fn() -> () + 'static,
+where
+    CB: Fn() -> () + 'static,
 {
     fn new(func: CB, automation: Weak<IUIAutomation6>) -> Self {
         Self {
@@ -281,8 +281,8 @@ impl<CB> OnChangesCallback<CB>
 }
 
 impl<CB> IUIAutomationChangesEventHandler_Impl for OnChangesCallback<CB>
-    where
-        CB: Fn() -> () + 'static,
+where
+    CB: Fn() -> () + 'static,
 {
     //noinspection SpellCheckingInspection
     #[allow(non_snake_case)]
@@ -300,16 +300,16 @@ impl<CB> IUIAutomationChangesEventHandler_Impl for OnChangesCallback<CB>
 
 #[implement(IUIAutomationEventHandler)]
 struct OnCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     _automation: Weak<IUIAutomation6>,
     _cb: Box<CB>,
 }
 
 impl<CB> OnCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     fn new(func: CB, automation: Weak<IUIAutomation6>) -> Self {
         Self {
@@ -320,8 +320,8 @@ impl<CB> OnCallback<CB>
 }
 
 impl<CB> IUIAutomationEventHandler_Impl for OnCallback<CB>
-    where
-        CB: Fn(UiAutomationElement) -> () + 'static,
+where
+    CB: Fn(UiAutomationElement) -> () + 'static,
 {
     #[allow(non_snake_case)]
     #[allow(unused_variables)]

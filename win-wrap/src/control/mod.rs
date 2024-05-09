@@ -11,38 +11,58 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub mod edit;
-
 use std::{
     ffi::CString,
     fmt::{Debug, Formatter},
 };
+
+use windows::Win32::Foundation::LRESULT;
+pub use windows::Win32::UI::WindowsAndMessaging::{
+    PRF_CHECKVISIBLE, PRF_CHILDREN, PRF_CLIENT, PRF_ERASEBKGND, PRF_NONCLIENT, PRF_OWNED, WM_CLEAR,
+    WM_CLOSE, WM_COPY, WM_CUT, WM_GETTEXT, WM_GETTEXTLENGTH, WM_PAINT, WM_PASTE, WM_PRINT,
+    WM_SETREDRAW, WM_SETTEXT, WM_UNDO,
+};
+use windows_core::imp::{heap_alloc, heap_free};
 
 use crate::{
     common::{HWND, LPARAM, WPARAM},
     ext::StringExt,
     graphic::HDC,
     message::{send_message_timeout, SMTO_ABORTIFHUNG},
-};
-use windows::core::imp::{heap_alloc, heap_free};
-pub use windows::Win32::UI::WindowsAndMessaging::{
-    PRF_CHECKVISIBLE, PRF_CHILDREN, PRF_CLIENT, PRF_ERASEBKGND, PRF_NONCLIENT, PRF_OWNED, WM_CLEAR,
-    WM_CLOSE, WM_COPY, WM_CUT, WM_GETTEXT, WM_GETTEXTLENGTH, WM_PAINT, WM_PASTE, WM_PRINT,
-    WM_SETREDRAW, WM_SETTEXT, WM_UNDO,
+    threading::get_window_thread_process_id,
 };
 
-#[macro_export]
-macro_rules! sm {
-    ($self:expr,$msg:expr,$wp:expr,$lp:expr) => {
-        send_message_timeout($self.0, $msg, $wp, $lp, SMTO_ABORTIFHUNG, 500)
-    };
+pub mod edit;
+
+/// 窗口控件
+pub struct WindowControl {
+    h_wnd: HWND,
+    pid: u32,
 }
 
-pub struct WindowControl(HWND);
+impl WindowControl {
+    /**
+     * 获取进程ID。
+     * */
+    pub fn get_pid(&self) -> u32 {
+        self.pid
+    }
+
+    /**
+     * 把消息发送到控件。
+     * `msg` 消息值。
+     * `wp` 参数1。
+     * `lp` 参数2。
+     * */
+    pub fn send_message(&self, msg: u32, wp: WPARAM, lp: LPARAM) -> (LRESULT, usize) {
+        send_message_timeout(self.h_wnd, msg, wp, lp, SMTO_ABORTIFHUNG, 500)
+    }
+}
 
 impl From<HWND> for WindowControl {
     fn from(value: HWND) -> Self {
-        Self(value)
+        let (_, pid) = get_window_thread_process_id(value);
+        Self { h_wnd: value, pid }
     }
 }
 
@@ -74,13 +94,13 @@ impl WindowControl {
      * 若要检索控件的 ID，应用程序可以使用 get_window_long 传递GWL_ID作为索引值，或使用 GWLP_ID传递 get_window_long_ptr。
      * */
     pub fn get_text(&self) -> Option<String> {
-        let (_, len) = sm!(self, WM_GETTEXTLENGTH, WPARAM::default(), LPARAM::default());
+        let (_, len) = self.send_message(WM_GETTEXTLENGTH, WPARAM::default(), LPARAM::default());
         let Ok(ptr) = heap_alloc(len * 2 + 1) else {
             return None;
         };
         unsafe { ptr.write_bytes(b'\0', len * 2 + 1) };
 
-        sm!(self, WM_GETTEXT, WPARAM(len + 1), LPARAM(ptr as isize));
+        self.send_message(WM_GETTEXT, WPARAM(len + 1), LPARAM(ptr as isize));
         let text = (ptr as *const u16).to_string_utf16();
         unsafe {
             heap_free(ptr);
@@ -109,7 +129,7 @@ impl WindowControl {
      * */
     pub fn set_redraw(&self, enabled: bool) -> usize {
         let enabled = if enabled { WPARAM(1) } else { WPARAM(0) };
-        let (_, res) = sm!(self, WM_SETREDRAW, enabled, LPARAM::default());
+        let (_, res) = self.send_message(WM_SETREDRAW, enabled, LPARAM::default());
         res
     }
 
@@ -126,11 +146,10 @@ impl WindowControl {
      * */
     pub fn set_text(&self, text: &str) -> bool {
         let text = CString::new(text).unwrap();
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             WM_SETTEXT,
             WPARAM::default(),
-            LPARAM(text.as_ptr() as isize)
+            LPARAM(text.as_ptr() as isize),
         );
         res != 0
     }
@@ -161,7 +180,7 @@ impl WindowControl {
      * 如果 wParam 为非 NULL，则控件假定该值为 HDC，并使用该设备上下文进行绘制。
      * */
     pub fn paint(&self) -> usize {
-        let (_, res) = sm!(self, WM_PAINT, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(WM_PAINT, WPARAM::default(), LPARAM::default());
         res
     }
 
@@ -179,12 +198,8 @@ impl WindowControl {
      * def_window_proc 函数根据指定的绘图选项处理此消息：如果指定了PRF_CHECKVISIBLE并且窗口不可见，则不执行任何操作，如果指定了PRF_NONCLIENT，则绘制指定设备上下文中的非工作区，如果指定了PRF_ERASEBKGND，则向窗口发送WM_ERASEBKGND消息，如果指定了PRF_CLIENT， 向窗口发送WM_PRINTCLIENT消息，如果设置了PRF_CHILDREN，则向每个可见子窗口发送一条WM_PRINT消息，如果设置了PRF_OWNED，则向每个可见的拥有窗口发送一条WM_PRINT消息。
      * */
     pub fn print(&self, h_dc: HDC, options: i32) -> usize {
-        let (_, res) = sm!(
-            self,
-            WM_PRINT,
-            WPARAM(h_dc.0 as usize),
-            LPARAM(options as isize)
-        );
+        let (_, res) =
+            self.send_message(WM_PRINT, WPARAM(h_dc.0 as usize), LPARAM(options as isize));
         res
     }
     /**
@@ -195,7 +210,7 @@ impl WindowControl {
      * 默认情况下， def_window_proc 函数调用 destroy_window 函数来销毁窗口。
      * */
     pub fn close(&self) -> usize {
-        let (_, res) = sm!(self, WM_CLOSE, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(WM_CLOSE, WPARAM::default(), LPARAM::default());
         res
     }
 
@@ -206,7 +221,7 @@ impl WindowControl {
      * 发送到组合框时， WM_CUT 消息由其编辑控件处理。 发送到具有 CBS_DROPDOWNLIST 样式的组合框时，此消息无效。
      * */
     pub fn cut(&self) {
-        sm!(self, WM_CUT, WPARAM::default(), LPARAM::default());
+        self.send_message(WM_CUT, WPARAM::default(), LPARAM::default());
     }
 
     /**
@@ -214,7 +229,7 @@ impl WindowControl {
      * 当发送到组合框时，WM_COPY消息由其编辑控件处理。此消息在发送到具有CBS_DROPDOWNLIST样式的组合框时不起作用。
      * */
     pub fn copy(&self) {
-        sm!(self, WM_COPY, WPARAM::default(), LPARAM::default());
+        self.send_message(WM_COPY, WPARAM::default(), LPARAM::default());
     }
 
     /**
@@ -222,7 +237,7 @@ impl WindowControl {
      * 发送到组合框时， WM_PASTE 消息由其编辑控件处理。 发送到具有 CBS_DROPDOWNLIST 样式的组合框时，此消息无效。
      */
     pub fn paste(&self) {
-        sm!(self, WM_PASTE, WPARAM::default(), LPARAM::default());
+        self.send_message(WM_PASTE, WPARAM::default(), LPARAM::default());
     }
 
     /**
@@ -232,7 +247,7 @@ impl WindowControl {
      * 发送到组合框时， WM_CLEAR 消息由其编辑控件处理。 发送到具有 CBS_DROPDOWNLIST 样式的组合框时，此消息不起作用。
      * */
     pub fn clear(&self) {
-        sm!(self, WM_CLEAR, WPARAM::default(), LPARAM::default());
+        self.send_message(WM_CLEAR, WPARAM::default(), LPARAM::default());
     }
 
     /**
@@ -241,7 +256,7 @@ impl WindowControl {
      * Rich Edit： 建议使用 EM_UNDO 而不是 WM_UNDO。
      * */
     pub fn undo(&self) -> bool {
-        let (_, res) = sm!(self, WM_UNDO, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(WM_UNDO, WPARAM::default(), LPARAM::default());
         res != 0
     }
 }

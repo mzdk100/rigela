@@ -60,8 +60,7 @@ impl UiAutomationIAccessiblePattern {
      * 获取元素状态。
      * */
     pub fn get_state(&self) -> u32 {
-        unsafe { self.0.CurrentState() }
-            .unwrap_or(0)
+        unsafe { self.0.CurrentState() }.unwrap_or(0)
     }
 
     /**

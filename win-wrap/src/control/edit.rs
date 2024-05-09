@@ -55,8 +55,6 @@ use crate::{
     common::{LPARAM, RECT, WPARAM},
     control::WindowControl,
     ext::StringExt,
-    message::{send_message_timeout, SMTO_ABORTIFHUNG},
-    sm,
 };
 
 pub trait Edit {
@@ -108,12 +106,8 @@ impl Edit for WindowControl {
             };
             ptr.write_bytes(b'\0', (len * 2 + 1) as usize);
             (ptr as *mut u16).write(len);
-            let (_, _) = sm!(
-                self,
-                EM_GETLINE,
-                WPARAM(index as usize),
-                LPARAM(ptr as isize)
-            );
+            let (_, _) =
+                self.send_message(EM_GETLINE, WPARAM(index as usize), LPARAM(ptr as isize));
             let text = (ptr as *const u16).to_string_utf16();
             heap_free(ptr);
             Some(text)
@@ -129,12 +123,8 @@ impl Edit for WindowControl {
      * `position` 行中要检索其长度的字符的字符索引。 如果此参数大于控件中的字符数，则返回值为零。此参数可以为 -1。 在这种情况下，消息返回包含选定字符的行上的未选定字符数。 例如，如果所选内容从下一行末尾的第四个字符扩展到第八个字符，则返回值为 10 (第一行的 3 个字符，下一行的) 7 个字符。
      * */
     fn line_length(&self, position: i32) -> usize {
-        let (_, res) = sm!(
-            self,
-            EM_LINELENGTH,
-            WPARAM(position as usize),
-            LPARAM::default()
-        );
+        let (_, res) =
+            self.send_message(EM_LINELENGTH, WPARAM(position as usize), LPARAM::default());
         res
     }
 
@@ -145,12 +135,8 @@ impl Edit for WindowControl {
      * `line_index` 从零开始的行号。 值 -1 (当前行号指定包含插入点) 的行。
      * */
     fn line_index(&self, line_index: i32) -> i32 {
-        let (_, res) = sm!(
-            self,
-            EM_LINEINDEX,
-            WPARAM(line_index as usize),
-            LPARAM::default()
-        );
+        let (_, res) =
+            self.send_message(EM_LINEINDEX, WPARAM(line_index as usize), LPARAM::default());
         res as i32
     }
 
@@ -166,12 +152,7 @@ impl Edit for WindowControl {
     fn replace_sel(&self, allow_undo: bool, text: &str) {
         let text = CString::new(text).unwrap();
         let allow_undo = if allow_undo { WPARAM(1) } else { WPARAM(0) };
-        sm!(
-            self,
-            EM_REPLACESEL,
-            allow_undo,
-            LPARAM(text.as_ptr() as isize)
-        );
+        self.send_message(EM_REPLACESEL, allow_undo, LPARAM(text.as_ptr() as isize));
     }
 
     /**
@@ -184,7 +165,7 @@ impl Edit for WindowControl {
      * */
     fn set_readonly(&self, enable: bool) -> usize {
         let enable = if enable { WPARAM(1) } else { WPARAM(0) };
-        let (_, res) = sm!(self, EM_SETREADONLY, enable, LPARAM::default());
+        let (_, res) = self.send_message(EM_SETREADONLY, enable, LPARAM::default());
         res
     }
 
@@ -205,11 +186,10 @@ impl Edit for WindowControl {
             range2.chrg.cpMin = min;
 
             range2.lpstrText = PWSTR(ptr as *mut u16);
-            sm!(
-                self,
+            self.send_message(
                 EM_GETTEXTRANGE,
                 WPARAM::default(),
-                LPARAM(&mut range2 as *const TEXTRANGEW as isize)
+                LPARAM(&mut range2 as *const TEXTRANGEW as isize),
             );
             let text = (ptr as *const u16).to_string_utf16();
             heap_free(ptr);
@@ -225,7 +205,7 @@ impl Edit for WindowControl {
      * Rich Edit： 在 Microsoft Rich Edit 1.0 及更高版本中受支持。 有关 Rich Edit 版本与各种系统版本的兼容性的信息，请参阅 关于 Rich Edit 控件。
      * */
     fn can_undo(&self) -> bool {
-        let (_, res) = sm!(self, EM_CANUNDO, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_CANUNDO, WPARAM::default(), LPARAM::default());
         res != 0
     }
 
@@ -237,12 +217,7 @@ impl Edit for WindowControl {
      * Rich Edit： 在 Microsoft Rich Edit 1.0 及更高版本中受支持。 有关 Rich Edit 版本与各种系统版本的兼容性的信息，请参阅 关于 Rich Edit 控件。
      * */
     fn empty_undo_buffer(&self) {
-        sm!(
-            self,
-            EM_EMPTYUNDOBUFFER,
-            WPARAM::default(),
-            LPARAM::default()
-        );
+        self.send_message(EM_EMPTYUNDOBUFFER, WPARAM::default(), LPARAM::default());
     }
 
     /**
@@ -254,12 +229,8 @@ impl Edit for WindowControl {
      * 富编辑： Microsoft Rich Edit 1.0 及更高版本中受支持。 有关丰富编辑版本与各种系统版本的兼容性的信息，请参阅 关于丰富编辑控件。
      * */
     fn get_first_visible_line(&self) -> i32 {
-        let (_, res) = sm!(
-            self,
-            EM_GETFIRSTVISIBLELINE,
-            WPARAM::default(),
-            LPARAM::default()
-        );
+        let (_, res) =
+            self.send_message(EM_GETFIRSTVISIBLELINE, WPARAM::default(), LPARAM::default());
         res as i32
     }
 
@@ -271,7 +242,7 @@ impl Edit for WindowControl {
      * Rich Edit： 在 Microsoft Rich Edit 1.0 及更高版本中受支持。 有关 Rich Edit 版本与各种系统版本的兼容性的信息，请参阅 关于 Rich Edit 控件。
      */
     fn get_line_count(&self) -> usize {
-        let (_, res) = sm!(self, EM_GETLINECOUNT, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_GETLINECOUNT, WPARAM::default(), LPARAM::default());
         res
     }
 
@@ -281,7 +252,7 @@ impl Edit for WindowControl {
      * 富编辑： Microsoft Rich Edit 1.0 及更高版本中受支持。 有关丰富编辑版本与各种系统版本的兼容性的信息，请参阅 关于丰富编辑控件。
      * */
     fn get_modify(&self) -> bool {
-        let (_, res) = sm!(self, EM_GETMODIFY, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_GETMODIFY, WPARAM::default(), LPARAM::default());
         res != 0
     }
 
@@ -294,7 +265,7 @@ impl Edit for WindowControl {
      * */
     fn set_modify(&self, is_modified: bool) {
         let is_modified = if is_modified { WPARAM(1) } else { WPARAM(0) };
-        sm!(self, EM_SETMODIFY, is_modified, LPARAM::default());
+        self.send_message(EM_SETMODIFY, is_modified, LPARAM::default());
     }
 
     /**
@@ -305,11 +276,10 @@ impl Edit for WindowControl {
      * */
     fn get_rect(&self) -> RECT {
         let mut rect = unsafe { std::mem::zeroed() };
-        sm!(
-            self,
+        self.send_message(
             EM_GETRECT,
             WPARAM::default(),
-            LPARAM(&mut rect as *mut RECT as isize)
+            LPARAM(&mut rect as *mut RECT as isize),
         );
         rect
     }
@@ -322,11 +292,10 @@ impl Edit for WindowControl {
      * */
     fn get_sel(&self) -> (i32, i32) {
         let (mut start, mut end) = unsafe { std::mem::zeroed() };
-        sm!(
-            self,
+        self.send_message(
             EM_GETSEL,
             WPARAM(&mut start as *mut i32 as usize),
-            LPARAM(&mut end as *mut i32 as isize)
+            LPARAM(&mut end as *mut i32 as isize),
         );
         (start, end)
     }
@@ -336,11 +305,10 @@ impl Edit for WindowControl {
      * */
     fn get_sel_ex(&self) -> (i32, i32) {
         let mut cr: CHARRANGE = unsafe { std::mem::zeroed() };
-        sm!(
-            self,
+        self.send_message(
             EM_EXGETSEL,
             WPARAM::default(),
-            LPARAM(&mut cr as *mut CHARRANGE as isize)
+            LPARAM(&mut cr as *mut CHARRANGE as isize),
         );
         (cr.cpMin, cr.cpMax)
     }
@@ -357,12 +325,7 @@ impl Edit for WindowControl {
      * `end` 所选内容的结束字符位置。
      * */
     fn set_sel(&self, start: i32, end: i32) {
-        sm!(
-            self,
-            EM_SETSEL,
-            WPARAM(start as usize),
-            LPARAM(end as isize)
-        );
+        self.send_message(EM_SETSEL, WPARAM(start as usize), LPARAM(end as isize));
     }
 
     /**
@@ -376,11 +339,10 @@ impl Edit for WindowControl {
             cpMin: min,
             cpMax: max,
         };
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_EXSETSEL,
             WPARAM::default(),
-            LPARAM(&cr as *const CHARRANGE as isize)
+            LPARAM(&cr as *const CHARRANGE as isize),
         );
         res
     }
@@ -395,7 +357,7 @@ impl Edit for WindowControl {
                 return None;
             };
             ptr.write_bytes(b'\0', len * 2 + 1);
-            sm!(self, EM_GETSELTEXT, WPARAM::default(), LPARAM(ptr as isize));
+            self.send_message(EM_GETSELTEXT, WPARAM::default(), LPARAM(ptr as isize));
             let text = (ptr as *const u16).to_string_utf16();
             heap_free(ptr);
             Some(text)
@@ -409,11 +371,10 @@ impl Edit for WindowControl {
      * `position` 要检索其编号的行中包含的字符的字符索引。 如果此参数为 -1，  EM_LINEFROMCHAR  将检索当前行的行号 (包含脱字号) 或者，如果有选定内容，则检索包含所选内容的开头的行号。
      * */
     fn line_from_char(&self, position: i32) -> i32 {
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_LINEFROMCHAR,
             WPARAM(position as usize),
-            LPARAM::default()
+            LPARAM::default(),
         );
         res as i32
     }
@@ -424,11 +385,10 @@ impl Edit for WindowControl {
      * `position` 字符的从零开始的索引。
      * */
     fn line_from_char_ex(&self, position: i32) -> i32 {
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_EXLINEFROMCHAR,
             WPARAM::default(),
-            LPARAM(position as isize)
+            LPARAM(position as isize),
         );
         res as i32
     }
@@ -446,12 +406,7 @@ impl Edit for WindowControl {
      * - SB_PAGEUP 向上滚动一页。
      */
     fn scroll(&self, command: SCROLLBAR_COMMAND) -> isize {
-        let (_, res) = sm!(
-            self,
-            EM_SCROLL,
-            WPARAM(command.0 as usize),
-            LPARAM::default()
-        );
+        let (_, res) = self.send_message(EM_SCROLL, WPARAM(command.0 as usize), LPARAM::default());
         res as isize
     }
 
@@ -465,11 +420,10 @@ impl Edit for WindowControl {
      * `line` 要垂直滚动的行数。
      * */
     fn line_scroll(&self, column: i32, line: i32) -> bool {
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_LINESCROLL,
             WPARAM(column as usize),
-            LPARAM(line as isize)
+            LPARAM(line as isize),
         );
         res != 0
     }
@@ -479,14 +433,14 @@ impl Edit for WindowControl {
      * 富编辑：  Microsoft Rich Edit 1.0 及更高版本中受支持。 有关丰富编辑版本与各种系统版本的兼容性的信息，请参阅  关于丰富编辑控件 。
      * */
     fn scroll_caret(&self) {
-        sm!(self, EM_SCROLLCARET, WPARAM::default(), LPARAM::default());
+        self.send_message(EM_SCROLLCARET, WPARAM::default(), LPARAM::default());
     }
 
     /**
      * 确定丰富的编辑控件是否可以粘贴。
      * */
     fn can_paste(&self) -> bool {
-        let (_, res) = sm!(self, EM_CANPASTE, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_CANPASTE, WPARAM::default(), LPARAM::default());
         res != 0
     }
 
@@ -501,11 +455,10 @@ impl Edit for WindowControl {
      * */
     fn char_from_pos(&self, x: i32, y: i32) -> i32 {
         let point = POINT { x, y };
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_CHARFROMPOS,
             WPARAM::default(),
-            LPARAM(&point as *const POINT as isize)
+            LPARAM(&point as *const POINT as isize),
         );
         res as i32
     }
@@ -520,11 +473,10 @@ impl Edit for WindowControl {
      * `char_index` 指定字符的从零开始的索引。
      * */
     fn pos_from_char(&self, char_index: i32) -> (i32, i32) {
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_POSFROMCHAR,
             WPARAM(char_index as usize),
-            LPARAM::default()
+            LPARAM::default(),
         );
         ((res & 0xffff) as i32, (res >> 16) as i32)
     }
@@ -540,7 +492,7 @@ impl Edit for WindowControl {
      * - SEL_MULTIOBJECT 多个 COM 对象。
      * */
     fn selection_type(&self) -> RICH_EDIT_GET_CONTEXT_MENU_SEL_TYPE {
-        let (_, res) = sm!(self, EM_SELECTIONTYPE, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_SELECTIONTYPE, WPARAM::default(), LPARAM::default());
         RICH_EDIT_GET_CONTEXT_MENU_SEL_TYPE(res as u16)
     }
 
@@ -550,7 +502,7 @@ impl Edit for WindowControl {
      * */
     fn hide_selection(&self, hide: bool) {
         let hide = if hide { WPARAM(1) } else { WPARAM(0) };
-        sm!(self, EM_HIDESELECTION, hide, LPARAM::default());
+        self.send_message(EM_HIDESELECTION, hide, LPARAM::default());
     }
 
     /**
@@ -576,11 +528,10 @@ impl Edit for WindowControl {
             },
             lpstrText: PCWSTR(HSTRING::from(text).as_ptr()),
         };
-        let (_, res) = sm!(
-            self,
+        let (_, res) = self.send_message(
             EM_FINDTEXT,
             WPARAM(flags.0 as usize),
-            LPARAM(&find as *const FINDTEXTW as isize)
+            LPARAM(&find as *const FINDTEXTW as isize),
         );
         res as i32
     }
@@ -609,11 +560,10 @@ impl Edit for WindowControl {
             lpstrText: PCWSTR(HSTRING::from(text).as_ptr()),
             chrgText: CHARRANGE::default(),
         };
-        let (_, _) = sm!(
-            self,
+        let (_, _) = self.send_message(
             EM_FINDTEXT,
             WPARAM(flags.0 as usize),
-            LPARAM(&mut find as *mut FINDTEXTEXW as isize)
+            LPARAM(&mut find as *mut FINDTEXTEXW as isize),
         );
         (find.chrgText.cpMin, find.chrgText.cpMax)
     }
@@ -624,7 +574,7 @@ impl Edit for WindowControl {
      * Rich Edit：  不支持  EM_GETMARGINS  消息。
      * */
     fn get_margins(&self) -> i32 {
-        let (_, res) = sm!(self, EM_GETMARGINS, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(EM_GETMARGINS, WPARAM::default(), LPARAM::default());
         res as i32
     }
 
@@ -636,11 +586,10 @@ impl Edit for WindowControl {
      * `value` LOW指定左边距的宽度（以像素为单位）。如果 margin 不包括 EC_LEFTMARGIN，则忽略此值。HIGH 指定右边距的宽度（以像素为单位）。如果 margin 不包括 EC_RIGHTMARGIN，则忽略此值。
      * */
     fn set_margins(&self, margin: u32, value: i32) {
-        sm!(
-            self,
+        self.send_message(
             EM_SETMARGINS,
             WPARAM(margin as usize),
-            LPARAM(value as isize)
+            LPARAM(value as isize),
         );
     }
 }

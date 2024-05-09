@@ -54,7 +54,9 @@ pub fn reg_open_key_ex(
         if match sub_key {
             None => RegOpenKeyExW(h_key, None, options, sam_desired, &mut res),
             Some(key) => RegOpenKeyExW(h_key, &HSTRING::from(key), options, sam_desired, &mut res),
-        }.is_ok() {
+        }
+        .is_ok()
+        {
             return res;
         }
         HKEY::default()
@@ -94,7 +96,7 @@ pub fn reg_set_value_ex(
             Some(name) => RegSetValueExW(h_key, &HSTRING::from(name), reserved, r#type, data),
         }
     }
-        .ok()
+    .ok()
 }
 
 /**
@@ -114,7 +116,7 @@ pub fn reg_delete_value(h_key: HKEY, value_name: Option<&str>) -> Result<()> {
             Some(name) => RegDeleteValueW(h_key, &HSTRING::from(name)),
         }
     }
-        .ok()
+    .ok()
 }
 
 /**
