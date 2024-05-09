@@ -27,10 +27,7 @@ use std::{
     ffi::c_void,
     fmt::{Debug, Formatter},
 };
-use win_wrap::{
-    msaa::object::AccessibleObject,
-    common::{HWND},
-};
+use win_wrap::{common::HWND, msaa::object::AccessibleObject};
 use windows::{
     core::{Error, IUnknown, Interface, Result, Type, BSTR, VARIANT},
     Win32::{
@@ -253,7 +250,7 @@ impl Accessible2Object {
             let mut role = std::mem::zeroed();
             self._ia2.role(&mut role).and_then(|| Type::from_abi(role))
         }
-            .unwrap_or(0)
+        .unwrap_or(0)
     }
 
     //noinspection StructuralWrap

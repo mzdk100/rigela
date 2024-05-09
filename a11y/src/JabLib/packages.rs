@@ -588,6 +588,7 @@ pub(crate) const ACCESSIBLE_EDITBAR: &str = "editbar";
 #[allow(unused)]
 pub(crate) const PROGRESS_MONITOR: &str = "progress monitor";
 
+//noinspection GrazieInspection
 #[allow(non_snake_case)]
 #[derive(Debug)]
 #[repr(C)]
@@ -683,18 +684,6 @@ pub(crate) struct AccessibleActions {
     pub(crate) actionInfo: [AccessibleActionInfo; MAX_ACTION_INFO as usize],
 }
 
-/// struct for requesting the actions associated with a component
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleActionsPackage {
-    pub(crate) vmID: i32,
-    /// the component
-    pub(crate) accessibleContext: JObject64,
-    /// the actions
-    pub(crate) rAccessibleActions: AccessibleActions,
-}
-
 /// list of AccessibleActions to do
 #[allow(non_snake_case)]
 #[derive(Debug)]
@@ -715,23 +704,6 @@ impl AccessibleActionsToDo {
         }
         to_do
     }
-}
-
-/// struct for sending a message to do one or more actions
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct DoAccessibleActionsPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// component to do the action
-    pub(crate) accessibleContext: JObject64,
-    /// the accessible actions to do
-    pub(crate) actionsToDo: AccessibleActionsToDo,
-    /// action return value
-    pub(crate) rResult: BOOL,
-    /// index of action that failed if rResult is FALSE
-    pub(crate) failure: JInt,
 }
 
 /// AccessibleText packages
@@ -831,15 +803,6 @@ pub(crate) struct AccessibleRelationSetInfo {
     pub(crate) relations: [AccessibleRelationInfo; MAX_RELATIONS as usize],
 }
 
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleRelationSetPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) rAccessibleRelationSetInfo: AccessibleRelationSetInfo,
-}
-
 /**
  ******************************************************
  *  Accessible Key Bindings packages
@@ -904,7 +867,7 @@ pub(crate) const ACCESSIBLE_VK_RIGHT: JChar = 39;
 #[allow(unused)]
 pub(crate) const ACCESSIBLE_VK_UP: JChar = 38;
 
-// a key binding associates with a component
+// a key binding associate's with a component
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub(crate) struct AccessibleKeyBindingInfo {
@@ -924,18 +887,6 @@ pub(crate) struct AccessibleKeyBindings {
     pub(crate) keyBindingInfo: [AccessibleKeyBindingInfo; MAX_KEY_BINDINGS as usize],
 }
 
-// struct to get the key bindings associated with a component
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleKeyBindingsPackage {
-    /// the virtual machine id
-    vmID: i32,
-    /// the component
-    accessibleContext: JObject64,
-    /// the key bindings
-    rAccessibleKeyBindings: AccessibleKeyBindings,
-}
 
 /**
  ******************************************************
@@ -967,26 +918,14 @@ pub(crate) struct AccessibleIcons {
     pub(crate) iconInfo: [AccessibleIconInfo; MAX_ICON_INFO as usize],
 }
 
-/// struct to get the icons associated with a component
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleIconsPackage {
-    /// the virtual machine id
-    pub(crate) vmID: i32,
-    /// the component
-    pub(crate) accessibleContext: JObject64,
-    /// the icons
-    pub(crate) rAccessibleIcons: AccessibleIcons,
-}
 
 /**
  ******************************************************
  *  AccessibleTable packages
  ******************************************************
  * */
-
-const MAX_TABLE_SELECTIONS: u32 = 64;
+#[allow(dead_code)]
+pub(crate) const MAX_TABLE_SELECTIONS: u32 = 64;
 
 /// table information
 #[allow(non_snake_case)]
@@ -1003,15 +942,6 @@ pub(crate) struct AccessibleTableInfo {
     pub(crate) accessibleTable: JObject64,
 }
 
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableInfoPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) rTableInfo: AccessibleTableInfo,
-}
-
 /// table cell information
 #[allow(non_snake_case)]
 #[derive(Debug)]
@@ -1026,143 +956,6 @@ pub(crate) struct AccessibleTableCellInfo {
     pub(crate) isSelected: JBoolean,
 }
 
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableCellInfoPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) row: JInt,
-    pub(crate) column: JInt,
-    pub(crate) rTableCellInfo: AccessibleTableCellInfo,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableRowHeaderPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) rTableInfo: AccessibleTableInfo,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableColumnHeaderPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) rTableInfo: AccessibleTableInfo,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableRowDescriptionPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) row: JInt,
-    pub(crate) rAccessibleContext: JObject64,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableColumnDescriptionPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleContext: JObject64,
-    pub(crate) column: JInt,
-    pub(crate) rAccessibleContext: JObject64,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableRowSelectionCountPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) rCount: JInt,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct IsAccessibleTableRowSelectedPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) row: JInt,
-    pub(crate) rResult: JBoolean,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableRowSelectionsPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) count: JInt,
-    pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableColumnSelectionCountPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) rCount: JInt,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct IsAccessibleTableColumnSelectedPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) column: JInt,
-    pub(crate) rResult: JBoolean,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableColumnSelectionsPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) count: JInt,
-    pub(crate) rSelections: [JInt; MAX_TABLE_SELECTIONS as usize],
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableRowPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) index: JInt,
-    pub(crate) rRow: JInt,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableColumnPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) index: JInt,
-    pub(crate) rColumn: JInt,
-}
-
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleTableIndexPackage {
-    pub(crate) vmID: i32,
-    pub(crate) accessibleTable: JObject64,
-    pub(crate) row: JInt,
-    pub(crate) column: JInt,
-    pub(crate) rIndex: JInt,
-}
 
 /**
  ******************************************************
@@ -1199,96 +992,4 @@ pub(crate) struct AccessibleHypertextInfo {
     pub(crate) links: [AccessibleHyperlinkInfo; MAX_HYPERLINKS as usize],
     /// AccessibleHypertext object
     pub(crate) accessibleHypertext: JObject64,
-}
-
-/// struct for sending a message to get the hypertext for an AccessibleContext
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleHypertextPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleContext with hypertext
-    pub(crate) accessibleContext: JObject64,
-    /// returned hypertext
-    pub(crate) rAccessibleHypertextInfo: AccessibleHypertextInfo,
-}
-
-/// struct for sending a message to activate a hyperlink
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct ActivateAccessibleHyperlinkPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleContext containing the link
-    pub(crate) accessibleContext: JObject64,
-    /// the link to activate
-    pub(crate) accessibleHyperlink: JObject64,
-    /// hyperlink activation return value
-    pub(crate) rResult: BOOL,
-}
-
-/// struct for sending a message to get the number of hyperlinks in a component
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleHyperlinkCountPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleContext containing AccessibleHypertext
-    pub(crate) accessibleContext: JObject64,
-    /// link count return value
-    pub(crate) rLinkCount: JInt,
-}
-
-/// struct for sending a message to get the hypertext for an AccessibleContext
-/// starting at a specified index in the document
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleHypertextExtPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleContext with hypertext
-    pub(crate) accessibleContext: JObject64,
-    /// start index in document
-    pub(crate) startIndex: JInt,
-    /// returned hypertext
-    pub(crate) rAccessibleHypertextInfo: AccessibleHypertextInfo,
-    /// whether call succeeded
-    pub(crate) rSuccess: BOOL,
-}
-
-/// struct for sending a message to get the nth hyperlink in a document;
-/// maps to AccessibleHypertext.getLink
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleHyperlinkPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleHypertext
-    pub(crate) hypertext: JObject64,
-    /// hyperlink index
-    pub(crate) linkIndex: JInt,
-    /// returned hyperlink
-    pub(crate) rAccessibleHyperlinkInfo: AccessibleHyperlinkInfo,
-}
-
-/// struct for sending a message to get the index into an array
-/// of hyperlinks that is associated with a character index in a
-/// document; maps to AccessibleHypertext.getLinkIndex
-#[allow(non_snake_case)]
-#[derive(Debug)]
-#[repr(C)]
-pub(crate) struct GetAccessibleHypertextLinkIndexPackage {
-    /// the virtual machine ID
-    pub(crate) vmID: i32,
-    /// AccessibleHypertext
-    pub(crate) hypertext: JObject64,
-    /// character index in document
-    pub(crate) charIndex: JInt,
-    /// returned hyperlink index
-    pub(crate) rLinkIndex: JInt,
 }

@@ -67,7 +67,7 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
     ) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (Accessible2_2.idl)
  *
@@ -117,5 +117,4 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

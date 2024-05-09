@@ -297,7 +297,7 @@ pub(crate) enum IA2Role {
     IA2_ROLE_COMMENT,
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleRole.idl)
  *
@@ -347,5 +347,4 @@ pub(crate) enum IA2Role {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

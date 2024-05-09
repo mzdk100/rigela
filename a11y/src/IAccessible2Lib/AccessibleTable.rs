@@ -319,7 +319,7 @@ pub(crate) unsafe trait IAccessibleTable: IUnknown {
     fn modelChange(&self, modelChange: *mut IA2TableModelChange) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleTable.idl)
  *
@@ -369,5 +369,4 @@ pub(crate) unsafe trait IAccessibleTable: IUnknown {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

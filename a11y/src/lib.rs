@@ -34,6 +34,9 @@ pub mod ia2;
 #[cfg(feature = "jab")]
 #[cfg_attr(docsrs, doc(cfg(feature = "jab")))]
 pub mod jab;
+#[cfg(feature = "scintilla")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scintilla")))]
+pub mod scintilla;
 
 #[cfg(feature = "IAccessible2Lib")]
 const IA2_LIB_NAME: &str = "IAccessible2Proxy.dll";

@@ -101,7 +101,7 @@ pub(crate) unsafe trait IAccessibleTableCell: IUnknown {
     fn table(&self, table: *mut *mut IUnknown) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleTableCell.idl)
  *
@@ -151,5 +151,4 @@ pub(crate) unsafe trait IAccessibleTableCell: IUnknown {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

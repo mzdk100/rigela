@@ -398,7 +398,7 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
     pub(crate) fn oldText(&self, oldText: *mut IA2TextSegment) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleText.idl)
  *
@@ -448,5 +448,4 @@ pub(crate) unsafe trait IAccessibleText: IUnknown {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

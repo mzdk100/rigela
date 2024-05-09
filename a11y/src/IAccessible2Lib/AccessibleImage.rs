@@ -47,7 +47,7 @@ pub(crate) unsafe trait IAccessibleImage: IUnknown {
     fn imageSize(&self, height: *mut i32, width: *mut i32) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleImage.idl)
  *
@@ -97,5 +97,4 @@ pub(crate) unsafe trait IAccessibleImage: IUnknown {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

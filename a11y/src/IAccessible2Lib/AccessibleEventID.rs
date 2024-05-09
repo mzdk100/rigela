@@ -204,7 +204,7 @@ pub(crate) enum IA2EventID {
     IA2_EVENT_ROLE_CHANGED,
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleEventID.idl)
  *
@@ -254,5 +254,4 @@ pub(crate) enum IA2EventID {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

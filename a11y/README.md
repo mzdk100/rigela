@@ -24,3 +24,11 @@ Java 应用程序中 GUI 元素的信息，这些信息通过 Java Access Bridge
 IAccessible2是用于Microsoft Windows应用程序的可访问性API。IAccessible2最初由IBM以Missouri项目的代号开发，IAccessible
 2现在由自由标准组织（现在是Linux基金会的一部分）负责。它被定位为Microsoft新的UI自动化API的替代品。
 [原始接口参考](https://accessibility.linuxfoundation.org/a11yspecs/ia2/docs/html/interface_i_accessible2.html)
+
+## Scintilla API
+
+Scintilla并不是一个辅助技术，他是一个用于Win32、GTK和macOS的免费源代码编辑器组件。
+Scintilla的开发最初是为了改进PythonWin中的文本编辑器。在对PythonWin使用的Richedit控件中的问题感到沮丧之后，看起来最好的方法是编写一个新的编辑控件。Richedit和其他类似控件的最大问题是，它们将样式更改视为对文档的重要持久更改，因此这些更改将保存到撤消堆栈中并设置文档的脏标志。对于源代码，样式不应该被持久化，因为它可以被机械地重新创建。
+Scintilla已经被运用到很多产品中，被大家熟知的就是Notepad++，轻量级：启动速度快，内存占用少，支持许多编程语言的语法高亮显示和代码提示。
+本箱子仅实现对Scintilla控件的外部访问支持（文本、图像信息的获取，控件自动化），不提供创建和销毁的功能。
+[原始接口文档](https://www.scintilla.org/ScintillaDoc.html)

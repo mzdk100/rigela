@@ -74,7 +74,7 @@ pub(crate) unsafe trait IAccessibleHyperlink: IAccessibleAction {
     fn valid(&self, valid: *mut bool) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleHyperlink.idl)
  *
@@ -124,5 +124,4 @@ pub(crate) unsafe trait IAccessibleHyperlink: IAccessibleAction {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */

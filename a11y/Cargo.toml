@@ -18,6 +18,7 @@ rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 [features]
 jab = ["JabLib"]
 ia2 = ["IAccessible2Lib", "win-wrap/msaa", "windows/Win32_Foundation"]
+scintilla = ["win-wrap/control", "scintilla-sys"]
 JabLib = ["rigela-utils/library"]
 IAccessible2Lib = ["rigela-utils/library", "windows-core"]
 
@@ -29,6 +30,10 @@ optional = true
 [dependencies.rigela-utils]
 path = "../utils"
 version = "0.1.4"
+optional = true
+
+[dependencies.scintilla-sys]
+version = "4.0.9"
 optional = true
 
 [dependencies.windows]

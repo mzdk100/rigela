@@ -31,7 +31,7 @@ pub(crate) unsafe trait IAccessibleDocument: IUnknown {
     fn anchorTarget(&self, accessible: *mut *mut IUnknown) -> HRESULT;
 }
 
-/**
+/*
  * Idl file copyright information:
  *  File Name (AccessibleDocument.idl)
  *
@@ -79,5 +79,4 @@ pub(crate) unsafe trait IAccessibleDocument: IUnknown {
  *  IAccessible2 is a trademark of the Linux Foundation. The IAccessible2
  *  mark may be used in accordance with the Linux Foundation Trademark
  *  Policy to indicate compliance with the IAccessible2 specification.
- * */
-trait IdlCopyright {}
+ */
