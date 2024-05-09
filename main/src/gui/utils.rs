@@ -285,9 +285,9 @@ pub(crate) fn create_shortcut_link(link_path: String, hotkey: &[Keys]) -> bool {
     let Some(key) = hotkey
         .iter()
         .find(|k| ![Keys::VkAlt, Keys::VkShift, Keys::VkCtrl, Keys::VkWin].contains(k))
-        else {
-            return false;
-        };
+    else {
+        return false;
+    };
     let Some(key) = key.get_code() else {
         return false;
     };

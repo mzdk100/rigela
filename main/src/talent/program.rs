@@ -62,7 +62,7 @@ impl Speakable for &PdhCounter {
             "program.current_cpu_usage",
             value = self.get_value().1.round()
         )
-            .to_string()
+        .to_string()
     }
 }
 

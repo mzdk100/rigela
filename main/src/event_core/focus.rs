@@ -69,7 +69,7 @@ pub(crate) async fn subscribe_focus_events(context: Weak<Context>) {
                 handle_dialog_events(ctx.clone(), src);
                 return;
             }
-            _ => return
+            _ => return,
         };
 
         let ctx2 = ctx.clone();

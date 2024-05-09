@@ -106,7 +106,7 @@ async fn mode_next(context: Weak<Context>) {
         NavigationMode::Plane => t!("navigator.plane"),
         NavigationMode::Tree => t!("navigator.tree"),
     }
-        .to_string();
+    .to_string();
     context.get_performer().speak(&text).await;
 }
 
@@ -131,7 +131,7 @@ async fn mode_prev(context: Weak<Context>) {
             t!("navigator.tree")
         }
     }
-        .to_string();
+    .to_string();
     context.get_performer().speak(&text).await;
 }
 
@@ -144,6 +144,17 @@ async fn element_color_set(context: Weak<Context>) {
     let Some(color_set) = element.get_color_set() else {
         return;
     };
-    let info = color_set.iter().map(|i| i.name.as_str()).collect::<Vec<_>>().join(",");
-    context.get_performer().speak(&t!("navigator.element_color_set", count=color_set.len(), list=info)).await;
+    let info = color_set
+        .iter()
+        .map(|i| i.name.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+    context
+        .get_performer()
+        .speak(&t!(
+            "navigator.element_color_set",
+            count = color_set.len(),
+            list = info
+        ))
+        .await;
 }

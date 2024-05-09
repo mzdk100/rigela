@@ -48,17 +48,21 @@ pub(crate) async fn subscribe_element_events(context: Weak<Context>) {
     });
 
     let ctx = context.clone();
-    context.get_msaa().add_on_system_foreground_listener(move |src| {
-        let ctx2 = ctx.clone();
-        ctx.get_work_runtime().spawn(async move {
-            ctx2.get_ui_navigator().remove_by(|i| match i {
-                UiElement::MSAA(_, _) => true,
-                _ => false
-            }).await;
-            let Ok(obj) = src.get_object() else {
-                return;
-            };
-            ctx2.get_ui_navigator().add_all(obj.into()).await;
+    context
+        .get_msaa()
+        .add_on_system_foreground_listener(move |src| {
+            let ctx2 = ctx.clone();
+            ctx.get_work_runtime().spawn(async move {
+                ctx2.get_ui_navigator()
+                    .remove_by(|i| match i {
+                        UiElement::MSAA(_, _) => true,
+                        _ => false,
+                    })
+                    .await;
+                let Ok(obj) = src.get_object() else {
+                    return;
+                };
+                ctx2.get_ui_navigator().add_all(obj.into()).await;
+            });
         });
-    });
 }

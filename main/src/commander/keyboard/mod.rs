@@ -79,11 +79,11 @@ impl KeyboardManager {
         match pressed {
             true if key.main_key == { self.pressed_cache.0.lock().unwrap().clone() }
                 && self.pressed_cache.1.load(Ordering::Acquire) =>
-                {
-                    // 产生双击，把按压缓存的状态设为默认
-                    change_cache!(self.pressed_cache, Keys::VkNone, false);
-                    Some(key.change_state(DoublePress))
-                }
+            {
+                // 产生双击，把按压缓存的状态设为默认
+                change_cache!(self.pressed_cache, Keys::VkNone, false);
+                Some(key.change_state(DoublePress))
+            }
 
             true => {
                 // 第一次按下某个键， 按压缓存设为按下，释放缓存设为松开， 启动延时任务。

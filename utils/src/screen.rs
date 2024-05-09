@@ -97,9 +97,9 @@ pub fn snapshot_bytes(
     format: ImageCompressionFormat,
 ) -> Option<Vec<u8>> {
     let Some((mut pixels, bm_header, color_table)) = snapshot(h_wnd, left, top, width, height)
-        else {
-            return None;
-        };
+    else {
+        return None;
+    };
     match format {
         ImageCompressionFormat::BMP => {
             let offset = bm_header.biSize
