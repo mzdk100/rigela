@@ -11,22 +11,25 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod status;
+
 use std::{ffi::c_char, os::raw::c_void};
 
 use scintilla_sys::{Sci_CharacterRange, Sci_PositionCR, Sci_TextRange};
 pub use scintilla_sys::{
     SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT,
-    SCI_CHANGEINSERTION, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_DELETERANGE,
-    SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETLENGTH, SCI_GETLINE,
-    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETMODIFY, SCI_GETREADONLY, SCI_GETSTYLEAT,
-    SCI_GETSTYLEDTEXT, SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_INSERTTEXT,
-    SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESONSCREEN, SCI_POINTXFROMPOSITION,
-    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
-    SCI_POSITIONFROMPOINTCLOSE, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
-    SCI_SETLENGTHFORENCODE, SCI_SETREADONLY, SCI_SETSAVEPOINT, SCI_SETTEXT, SCI_TARGETASUTF8,
-    SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
+    SCI_CHANGEINSERTION, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_COUNTCHARACTERS,
+    SCI_DELETERANGE, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETCHARAT, SCI_GETCOLUMN,
+    SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETMODIFY,
+    SCI_GETREADONLY, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT, SCI_GETTEXT,
+    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
+    SCI_LINESONSCREEN, SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER,
+    SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE,
+    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_SETLENGTHFORENCODE, SCI_SETREADONLY,
+    SCI_SETSAVEPOINT, SCI_SETSTATUS, SCI_SETTEXT, SCI_TARGETASUTF8, SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
 };
 
+use crate::scintilla::status::Status;
 use win_wrap::{
     common::{LPARAM, WPARAM},
     control::{edit::Edit, WindowControl},
@@ -289,6 +292,33 @@ pub trait Scintilla: Edit {
      * `pos` 位置。
      * */
     fn point_y_from_position(&self, pos: usize) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 计算参数位置之前或之后的完整字符数，然后返回该位置（按字符）。返回的最小位置为0，最大位置为文档中的最后一个位置。如果位置超过文档末尾，则返回0。
+     * `pos` 起始位置。
+     * `relative` 相对位置。
+     * */
+    fn position_relative(&self, pos: usize, relative: usize) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 返回两个位置之间的完整字符数（按字符）。
+     * `start` 开始位置。
+     * `end` 结束位置。
+     * */
+    fn count_characters(&self, start: usize, end: usize) -> usize;
+
+    /**
+     * 设置状态。
+     * `status` 状态值。
+     * */
+    fn set_status(&self, status: Status);
+
+    /**
+     * 获取状态。
+     * */
+    fn get_status(&self) -> Status;
 }
 
 impl Scintilla for WindowControl {
@@ -506,7 +536,7 @@ impl Scintilla for WindowControl {
             }
             v
         })
-        .unwrap_or(Vec::new())
+            .unwrap_or(Vec::new())
     }
 
     fn get_text_length(&self) -> usize {
@@ -616,6 +646,30 @@ impl Scintilla for WindowControl {
         );
         res as i32
     }
+
+    fn position_relative(&self, pos: usize, relative: usize) -> usize {
+        let (_, res) =
+            self.send_message(SCI_POSITIONRELATIVE, WPARAM(pos), LPARAM(relative as isize));
+        res
+    }
+
+    fn count_characters(&self, start: usize, end: usize) -> usize {
+        let (_, res) = self.send_message(SCI_COUNTCHARACTERS, WPARAM(start), LPARAM(end as isize));
+        res
+    }
+
+    fn set_status(&self, status: Status) {
+        self.send_message(
+            SCI_SETSTATUS,
+            WPARAM(<Status as Into<u32>>::into(status) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_status(&self) -> Status {
+        let (_, res) = self.send_message(SCI_GETSTATUS, WPARAM::default(), LPARAM::default());
+        (res as u32).into()
+    }
 }
 
 #[cfg(test)]
@@ -625,6 +679,7 @@ mod test_scintilla {
         control::WindowControl,
     };
 
+    use crate::scintilla::status::Status;
     use crate::scintilla::Scintilla;
 
     #[test]
@@ -674,6 +729,10 @@ mod test_scintilla {
         dbg!(control.position_from_point_close(0, 400));
         dbg!(control.point_x_from_position(0));
         dbg!(control.point_y_from_position(0));
+        dbg!(control.position_relative(0, 1));
+        dbg!(control.count_characters(0, 4));
+        control.set_status(Status::BadAlloc);
+        assert_eq!(Status::BadAlloc, control.get_status());
         dbg!(control);
     }
 }
