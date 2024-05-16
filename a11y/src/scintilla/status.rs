@@ -41,10 +41,10 @@ impl From<u32> for Status {
 impl Into<u32> for Status {
     fn into(self) -> u32 {
         match self {
-            Status::Ok => SC_STATUS_OK,
-            Status::Failure => SC_STATUS_FAILURE,
-            Status::BadAlloc => SC_STATUS_BADALLOC,
-            Status::WarnRegex => SC_STATUS_WARN_REGEX,
+            Self::Ok => SC_STATUS_OK,
+            Self::Failure => SC_STATUS_FAILURE,
+            Self::BadAlloc => SC_STATUS_BADALLOC,
+            Self::WarnRegex => SC_STATUS_WARN_REGEX,
         }
     }
 }

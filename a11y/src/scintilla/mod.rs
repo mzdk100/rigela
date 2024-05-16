@@ -11,25 +11,34 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod selection;
 pub mod status;
 
 use std::{ffi::c_char, os::raw::c_void};
 
-use scintilla_sys::{Sci_CharacterRange, Sci_PositionCR, Sci_TextRange};
+use scintilla_sys::{Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, SCI_GETSELECTIONSTART};
 pub use scintilla_sys::{
     SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT,
-    SCI_CHANGEINSERTION, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_COUNTCHARACTERS,
-    SCI_DELETERANGE, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETCHARAT, SCI_GETCOLUMN,
-    SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETMODIFY,
-    SCI_GETREADONLY, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT, SCI_GETTEXT,
-    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
-    SCI_LINESONSCREEN, SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER,
-    SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE,
-    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_SETLENGTHFORENCODE, SCI_SETREADONLY,
-    SCI_SETSAVEPOINT, SCI_SETSTATUS, SCI_SETTEXT, SCI_TARGETASUTF8, SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
+    SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
+    SCI_COUNTCHARACTERS, SCI_DELETERANGE, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETANCHOR,
+    SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH, SCI_GETLINE,
+    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION,
+    SCI_GETLINESELSTARTPOSITION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_GETMOVEEXTENDSSELECTION, SCI_GETREADONLY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE,
+    SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
+    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION,
+    SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESONSCREEN,
+    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
+    SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE,
+    SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE,
+    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
+    SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION, SCI_SETLENGTHFORENCODE,
+    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETREADONLY, SCI_SETSAVEPOINT, SCI_SETSEL,
+    SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTEXT,
+    SCI_TARGETASUTF8, SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
 };
 
-use crate::scintilla::status::Status;
+use crate::scintilla::{selection::SelectionMode, status::Status};
 use win_wrap::{
     common::{LPARAM, WPARAM},
     control::{edit::Edit, WindowControl},
@@ -319,6 +328,176 @@ pub trait Scintilla: Edit {
      * 获取状态。
      * */
     fn get_status(&self) -> Status;
+
+    //noinspection StructuralWrap
+    /**
+     * 此消息设置锚点和当前位置。如果插入符号为负数，则表示文档的末尾。如果锚点为负数，则表示删除任何选择（即将锚点设置为与插入符号相同的位置）。执行此操作后，插入符号将滚动到视图中。
+     * `anchor` 锚点。
+     * `caret` 插入点。
+     * */
+    fn set_sel(&self, anchor: usize, caret: usize);
+
+    /**
+     * 这将删除任何选择，将caret设置为插入符号，并在必要时滚动视图以使插入符号可见。它相当于SCI_SETSEL(caret, caret)。锚点位置设置为与当前位置相同。
+     * `caret` 插入点。
+     * */
+    fn goto_pos(&self, caret: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 这将删除任何选择，并在行号line的开头设置插入符号，并滚动视图（如果需要）使其可见。锚点位置设置为与当前位置相同。如果line在文档中的行之外（第一行为0），则line集为第一行或最后一行。
+     * `line` 行号。
+     * */
+    fn goto_line(&self, line: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 这将设置当前位置，并在锚点和当前位置之间创建一个选择。插入符号未滚动到视图中。
+     * 另请参阅：SCI_SCROLLCARET
+     * `caret` 插入点。
+     * */
+    fn set_current_pos(&self, caret: usize);
+
+    /**
+     * 这将返回当前位置。
+     * */
+    fn get_current_pos(&self) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 这将设置锚点位置，并在锚点位置和当前位置之间创建一个选择。插入符号未滚动到视图中。
+     * 另请参阅：SCI_SCROLLCARET
+     * `anchor` 锚点。
+     * */
+    fn set_anchor(&self, anchor: usize);
+
+    /**
+     * 这将返回当前的锚点位置。
+     * */
+    fn get_anchor(&self) -> usize;
+
+    /**
+     * 基于锚位置小于当前位置的假设来设置选择。它们不会使插入符号可见。该表显示了锚点的位置和使用这些消息后的当前位置。
+     * 设置选择插入符号定位
+     * 新值 | 锚点 | 插入点
+     * SCI_SETSELECTIONSTART | anchor | Max(anchor, current)
+     * SCI_SETSELECTIONEND | Min(anchor, caret) | caret
+     * 另请参阅：SCI_SCROLLCARET
+     * */
+    fn set_selection_start(&self, anchor: usize);
+
+    /**
+     * 基于锚位置小于当前位置的假设来设置选择。它们不会使插入符号可见。该表显示了锚点的位置和使用这些消息后的当前位置。
+     * 设置选择插入符号定位
+     * 新值 | 锚点 | 插入点
+     * SCI_SETSELECTIONSTART | anchor | Max(anchor, current)
+     * SCI_SETSELECTIONEND | Min(anchor, caret) | caret
+     * 另请参阅：SCI_SCROLLCARET
+     * */
+    fn set_selection_end(&self, caret: usize);
+
+    /**
+     * 返回选择的开始，而不考虑当前位置和锚点。返回当前位置或锚点位置中较小的一个。
+     * */
+    fn get_selection_start(&self) -> usize;
+
+    /**
+     * 返回选择的结束，而不考虑当前位置和锚点。返回当前位置或锚点中较大的一个。
+     * */
+    fn get_selection_end(&self) -> usize;
+
+    /**
+     * 这将删除任何选择并将插入点设置为caret。插入点未滚动到视图中。
+     * `caret` 插入点。
+     * */
+    fn set_empty_selection(&self, caret: usize);
+
+    /**
+     * 这将选择文档中的所有文本。当前位置不会滚动到视图中。
+     * */
+    fn select_all(&self);
+
+    /**
+     * 正常状态是通过按照SCI_SETSELFORE、SCI_SETSELLACK和相关调用的设置绘制选择，使其可见。但是，如果隐藏所选内容，则会将其绘制为普通文本。
+     * `hide` 是否隐藏。
+     * */
+    fn hide_selection(&self, hide: bool);
+
+    /**
+     * 获取当前选定的文本。这允许矩形和不连续的选择以及简单的选择。有关如何复制多重选择和矩形选择以及虚拟空间的信息，请参见多重选择。
+     * 另请参见：SCI_GETCURLINE、SCI_GETLINE、SCI_GETTEXT、SCI_GetSTYLETEXT、SCI_GETTEXTRANGE
+     * */
+    fn get_sel_text(&self) -> Option<String>;
+
+    /**
+     * 查询包含插入符号的某行的文本，并返回插入符号所在行中的位置。
+     * 另请参见：SCI_GETSELTEXT、SCI_GETLINE、SCI_GETTEXT、SCI_GETSTYLEDTEXT和SCI_GETTEXTRANGE
+     * */
+    fn get_cur_line(&self) -> (Option<String>, usize);
+
+    /**
+     * 如果当前选择处于矩形模式，则返回true，否则返回false。
+     * */
+    fn selection_is_rectangle(&self) -> bool;
+
+    /**
+     * 设置选择模式）。当SCI_SETSELECTIONMODE设置这些模式时，常规插入符号移动将扩展或减少选择，直到具有相同值的调用、SCI_CANCEL或SCI_SETMOVEXTENDSSELECTION取消该模式。SCI_CHANGESELECTIONMODE设置模式，但不使常规插入符号移动扩展或减少选择。
+     * */
+    fn set_selection_mode(&self, selection_mode: SelectionMode);
+
+    /**
+     * 返回当前模式，即使选择是通过鼠标或常规扩展移动进行的。SC_SEL_THIN是在键入矩形选择后的模式，可确保不选择任何字符。
+     * */
+    fn get_selection_mode(&self) -> SelectionMode;
+
+    /**
+     * 这控制了常规插入符号移动是否扩展所选内容而不改变定位点。如果常规插入符号移动将扩展或减少所选内容，则为true，否则为false。SCI_SETSELECTIONMODE可在打开和关闭之间切换此设置。
+     * */
+    fn get_move_extends_selection(&self) -> bool;
+
+    /**
+     * 查询给定行的选择开始的位置，如果该行上没有选择，则返回INVALID_POSITION。
+     * `line` 行号。
+     * */
+    fn get_line_sel_start_position(&self, line: usize) -> usize;
+
+    /**
+     * 查询给定行的选择结束的位置，如果该行上没有选择，则返回INVALID_POSITION。
+     * `line` 行号。
+     * */
+    fn get_line_sel_end_position(&self, line: usize) -> usize;
+
+    /**
+     * 如果插入点偏离视图的顶部或底部，则会将其移动到其当前位置可见的最近一行。任何选择都将丢失。
+     * */
+    fn move_caret_inside_view(&self);
+
+    /**
+     * Scintilla会记住用户明确水平移动到的最后一个位置的x值，然后在垂直移动时使用该值，例如使用上下键。此消息将插入符号的当前x位置设置为记忆值。
+     * */
+    fn choose_caret_x(&self);
+
+    /**
+     * 将选定的行向上移动一行，选择后将行移到上面。所选内容将自动扩展到所选内容的第一行的开头和最后一行的末尾。如果未选择任何内容，则将选择光标当前所在的行。
+     * */
+    fn move_selected_lines_up(&self);
+
+    /**
+     * 将选定的行向下移动一行，将该行移动到选定之前的下方。所选内容将自动扩展到所选内容的第一行的开头和最后一行的末尾。如果未选择任何内容，则将选择光标当前所在的行。
+     * */
+    fn move_selected_lines_down(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 启用或禁用在使用鼠标进行选择时切换到矩形选择模式的功能。启用此选项后，可以通过按下相应的修改器键将流模式下的鼠标选择切换到矩形模式。然后，即使再次释放修改器键，它们也会坚持矩形模式。禁用此选项后，鼠标选择将始终保持在启动选择时的模式。默认情况下，此选项处于禁用状态。
+     * `mouse_selection_rectangular_switch` 鼠标选择矩形开关。
+     * */
+    fn set_mouse_selection_rectangular_switch(&self, mouse_selection_rectangular_switch: bool);
+
+    /**
+     * 获取在使用鼠标进行选择时矩形选择模式。
+     * */
+    fn get_mouse_selection_rectangular_switch(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -670,6 +849,181 @@ impl Scintilla for WindowControl {
         let (_, res) = self.send_message(SCI_GETSTATUS, WPARAM::default(), LPARAM::default());
         (res as u32).into()
     }
+
+    fn set_sel(&self, anchor: usize, caret: usize) {
+        self.send_message(SCI_SETSEL, WPARAM(anchor), LPARAM(caret as isize));
+    }
+
+    fn goto_pos(&self, caret: usize) {
+        self.send_message(SCI_GOTOPOS, WPARAM(caret), LPARAM::default());
+    }
+
+    fn goto_line(&self, line: usize) {
+        self.send_message(SCI_GOTOLINE, WPARAM(line), LPARAM::default());
+    }
+
+    fn set_current_pos(&self, caret: usize) {
+        self.send_message(SCI_SETCURRENTPOS, WPARAM(caret), LPARAM::default());
+    }
+
+    fn get_current_pos(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETCURRENTPOS, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn set_anchor(&self, anchor: usize) {
+        self.send_message(SCI_SETANCHOR, WPARAM(anchor), LPARAM::default());
+    }
+
+    fn get_anchor(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETANCHOR, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn set_selection_start(&self, anchor: usize) {
+        self.send_message(SCI_SETSELECTIONSTART, WPARAM(anchor), LPARAM::default());
+    }
+
+    fn set_selection_end(&self, caret: usize) {
+        self.send_message(SCI_SETSELECTIONEND, WPARAM(caret), LPARAM::default());
+    }
+
+    fn get_selection_start(&self) -> usize {
+        let (_, res) =
+            self.send_message(SCI_GETSELECTIONSTART, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn get_selection_end(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETSELECTIONEND, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn set_empty_selection(&self, caret: usize) {
+        self.send_message(SCI_SETEMPTYSELECTION, WPARAM(caret), LPARAM::default());
+    }
+
+    fn select_all(&self) {
+        self.send_message(SCI_SELECTALL, WPARAM::default(), LPARAM::default());
+    }
+
+    fn hide_selection(&self, hide: bool) {
+        let hide = if hide { 1 } else { 0 };
+        self.send_message(SCI_HIDESELECTION, WPARAM(hide), LPARAM::default());
+    }
+
+    fn get_sel_text(&self) -> Option<String> {
+        let (_, len) = self.send_message(SCI_GETSELTEXT, WPARAM::default(), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), len + 1).unwrap();
+        self.send_message(
+            SCI_GETSELTEXT,
+            WPARAM::default(),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn get_cur_line(&self) -> (Option<String>, usize) {
+        let (_, len) = self.send_message(SCI_GETCURLINE, WPARAM::default(), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), len + 1).unwrap();
+        let (_, caret) =
+            self.send_message(SCI_GETCURLINE, WPARAM(len), LPARAM(mem.as_ptr() as isize));
+        (mem.read(|buf| (buf as *const u8).to_string()), caret)
+    }
+
+    fn selection_is_rectangle(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_SELECTIONISRECTANGLE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_selection_mode(&self, selection_mode: SelectionMode) {
+        self.send_message(
+            SCI_SETSELECTIONMODE,
+            WPARAM(<SelectionMode as Into<u32>>::into(selection_mode) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_selection_mode(&self) -> SelectionMode {
+        let (_, res) =
+            self.send_message(SCI_GETSELECTIONMODE, WPARAM::default(), LPARAM::default());
+        SelectionMode::from(res as u32)
+    }
+
+    fn get_move_extends_selection(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETMOVEEXTENDSSELECTION,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn get_line_sel_start_position(&self, line: usize) -> usize {
+        let (_, res) =
+            self.send_message(SCI_GETLINESELSTARTPOSITION, WPARAM(line), LPARAM::default());
+        res
+    }
+
+    fn get_line_sel_end_position(&self, line: usize) -> usize {
+        let (_, res) =
+            self.send_message(SCI_GETLINESELENDPOSITION, WPARAM(line), LPARAM::default());
+        res
+    }
+
+    fn move_caret_inside_view(&self) {
+        self.send_message(
+            SCI_MOVECARETINSIDEVIEW,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn choose_caret_x(&self) {
+        self.send_message(SCI_CHOOSECARETX, WPARAM::default(), LPARAM::default());
+    }
+
+    fn move_selected_lines_up(&self) {
+        self.send_message(
+            SCI_MOVESELECTEDLINESUP,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn move_selected_lines_down(&self) {
+        self.send_message(
+            SCI_MOVESELECTEDLINESDOWN,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_mouse_selection_rectangular_switch(&self, mouse_selection_rectangular_switch: bool) {
+        let mode = if mouse_selection_rectangular_switch {
+            1
+        } else {
+            0
+        };
+        self.send_message(
+            SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
+            WPARAM(mode),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_mouse_selection_rectangular_switch(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -679,8 +1033,7 @@ mod test_scintilla {
         control::WindowControl,
     };
 
-    use crate::scintilla::status::Status;
-    use crate::scintilla::Scintilla;
+    use crate::scintilla::{selection::SelectionMode, status::Status, Scintilla};
 
     #[test]
     fn main() {
@@ -733,6 +1086,34 @@ mod test_scintilla {
         dbg!(control.count_characters(0, 4));
         control.set_status(Status::BadAlloc);
         assert_eq!(Status::BadAlloc, control.get_status());
+        control.set_sel(6, 7);
+        control.goto_pos(9);
+        control.goto_line(2);
+        control.set_current_pos(6);
+        assert_eq!(6, control.get_current_pos());
+        control.set_anchor(8);
+        assert_eq!(8, control.get_anchor());
+        control.set_selection_start(10);
+        assert_eq!(10, control.get_selection_start());
+        control.set_selection_end(11);
+        assert_eq!(11, control.get_selection_end());
+        control.set_empty_selection(7);
+        control.select_all();
+        control.hide_selection(true);
+        dbg!(control.get_sel_text());
+        dbg!(control.get_cur_line());
+        dbg!(control.selection_is_rectangle());
+        control.set_selection_mode(SelectionMode::Rectangle);
+        assert_eq!(SelectionMode::Rectangle, control.get_selection_mode());
+        dbg!(control.get_move_extends_selection());
+        dbg!(control.get_line_sel_start_position(1));
+        dbg!(control.get_line_sel_end_position(1));
+        control.move_caret_inside_view();
+        control.choose_caret_x();
+        control.move_selected_lines_up();
+        control.move_selected_lines_down();
+        control.set_mouse_selection_rectangular_switch(true);
+        assert_eq!(true, control.get_mouse_selection_rectangular_switch());
         dbg!(control);
     }
 }
