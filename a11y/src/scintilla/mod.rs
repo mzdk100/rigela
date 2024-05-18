@@ -16,26 +16,47 @@ pub mod status;
 
 use std::{ffi::c_char, os::raw::c_void};
 
-use scintilla_sys::{Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, SCI_GETSELECTIONSTART};
+use scintilla_sys::{
+    Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, SCI_GETSELECTIONNANCHOR,
+    SCI_GETSELECTIONNANCHORVIRTUALSPACE, SCI_GETSELECTIONSTART, SCI_SETSELECTIONNANCHOR,
+    SCI_SETSELECTIONNANCHORVIRTUALSPACE,
+};
 pub use scintilla_sys::{
-    SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT,
-    SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
-    SCI_COUNTCHARACTERS, SCI_DELETERANGE, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETANCHOR,
-    SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH, SCI_GETLINE,
-    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION,
-    SCI_GETLINESELSTARTPOSITION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_GETMOVEEXTENDSSELECTION, SCI_GETREADONLY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE,
+    SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES,
+    SCI_APPENDTEXT, SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
+    SCI_CLEARSELECTIONS, SCI_COUNTCHARACTERS, SCI_DELETERANGE, SCI_DROPSELECTIONN,
+    SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK,
+    SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING,
+    SCI_GETANCHOR, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH,
+    SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION,
+    SCI_GETLINESELSTARTPOSITION, SCI_GETMAINSELECTION, SCI_GETMODIFY,
+    SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE,
+    SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
+    SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
+    SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
+    SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
+    SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
     SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
-    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION,
-    SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESONSCREEN,
-    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
-    SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE,
-    SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE,
-    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
+    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETVIRTUALSPACEOPTIONS, SCI_GOTOLINE,
+    SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
+    SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
+    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_POINTXFROMPOSITION,
+    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
+    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
+    SCI_ROTATESELECTION, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
+    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
+    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
     SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION, SCI_SETLENGTHFORENCODE,
-    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETREADONLY, SCI_SETSAVEPOINT, SCI_SETSEL,
-    SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTEXT,
-    SCI_TARGETASUTF8, SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
+    SCI_SETMAINSELECTION, SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMULTIPASTE,
+    SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
+    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
+    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
+    SCI_SETSAVEPOINT, SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
+    SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND,
+    SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTEXT,
+    SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TEXTHEIGHT,
+    SCI_TEXTWIDTH, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE,
+    SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
 };
 
 use crate::scintilla::{selection::SelectionMode, status::Status};
@@ -498,6 +519,336 @@ pub trait Scintilla: Edit {
      * 获取在使用鼠标进行选择时矩形选择模式。
      * */
     fn get_mouse_selection_rectangular_switch(&self) -> bool;
+
+    /**
+     * 启用或禁用多选。禁用多选时，无法通过按住Ctrl键同时用鼠标拖动来选择多个范围。
+     * `multiple_selection` 启用多选。
+     * */
+    fn set_multiple_selection(&self, multiple_selection: bool);
+
+    /**
+     * 获取多选开关状态。禁用多选时，无法通过按住Ctrl键同时用鼠标拖动来选择多个范围。
+     * */
+    fn get_multiple_selection(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 无论是打字、换行、光标左/右/上/下、退格、删除、主页还是同时结束多项选择。还允许选择和字和行删除命令。
+     * `additional_selection_typing` 附加选择类型。
+     * */
+    fn set_additional_selection_typing(&self, additional_selection_typing: bool);
+
+    /**
+     * 获取附加选择类型状态。无论是打字、换行、光标左/右/上/下、退格、删除、主页还是同时结束多项选择。还允许选择和字和行删除命令。
+     * */
+    fn get_additional_selection_typing(&self) -> bool;
+
+    /**
+     * 粘贴到多个选择中时，粘贴的文本可以仅进入multi_paste=false的主选择中，也可以进入multi_paste=true的每个选择中。false是默认值。
+     * `multi_paste` 是否启用多粘贴方式。
+     * */
+    fn set_multi_paste(&self, multi_paste: bool);
+
+    /**
+     * 获取多粘贴方式。粘贴到多个选择中时，粘贴的文本仅进入主选择返回false，进入每个选择返回true。
+     * */
+    fn get_multi_paste(&self) -> bool;
+
+    /**
+     * 虚拟空间可以针对矩形选择启用或禁用，也可以在其他情况下启用或禁用。有三个位标志SCVS_RECTANGULARSELECTION=1、SCVS_USERACCESSABLE=2和SCVS_NOWRAPLINESTART=4，它们可以独立设置。SCVS_NONE=0（默认值）将禁用所有虚拟空间的使用。
+     * SCVS_NOWRAPLINESTART防止左箭头移动和选择换行到前一行。这通常与虚拟空间结合使用，但它是一个独立的设置，因此在没有虚拟空间的情况下也能工作。
+     * `virtual_space` 虚拟空间位标志。
+     * */
+    fn set_virtual_space_options(&self, virtual_space: u32);
+
+    /**
+     * 获取虚拟空间位标志。
+     * 虚拟空间可以针对矩形选择启用或禁用，也可以在其他情况下启用或禁用。有三个位标志SCVS_RECTANGULARSELECTION=1、SCVS_USERACCESSABLE=2和SCVS_NOWRAPLINESTART=4，它们可以独立设置。SCVS_NONE=0（默认值）将禁用所有虚拟空间的使用。
+     * SCVS_NOWRAPLINESTART防止左箭头移动和选择换行到前一行。这通常与虚拟空间结合使用，但它是一个独立的设置，因此在没有虚拟空间的情况下也能工作。
+     * */
+    fn get_virtual_space_options(&self) -> u32;
+
+    /**
+     * 在GTK和Qt上，可以设置用于指示与鼠标拖动组合时应创建矩形选择的键。三个可能的值是SCMOD_CTRL=2、SCMOD_ALT=4（默认值）或SCMOD_SUPER=8。由于SCMOD_ALT可能已经被窗口管理器使用，因此窗口管理器可能需要进行配置以允许此选择。SCMOD_SUPER通常是一个依赖于系统的修改键，例如Windows键盘上的“左Windows”键或Mac上的“命令”键。
+     * `modifier` 修饰为标志。
+     * */
+    fn set_rectangular_selection_modifier(&self, modifier: u32);
+
+    /**
+     * 在GTK和Qt上，可以设置用于指示与鼠标拖动组合时应创建矩形选择的键。三个可能的值是SCMOD_CTRL=2、SCMOD_ALT=4（默认值）或SCMOD_SUPER=8。由于SCMOD_ALT可能已经被窗口管理器使用，因此窗口管理器可能需要进行配置以允许此选择。SCMOD_SUPER通常是一个依赖于系统的修改键，例如Windows键盘上的“左Windows”键或Mac上的“命令”键。
+     * */
+    fn get_rectangular_selection_modifier(&self) -> u32;
+
+    /**
+     * 返回当前活动的选择数。始终至少有一个选择。
+     * */
+    fn get_selections(&self) -> i32;
+
+    /**
+     * 如果每个选定范围为空，则返回true，否则返回false。
+     * */
+    fn get_selection_empty(&self) -> bool;
+
+    /**
+     * 将0处的单个空选择设置为唯一选择。
+     * */
+    fn clear_selections(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 将从锚点到插入点的单个选择设置为唯一选择。
+     * `caret` 插入点。
+     * `archor` 锚点。
+     * */
+    fn set_selection(&self, caret: usize, anchor: usize);
+
+    /**
+     * 从锚点到插入点添加一个新的选择作为主选择，保留所有其他选择作为附加选择。由于总是至少有一个选择，因此要设置选择列表，第一个选择应添加SCI_SETSELECTION，随后的选择应添加SCI_ADDSELECTION。
+     * `caret` 插入点。
+     * `archor` 锚点。
+     * */
+    fn add_selection(&self, caret: usize, anchor: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 如果有多个选择，则删除指示的选择。如果这是主选择，则将上一个选择作为主选择；如果是第一个选择，则最后一个选择成为主选择。如果只有一个选择，或者没有选择，则没有效果。
+     * `selection` 选择区。
+     * */
+    fn drop_selection_n(&self, selection: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 其中一个选项是主选项，用于确定自动可见的文本范围。主选择可以用不同的颜色显示，或者用不同样式的插入点显示。只有已存在的选择才能成为主要选择。
+     * `selection` 选择区。
+     * */
+    fn set_main_selection(&self, selection: i32);
+
+    /**
+     * 获取主要选择，用于确定自动可见的文本范围。主选择可以用不同的颜色显示，或者用不同样式的插入点显示。
+     * */
+    fn get_main_selection(&self) -> i32;
+
+    /**
+     * 设置每个已存在选择的插入点的位置。
+     * `selection` 选择区。
+     * `caret` 插入点。
+     * */
+    fn set_selection_n_caret(&self, selection: i32, caret: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的插入点的位置。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_caret(&self, selection: i32) -> usize;
+
+    /**
+     * 设置每个已存在选择的插入点的虚拟空间数量。
+     * `selection` 选择区。
+     * `space` 虚拟空间。
+     * */
+    fn set_selection_n_caret_virtual_space(&self, selection: i32, space: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的插入点的虚拟空间数量。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_caret_virtual_space(&self, selection: i32) -> usize;
+
+    /**
+     * 设置每个已存在选择的锚点的位置。
+     * `selection` 选择区。
+     * `anchor` 锚点。
+     * */
+    fn set_selection_n_anchor(&self, selection: i32, anchor: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的锚点的位置。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_anchor(&self, selection: i32) -> usize;
+
+    /**
+     * 设置每个已存在选择的锚点的虚拟空间数量。
+     * `selection` 选择区。
+     * `space` 虚拟空间。
+     * */
+    fn set_selection_n_anchor_virtual_space(&self, selection: i32, space: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的锚点的虚拟空间数量。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_anchor_virtual_space(&self, selection: i32) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置每个已存在选择的开始位置。主要用于查询每个范围的文本。选择参数为零。
+     * `selection` 选择区。
+     * `anchor` 锚点。
+     * */
+    fn set_selection_n_start(&self, selection: i32, anchor: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的开始位置。主要用于查询每个范围的文本。选择参数为零。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_start(&self, selection: i32) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置每个已存在选择的结束位置。主要用于查询每个范围的文本。选择参数为零。
+     * `selection` 选择区。
+     * `caret` 插入点。
+     * */
+    fn set_selection_n_end(&self, selection: i32, caret: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询每个已存在选择的结束位置。主要用于查询每个范围的文本。选择参数为零。
+     * `selection` 选择区。
+     * */
+    fn get_selection_n_end(&self, selection: i32) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置矩形选择的插入点的位置。设置矩形选择后，会将其分解为多个选择，每行一个。
+     * `caret` 插入点。
+     * */
+    fn set_rectangular_selection_caret(&self, caret: usize);
+
+    /**
+     * 查询矩形选择的插入点的位置。矩形选择会将其分解为多个选择，每行一个。
+     * */
+    fn get_rectangular_selection_caret(&self) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置矩形选择的插入点的虚拟空间数量。设置矩形选择后，会将其分解为多个选择，每行一个。
+     * `space` 虚拟空间。
+     * */
+    fn set_rectangular_selection_caret_virtual_space(&self, space: usize);
+
+    /**
+     * 查询矩形选择的插入点的虚拟空间数量。矩形选择会将其分解为多个选择，每行一个。
+     * */
+    fn get_rectangular_selection_caret_virtual_space(&self) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置矩形选择的锚点的位置。设置矩形选择后，会将其分解为多个选择，每行一个。
+     * `anchor` 锚点。
+     * */
+    fn set_rectangular_selection_anchor(&self, anchor: usize);
+
+    /**
+     * 查询矩形选择的锚点的位置。矩形选择会将其分解为多个选择，每行一个。
+     * */
+    fn get_rectangular_selection_anchor(&self) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置矩形选择的锚点的虚拟空间数量。设置矩形选择后，会将其分解为多个选择，每行一个。
+     * `space` 虚拟空间。
+     * */
+    fn set_rectangular_selection_anchor_virtual_space(&self, space: usize);
+
+    /**
+     * 查询矩形选择的锚点的虚拟空间数量。矩形选择会将其分解为多个选择，每行一个。
+     * */
+    fn get_rectangular_selection_anchor_virtual_space(&self) -> usize;
+
+    /**
+     * 修改附加选择的外观，以便将其与外观设置为SC_ELEMENT_SELECTION_TEXT、SC_ELEMENT_SELECTION_BACK、SCI_SETSELALPHA、SCI_GETSELALPHA、SCI_SETSELFORE和SCI_SETSELBACK的主选择区分开来。首选元素API，不鼓励使用以下消息。附加选择背景绘制在SCI_SETSELECTIONLAYER为所有选择背景定义的图层上。只有在useSetting值设置为true的情况下调用SCI_SETSELFORE和SCI_SETSELBACK后，SCI_SETADDITIONALSELFORE与SCI_SETADDITIONALSELBACK调用才会生效。随后对SCI_SETSELFORE和SCI_SETSELBACK的调用将覆盖SCI_SETADDITIONALSEL*函数设置的值。
+     * `alpha` 外观。
+     * */
+    fn set_additional_sel_alpha(&self, alpha: i32);
+
+    /**
+     * 获取附加选择的外观。
+     * */
+    fn get_additional_sel_alpha(&self) -> i32;
+
+    /**
+     * 修改附加选择的外观，以便将其与外观设置为SC_ELEMENT_SELECTION_TEXT、SC_ELEMENT_SELECTION_BACK、SCI_SETSELALPHA、SCI_GETSELALPHA、SCI_SETSELFORE和SCI_SETSELBACK的主选择区分开来。首选元素API，不鼓励使用以下消息。附加选择背景绘制在SCI_SETSELECTIONLAYER为所有选择背景定义的图层上。只有在useSetting值设置为true的情况下调用SCI_SETSELFORE和SCI_SETSELBACK后，SCI_SETADDITIONALSELFORE与SCI_SETADDITIONALSELBACK调用才会生效。随后对SCI_SETSELFORE和SCI_SETSELBACK的调用将覆盖SCI_SETADDITIONALSEL*函数设置的值。
+     * `fore` 外观。
+     * */
+    fn set_additional_sel_fore(&self, fore: i32);
+
+    /**
+     * 修改附加选择的外观，以便将其与外观设置为SC_ELEMENT_SELECTION_TEXT、SC_ELEMENT_SELECTION_BACK、SCI_SETSELALPHA、SCI_GETSELALPHA、SCI_SETSELFORE和SCI_SETSELBACK的主选择区分开来。首选元素API，不鼓励使用以下消息。附加选择背景绘制在SCI_SETSELECTIONLAYER为所有选择背景定义的图层上。只有在useSetting值设置为true的情况下调用SCI_SETSELFORE和SCI_SETSELBACK后，SCI_SETADDITIONALSELFORE与SCI_SETADDITIONALSELBACK调用才会生效。随后对SCI_SETSELFORE和SCI_SETSELBACK的调用将覆盖SCI_SETADDITIONALSEL*函数设置的值。
+     * `back` 外观。
+     * */
+    fn set_additional_sel_back(&self, back: i32);
+
+    /**
+     * 修改附加插入符号的外观，以便将其与外观设置为SC_ELEMENT_CARET、SCI_SETCARETFORE、SCI_GETCARETFORE、SCI_SETCARETPERIOD和SCI_GETCARETPERIOD的主插入符号区分开来。
+     * `fore` 外观。
+     * */
+    fn set_additional_caret_fore(&self, fore: i32);
+
+    /**
+     * 获取附加插入符号的外观。
+     * */
+    fn get_additional_caret_fore(&self) -> i32;
+
+    /**
+     * 修改附加插入符号的外观，以便将其与外观设置为SC_ELEMENT_CARET、SCI_SETCARETFORE、SCI_GETCARETFORE、SCI_SETCARETPERIOD和SCI_GETCARETPERIOD的主插入符号区分开来。
+     * `additional_carets_blink` 可选插入点闪烁。
+     * */
+    fn set_additional_carets_blink(&self, additional_carets_blink: bool);
+
+    /**
+     * 获取附加插入符号的外观。
+     * */
+    fn get_additional_carets_blink(&self) -> bool;
+
+    /**
+     * 确定是否显示其他插入符号（默认为true）。
+     * `visible` 是否显示。
+     * */
+    fn set_additional_carets_visible(&self, visible: bool);
+
+    /**
+     * 确定是否显示其他插入符号（默认为true）。
+     * */
+    fn get_additional_carets_visible(&self) -> bool;
+
+    /**
+     * 将插入符号移动到主选择的另一端。
+     * */
+    fn swap_main_anchor_caret(&self);
+
+    /**
+     * 使下一个选择成为主选择。
+     * */
+    fn rotate_selection(&self);
+
+    /**
+     * 将目标中下一次出现的主选择添加到主选择集。如果当前选择为空，则选择插入符号周围的单词。使用当前的searchFlags，因此应用程序可以选择区分大小写和单词搜索选项。
+     * */
+    fn multiple_select_add_next(&self);
+
+    /**
+     * 类似于multiple_select_add_next，但添加了多个引用，而不是仅添加一个。
+     * */
+    fn multiple_select_add_each(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置改写模式。启用改写后，每个键入的字符都会替换文本插入符号右侧的字符。如果禁用了改写，则会在插入符号处插入字符。如果改写处于活动状态，SCI_GETOVERTYPE将返回true（1），否则将返回false（0）。
+     * `over_type` 改写模式。
+     * */
+    fn set_over_type(&self, over_type: bool);
+
+    /**
+     * 获取改写模式。启用改写后，每个键入的字符都会替换文本插入符号右侧的字符。如果禁用了改写，则会在插入符号处插入字符。如果改写处于活动状态，SCI_GETOVERTYPE将返回true（1），否则将返回false（0）。
+     * */
+    fn get_over_type(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -1024,6 +1375,424 @@ impl Scintilla for WindowControl {
         );
         res != 0
     }
+
+    fn set_multiple_selection(&self, multiple_selection: bool) {
+        let multiple_selection = if multiple_selection { 1 } else { 0 };
+        self.send_message(
+            SCI_SETMULTIPLESELECTION,
+            WPARAM(multiple_selection),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_multiple_selection(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETMULTIPLESELECTION,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_additional_selection_typing(&self, additional_selection_typing: bool) {
+        let additional_selection_typing = if additional_selection_typing { 1 } else { 0 };
+        self.send_message(
+            SCI_SETADDITIONALSELECTIONTYPING,
+            WPARAM(additional_selection_typing),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_additional_selection_typing(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETADDITIONALSELECTIONTYPING,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_multi_paste(&self, multi_paste: bool) {
+        let multi_paste = if multi_paste { 1 } else { 0 };
+        self.send_message(SCI_SETMULTIPASTE, WPARAM(multi_paste), LPARAM::default());
+    }
+
+    fn get_multi_paste(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETMULTIPASTE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn set_virtual_space_options(&self, virtual_space: u32) {
+        self.send_message(
+            SCI_SETVIRTUALSPACEOPTIONS,
+            WPARAM(virtual_space as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_virtual_space_options(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETVIRTUALSPACEOPTIONS,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn set_rectangular_selection_modifier(&self, modifier: u32) {
+        self.send_message(
+            SCI_SETRECTANGULARSELECTIONMODIFIER,
+            WPARAM(modifier as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_rectangular_selection_modifier(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETRECTANGULARSELECTIONMODIFIER,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn get_selections(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETSELECTIONS, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn get_selection_empty(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETSELECTIONS, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn clear_selections(&self) {
+        self.send_message(SCI_CLEARSELECTIONS, WPARAM::default(), LPARAM::default());
+    }
+
+    fn set_selection(&self, caret: usize, anchor: usize) {
+        self.send_message(SCI_SETSELECTION, WPARAM(caret), LPARAM(anchor as isize));
+    }
+
+    fn add_selection(&self, caret: usize, anchor: usize) {
+        self.send_message(SCI_ADDSELECTION, WPARAM(caret), LPARAM(anchor as isize));
+    }
+
+    fn drop_selection_n(&self, selection: i32) {
+        self.send_message(
+            SCI_DROPSELECTIONN,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_main_selection(&self, selection: i32) {
+        self.send_message(
+            SCI_SETMAINSELECTION,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_main_selection(&self) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_GETMAINSELECTION, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_selection_n_caret(&self, selection: i32, caret: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNCARET,
+            WPARAM(selection as usize),
+            LPARAM(caret as isize),
+        );
+    }
+
+    fn get_selection_n_caret(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNCARET,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_selection_n_caret_virtual_space(&self, selection: i32, space: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNCARETVIRTUALSPACE,
+            WPARAM(selection as usize),
+            LPARAM(space as isize),
+        );
+    }
+
+    fn get_selection_n_caret_virtual_space(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNCARETVIRTUALSPACE,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_selection_n_anchor(&self, selection: i32, anchor: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNANCHOR,
+            WPARAM(selection as usize),
+            LPARAM(anchor as isize),
+        );
+    }
+
+    fn get_selection_n_anchor(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNANCHOR,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_selection_n_anchor_virtual_space(&self, selection: i32, space: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNANCHORVIRTUALSPACE,
+            WPARAM(selection as usize),
+            LPARAM(space as isize),
+        );
+    }
+
+    fn get_selection_n_anchor_virtual_space(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNANCHORVIRTUALSPACE,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_selection_n_start(&self, selection: i32, anchor: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNSTART,
+            WPARAM(selection as usize),
+            LPARAM(anchor as isize),
+        );
+    }
+
+    fn get_selection_n_start(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNSTART,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_selection_n_end(&self, selection: i32, caret: usize) {
+        self.send_message(
+            SCI_SETSELECTIONNEND,
+            WPARAM(selection as usize),
+            LPARAM(caret as isize),
+        );
+    }
+
+    fn get_selection_n_end(&self, selection: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETSELECTIONNEND,
+            WPARAM(selection as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_rectangular_selection_caret(&self, caret: usize) {
+        self.send_message(
+            SCI_SETRECTANGULARSELECTIONCARET,
+            WPARAM(caret),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_rectangular_selection_caret(&self) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETRECTANGULARSELECTIONCARET,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_rectangular_selection_caret_virtual_space(&self, space: usize) {
+        self.send_message(
+            SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+            WPARAM(space),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_rectangular_selection_caret_virtual_space(&self) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_rectangular_selection_anchor(&self, anchor: usize) {
+        self.send_message(
+            SCI_SETRECTANGULARSELECTIONCARET,
+            WPARAM(anchor),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_rectangular_selection_anchor(&self) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETRECTANGULARSELECTIONANCHOR,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_rectangular_selection_anchor_virtual_space(&self, space: usize) {
+        self.send_message(
+            SCI_SETRECTANGULARSELECTIONCARET,
+            WPARAM(space),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_rectangular_selection_anchor_virtual_space(&self) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_additional_sel_alpha(&self, alpha: i32) {
+        self.send_message(
+            SCI_SETADDITIONALSELALPHA,
+            WPARAM(alpha as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_additional_sel_alpha(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETADDITIONALSELALPHA,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_additional_sel_fore(&self, fore: i32) {
+        self.send_message(
+            SCI_SETADDITIONALSELFORE,
+            WPARAM(fore as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_additional_sel_back(&self, back: i32) {
+        self.send_message(
+            SCI_SETADDITIONALSELBACK,
+            WPARAM(back as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_additional_caret_fore(&self, fore: i32) {
+        self.send_message(
+            SCI_SETADDITIONALCARETFORE,
+            WPARAM(fore as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_additional_caret_fore(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETADDITIONALCARETFORE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_additional_carets_blink(&self, additional_carets_blink: bool) {
+        let additional_carets_blink = if additional_carets_blink { 1 } else { 0 };
+        self.send_message(
+            SCI_SETADDITIONALCARETSBLINK,
+            WPARAM(additional_carets_blink as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_additional_carets_blink(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETADDITIONALCARETSBLINK,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_additional_carets_visible(&self, visible: bool) {
+        let visible = if visible { 1 } else { 0 };
+        self.send_message(
+            SCI_SETADDITIONALCARETSVISIBLE,
+            WPARAM(visible as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_additional_carets_visible(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETADDITIONALCARETSVISIBLE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn swap_main_anchor_caret(&self) {
+        self.send_message(
+            SCI_SWAPMAINANCHORCARET,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn rotate_selection(&self) {
+        self.send_message(SCI_ROTATESELECTION, WPARAM::default(), LPARAM::default());
+    }
+
+    fn multiple_select_add_next(&self) {
+        self.send_message(
+            SCI_MULTIPLESELECTADDNEXT,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn multiple_select_add_each(&self) {
+        self.send_message(
+            SCI_MULTIPLESELECTADDEACH,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_over_type(&self, over_type: bool) {
+        let over_type = if over_type { 1 } else { 0 };
+        self.send_message(SCI_SETOVERTYPE, WPARAM(over_type), LPARAM::default());
+    }
+
+    fn get_over_type(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETOVERTYPE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -1033,7 +1802,9 @@ mod test_scintilla {
         control::WindowControl,
     };
 
-    use crate::scintilla::{selection::SelectionMode, status::Status, Scintilla};
+    use crate::scintilla::{
+        selection::SelectionMode, status::Status, Scintilla, SCMOD_META, SCVS_USERACCESSIBLE,
+    };
 
     #[test]
     fn main() {
@@ -1114,6 +1885,60 @@ mod test_scintilla {
         control.move_selected_lines_down();
         control.set_mouse_selection_rectangular_switch(true);
         assert_eq!(true, control.get_mouse_selection_rectangular_switch());
+        control.set_multiple_selection(true);
+        assert_eq!(true, control.get_multiple_selection());
+        control.set_additional_selection_typing(true);
+        assert_eq!(true, control.get_additional_selection_typing());
+        control.set_multi_paste(true);
+        assert_eq!(true, control.get_multi_paste());
+        control.set_virtual_space_options(SCVS_USERACCESSIBLE);
+        assert_eq!(SCVS_USERACCESSIBLE, control.get_virtual_space_options());
+        control.set_rectangular_selection_modifier(SCMOD_META);
+        dbg!(control.get_rectangular_selection_modifier());
+        dbg!(control.get_selections());
+        dbg!(control.get_selection_empty());
+        control.clear_selections();
+        control.set_selection(1, 2);
+        control.add_selection(3, 5);
+        control.drop_selection_n(1);
+        control.set_main_selection(1);
+        assert_eq!(1, control.get_main_selection());
+        control.set_selection_n_caret(1, 3);
+        assert_eq!(3, control.get_selection_n_caret(1));
+        control.set_selection_n_caret_virtual_space(1, 0);
+        assert_eq!(0, control.get_selection_n_caret_virtual_space(1));
+        control.set_selection_n_anchor(1, 5);
+        assert_eq!(5, control.get_selection_n_anchor(1));
+        control.set_selection_n_anchor_virtual_space(1, 0);
+        assert_eq!(0, control.get_selection_n_anchor_virtual_space(1));
+        control.set_selection_n_start(1, 3);
+        assert_eq!(3, control.get_selection_n_start(1));
+        control.set_selection_n_end(1, 5);
+        assert_eq!(5, control.get_selection_n_end(1));
+        control.set_rectangular_selection_caret(1);
+        assert_eq!(1, control.get_rectangular_selection_caret());
+        control.set_rectangular_selection_caret_virtual_space(1);
+        assert_eq!(1, control.get_rectangular_selection_caret_virtual_space());
+        control.set_rectangular_selection_anchor(0);
+        assert_eq!(0, control.get_rectangular_selection_anchor());
+        control.set_rectangular_selection_anchor_virtual_space(0);
+        assert_eq!(0, control.get_rectangular_selection_anchor_virtual_space());
+        control.set_additional_sel_alpha(1);
+        dbg!(control.get_additional_sel_alpha());
+        control.set_additional_sel_fore(1);
+        control.set_additional_sel_back(1);
+        control.set_additional_caret_fore(32);
+        assert_eq!(32, control.get_additional_caret_fore());
+        control.set_additional_carets_blink(true);
+        assert_eq!(true, control.get_additional_carets_blink());
+        control.set_additional_carets_visible(true);
+        assert_eq!(true, control.get_additional_carets_visible());
+        control.swap_main_anchor_caret();
+        control.rotate_selection();
+        control.multiple_select_add_next();
+        control.multiple_select_add_each();
+        control.set_over_type(true);
+        assert_eq!(true, control.get_over_type());
         dbg!(control);
     }
 }
