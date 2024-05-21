@@ -17,46 +17,51 @@ pub mod status;
 use std::{ffi::c_char, os::raw::c_void};
 
 use scintilla_sys::{
-    Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, SCI_GETSELECTIONNANCHOR,
+    Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, Sci_TextToFind, SCI_GETSELECTIONNANCHOR,
     SCI_GETSELECTIONNANCHORVIRTUALSPACE, SCI_GETSELECTIONSTART, SCI_SETSELECTIONNANCHOR,
-    SCI_SETSELECTIONNANCHORVIRTUALSPACE,
+    SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETTARGETRANGE, SCI_TARGETFROMSELECTION,
 };
 pub use scintilla_sys::{
-    SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES,
-    SCI_APPENDTEXT, SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
-    SCI_CLEARSELECTIONS, SCI_COUNTCHARACTERS, SCI_DELETERANGE, SCI_DROPSELECTIONN,
-    SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK,
-    SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING,
-    SCI_GETANCHOR, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH,
-    SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION,
-    SCI_GETLINESELSTARTPOSITION, SCI_GETMAINSELECTION, SCI_GETMODIFY,
-    SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE,
-    SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
+    SCFIND_CXX11REGEX, SCFIND_MATCHCASE, SCFIND_POSIX, SCFIND_REGEXP, SCFIND_WHOLEWORD,
+    SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE,
+    SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT, SCI_CHANGEINSERTION, SCI_CHOOSECARETX,
+    SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS, SCI_COUNTCHARACTERS,
+    SCI_DELETERANGE, SCI_DROPSELECTIONN, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_FINDTEXT,
+    SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE,
+    SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT,
+    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
+    SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
+    SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
+    SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
     SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
     SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
-    SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
-    SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
-    SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
+    SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE,
+    SCI_GETSELECTIONNCARET, SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND,
+    SCI_GETSELECTIONNSTART, SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT,
+    SCI_GETSTYLEDTEXT, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT,
     SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETVIRTUALSPACEOPTIONS, SCI_GOTOLINE,
     SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
     SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
     SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_POINTXFROMPOSITION,
     SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
     SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
-    SCI_ROTATESELECTION, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
-    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
-    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
-    SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION, SCI_SETLENGTHFORENCODE,
-    SCI_SETMAINSELECTION, SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMULTIPASTE,
-    SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
-    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
-    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
-    SCI_SETSAVEPOINT, SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
-    SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND,
-    SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTEXT,
-    SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TEXTHEIGHT,
-    SCI_TEXTWIDTH, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE,
-    SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
+    SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SEARCHANCHOR,
+    SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
+    SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
+    SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
+    SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION,
+    SCI_SETLENGTHFORENCODE, SCI_SETMAINSELECTION, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETREADONLY,
+    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETSAVEPOINT, SCI_SETSEARCHFLAGS, SCI_SETSEL,
+    SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET,
+    SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
+    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT,
+    SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT,
+    SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT,
+    SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
 };
 
 use crate::scintilla::{selection::SelectionMode, status::Status};
@@ -69,6 +74,34 @@ use win_wrap::{
 
 pub type Cell = u16;
 
+/**
+ * 一些搜索例程使用标志选项，其中包括一个简单的正则表达式搜索。通过添加标志选项来组合它们：
+ * 搜索标志
+ * SCFIND_NONE | 默认设置为不区分大小写的文字匹配。
+ * SCFIND_MATCHCASE | 只有与搜索字符串大小写匹配的文本才会匹配。
+ * SCFIND_WHOLEWORD | 只有当前面和后面的字符不是SCI_SETWORDCHARS定义的单词字符时，才会发生匹配。
+ * SCFIND_WORDSTART | 只有当前面的字符不是SCI_SETWORDCHARS定义的单词字符时，才会发生匹配。
+ * SCFIND_REGEXP | 搜索字符串应被解释为正则表达式。除非与SCFIND_CXC11REGEX结合使用，否则使用Scintilla的基本实现。
+ * SCFIND_POSIX | 通过为标记节而不是\(和\)解释bare(和)，以更兼容POSIX的方式处理正则表达式。设置SCFIND_CXC11REGEX时无效。
+ * SCFIND_CXC11REGEX | 此标志可以设置为使用C++11＜regex＞，而不是Scintilla的基本正则表达式。如果正则表达式无效，则返回-1，状态设置为SC_STATUS_WARN_REGEX。ECMAScript标志是在regex对象上设置的，UTF-8文档将表现出符合Unicode的行为。对于MSVC，其中wchar_t是16位，正则表达式“..”将匹配单个星体平面字符。编译器之间可能还有其他差异。还必须设置SCFIND_REGEXP。
+ *
+ * 在正则表达式中，使用Scintilla的基本实现，解释的特殊字符为：
+ * 正则表达式 | 概要
+ * . | 匹配任何字符
+ * \( | 这标志着用于标记匹配项的区域的开始。
+ * \) | 这标志着标记区域的结束。
+ * \n | 其中n是1到9指代替换时的第一到第九标记区域。例如，如果搜索字符串是Fred\（[1-9]\）XXX，而替换字符串是Sam\1YYY，当应用于Fred2XXX时，这将生成Sam2YYY\0表示所有匹配的文本。
+ * \< | 这与使用Scintilla的单词定义的单词开头相匹配。
+ * \> | 这与使用Scintilla的单词定义的单词结尾相匹配。
+ * \x | 这允许您使用具有特殊含义的字符x。例如，\[将被解释为[，而不是字符集的开头。
+ * [...] | 这表示一组字符，例如，[abc]表示字符a、b或c中的任何一个。您也可以使用范围，例如[a-z]表示任何小写字符。
+ * [^...] | 集合中字符的补码。例如，[^A-Za-z]表示除字母字符以外的任何字符。
+ * ^ | 这与一行的开头匹配（除非在集合中使用，请参见上文）。
+ * $ | 这与一行的末尾相匹配。
+ * * | 这匹配了0次或更多次。例如，Sa*m匹配Sm、Sam、Saam、Saam等等。
+ * + | 这匹配1次或多次。例如，Sa+m匹配Sam、Saam、Saam等等。
+ * 正则表达式将只匹配单行内的范围，而不会匹配多行。当使用SCFIND_CXX11REGEX时，可以使用更多的功能，通常类似于JavaScript中的正则表达式支持。有关支持内容的详细信息，请参阅C++运行时的文档。
+ * */
 pub trait Scintilla: Edit {
     /**
      * 返回从文档开头算起的指定数量的字符。
@@ -829,7 +862,7 @@ pub trait Scintilla: Edit {
     fn rotate_selection(&self);
 
     /**
-     * 将目标中下一次出现的主选择添加到主选择集。如果当前选择为空，则选择插入符号周围的单词。使用当前的searchFlags，因此应用程序可以选择区分大小写和单词搜索选项。
+     * 将目标中下一次出现的主选择添加到主选择集。如果当前选择为空，则选择插入符号周围的单词。使用当前的search_flags，因此应用程序可以选择区分大小写和单词搜索选项。
      * */
     fn multiple_select_add_next(&self);
 
@@ -849,6 +882,136 @@ pub trait Scintilla: Edit {
      * 获取改写模式。启用改写后，每个键入的字符都会替换文本插入符号右侧的字符。如果禁用了改写，则会在插入符号处插入字符。如果改写处于活动状态，SCI_GETOVERTYPE将返回true（1），否则将返回false（0）。
      * */
     fn get_over_type(&self) -> bool;
+
+    /**
+     * 设置目标的开始点。搜索时，可以将“开始”设置为大于“结束”，以查找目标中的最后一个匹配文本，而不是第一个匹配文本。使用SCI_SETTARGETSTART、SCI_SETTARGETEND或SCI_SETTARGETRANGE设置目标位置会将虚拟空间设置为0。该目标也是由成功的SCI_SEARCHINTARGET设定的。
+     * `start` 开始点。
+     * */
+    fn set_target_start(&self, start: usize);
+
+    /**
+     * 获取目标的开始点。
+     * */
+    fn get_target_start(&self) -> usize;
+
+    /**
+     * 设置目标的结束点。搜索时，可以将“开始”设置为大于“结束”，以查找目标中的最后一个匹配文本，而不是第一个匹配文本。使用SCI_SETTARGETSTART、SCI_SETTARGETEND或SCI_SETTARGETRANGE设置目标位置会将虚拟空间设置为0。该目标也是由成功的SCI_SEARCHINTARGET设定的。
+     * `end` 结束点。
+     * */
+    fn set_target_end(&self, end: usize);
+
+    /**
+     * 获取目标的结束点。
+     * */
+    fn get_target_end(&self) -> usize;
+
+    /**
+     * 设置目标的范围。搜索时，可以将“开始”设置为大于“结束”，以查找目标中的最后一个匹配文本，而不是第一个匹配文本。使用SCI_SETTARGETSTART、SCI_SETTARGETEND或SCI_SETTARGETRANGE设置目标位置会将虚拟空间设置为0。该目标也是由成功的SCI_SEARCHINTARGET设定的。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn set_target_range(&self, start: usize, end: usize);
+
+    /**
+     * 将目标起点和终点设置为选择的起点和终点位置。
+     * */
+    fn target_from_selection(&self);
+
+    /**
+     * 将目标起点设置为文档起点，将目标终点设置为文档终点。
+     * */
+    fn target_whole_document(&self);
+
+    /**
+     * 设置SCI_SEARCHINTARGET使用的search_flags。有几个选项标志，包括一个简单的正则表达式搜索。
+     * `search_flags` 搜索标志。
+     * */
+    fn set_search_flags(&self, search_flags: u32);
+
+    /**
+     * 获取SCI_SEARCHINTARGET使用的search_flags。有几个选项标志，包括一个简单的正则表达式搜索。
+     * */
+    fn get_search_flags(&self) -> u32;
+
+    /**
+     * 这将搜索SCI_SETTARGETSTART和SCI_SETTARGETEND定义的目标中第一个出现的文本字符串。搜索由SCI_SETSEARCHFLAGS设置的搜索标志进行修改。如果搜索成功，则将目标设置为找到的文本，返回值为匹配文本的起始位置。如果搜索失败，结果为-1。
+     * `text` 要搜索的文字。
+     * */
+    fn search_in_target(&self, text: String) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 查询目标中的值。
+     * `length` 字符数，不包括'\0'
+     * */
+    fn get_target_text(&self, length: usize) -> Option<String>;
+
+    //noinspection StructuralWrap
+    /**
+     * 替换后，目标范围是指替换文本。返回值是替换字符串的长度。
+     * 请注意，删除文档中文本的建议方法是将目标设置为要删除的文本，并用空字符串替换目标。
+     * `text` 要替换的文字。
+     * */
+    fn replace_target(&self, text: String) -> usize;
+
+    /**
+     * 这将使用正则表达式替换目标。替换字符串由文本字符串组成，其中\1到\9的任何序列都被最近正则表达式搜索中的标记匹配项替换\0将替换为最近搜索中的所有匹配文本。替换后，目标范围是指替换文本。返回值是替换字符串的长度。
+     * */
+    fn replace_target_re(&self, text: String) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 发现正则表达式搜索中标记的表达式匹配了哪些文本。如果应用程序想要解释替换字符串本身，这将非常有用。
+     * 另请参阅：SCI_FINDTEXT
+     * `tag_number` 标记序号。
+     * `length` 字符数，不包括'\0'
+     * */
+    fn get_tag(&self, tag_number: i32, length: usize) -> (i32, Option<String>);
+
+    /**
+     * 消息搜索文档中的文本。它们不使用或移动当前选择。search_flags参数控制搜索类型，其中包括正则表达式搜索。
+     * 通过在开始之前设置搜索范围的末尾，可以向后搜索以查找搜索字符串的前一个出现。
+     * 设置min和max以及要搜索的文档中的位置范围。您可以通过将max设置为小于min来向后搜索。
+     * 如果搜索失败，则返回值为-1；如果搜索成功，则返回所找到文本的起始位置。
+     * 另请参阅：SCI_SEARCHINTARGET
+     * `text` 要搜索的文字或正规表达式。
+     * `min` 搜索开始位置。
+     * `max` 搜索结束位置。
+     * `search_flags` 搜索标志。
+     * */
+    fn find_text(
+        &self,
+        text: String,
+        min: isize,
+        max: isize,
+        search_flags: u32,
+    ) -> (usize, Option<(usize, usize)>);
+
+    /**
+     * 消息提供可重定位搜索支持。这允许宏记录多个增量交互式搜索，同时仍将选择设置为已找到的文本，因此查找/选择操作是自包含的。如果启用了宏录制，这三条消息将发送SCN_MACRORECORD通知。
+     * 将SCI_SEARCHNEXT和SCI_SEARCHPREV使用的搜索起点设置为当前选择的起点，即更接近文档起点的选择的终点。在调用SCI_SEARCHNEXT或SCI_SEARCHPREV之前，应始终调用此函数。
+     * */
+    fn search_anchor(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 消息提供可重定位搜索支持。这允许宏记录多个增量交互式搜索，同时仍将选择设置为已找到的文本，因此查找/选择操作是自包含的。如果启用了宏录制，这三条消息将发送SCN_MACRORECORD通知。
+     * 搜索上一个。搜索由search_flags修改。
+     * 如果未找到任何内容，则返回值为-1，否则返回值为匹配文本的起始位置。所选内容会更新以显示匹配的文本，但不会滚动到视图中。
+     * 另请参见：SCI_SEARCHINTARGET、SCI_FINDTEXT
+     * `search_flags` 搜索标志。
+     * */
+    fn search_prev(&self, search_flags: u32, text: String) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 消息提供可重定位搜索支持。这允许宏记录多个增量交互式搜索，同时仍将选择设置为已找到的文本，因此查找/选择操作是自包含的。如果启用了宏录制，这三条消息将发送SCN_MACRORECORD通知。
+     * 搜索下一个。搜索由search_flags修改。
+     * 如果未找到任何内容，则返回值为-1，否则返回值为匹配文本的起始位置。所选内容会更新以显示匹配的文本，但不会滚动到视图中。
+     * 另请参见：SCI_SEARCHINTARGET、SCI_FINDTEXT
+     * `search_flags` 搜索标志。
+     * */
+    fn search_next(&self, search_flags: u32, text: String) -> usize;
 }
 
 impl Scintilla for WindowControl {
@@ -1793,6 +1956,174 @@ impl Scintilla for WindowControl {
         let (_, res) = self.send_message(SCI_GETOVERTYPE, WPARAM::default(), LPARAM::default());
         res != 0
     }
+
+    fn set_target_start(&self, start: usize) {
+        self.send_message(SCI_SETTARGETSTART, WPARAM(start), LPARAM::default());
+    }
+
+    fn get_target_start(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETTARGETSTART, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn set_target_end(&self, end: usize) {
+        self.send_message(SCI_SETTARGETEND, WPARAM(end), LPARAM::default());
+    }
+
+    fn get_target_end(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETTARGETEND, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn set_target_range(&self, start: usize, end: usize) {
+        self.send_message(SCI_SETTARGETRANGE, WPARAM(start), LPARAM(end as isize));
+    }
+
+    fn target_from_selection(&self) {
+        self.send_message(
+            SCI_TARGETFROMSELECTION,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn target_whole_document(&self) {
+        self.send_message(
+            SCI_TARGETWHOLEDOCUMENT,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_search_flags(&self, search_flags: u32) {
+        self.send_message(
+            SCI_SETSEARCHFLAGS,
+            WPARAM(search_flags as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_search_flags(&self) -> u32 {
+        let (_, res) = self.send_message(SCI_GETSEARCHFLAGS, WPARAM::default(), LPARAM::default());
+        res as u32
+    }
+
+    fn search_in_target(&self, text: String) -> usize {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let (_, res) = self.send_message(
+            SCI_SEARCHINTARGET,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        res
+    }
+
+    fn get_target_text(&self, length: usize) -> Option<String> {
+        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        self.send_message(
+            SCI_GETTARGETTEXT,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn replace_target(&self, text: String) -> usize {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let (_, res) = self.send_message(
+            SCI_REPLACETARGET,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        res
+    }
+
+    fn replace_target_re(&self, text: String) -> usize {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let (_, res) = self.send_message(
+            SCI_REPLACETARGETRE,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        res
+    }
+
+    fn get_tag(&self, tag_number: i32, length: usize) -> (i32, Option<String>) {
+        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        let (_, res) = self.send_message(
+            SCI_GETTAG,
+            WPARAM(tag_number as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        (res as i32, mem.read(|buf| (buf as *const u8).to_string()))
+    }
+
+    fn find_text(
+        &self,
+        text: String,
+        min: isize,
+        max: isize,
+        search_flags: u32,
+    ) -> (usize, Option<(usize, usize)>) {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let param = Sci_TextToFind {
+            chrg: Sci_CharacterRange {
+                cpMax: max as Sci_PositionCR,
+                cpMin: min as Sci_PositionCR,
+            },
+            lpstrText: mem.as_ptr() as *const c_char,
+            chrgText: Sci_CharacterRange { cpMin: 0, cpMax: 0 },
+        };
+        let size = std::mem::size_of::<Sci_TextToFind>();
+        let mem2 = InProcessMemory::new(self.get_pid(), size).unwrap();
+        mem2.write(&param as *const Sci_TextToFind as *const c_void, size);
+        let (_, res) = self.send_message(
+            SCI_FINDTEXT,
+            WPARAM(search_flags as usize),
+            LPARAM(mem2.as_ptr() as isize),
+        );
+        let range = mem2.read(|buf| unsafe { (buf as *const Sci_TextToFind).read().chrgText });
+        match range {
+            None => (res, None),
+            Some(r) => (res, Some((r.cpMin as usize, r.cpMax as usize))),
+        }
+    }
+
+    fn search_anchor(&self) {
+        self.send_message(SCI_SEARCHANCHOR, WPARAM::default(), LPARAM::default());
+    }
+
+    fn search_prev(&self, search_flags: u32, text: String) -> usize {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let (_, res) = self.send_message(
+            SCI_SEARCHPREV,
+            WPARAM(search_flags as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        res
+    }
+
+    fn search_next(&self, search_flags: u32, text: String) -> usize {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        let (_, res) = self.send_message(
+            SCI_SEARCHNEXT,
+            WPARAM(search_flags as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        res
+    }
 }
 
 #[cfg(test)]
@@ -1803,7 +2134,8 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
-        selection::SelectionMode, status::Status, Scintilla, SCMOD_META, SCVS_USERACCESSIBLE,
+        selection::SelectionMode, status::Status, Scintilla, SCFIND_MATCHCASE, SCMOD_META,
+        SCVS_USERACCESSIBLE,
     };
 
     #[test]
@@ -1821,6 +2153,7 @@ mod test_scintilla {
         dbg!(Scintilla::get_text(&control, 5));
         // control.set_readonly(true);
         // dbg!(control.get_readonly());
+        // has bugs
         // dbg!(control.get_text_range(1, 2));
         // dbg!(control.get_styled_text(1, 2));
         control.allocate(200);
@@ -1939,6 +2272,25 @@ mod test_scintilla {
         control.multiple_select_add_each();
         control.set_over_type(true);
         assert_eq!(true, control.get_over_type());
+        control.set_target_start(3);
+        assert_eq!(3, control.get_target_start());
+        control.set_target_start(4);
+        assert_eq!(4, control.get_target_start());
+        control.set_target_range(5, 6);
+        control.target_from_selection();
+        control.target_whole_document();
+        control.set_search_flags(0);
+        assert_eq!(0, control.get_search_flags());
+        dbg!(control.search_in_target("ll".to_string()));
+        dbg!(control.get_target_text(5));
+        dbg!(control.replace_target("world".to_string()));
+        dbg!(control.replace_target_re(r"worl\1".to_string()));
+        dbg!(control.get_tag(0, 3));
+        // has bugs
+        // dbg!(control.find_text("lo".to_string(), 0, 10, SCFIND_MATCHCASE));
+        control.search_anchor();
+        dbg!(control.search_prev(SCFIND_MATCHCASE, "h".to_string()));
+        dbg!(control.search_next(SCFIND_MATCHCASE, "o".to_string()));
         dbg!(control);
     }
 }
