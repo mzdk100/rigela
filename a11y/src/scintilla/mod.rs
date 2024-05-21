@@ -61,7 +61,7 @@ pub use scintilla_sys::{
     SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT,
     SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT,
     SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT,
-    SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
+    SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SCI_CUT, SCI_COPY, SCI_PASTE, SCI_CLEAR, SCI_CANPASTE, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT, SCI_SETPASTECONVERTENDINGS, SCI_GETPASTECONVERTENDINGS,
 };
 
 use crate::scintilla::{selection::SelectionMode, status::Status};
@@ -1012,6 +1012,64 @@ pub trait Scintilla: Edit {
      * `search_flags` 搜索标志。
      * */
     fn search_next(&self, search_flags: u32, text: String) -> usize;
+
+    /**
+     * 将数据剪切。如果您需要“可以复制”或“可以剪切”，请使用SCI_GETSELECTIONEMPTY()，如果有任何非空的选择范围意味着复制或剪切到剪贴板应该可以工作，则该值将为零。
+     * */
+    fn cut(&self);
+
+    /**
+     * 将数据复制到剪贴板。如果您需要“可以复制”或“可以剪切”，请使用SCI_GETSELECTIONEMPTY（），如果有任何非空的选择范围意味着复制或剪切到剪贴板应该可以工作，则该值将为零。
+     * */
+    fn copy(&self);
+
+    /**
+     * 从剪贴板粘贴到文档。
+     * 在X上，剪贴板是异步的，可能需要在目标应用程序和源应用程序之间发送多条消息。来自SCI_PASTE的数据不会立即到达文档中。
+     * */
+    fn paste(&self);
+
+    /**
+     * 清除文档。
+     * */
+    fn clear(&self);
+
+    /**
+     * 查询是否可以粘贴。如果文档不是只读的，并且所选内容不包含受保护的文本，SCI_CANPASTE将返回非零。如果您需要“可以复制”或“可以剪切”，请使用SCI_GETSELECTIONEMPTY（），如果有任何非空的选择范围意味着复制或剪切到剪贴板应该可以工作，则该值将为零。
+     * GTK并不真正支持SCI_CANPASTE，并且总是返回true，除非文档是只读的。
+     * */
+    fn can_paste(&self) -> bool;
+
+    /**
+     * 工作原理与SCI_COPY相同，只是如果选择为空，则复制当前行。在Windows上，会将一个额外的“MSDEVLineSelect”标记添加到剪贴板，然后在SCI_PASTE中使用该标记将整行粘贴到当前行之前。
+     * */
+    fn copy_allow_line(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 将一系列文本从文档复制到系统剪贴板。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn copy_range(&self, start: usize, end: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 将提供的文本复制到系统剪切板。
+     * `text` 要复制的文字。
+     * */
+    fn copy_text(&self, text: String);
+
+    /**
+     * 如果设置了此属性，则在粘贴文本时，将转换任何行尾以匹配使用SCI_SETEOLMODE设置的文档的行尾模式。默认为true。
+     * `convert` 转换模式。
+     * */
+    fn set_paste_convert_endings(&self, convert: bool);
+
+    /**
+     * 获取粘贴时行尾转换模式。如果设置了此属性，则在粘贴文本时，将转换任何行尾以匹配使用SCI_SETEOLMODE设置的文档的行尾模式。默认为true。
+     * */
+    fn get_paste_convert_endings(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -2124,6 +2182,52 @@ impl Scintilla for WindowControl {
         );
         res
     }
+
+    fn cut(&self) {
+        self.send_message(SCI_CUT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn copy(&self) {
+        self.send_message(SCI_COPY, WPARAM::default(), LPARAM::default());
+    }
+
+    fn paste(&self) {
+        self.send_message(SCI_PASTE, WPARAM::default(), LPARAM::default());
+    }
+
+    fn clear(&self) {
+        self.send_message(SCI_CLEAR, WPARAM::default(), LPARAM::default());
+    }
+
+    fn can_paste(&self) -> bool {
+        let (_, res) = self.send_message(SCI_CUT, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn copy_allow_line(&self) {
+        self.send_message(SCI_COPYALLOWLINE, WPARAM::default(), LPARAM::default());
+    }
+
+    fn copy_range(&self, start: usize, end: usize) {
+        self.send_message(SCI_COPYRANGE, WPARAM(start), LPARAM(end as isize));
+    }
+
+    fn copy_text(&self, text: String) {
+        let lentth = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), lentth + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, lentth);
+        self.send_message(SCI_COPYTEXT, WPARAM(lentth), LPARAM(mem.as_ptr() as isize));
+    }
+
+    fn set_paste_convert_endings(&self, convert: bool) {
+        let convert = if convert { 1 } else { 0 };
+        self.send_message(SCI_SETPASTECONVERTENDINGS, WPARAM(convert), LPARAM::default());
+    }
+
+    fn get_paste_convert_endings(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETPASTECONVERTENDINGS, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -2291,6 +2395,16 @@ mod test_scintilla {
         control.search_anchor();
         dbg!(control.search_prev(SCFIND_MATCHCASE, "h".to_string()));
         dbg!(control.search_next(SCFIND_MATCHCASE, "o".to_string()));
+        control.cut();
+        control.copy();
+        control.paste();
+        control.clear();
+        dbg!(control.can_paste());
+        control.copy_allow_line();
+        control.copy_range(1, 5);
+        control.copy_text("hello".to_string());
+        control.set_paste_convert_endings(true);
+        assert_eq!(true, control.get_paste_convert_endings());
         dbg!(control);
     }
 }
