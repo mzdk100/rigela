@@ -24,12 +24,12 @@ IAccessible2Lib = ["rigela-utils/library", "windows-core"]
 
 [dependencies.win-wrap]
 path = "../win-wrap"
-version = "0.1.4"
+version = "*"
 optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-version = "0.1.4"
+version = "*"
 optional = true
 
 [dependencies.scintilla-sys]

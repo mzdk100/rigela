@@ -56,7 +56,7 @@ optional = true
 
 [dependencies.win-wrap]
 path = "../win-wrap"
-version = "0.1"
+version = "*"
 optional = true
 
 [dependencies.png]
