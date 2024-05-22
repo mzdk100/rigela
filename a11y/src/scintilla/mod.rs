@@ -23,45 +23,50 @@ use scintilla_sys::{
 };
 pub use scintilla_sys::{
     SCFIND_CXX11REGEX, SCFIND_MATCHCASE, SCFIND_POSIX, SCFIND_REGEXP, SCFIND_WHOLEWORD,
-    SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ALLOCATE,
-    SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT, SCI_CHANGEINSERTION, SCI_CHOOSECARETX,
-    SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS, SCI_COUNTCHARACTERS,
-    SCI_DELETERANGE, SCI_DROPSELECTIONN, SCI_ENCODEDFROMUTF8, SCI_FINDCOLUMN, SCI_FINDTEXT,
+    SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ADDUNDOACTION,
+    SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_CANPASTE,
+    SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL,
+    SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE,
+    SCI_COPYTEXT, SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DROPSELECTIONN,
+    SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT,
     SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE,
     SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT,
     SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
     SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
     SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
     SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
-    SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
+    SCI_GETPASTECONVERTENDINGS, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
     SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
     SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
     SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE,
     SCI_GETSELECTIONNCARET, SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND,
     SCI_GETSELECTIONNSTART, SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT,
     SCI_GETSTYLEDTEXT, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT,
-    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETVIRTUALSPACEOPTIONS, SCI_GOTOLINE,
-    SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
-    SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
-    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_POINTXFROMPOSITION,
-    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
-    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
+    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION,
+    SCI_GETVIRTUALSPACEOPTIONS, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT,
+    SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW,
+    SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH,
+    SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION,
+    SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE,
+    SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
     SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SEARCHANCHOR,
     SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
     SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
     SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
     SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION,
     SCI_SETLENGTHFORENCODE, SCI_SETMAINSELECTION, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETREADONLY,
-    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
-    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
-    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETSAVEPOINT, SCI_SETSEARCHFLAGS, SCI_SETSEL,
-    SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET,
-    SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
-    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT,
+    SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS,
+    SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
+    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
+    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
+    SCI_SETSAVEPOINT, SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND,
+    SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE,
+    SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS,
+    SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION,
     SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT,
-    SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT,
-    SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SCI_CUT, SCI_COPY, SCI_PASTE, SCI_CLEAR, SCI_CANPASTE, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT, SCI_SETPASTECONVERTENDINGS, SCI_GETPASTECONVERTENDINGS,
+    SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM,
+    SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
+    UNDO_MAY_COALESCE,
 };
 
 use crate::scintilla::{selection::SelectionMode, status::Status};
@@ -1070,6 +1075,64 @@ pub trait Scintilla: Edit {
      * 获取粘贴时行尾转换模式。如果设置了此属性，则在粘贴文本时，将转换任何行尾以匹配使用SCI_SETEOLMODE设置的文档的行尾模式。默认为true。
      * */
     fn get_paste_convert_endings(&self) -> bool;
+
+    /**
+     * 撤消一个操作，或者如果撤消缓冲区已达到SCI_ENDUNDOACTION点，则所有操作都返回到相应的SCI_BEGINUNDOACTION。
+     * */
+    fn undo(&self);
+
+    /**
+     * 如果没有要撤消的内容，将返回false，如果有，则返回true。您通常会使用此消息的结果来启用/禁用“编辑”菜单的“撤消”命令。
+     * */
+    fn can_undo(&self) -> bool;
+
+    /**
+     * 取消最后一次SCI_UNDO操作的效果。
+     * */
+    fn redo(&self);
+
+    /**
+     * 如果没有要重做的操作，将返回false，如果有要重做的撤消操作，则返回true。您通常可以使用此消息的结果来启用/禁用“编辑”菜单“重做”命令。
+     * */
+    fn can_redo(&self) -> bool;
+
+    /**
+     * 此命令告诉Scintilla忘记任何保存的撤消或重做历史记录。它还将保存点设置为撤消缓冲区的起点，这样文档看起来就没有修改。这不会导致SCN_SAVEPOINTRACHED通知被发送到容器。
+     * 另请参阅：SCI_SETSAVEPOINT
+     * */
+    fn empty_undo_buffer(&self);
+
+    /**
+     * 控制Scintilla是否收集撤消信息。传入true（1）以收集信息，传入false（0）以停止收集。如果停止收集，还应使用SCI_EMPTUNDOBUFFER来避免撤消缓冲区与缓冲区中的数据不同步。
+     * 如果使用Scintilla存储程序生成的文本（日志视图）或在经常删除和重新生成文本的显示窗口中，则可能希望关闭保存撤消信息。
+     * `collect_undo` 是否收集撤销记录。
+     * */
+    fn set_undo_collection(&self, collect_undo: bool);
+
+    /**
+     * 获取是否收集撤销信息。
+     * 如果使用Scintilla存储程序生成的文本（日志视图）或在经常删除和重新生成文本的显示窗口中，则可能希望关闭保存撤消信息。
+     * */
+    fn get_undo_collection(&self) -> bool;
+
+    /**
+     * 以标记一组操作的开始，操作要全部撤消为一个操作，但必须生成为多个操作。或者，您可以使用begin_undo_action和end_undo_action标记一组操作，如果这些操作已撤消，则不希望与前面或后面的操作组合。
+     * */
+    fn begin_undo_action(&self);
+
+    /**
+     * 以标记一组操作的结束，操作要全部撤消为一个操作，但必须生成为多个操作。或者，您可以使用begin_undo_action和end_undo_action标记一组操作，如果这些操作已撤消，则不希望与前面或后面的操作组合。
+     * */
+    fn end_undo_action(&self);
+
+    /**
+     * 将自己的操作添加到撤消堆栈中，并且当需要撤消（SC_PERFORMED_UNDO）或重做（SC_PERFORMED_REDO）操作时，将向具有SC_MOD_CONTAINER标志的容器发送SCN_MODIFIED通知。提供的token参数在通知的token字段中返回。
+     * 例如，如果容器希望允许撤消和重做“切换书签”命令，则可以在每次执行该命令时调用SCI_ADDUNDOACTION(line, 0)。然后，当它收到撤消或重做的通知时，它会在令牌字段给出的行上切换书签。如果有不同类型的命令或参数需要存储到撤消堆栈中，则容器应为文档维护自己的堆栈，并使用该堆栈中的当前位置作为SCI_ADDUNDOACTION的参数（line）。除非与SCI_BEGINUNDOACTION和SCI_ENDUNDOACTION组合在一起，否则SCI_ADDUNDOACTION命令不会组合成单个撤消事务。
+     * 如果容器操作可以与任何插入和删除操作合并为单个复合操作，则flags参数可以是UNDO_MAY_COALESCE（1），否则为UNDO_NONE（0）。合并将可合并容器操作视为透明的，因此仍然只将看起来像键入的插入或看起来像多次使用Backspace或Delete键的删除分组在一起。
+     * `token` 令牌。
+     * `flags` 标志。
+     * */
+    fn add_undo_action(&self, token: i32, flags: u32);
 }
 
 impl Scintilla for WindowControl {
@@ -2221,12 +2284,73 @@ impl Scintilla for WindowControl {
 
     fn set_paste_convert_endings(&self, convert: bool) {
         let convert = if convert { 1 } else { 0 };
-        self.send_message(SCI_SETPASTECONVERTENDINGS, WPARAM(convert), LPARAM::default());
+        self.send_message(
+            SCI_SETPASTECONVERTENDINGS,
+            WPARAM(convert),
+            LPARAM::default(),
+        );
     }
 
     fn get_paste_convert_endings(&self) -> bool {
-        let (_, res) = self.send_message(SCI_GETPASTECONVERTENDINGS, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(
+            SCI_GETPASTECONVERTENDINGS,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
         res != 0
+    }
+
+    fn undo(&self) {
+        self.send_message(SCI_UNDO, WPARAM::default(), LPARAM::default());
+    }
+
+    fn can_undo(&self) -> bool {
+        let (_, res) = self.send_message(SCI_CANUNDO, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn redo(&self) {
+        self.send_message(SCI_REDO, WPARAM::default(), LPARAM::default());
+    }
+
+    fn can_redo(&self) -> bool {
+        let (_, res) = self.send_message(SCI_CANREDO, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn empty_undo_buffer(&self) {
+        self.send_message(SCI_EMPTYUNDOBUFFER, WPARAM::default(), LPARAM::default());
+    }
+
+    fn set_undo_collection(&self, collect_undo: bool) {
+        let collect_undo = if collect_undo { 1 } else { 0 };
+        self.send_message(
+            SCI_SETUNDOCOLLECTION,
+            WPARAM(collect_undo),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_undo_collection(&self) -> bool {
+        let (_, res) =
+            self.send_message(SCI_GETUNDOCOLLECTION, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn begin_undo_action(&self) {
+        self.send_message(SCI_BEGINUNDOACTION, WPARAM::default(), LPARAM::default());
+    }
+
+    fn end_undo_action(&self) {
+        self.send_message(SCI_ENDUNDOACTION, WPARAM::default(), LPARAM::default());
+    }
+
+    fn add_undo_action(&self, token: i32, flags: u32) {
+        self.send_message(
+            SCI_ADDUNDOACTION,
+            WPARAM(token as usize),
+            LPARAM(flags as isize),
+        );
     }
 }
 
@@ -2239,7 +2363,7 @@ mod test_scintilla {
 
     use crate::scintilla::{
         selection::SelectionMode, status::Status, Scintilla, SCFIND_MATCHCASE, SCMOD_META,
-        SCVS_USERACCESSIBLE,
+        SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE,
     };
 
     #[test]
@@ -2405,6 +2529,16 @@ mod test_scintilla {
         control.copy_text("hello".to_string());
         control.set_paste_convert_endings(true);
         assert_eq!(true, control.get_paste_convert_endings());
+        control.undo();
+        dbg!(control.can_undo());
+        control.redo();
+        dbg!(control.can_redo());
+        control.empty_undo_buffer();
+        control.set_undo_collection(false);
+        assert_eq!(false, control.get_undo_collection());
+        control.begin_undo_action();
+        control.end_undo_action();
+        control.add_undo_action(0, UNDO_MAY_COALESCE);
         dbg!(control);
     }
 }
