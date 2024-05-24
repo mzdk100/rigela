@@ -22,51 +22,58 @@ use scintilla_sys::{
     SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETTARGETRANGE, SCI_TARGETFROMSELECTION,
 };
 pub use scintilla_sys::{
-    SCFIND_CXX11REGEX, SCFIND_MATCHCASE, SCFIND_POSIX, SCFIND_REGEXP, SCFIND_WHOLEWORD,
-    SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ADDUNDOACTION,
-    SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_CANPASTE,
-    SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL,
-    SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE,
-    SCI_COPYTEXT, SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DROPSELECTIONN,
-    SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT,
+    CARET_EVEN, CARET_JUMPS, CARET_SLOP, CARET_STRICT, SCFIND_CXX11REGEX, SCFIND_MATCHCASE,
+    SCFIND_POSIX, SCFIND_REGEXP, SCFIND_WHOLEWORD, SCFIND_WORDSTART, SCI_ADDSELECTION,
+    SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ADDUNDOACTION, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES,
+    SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO,
+    SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
+    SCI_CLEARSELECTIONS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
+    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER,
+    SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT,
     SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE,
     SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT,
-    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
+    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETENDATLASTLINE,
+    SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
     SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
     SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
     SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
     SCI_GETPASTECONVERTENDINGS, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
     SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
     SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
-    SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE,
-    SCI_GETSELECTIONNCARET, SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND,
-    SCI_GETSELECTIONNSTART, SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT,
-    SCI_GETSTYLEDTEXT, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT,
-    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION,
-    SCI_GETVIRTUALSPACEOPTIONS, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT,
-    SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW,
-    SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH,
-    SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION,
-    SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE,
-    SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
-    SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SEARCHANCHOR,
-    SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
-    SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
-    SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
-    SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION,
-    SCI_SETLENGTHFORENCODE, SCI_SETMAINSELECTION, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS,
-    SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
-    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
-    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
-    SCI_SETSAVEPOINT, SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND,
-    SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE,
-    SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS,
-    SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION,
-    SCI_SETVIRTUALSPACEOPTIONS, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT,
-    SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM,
-    SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE,
-    UNDO_MAY_COALESCE,
+    SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING, SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY,
+    SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
+    SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
+    SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
+    SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT, SCI_GETTEXT,
+    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIRTUALSPACEOPTIONS,
+    SCI_GETVSCROLLBAR, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION,
+    SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN,
+    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
+    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION,
+    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
+    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES,
+    SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SCROLLCARET,
+    SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV,
+    SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
+    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
+    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
+    SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE,
+    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETLENGTHFORENCODE, SCI_SETMAINSELECTION,
+    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION,
+    SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETREADONLY,
+    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH,
+    SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELECTION,
+    SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET,
+    SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
+    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT,
+    SCI_SETUNDOCOLLECTION, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR,
+    SCI_SETXCARETPOLICY, SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_SWAPMAINANCHORCARET,
+    SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCMOD_ALT,
+    SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
+    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_SLOP,
+    VISIBLE_STRICT,
 };
 
 use crate::scintilla::{selection::SelectionMode, status::Status};
@@ -1133,6 +1140,169 @@ pub trait Scintilla: Edit {
      * `flags` 标志。
      * */
     fn add_undo_action(&self, token: i32, flags: u32);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置闪烁体视图中第一条可见行的行号。文档中的第一行编号为0。该值是可见行，而不是文档行。
+     * `line` 行号。
+     * */
+    fn set_first_visible_line(&self, line: usize);
+
+    /**
+     * 获取闪烁体视图中第一条可见线的行号。文档中的第一行编号为0。该值是可见行，而不是文档行。
+     * */
+    fn get_first_visible_line(&self) -> usize;
+
+    /**
+     * 设置x偏移量。x_offset是文本视图开始处的水平滚动位置（以像素为单位）。值0是第一个文本列在视图左侧可见的正常位置。
+     * `x_offset` x坐标。
+     * */
+    fn set_x_offset(&self, x_offset: i32);
+
+    /**
+     * 获取x偏移量。x_offset是文本视图开始处的水平滚动位置（以像素为单位）。值0是第一个文本列在视图左侧可见的正常位置。
+     * */
+    fn get_x_offset(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 这将尝试按指定的列数和行数滚动显示。正值会增加屏幕顶部的行号（即，它们会将文本向上移动到用户所关心的位置），负值则相反。
+     * 列度量值是默认样式中空间的宽度。正值会增加视图左边缘的列（即，它们会将文本向左移动到用户所关心的位置）。负值则相反。
+     * 另请参阅：SCI_SETXOFFSET
+     * `columns` 要滚动的列数。
+     * `lines` 要滚动的行数。
+     * */
+    fn line_scroll(&self, columns: usize, lines: usize);
+
+    /**
+     * 如果当前位置（如果没有选择，则为插入符号）不可见，则根据当前插入符号策略滚动视图使其可见。
+     * */
+    fn scroll_caret(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 将自变量位置及其之间的范围滚动到视图中，优先考虑主要位置，然后是次要位置。该行为类似于SCI_SCROLLCARET，使用的是主位置而不是插入符号。然后努力确保二次位置和二次位置之间的范围也是可见的。这可以用于使搜索匹配可见。
+     * `secondary` 次要位置。
+     * `primary` 主要位置。
+     * */
+    fn scroll_range(&self, secondary: usize, primary: usize);
+
+    /**
+     * 设置插入符号策略。caretPolicy的值是CARET_SLOP、CARET_STRICT、CARET_JUMPS和CARET_EVEN的组合。
+     * `caret_policy` 参数可以是下列值的组合：
+     * CARET_SLOP | 如果设置，我们可以定义一个SLOP值：caretSlop。此值定义了一个不需要的区域（UZ），其中插入符号是…不需要的。此区域定义为垂直边距附近的像素数和水平边距附近的行数。通过使插入符号远离边缘，可以在其上下文中看到插入符号。这使得可以完全看到插入符号所在的标识符，并且可以看到当前行及其后面的一些行，这些行通常依赖于该行。
+     * CARET_STRICT | 如果设置了CARET_SLOP设置的策略，则强制执行。。。严格地如果未设置插入符号Slop，则插入符号将居中显示；如果设置了插入符号Slopt，则不能进入UZ。
+     * CARET_JUMPS | 如果设置，则会更有力地移动显示，以便在再次应用策略之前，插入符号可以在同一方向上移动更长时间。'3UZ’表示法用于将UZ的大小表示为到边缘的距离的三倍。
+     * CARET_EVEN  | 如果未设置，则左侧和底部的UZ将分别向上延伸到右侧和顶部的UZ，而不是具有对称的UZ。通过这种方式，我们倾向于显示有用的信息：大多数代码所在的行的开头，以及插入符号之后的行，例如函数的正文。
+     * `caret_slop` 可以是下列位标志：
+     * slop | strict | jumps | even | Caret可以到达边缘 | 当达到极限（离开视线或进入UZ）时，显示。。。
+     * 0 | 0 | 0 | 0  | 是 | 移动以将插入符号放在顶部/右侧
+     * 0 | 0 | 0 | 1 | 是 | 移动了一个位置
+     * 0 | 0 | 1 | 0 | 是 | 移动以将插入符号放在顶部/右侧
+     * 0 | 0 | 1 | 1 | 是 | 以插入符号为中心
+     * 0 | 1 | - | 0 | 光标始终位于显示的顶部/右侧 | -
+     * 0 | 1 | - | 1 | 否，插入符号始终居中 | -
+     * 1 | 0 | 0 | 0 | 是 | 移动以将插入符号移出不对称的UZ
+     * 1 | 0 | 0 | 1 | 是 | 移动以将插入符号移出UZ
+     * 1 | 0 | 1 | 0 | 是 | 移动到将插入符号放在上页边距或右页边距的3UZ处
+     * 1 | 0 | 1 | 1 | 是 | 移动到将插入符号放在边距的3UZ处
+     * 1 | 1 | - | 0 | Caret始终位于上页边距/右页边距的UZ处 | -
+     * 1 | 1 | 0 | 1 | 否，避开UZ | 移动了一个位置
+     * 1 | 1 | 1 | 0 | 否，避开UZ | 移动以将插入符号放在边距的3UZ处
+     * */
+    fn set_x_caret_policy(&self, caret_policy: u32, caret_slop: i32);
+
+    /**
+     * 设置插入符号策略。caretPolicy的值是CARET_SLOP、CARET_STRICT、CARET_JUMPS和CARET_EVEN的组合。
+     * `caret_policy` 参数可以是下列值的组合：
+     * CARET_SLOP | 如果设置，我们可以定义一个SLOP值：caretSlop。此值定义了一个不需要的区域（UZ），其中插入符号是…不需要的。此区域定义为垂直边距附近的像素数和水平边距附近的行数。通过使插入符号远离边缘，可以在其上下文中看到插入符号。这使得可以完全看到插入符号所在的标识符，并且可以看到当前行及其后面的一些行，这些行通常依赖于该行。
+     * CARET_STRICT | 如果设置了CARET_SLOP设置的策略，则强制执行。。。严格地如果未设置插入符号Slop，则插入符号将居中显示；如果设置了插入符号Slopt，则不能进入UZ。
+     * CARET_JUMPS | 如果设置，则会更有力地移动显示，以便在再次应用策略之前，插入符号可以在同一方向上移动更长时间。'3UZ’表示法用于将UZ的大小表示为到边缘的距离的三倍。
+     * CARET_EVEN  | 如果未设置，则左侧和底部的UZ将分别向上延伸到右侧和顶部的UZ，而不是具有对称的UZ。通过这种方式，我们倾向于显示有用的信息：大多数代码所在的行的开头，以及插入符号之后的行，例如函数的正文。
+     * `caret_slop` 可以是下列位标志：
+     * slop | strict | jumps | even | Caret可以到达边缘 | 当达到极限（离开视线或进入UZ）时，显示。。。
+     * 0 | 0 | 0 | 0  | 是 | 移动以将插入符号放在顶部/右侧
+     * 0 | 0 | 0 | 1 | 是 | 移动了一个位置
+     * 0 | 0 | 1 | 0 | 是 | 移动以将插入符号放在顶部/右侧
+     * 0 | 0 | 1 | 1 | 是 | 以插入符号为中心
+     * 0 | 1 | - | 0 | 光标始终位于显示的顶部/右侧 | -
+     * 0 | 1 | - | 1 | 否，插入符号始终居中 | -
+     * 1 | 0 | 0 | 0 | 是 | 移动以将插入符号移出不对称的UZ
+     * 1 | 0 | 0 | 1 | 是 | 移动以将插入符号移出UZ
+     * 1 | 0 | 1 | 0 | 是 | 移动到将插入符号放在上页边距或右页边距的3UZ处
+     * 1 | 0 | 1 | 1 | 是 | 移动到将插入符号放在边距的3UZ处
+     * 1 | 1 | - | 0 | Caret始终位于上页边距/右页边距的UZ处 | -
+     * 1 | 1 | 0 | 1 | 否，避开UZ | 移动了一个位置
+     * 1 | 1 | 1 | 0 | 否，避开UZ | 移动以将插入符号放在边距的3UZ处
+     * */
+    fn set_y_caret_policy(&self, caret_policy: u32, caret_slop: i32);
+
+    /**
+     * 这决定了在调用SCI_ENSUREVISIBLEENFORCEPOLICY时如何确定垂直定位。它接受visible_policy参数的VISIBLE_SLOP和VISIBLE_STRICT标志。它在操作上类似于SCI_SETYCARETPOLICY(int caret_policy, int caret_slop)。
+     * `visible_policy` 可见策略。
+     * `visible_slop` 位标志。
+     * */
+    fn set_visible_policy(&self, visible_policy: u32, visible_slop: i32);
+
+    /**
+     * 设置水平滚动条可见性。水平滚动条仅在假定宽度需要时才显示。如果您从不希望看到它，请调用SCI_SETHSCROLLBAR（0）。请使用SCI_SETHSCROLLBAR（1）再次启用它。SCI_GETHSCROLLBAR返回当前状态。默认状态是在需要时显示它。
+     * 另请参见：SCI_SETSCROLLWIDTH。
+     * `visible` 是否可见。
+     * */
+    fn set_h_scroll_bar(&self, visible: bool);
+
+    /**
+     * 获取水平滚动条可见性。水平滚动条仅在假定宽度需要时才显示。如果您从不希望看到它，请调用SCI_SETHSCROLLBAR（0）。请使用SCI_SETHSCROLLBAR（1）再次启用它。SCI_GETHSCROLLBAR返回当前状态。默认状态是在需要时显示它。
+     * 另请参见：SCI_SETSCROLLWIDTH。
+     * */
+    fn get_h_scroll_bar(&self) -> bool;
+
+    /**
+     * 设置垂直滚动条可见性。默认情况下，在需要时始终显示垂直滚动条。您可以选择使用SCI_SETVSCROLLBAR隐藏或显示它，并使用SCI_GETVSCLOLLBAR获取当前状态。
+     * 另请参阅：SCI_LINESCROLL
+     * `visible` 是否可见。
+     * */
+    fn set_v_scroll_bar(&self, visible: bool);
+
+    /**
+     * 获取垂直滚动条可见性。默认情况下，在需要时始终显示垂直滚动条。您可以选择使用SCI_SETVSCROLLBAR隐藏或显示它，并使用SCI_GETVSCLOLLBAR获取当前状态。
+     * 另请参阅：SCI_LINESCROLL
+     * */
+    fn get_v_scroll_bar(&self) -> bool;
+
+    /**
+     * 为了提高性能，Scintilla不会通过测量文档的显示宽度来确定水平滚动条的属性。而是使用假定的宽度。此消息设置Scintilla假设的文档宽度（以像素为单位）。默认值为2000。要确保当前可见行的宽度可以滚动，请使用SCI_SETSCROLLWIDTHTRACKING
+     * `pixel_width` 宽度。
+     * */
+    fn set_scroll_width(&self, pixel_width: i32);
+
+    /**
+     * 为了提高性能，Scintilla不会通过测量文档的显示宽度来确定水平滚动条的属性。而是使用假定的宽度。此消息获取Scintilla假设的文档宽度（以像素为单位）。默认值为2000。要确保当前可见行的宽度可以滚动，请使用SCI_SETSCROLLWIDTHTRACKING
+     * */
+    fn get_scroll_width(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置滚动宽度跟踪。如果启用了滚动宽度跟踪，则会调整滚动宽度，以确保当前显示的所有行都可以完全滚动。此模式从不将滚动宽度调整得更窄。
+     * `tracking` 是否跟踪。
+     * */
+    fn set_scroll_width_tracking(&self, tracking: bool);
+
+    /**
+     * 获取滚动宽度跟踪。如果启用了滚动宽度跟踪，则会调整滚动宽度，以确保当前显示的所有行都可以完全滚动。此模式从不将滚动宽度调整得更窄。
+     * */
+    fn get_scroll_width_tracking(&self) -> bool;
+
+    /**
+     * 设置滚动范围，使最大滚动位置的最后一行位于视图底部（默认值）。将其设置为false可在最后一行下方滚动一页。
+     * `end_at_last_line` 最后一行是否为视图末尾。
+     * */
+    fn set_end_at_last_line(&self, end_at_last_line: bool);
+
+    /**
+     * 获取滚动范围，判断最大滚动位置的最后一行是否位于视图底部（默认值）。false表示可在最后一行下方滚动一页。
+     * */
+    fn get_end_at_last_line(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -2352,6 +2522,130 @@ impl Scintilla for WindowControl {
             LPARAM(flags as isize),
         );
     }
+
+    fn set_first_visible_line(&self, line: usize) {
+        self.send_message(SCI_SETFIRSTVISIBLELINE, WPARAM(line), LPARAM::default());
+    }
+
+    fn get_first_visible_line(&self) -> usize {
+        let (_, res) = self.send_message(
+            SCI_GETFIRSTVISIBLELINE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn set_x_offset(&self, x_offset: i32) {
+        self.send_message(SCI_SETXOFFSET, WPARAM(x_offset as usize), LPARAM::default());
+    }
+
+    fn get_x_offset(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETXOFFSET, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn line_scroll(&self, columns: usize, lines: usize) {
+        self.send_message(SCI_LINESCROLL, WPARAM(columns), LPARAM(lines as isize));
+    }
+
+    fn scroll_caret(&self) {
+        self.send_message(SCI_SCROLLCARET, WPARAM::default(), LPARAM::default());
+    }
+
+    fn scroll_range(&self, secondary: usize, primary: usize) {
+        self.send_message(SCI_SCROLLRANGE, WPARAM(secondary), LPARAM(primary as isize));
+    }
+
+    fn set_x_caret_policy(&self, caret_policy: u32, caret_slop: i32) {
+        self.send_message(
+            SCI_SETXCARETPOLICY,
+            WPARAM(caret_policy as usize),
+            LPARAM(caret_slop as isize),
+        );
+    }
+
+    fn set_y_caret_policy(&self, caret_policy: u32, caret_slop: i32) {
+        self.send_message(
+            SCI_SETYCARETPOLICY,
+            WPARAM(caret_policy as usize),
+            LPARAM(caret_slop as isize),
+        );
+    }
+
+    fn set_visible_policy(&self, visible_policy: u32, visible_slop: i32) {
+        self.send_message(
+            SCI_SETVISIBLEPOLICY,
+            WPARAM(visible_policy as usize),
+            LPARAM(visible_slop as isize),
+        );
+    }
+
+    fn set_h_scroll_bar(&self, visible: bool) {
+        let visible = if visible { 1 } else { 0 };
+        self.send_message(SCI_SETHSCROLLBAR, WPARAM(visible), LPARAM::default());
+    }
+
+    fn get_h_scroll_bar(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETHSCROLLBAR, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn set_v_scroll_bar(&self, visible: bool) {
+        let visible = if visible { 1 } else { 0 };
+        self.send_message(SCI_SETVSCROLLBAR, WPARAM(visible), LPARAM::default());
+    }
+
+    fn get_v_scroll_bar(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETVSCROLLBAR, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn set_scroll_width(&self, pixel_width: i32) {
+        self.send_message(
+            SCI_SETSCROLLWIDTH,
+            WPARAM(pixel_width as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_scroll_width(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETSCROLLWIDTH, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_scroll_width_tracking(&self, tracking: bool) {
+        let tracking = if tracking { 1 } else { 0 };
+        self.send_message(
+            SCI_SETSCROLLWIDTHTRACKING,
+            WPARAM(tracking),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_scroll_width_tracking(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETSCROLLWIDTHTRACKING,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_end_at_last_line(&self, end_at_last_line: bool) {
+        let end_at_last_line = if end_at_last_line { 1 } else { 0 };
+        self.send_message(
+            SCI_SETENDATLASTLINE,
+            WPARAM(end_at_last_line),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_end_at_last_line(&self) -> bool {
+        let (_, res) =
+            self.send_message(SCI_GETENDATLASTLINE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -2362,8 +2656,8 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
-        selection::SelectionMode, status::Status, Scintilla, SCFIND_MATCHCASE, SCMOD_META,
-        SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE,
+        selection::SelectionMode, status::Status, Scintilla, CARET_JUMPS, SCFIND_MATCHCASE,
+        SCMOD_META, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     #[test]
@@ -2539,6 +2833,26 @@ mod test_scintilla {
         control.begin_undo_action();
         control.end_undo_action();
         control.add_undo_action(0, UNDO_MAY_COALESCE);
+        control.set_first_visible_line(0);
+        assert_eq!(0, control.get_first_visible_line());
+        control.set_x_offset(0);
+        assert_eq!(0, control.get_x_offset());
+        control.line_scroll(1, 1);
+        control.scroll_caret();
+        control.scroll_range(0, 1);
+        control.set_x_caret_policy(CARET_JUMPS, 0);
+        control.set_y_caret_policy(CARET_JUMPS, 0);
+        control.set_visible_policy(VISIBLE_STRICT, 0);
+        control.set_h_scroll_bar(true);
+        assert_eq!(true, control.get_h_scroll_bar());
+        control.set_v_scroll_bar(true);
+        assert_eq!(true, control.get_v_scroll_bar());
+        control.set_scroll_width(3000);
+        dbg!(control.get_scroll_width());
+        control.set_scroll_width_tracking(true);
+        assert_eq!(true, control.get_scroll_width_tracking());
+        control.set_end_at_last_line(true);
+        assert_eq!(true, control.get_end_at_last_line());
         dbg!(control);
     }
 }
