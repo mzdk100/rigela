@@ -13,6 +13,7 @@
 
 pub mod selection;
 pub mod status;
+pub mod space;
 
 use std::{ffi::c_char, os::raw::c_void};
 
@@ -73,10 +74,10 @@ pub use scintilla_sys::{
     SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCMOD_ALT,
     SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
     SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_SLOP,
-    VISIBLE_STRICT,
+    VISIBLE_STRICT, SCI_SETVIEWWS, SCI_GETVIEWWS, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE, SCI_GETWHITESPACESIZE, SCI_SETTABDRAWMODE, SCI_GETTABDRAWMODE, SCI_SETEXTRAASCENT, SCI_GETEXTRAASCENT, SCI_SETEXTRADESCENT, SCI_GETEXTRADESCENT, SCI_SETCURSOR, SCI_GETCURSOR, SC_CURSORARROW, SC_CURSORNORMAL, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SCI_SETMOUSEDOWNCAPTURES, SCI_GETMOUSEDOWNCAPTURES, SCI_SETMOUSEWHEELCAPTURES, SCI_GETMOUSEWHEELCAPTURES,
 };
 
-use crate::scintilla::{selection::SelectionMode, status::Status};
+use crate::scintilla::{selection::SelectionMode, status::Status, space::{WhiteSpace, TabDrawMode}};
 use win_wrap::{
     common::{LPARAM, WPARAM},
     control::{edit::Edit, WindowControl},
@@ -1303,6 +1304,121 @@ pub trait Scintilla: Edit {
      * 获取滚动范围，判断最大滚动位置的最后一行是否位于视图底部（默认值）。false表示可在最后一行下方滚动一页。
      * */
     fn get_end_at_last_line(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置空白显示模式。可以使空白可见，这对于空白很重要的语言（如Python）可能很有用。空格字符显示为居中的小圆点，制表符显示为指向右侧的轻箭头。还有一些方法可以控制行尾字符的显示。
+     * `view_ws` 显示模式。
+     * */
+    fn set_view_ws(&self, view_ws: WhiteSpace);
+
+    /**
+     * 获取空白显示模式。空格字符显示为居中的小圆点，制表符显示为指向右侧的轻箭头。
+     * */
+    fn get_view_ws(&self) -> WhiteSpace;
+
+    /**
+     * 默认情况下，可见白色空间的颜色由使用中的lexer决定。所有可见白色空间的前景和/或背景颜色可以全局设置，用SC_ELEMENT_WHITE_SPACE和SC_ELELEMENT_WHITE_SPACE_BACK覆盖lexer的颜色。
+     * SCI_SETWHITESPACEFORE和SCI_SETWHITESPACEBACK也会更改空白颜色，但元素API是首选，SC_ELEMENTWHITE_SPACE允许半透明。
+     * `use_setting` 使用设置。
+     * `fore` 前景颜色。
+     * */
+    fn set_white_space_fore(&self, use_setting: bool, fore: i32);
+
+    /**
+     * 默认情况下，可见白色空间的颜色由使用中的lexer决定。所有可见白色空间的前景和/或背景颜色可以全局设置，用SC_ELEMENT_WHITE_SPACE和SC_ELELEMENT_WHITE_SPACE_BACK覆盖lexer的颜色。
+     * SCI_SETWHITESPACEFORE和SCI_SETWHITESPACEBACK也会更改空白颜色，但元素API是首选，SC_ELEMENTWHITE_SPACE允许半透明。
+     * `use_setting` 使用设置。
+     * `back` 背景颜色。
+     * */
+    fn set_white_space_back(&self, use_setting: bool, back: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置用于标记空间字符的点的大小。值0是有效的，并且使点不可见。
+     * `size` 大小值。
+     * */
+    fn set_white_space_size(&self, size: i32);
+
+    /**
+     * 查询当前空白字符大小。值0是有效的，并且使点不可见。
+     * */
+    fn get_white_space_size(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置空白时制表符的绘制方式。
+     * `tab_draw_mode` 制表符绘制模式。
+     * */
+    fn set_tab_draw_mode(&self, tab_draw_mode: TabDrawMode);
+
+    /**
+     * 获取空白时制表符的绘制方式。
+     * */
+    fn get_tab_draw_mode(&self) -> TabDrawMode;
+
+    //noinspection StructuralWrap
+    /**
+     * 将空格添加到最大上升（SCI_SETEXTRAASCENT），以允许线之间有更多的空间。这样做可以使文本更容易阅读或容纳下划线或高亮显示。
+     * 文本是以“基线”上每个字符的底部绘制的。线的高度是从任何样式延伸到基线以上的最大值（其“上升”）加上任何样式延伸至基线以下的最大值，（其“下降”）得出的。
+     * 额外的上升值可能是负值，但应小心操作，因为当线路共享空间时，可能会导致意外干扰。
+     * `ascent` 上升值。
+     * */
+    fn set_extra_ascent(&self, ascent: i32);
+
+    /**
+     * 获取空格额外的上升值。
+     * */
+    fn get_extra_ascent(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 将空格添加到最大下降（SCI_SETEXTRADESCENT），以允许线之间有更多的空间。这样做可以使文本更容易阅读或容纳下划线或高亮显示。
+     * 文本是以“基线”上每个字符的底部绘制的。线的高度是从任何样式延伸到基线以上的最大值（其“上升”）加上任何样式延伸至基线以下的最大值，（其“下降”）得出的。
+     * 额外的下降值可能是负值，但应小心操作，因为当线路共享空间时，可能会导致意外干扰。
+     * `descent` 下降值。
+     * */
+    fn set_extra_descent(&self, descent: i32);
+
+    /**
+     * 获取空格额外的下降值。
+     * */
+    fn get_extra_descent(&self) -> i32;
+
+    /**
+     * 设置光标类型。光标通常是以上下文敏感的方式选择的，因此在边距上的光标与在文本上的光标不同。执行慢速操作时，您可能希望更改为等待光标。
+     * `cursor_type` 光标值在1到7之间，但只有SC_CURSORWAIT是有效可控的，其他值会导致显示指针。可以是：
+     * SC_CURSORNORMAL | -1 | 显示正常光标。
+     * SC_CURSORWAIT | 4 | 当鼠标位于Scintilla窗口上方或为其所有时，将显示等待光标。
+     * */
+    fn set_cursor(&self, cursor_type: u32);
+
+    /**
+     * 返回您设置的最后一个光标类型，如果您没有设置光标类型，则返回SC_CURSORNORMAL（-1）。
+     * */
+    fn get_cursor(&self) -> u32;
+
+    /**
+     * 设置鼠标按下捕获模式。当鼠标在闪烁体内部按下时，它会被捕获，以便将来的鼠标移动事件被发送到闪烁体。可以使用SCI_SETMOUSEDOWNCAPTURES（0）关闭此行为。
+     * `captures` 是否捕获。
+     * */
+    fn set_mouse_down_captures(&self, captures: bool);
+
+    /**
+     * 获取鼠标按下捕获模式。当鼠标在闪烁体内部按下时，它会被捕获，以便将来的鼠标移动事件被发送到闪烁体。可以使用SCI_SETMOUSEDOWNCAPTURES（0）关闭此行为。
+     * */
+    fn get_mouse_down_captures(&self) -> bool;
+
+    /**
+     * 设置鼠标滚轮捕获模式。在Windows上，即使鼠标指针不在Scintilla编辑器窗口附近，如果Scintilla有焦点，它也会捕获所有WM_MOUSEWHEEL消息。可以使用SCI_SETMOUSEWHEELCAPTURES（0）更改此行为，以便Scintilla将WM_MOUSEWHEEL消息传递到其父窗口。如果鼠标指针位于编辑器窗口上方，闪烁体仍将对鼠标滚轮做出反应。
+     * `captures` 是否捕获。
+     * */
+    fn set_mouse_wheel_captures(&self, captures: bool);
+
+    /**
+     * 获取鼠标滚轮捕获模式。在Windows上，即使鼠标指针不在Scintilla编辑器窗口附近，如果Scintilla有焦点，它也会捕获所有WM_MOUSEWHEEL消息。可以使用SCI_SETMOUSEWEHEELCAPTURES（0）更改此行为，以便Scintilla将WM_MOUSEWHEEL消息传递到其父窗口。如果鼠标指针位于编辑器窗口上方，闪烁体仍将对鼠标滚轮做出反应。
+     * */
+    fn get_mouse_wheel_captures(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -2646,6 +2762,90 @@ impl Scintilla for WindowControl {
             self.send_message(SCI_GETENDATLASTLINE, WPARAM::default(), LPARAM::default());
         res != 0
     }
+
+    fn set_view_ws(&self, view_ws: WhiteSpace) {
+        self.send_message(SCI_SETVIEWWS, WPARAM(Into::<u32>::into(view_ws) as usize), LPARAM::default());
+    }
+
+    fn get_view_ws(&self) -> WhiteSpace {
+        let (_, res) = self.send_message(SCI_GETVIEWWS, WPARAM::default(), LPARAM::default());
+        WhiteSpace::from(res as u32)
+    }
+
+    fn set_white_space_fore(&self, use_setting: bool, fore: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(SCI_SETWHITESPACEFORE, WPARAM(use_setting), LPARAM(fore as isize));
+    }
+
+    fn set_white_space_back(&self, use_setting: bool, back: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(SCI_SETWHITESPACEBACK, WPARAM(use_setting), LPARAM(back as isize));
+    }
+
+    fn set_white_space_size(&self, size: i32) {
+        self.send_message(SCI_SETWHITESPACESIZE, WPARAM(size as usize), LPARAM::default());
+    }
+
+    fn get_white_space_size(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETWHITESPACESIZE, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_tab_draw_mode(&self, tab_draw_mode: TabDrawMode) {
+        self.send_message(SCI_SETTABDRAWMODE, WPARAM(Into::<u32>::into(tab_draw_mode) as usize), LPARAM::default());
+    }
+
+    fn get_tab_draw_mode(&self) -> TabDrawMode {
+        let (_, res) = self.send_message(SCI_GETTABDRAWMODE, WPARAM::default(), LPARAM::default());
+        TabDrawMode::from(res as u32)
+    }
+
+    fn set_extra_ascent(&self, ascent: i32) {
+        self.send_message(SCI_SETEXTRAASCENT, WPARAM(ascent as usize), LPARAM::default());
+    }
+
+    fn get_extra_ascent(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETEXTRAASCENT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_extra_descent(&self, descent: i32) {
+        self.send_message(SCI_SETEXTRADESCENT, WPARAM(descent as usize), LPARAM::default());
+    }
+
+    fn get_extra_descent(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETEXTRADESCENT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_cursor(&self, cursor_type: u32) {
+        self.send_message(SCI_SETCURSOR, WPARAM(cursor_type as usize), LPARAM::default());
+    }
+
+    fn get_cursor(&self) -> u32 {
+        let (_, res) = self.send_message(SCI_GETCURSOR, WPARAM::default(), LPARAM::default());
+        res as u32
+    }
+
+    fn set_mouse_down_captures(&self, captures: bool) {
+        let captures = if captures { 1 } else { 0 };
+        self.send_message(SCI_SETMOUSEDOWNCAPTURES, WPARAM(captures), LPARAM::default());
+    }
+
+    fn get_mouse_down_captures(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETMOUSEDOWNCAPTURES, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn set_mouse_wheel_captures(&self, captures: bool) {
+        let captures = if captures { 1 } else { 0 };
+        self.send_message(SCI_SETMOUSEWHEELCAPTURES, WPARAM(captures), LPARAM::default());
+    }
+
+    fn get_mouse_wheel_captures(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETMOUSEWHEELCAPTURES, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -2657,7 +2857,7 @@ mod test_scintilla {
 
     use crate::scintilla::{
         selection::SelectionMode, status::Status, Scintilla, CARET_JUMPS, SCFIND_MATCHCASE,
-        SCMOD_META, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        SCMOD_META, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_STRICT, space::{WhiteSpace, TabDrawMode}, SC_CURSORWAIT,
     };
 
     #[test]
@@ -2853,6 +3053,24 @@ mod test_scintilla {
         assert_eq!(true, control.get_scroll_width_tracking());
         control.set_end_at_last_line(true);
         assert_eq!(true, control.get_end_at_last_line());
+        control.set_view_ws(WhiteSpace::VisibleAways);
+        assert_eq!(WhiteSpace::VisibleAways, control.get_view_ws());
+        control.set_white_space_back(true, 0x0000ff);
+        control.set_white_space_fore(true, 0x000000);
+        control.set_white_space_size(16);
+        assert_eq!(16, control.get_white_space_size());
+        control.set_tab_draw_mode(TabDrawMode::LongArrow);
+        assert_eq!(TabDrawMode::LongArrow, control.get_tab_draw_mode());
+        control.set_extra_ascent(5);
+        assert_eq!(5, control.get_extra_ascent());
+        control.set_extra_descent(5);
+        assert_eq!(5, control.get_extra_descent());
+        control.set_cursor(SC_CURSORWAIT);
+        assert_eq!(SC_CURSORWAIT, control.get_cursor());
+        control.set_mouse_down_captures(false);
+        assert_eq!(false, control.get_mouse_down_captures());
+        control.set_mouse_wheel_captures(false);
+        assert_eq!(false, control.get_mouse_wheel_captures());
         dbg!(control);
     }
 }
