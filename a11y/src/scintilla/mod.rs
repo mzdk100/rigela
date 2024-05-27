@@ -11,15 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod eol;
 pub mod selection;
-pub mod status;
 pub mod space;
+pub mod status;
 
 use std::{ffi::c_char, os::raw::c_void};
 
 use scintilla_sys::{
-    Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, Sci_TextToFind, SCI_GETSELECTIONNANCHOR,
-    SCI_GETSELECTIONNANCHORVIRTUALSPACE, SCI_GETSELECTIONSTART, SCI_SETSELECTIONNANCHOR,
+    Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, Sci_TextToFind, SCI_GETEOLMODE,
+    SCI_GETLINEENDTYPESSUPPORTED, SCI_GETSELECTIONNANCHOR, SCI_GETSELECTIONNANCHORVIRTUALSPACE,
+    SCI_GETSELECTIONSTART, SCI_SETEOLMODE, SCI_SETSELECTIONNANCHOR,
     SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETTARGETRANGE, SCI_TARGETFROMSELECTION,
 };
 pub use scintilla_sys::{
@@ -28,56 +30,73 @@ pub use scintilla_sys::{
     SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ADDUNDOACTION, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES,
     SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO,
     SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
-    SCI_CLEARSELECTIONS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
-    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER,
-    SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT,
-    SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE,
-    SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT,
-    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETENDATLASTLINE,
-    SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
-    SCI_GETLINEENDPOSITION, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
-    SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
-    SCI_GETPASTECONVERTENDINGS, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
+    SCI_CLEARSELECTIONS, SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
+    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT,
+    SCI_DELWORDRIGHTEND, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8,
+    SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE,
+    SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA,
+    SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE,
+    SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE, SCI_GETEXTRAASCENT,
+    SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETLENGTH, SCI_GETLINE,
+    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINEENDTYPESACTIVE,
+    SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
+    SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSEDOWNCAPTURES,
+    SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOUSEWHEELCAPTURES, SCI_GETMOVEEXTENDSSELECTION,
+    SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETPASTECONVERTENDINGS,
+    SCI_GETPUNCTUATIONCHARS, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
     SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
     SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
     SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING, SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY,
     SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
     SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
     SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
-    SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT, SCI_GETTEXT,
-    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIRTUALSPACEOPTIONS,
-    SCI_GETVSCROLLBAR, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION,
-    SCI_INSERTTEXT, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN,
-    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
-    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION,
-    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
-    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES,
-    SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SCROLLCARET,
-    SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV,
-    SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
-    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
-    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
-    SCI_SETANCHOR, SCI_SETCURRENTPOS, SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE,
-    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETLENGTHFORENCODE, SCI_SETMAINSELECTION,
-    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION,
-    SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETREADONLY,
+    SCI_GETTABDRAWMODE, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT,
+    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIEWEOL,
+    SCI_GETVIEWWS, SCI_GETVIRTUALSPACEOPTIONS, SCI_GETVSCROLLBAR, SCI_GETWHITESPACECHARS,
+    SCI_GETWHITESPACESIZE, SCI_GETWORDCHARS, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS,
+    SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_ISRANGEWORD, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
+    SCI_LINESCROLL, SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN,
+    SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE,
+    SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE,
+    SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO,
+    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE,
+    SCI_ROTATESELECTION, SCI_SCROLLCARET, SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET,
+    SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
+    SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
+    SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
+    SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCHARSDEFAULT, SCI_SETCURRENTPOS, SCI_SETCURSOR,
+    SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT,
+    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETLENGTHFORENCODE, SCI_SETLINEENDTYPESALLOWED,
+    SCI_SETMAINSELECTION, SCI_SETMOUSEDOWNCAPTURES, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE,
+    SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS, SCI_SETREADONLY,
     SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
     SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
     SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH,
     SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELECTION,
     SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET,
     SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
-    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT,
-    SCI_SETUNDOCOLLECTION, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR,
-    SCI_SETXCARETPOLICY, SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_SWAPMAINANCHORCARET,
-    SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCMOD_ALT,
-    SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
-    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_SLOP,
-    VISIBLE_STRICT, SCI_SETVIEWWS, SCI_GETVIEWWS, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE, SCI_GETWHITESPACESIZE, SCI_SETTABDRAWMODE, SCI_GETTABDRAWMODE, SCI_SETEXTRAASCENT, SCI_GETEXTRAASCENT, SCI_SETEXTRADESCENT, SCI_GETEXTRADESCENT, SCI_SETCURSOR, SCI_GETCURSOR, SC_CURSORARROW, SC_CURSORNORMAL, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SCI_SETMOUSEDOWNCAPTURES, SCI_GETMOUSEDOWNCAPTURES, SCI_SETMOUSEWHEELCAPTURES, SCI_GETMOUSEWHEELCAPTURES,
+    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTABDRAWMODE, SCI_SETTARGETEND, SCI_SETTARGETSTART,
+    SCI_SETTEXT, SCI_SETUNDOCOLLECTION, SCI_SETVIEWEOL, SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS,
+    SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS,
+    SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE, SCI_SETWORDCHARS, SCI_SETXCARETPOLICY,
+    SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8,
+    SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCI_WORDENDPOSITION,
+    SCI_WORDLEFT, SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND, SCI_WORDPARTLEFT,
+    SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND, SCI_WORDRIGHT,
+    SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND, SCI_WORDSTARTPOSITION,
+    SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
+    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CURSORARROW, SC_CURSORNORMAL,
+    SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_DEFAULT, SC_LINE_END_TYPE_UNICODE,
+    UNDO_MAY_COALESCE, VISIBLE_SLOP, VISIBLE_STRICT,
 };
 
-use crate::scintilla::{selection::SelectionMode, status::Status, space::{WhiteSpace, TabDrawMode}};
+use crate::scintilla::{
+    eol::EolMode,
+    selection::SelectionMode,
+    space::{TabDrawMode, WhiteSpace},
+    status::Status,
+};
 use win_wrap::{
     common::{LPARAM, WPARAM},
     control::{edit::Edit, WindowControl},
@@ -1419,6 +1438,191 @@ pub trait Scintilla: Edit {
      * 获取鼠标滚轮捕获模式。在Windows上，即使鼠标指针不在Scintilla编辑器窗口附近，如果Scintilla有焦点，它也会捕获所有WM_MOUSEWHEEL消息。可以使用SCI_SETMOUSEWEHEELCAPTURES（0）更改此行为，以便Scintilla将WM_MOUSEWHEEL消息传递到其父窗口。如果鼠标指针位于编辑器窗口上方，闪烁体仍将对鼠标滚轮做出反应。
      * */
     fn get_mouse_wheel_captures(&self) -> bool;
+
+    /**
+     * 设置用户按Enter键时添加到文档中的字符。
+     * `eol_mode` 换行模式。
+     * */
+    fn set_eol_mode(&self, eol_mode: EolMode);
+
+    /**
+     * 获取换行模式。
+     * */
+    fn get_eol_mode(&self) -> EolMode;
+
+    /**
+     * 更改文档中的所有行尾字符以匹配eol_mode。
+     * `eol_mode` 换行模式。
+     * */
+    fn convert_eols(&self, eol_mode: EolMode);
+
+    /**
+     * 通常，行尾字符是隐藏的，但SCI_SETVIEWEOL允许您通过设置visible true（或false）来显示（或隐藏）它们。行尾字符的可见渲染类似于（CR）、（LF）或（CR）（LF）。SCI_GETVIEWEOL返回当前状态。
+     * `visible` 是否显示。
+     * */
+    fn set_view_eol(&self, visible: bool);
+
+    /**
+     * 获取换行显示状态。
+     * */
+    fn get_view_eol(&self) -> bool;
+
+    /**
+     * 报告当前lexer支持的不同类型的行尾。这是一个位集，尽管目前只有SC_LINE_END_TYPE_DEFAULT（0）或SC_LINEEND_TYPE_UNICODE（1）的单一选择。这些值也被其他与Unicode行尾有关的消息使用。
+     * */
+    fn get_line_end_types_supported(&self) -> u32;
+
+    /**
+     * 默认情况下，仅解释ASCII行尾。可以使用SCI_SETLINEENDTYPESALLOWED(SC_LINE_END_TYPE_UNICODE)请求Unicode行结束，但除非lexer也允许您使用Unicode行结束否则这将无效。
+     * SCI_GETLINEENDTYPESALLOWED返回当前状态。
+     * `line_end_bit_set` 行尾类型位标志。
+     * */
+    fn set_line_end_types_allowed(&self, line_end_bit_set: u32);
+
+    /**
+     * 获取行尾类型位标志。
+     * */
+    fn get_line_end_types_allowed(&self) -> u32;
+
+    /**
+     * 报告当前由Scintilla解释的一组行结束。它是SCI_GETLINEENDTYPESSUPPORTED和SCI_GETLINEENDTYPESALLOWED。
+     * */
+    fn get_line_end_types_active(&self) -> u32;
+
+    /**
+     * 使用与闪烁体内部使用的单词定义相同的单词定义返回单词的开头。您可以使用SCI_SETWORDCHARS设置自己的字符列表，这些字符算作单词。位置设置开始或搜索，搜索结束时向前，搜索开始时向后。
+     * `pos` 位置。
+     * `only_word_characters` 仅单词字符，请参考[官方文档](https://www.scintilla.org/ScintillaDoc.html#SCI_WORDSTARTPOSITION)。
+     * */
+    fn word_start_position(&self, pos: usize, only_word_characters: bool) -> usize;
+
+    /**
+     * 使用与闪烁体内部使用的单词定义相同的单词定义返回单词的结尾。您可以使用SCI_SETWORDCHARS设置自己的字符列表，这些字符算作单词。位置设置开始或搜索，搜索结束时向前，搜索开始时向后。
+     * `pos` 位置。
+     * `only_word_characters` 仅单词字符，请参考[官方文档](https://www.scintilla.org/ScintillaDoc.html#SCI_WORDENDPOSITION)。
+     * */
+    fn word_end_position(&self, pos: usize, only_word_characters: bool) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 范围是从一个单词或一组单词开始到结束？此消息检查开始是否在单词开始转换处，结束是否在单词结束转换处。它不检查范围内是否有空格。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn is_range_word(&self, start: usize, end: usize) -> bool;
+
+    /**
+     * 此消息定义哪些字符是单词类别的成员。在处理此函数之前，将字符类别设置为默认值。例如，如果不允许在字符集中使用“_”，请使用：
+     * SCI_SETWORDCHARS(0, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+     * `characters` 字符串。
+     * */
+    fn set_word_chars(&self, characters: String);
+
+    /**
+     * 获取单词中包含的所有字符。对于多字节编码，此API将不会返回0x80及以上的有意义的值。
+     * */
+    fn get_word_chars(&self) -> Option<String>;
+
+    /**
+     * 与SCI_SETWORDCHARS类似，此消息允许用户定义Scintilla将哪些字符视为空白字符。通过设置空白字符，用户可以微调Scintilla的行为，比如将光标移动到单词的开头或结尾；例如，通过将标点符号定义为空白，当用户按下ctrl+left或ctrl+right时，它们将被跳过。此函数应在SCI_SETWORDCHARS之后调用，因为它会将空白字符重置为默认集。
+     * `characters` 字符串。
+     * */
+    fn set_white_space_chars(&self, characters: String);
+
+    /**
+     * 获取空白字符串。行为与SCI_GETWORDCHARS类似。
+     * */
+    fn get_white_space_chars(&self) -> Option<String>;
+
+    /**
+     * 与SCI_SETWORDCHARS和SCI_SETWHITESPACECHARS类似，此消息允许用户定义Scintilla将哪些字符视为标点符号。
+     * */
+    fn set_punctuation_chars(&self, characters: String);
+
+    /**
+     * 获取标点字符串。行为与SCI_GETWORDCHARS类似。
+     * */
+    fn get_punctuation_chars(&self) -> Option<String>;
+
+    /**
+     * 使用默认的单词和空白字符集。这将空白设置为空格、制表符和其他代码小于0x20的字符，单词字符设置为字母数字和“_”。
+     * */
+    fn set_chars_default(&self);
+
+    /**
+     * SCI_WORDLEFT.
+     * */
+    fn word_left(&self);
+
+    /**
+     * SCI_WORDLEFTEXTEND.
+     * */
+    fn word_left_extend(&self);
+
+    /**
+     * SCI_WORDRIGHT.
+     * */
+    fn word_right(&self);
+
+    /**
+     * SCI_WORDRIGHTEXTEND.
+     * */
+    fn word_right_extend(&self);
+
+    /**
+     * SCI_WORDLEFTEND.
+     * */
+    fn word_left_end(&self);
+
+    /**
+     * SCI_WORDLEFTENDEXTEND.
+     * */
+    fn word_left_end_extend(&self);
+
+    /**
+     * SCI_WORDRIGHTEND.
+     * */
+    fn word_right_end(&self);
+
+    /**
+     * SCI_WORDRIGHTENDEXTEND.
+     * */
+    fn word_right_end_extend(&self);
+
+    /**
+     * SCI_WORDPARTLEFT.
+     * */
+    fn word_part_left(&self);
+
+    /**
+     * SCI_WORDPARTLEFTEXTEND.
+     * */
+    fn word_part_left_extend(&self);
+
+    /**
+     * SCI_WORDPARTRIGHT.
+     * */
+    fn word_part_right(&self);
+
+    /**
+     * SCI_WORDPARTRIGHTEXTEND.
+     * */
+    fn word_part_right_extend(&self);
+
+    /**
+     * SCI_DELWORDLEFT.
+     * */
+    fn del_word_left(&self);
+
+    /**
+     * SCI_DELWORDRIGHT.
+     * */
+    fn del_word_right(&self);
+
+    /**
+     * SCI_DELWORDRIGHTEND.
+     * */
+    fn del_word_right_end(&self);
 }
 
 impl Scintilla for WindowControl {
@@ -2764,7 +2968,11 @@ impl Scintilla for WindowControl {
     }
 
     fn set_view_ws(&self, view_ws: WhiteSpace) {
-        self.send_message(SCI_SETVIEWWS, WPARAM(Into::<u32>::into(view_ws) as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETVIEWWS,
+            WPARAM(Into::<u32>::into(view_ws) as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_view_ws(&self) -> WhiteSpace {
@@ -2774,25 +2982,42 @@ impl Scintilla for WindowControl {
 
     fn set_white_space_fore(&self, use_setting: bool, fore: i32) {
         let use_setting = if use_setting { 1 } else { 0 };
-        self.send_message(SCI_SETWHITESPACEFORE, WPARAM(use_setting), LPARAM(fore as isize));
+        self.send_message(
+            SCI_SETWHITESPACEFORE,
+            WPARAM(use_setting),
+            LPARAM(fore as isize),
+        );
     }
 
     fn set_white_space_back(&self, use_setting: bool, back: i32) {
         let use_setting = if use_setting { 1 } else { 0 };
-        self.send_message(SCI_SETWHITESPACEBACK, WPARAM(use_setting), LPARAM(back as isize));
+        self.send_message(
+            SCI_SETWHITESPACEBACK,
+            WPARAM(use_setting),
+            LPARAM(back as isize),
+        );
     }
 
     fn set_white_space_size(&self, size: i32) {
-        self.send_message(SCI_SETWHITESPACESIZE, WPARAM(size as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETWHITESPACESIZE,
+            WPARAM(size as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_white_space_size(&self) -> i32 {
-        let (_, res) = self.send_message(SCI_GETWHITESPACESIZE, WPARAM::default(), LPARAM::default());
+        let (_, res) =
+            self.send_message(SCI_GETWHITESPACESIZE, WPARAM::default(), LPARAM::default());
         res as i32
     }
 
     fn set_tab_draw_mode(&self, tab_draw_mode: TabDrawMode) {
-        self.send_message(SCI_SETTABDRAWMODE, WPARAM(Into::<u32>::into(tab_draw_mode) as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETTABDRAWMODE,
+            WPARAM(Into::<u32>::into(tab_draw_mode) as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_tab_draw_mode(&self) -> TabDrawMode {
@@ -2801,7 +3026,11 @@ impl Scintilla for WindowControl {
     }
 
     fn set_extra_ascent(&self, ascent: i32) {
-        self.send_message(SCI_SETEXTRAASCENT, WPARAM(ascent as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETEXTRAASCENT,
+            WPARAM(ascent as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_extra_ascent(&self) -> i32 {
@@ -2810,7 +3039,11 @@ impl Scintilla for WindowControl {
     }
 
     fn set_extra_descent(&self, descent: i32) {
-        self.send_message(SCI_SETEXTRADESCENT, WPARAM(descent as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETEXTRADESCENT,
+            WPARAM(descent as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_extra_descent(&self) -> i32 {
@@ -2819,7 +3052,11 @@ impl Scintilla for WindowControl {
     }
 
     fn set_cursor(&self, cursor_type: u32) {
-        self.send_message(SCI_SETCURSOR, WPARAM(cursor_type as usize), LPARAM::default());
+        self.send_message(
+            SCI_SETCURSOR,
+            WPARAM(cursor_type as usize),
+            LPARAM::default(),
+        );
     }
 
     fn get_cursor(&self) -> u32 {
@@ -2829,22 +3066,268 @@ impl Scintilla for WindowControl {
 
     fn set_mouse_down_captures(&self, captures: bool) {
         let captures = if captures { 1 } else { 0 };
-        self.send_message(SCI_SETMOUSEDOWNCAPTURES, WPARAM(captures), LPARAM::default());
+        self.send_message(
+            SCI_SETMOUSEDOWNCAPTURES,
+            WPARAM(captures),
+            LPARAM::default(),
+        );
     }
 
     fn get_mouse_down_captures(&self) -> bool {
-        let (_, res) = self.send_message(SCI_GETMOUSEDOWNCAPTURES, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(
+            SCI_GETMOUSEDOWNCAPTURES,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
         res != 0
     }
 
     fn set_mouse_wheel_captures(&self, captures: bool) {
         let captures = if captures { 1 } else { 0 };
-        self.send_message(SCI_SETMOUSEWHEELCAPTURES, WPARAM(captures), LPARAM::default());
+        self.send_message(
+            SCI_SETMOUSEWHEELCAPTURES,
+            WPARAM(captures),
+            LPARAM::default(),
+        );
     }
 
     fn get_mouse_wheel_captures(&self) -> bool {
-        let (_, res) = self.send_message(SCI_GETMOUSEWHEELCAPTURES, WPARAM::default(), LPARAM::default());
+        let (_, res) = self.send_message(
+            SCI_GETMOUSEWHEELCAPTURES,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
         res != 0
+    }
+
+    fn set_eol_mode(&self, eol_mode: EolMode) {
+        self.send_message(
+            SCI_SETEOLMODE,
+            WPARAM(Into::<u32>::into(eol_mode) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_eol_mode(&self) -> EolMode {
+        let (_, res) = self.send_message(SCI_GETEOLMODE, WPARAM::default(), LPARAM::default());
+        EolMode::from(res as u32)
+    }
+
+    fn convert_eols(&self, eol_mode: EolMode) {
+        self.send_message(
+            SCI_CONVERTEOLS,
+            WPARAM(Into::<u32>::into(eol_mode) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_view_eol(&self, visible: bool) {
+        let visible = if visible { 1 } else { 0 };
+        self.send_message(SCI_SETVIEWEOL, WPARAM(visible), LPARAM::default());
+    }
+
+    fn get_view_eol(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETVIEWEOL, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn get_line_end_types_supported(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETLINEENDTYPESSUPPORTED,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn set_line_end_types_allowed(&self, line_end_bit_set: u32) {
+        self.send_message(
+            SCI_SETLINEENDTYPESALLOWED,
+            WPARAM(line_end_bit_set as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_line_end_types_allowed(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETLINEENDTYPESALLOWED,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn get_line_end_types_active(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETLINEENDTYPESACTIVE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn word_start_position(&self, pos: usize, only_word_characters: bool) -> usize {
+        let only_word_characters = if only_word_characters { 1 } else { 0 };
+        let (_, res) = self.send_message(
+            SCI_WORDSTARTPOSITION,
+            WPARAM(pos),
+            LPARAM(only_word_characters),
+        );
+        res
+    }
+
+    fn word_end_position(&self, pos: usize, only_word_characters: bool) -> usize {
+        let only_word_characters = if only_word_characters { 1 } else { 0 };
+        let (_, res) = self.send_message(
+            SCI_WORDENDPOSITION,
+            WPARAM(pos),
+            LPARAM(only_word_characters),
+        );
+        res
+    }
+
+    fn is_range_word(&self, start: usize, end: usize) -> bool {
+        let (_, res) = self.send_message(SCI_ISRANGEWORD, WPARAM(start), LPARAM(end as isize));
+        res != 0
+    }
+
+    fn set_word_chars(&self, characters: String) {
+        let length = characters.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(characters.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_SETWORDCHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn get_word_chars(&self) -> Option<String> {
+        let (_, length) = self.send_message(SCI_GETWORDCHARS, WPARAM::default(), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_GETWORDCHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn set_white_space_chars(&self, characters: String) {
+        let length = characters.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(characters.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_SETWHITESPACECHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn get_white_space_chars(&self) -> Option<String> {
+        let (_, length) =
+            self.send_message(SCI_GETWHITESPACECHARS, WPARAM::default(), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_GETWHITESPACECHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn set_punctuation_chars(&self, characters: String) {
+        let length = characters.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(characters.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_SETPUNCTUATIONCHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn get_punctuation_chars(&self) -> Option<String> {
+        let (_, length) = self.send_message(
+            SCI_GETPUNCTUATIONCHARS,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_GETPUNCTUATIONCHARS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn set_chars_default(&self) {
+        self.send_message(SCI_SETCHARSDEFAULT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_left(&self) {
+        self.send_message(SCI_WORDLEFT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_left_extend(&self) {
+        self.send_message(SCI_WORDLEFTEXTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_right(&self) {
+        self.send_message(SCI_WORDRIGHT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_right_extend(&self) {
+        self.send_message(SCI_WORDRIGHTEXTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_left_end(&self) {
+        self.send_message(SCI_WORDLEFTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_left_end_extend(&self) {
+        self.send_message(SCI_WORDLEFTENDEXTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_right_end(&self) {
+        self.send_message(SCI_WORDRIGHTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_right_end_extend(&self) {
+        self.send_message(SCI_WORDRIGHTENDEXTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_part_left(&self) {
+        self.send_message(SCI_WORDPARTLEFT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_part_left_extend(&self) {
+        self.send_message(SCI_WORDPARTLEFTEXTEND, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_part_right(&self) {
+        self.send_message(SCI_WORDPARTRIGHT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn word_part_right_extend(&self) {
+        self.send_message(
+            SCI_WORDPARTRIGHTEXTEND,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn del_word_left(&self) {
+        self.send_message(SCI_DELWORDLEFT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn del_word_right(&self) {
+        self.send_message(SCI_DELWORDRIGHT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn del_word_right_end(&self) {
+        self.send_message(SCI_DELWORDRIGHTEND, WPARAM::default(), LPARAM::default());
     }
 }
 
@@ -2856,8 +3339,12 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
-        selection::SelectionMode, status::Status, Scintilla, CARET_JUMPS, SCFIND_MATCHCASE,
-        SCMOD_META, SCVS_USERACCESSIBLE, UNDO_MAY_COALESCE, VISIBLE_STRICT, space::{WhiteSpace, TabDrawMode}, SC_CURSORWAIT,
+        eol::EolMode,
+        selection::SelectionMode,
+        space::{TabDrawMode, WhiteSpace},
+        status::Status,
+        Scintilla, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE, SC_CURSORWAIT,
+        SC_LINE_END_TYPE_UNICODE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     #[test]
@@ -3071,6 +3558,40 @@ mod test_scintilla {
         assert_eq!(false, control.get_mouse_down_captures());
         control.set_mouse_wheel_captures(false);
         assert_eq!(false, control.get_mouse_wheel_captures());
+        control.set_eol_mode(EolMode::Lf);
+        assert_eq!(EolMode::Lf, control.get_eol_mode());
+        control.convert_eols(EolMode::Cr);
+        control.set_view_eol(true);
+        assert_eq!(true, control.get_view_eol());
+        dbg!(control.get_line_end_types_supported());
+        control.set_line_end_types_allowed(SC_LINE_END_TYPE_UNICODE);
+        dbg!(control.get_line_end_types_allowed());
+        dbg!(control.get_line_end_types_active());
+        dbg!(control.word_start_position(4, false));
+        dbg!(control.word_end_position(4, false));
+        dbg!(control.is_range_word(3, 7));
+        control.set_word_chars("abcdefg".to_string());
+        assert_eq!(Some("gfedcba".to_string()), control.get_word_chars());
+        control.set_white_space_chars("h".to_string());
+        dbg!(control.get_white_space_chars());
+        control.set_punctuation_chars(".,:".to_string());
+        dbg!(control.get_punctuation_chars());
+        control.set_chars_default();
+        control.word_left();
+        control.word_left_extend();
+        control.word_right();
+        control.word_right_extend();
+        control.word_left_end();
+        control.word_left_end_extend();
+        control.word_right_end();
+        control.word_right_end_extend();
+        control.word_part_left();
+        control.word_part_left_extend();
+        control.word_part_right();
+        control.word_part_right_extend();
+        control.del_word_left();
+        control.del_word_right();
+        control.del_word_right_end();
         dbg!(control);
     }
 }
