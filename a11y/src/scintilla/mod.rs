@@ -11,10 +11,12 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod character;
 pub mod eol;
 pub mod selection;
 pub mod space;
 pub mod status;
+pub mod style;
 
 use std::{ffi::c_char, os::raw::c_void};
 
@@ -22,7 +24,8 @@ use scintilla_sys::{
     Sci_CharacterRange, Sci_PositionCR, Sci_TextRange, Sci_TextToFind, SCI_GETEOLMODE,
     SCI_GETLINEENDTYPESSUPPORTED, SCI_GETSELECTIONNANCHOR, SCI_GETSELECTIONNANCHORVIRTUALSPACE,
     SCI_GETSELECTIONSTART, SCI_SETEOLMODE, SCI_SETSELECTIONNANCHOR,
-    SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETTARGETRANGE, SCI_TARGETFROMSELECTION,
+    SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETTARGETRANGE, SCI_STYLEGETBOLD, SCI_STYLESETBOLD,
+    SCI_TARGETFROMSELECTION,
 };
 pub use scintilla_sys::{
     CARET_EVEN, CARET_JUMPS, CARET_SLOP, CARET_STRICT, SCFIND_CXX11REGEX, SCFIND_MATCHCASE,
@@ -36,14 +39,15 @@ pub use scintilla_sys::{
     SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE,
     SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA,
     SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE,
-    SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE, SCI_GETEXTRAASCENT,
-    SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETLENGTH, SCI_GETLINE,
-    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINEENDTYPESACTIVE,
-    SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
-    SCI_GETMAINSELECTION, SCI_GETMODIFY, SCI_GETMOUSEDOWNCAPTURES,
-    SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOUSEWHEELCAPTURES, SCI_GETMOVEEXTENDSSELECTION,
-    SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETPASTECONVERTENDINGS,
-    SCI_GETPUNCTUATIONCHARS, SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
+    SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE, SCI_GETENDSTYLED, SCI_GETEXTRAASCENT,
+    SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETIDLESTYLING,
+    SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION,
+    SCI_GETLINEENDTYPESACTIVE, SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION,
+    SCI_GETLINESELSTARTPOSITION, SCI_GETLINESTATE, SCI_GETMAINSELECTION, SCI_GETMAXLINESTATE,
+    SCI_GETMODIFY, SCI_GETMOUSEDOWNCAPTURES, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_GETMOUSEWHEELCAPTURES, SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE,
+    SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETPASTECONVERTENDINGS, SCI_GETPUNCTUATIONCHARS,
+    SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
     SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
     SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
     SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING, SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY,
@@ -66,36 +70,48 @@ pub use scintilla_sys::{
     SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
     SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCHARSDEFAULT, SCI_SETCURRENTPOS, SCI_SETCURSOR,
     SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT,
-    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETLENGTHFORENCODE, SCI_SETLINEENDTYPESALLOWED,
-    SCI_SETMAINSELECTION, SCI_SETMOUSEDOWNCAPTURES, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE,
-    SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS, SCI_SETREADONLY,
-    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
-    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
-    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH,
-    SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELECTION,
-    SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET,
-    SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
-    SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETTABDRAWMODE, SCI_SETTARGETEND, SCI_SETTARGETSTART,
-    SCI_SETTEXT, SCI_SETUNDOCOLLECTION, SCI_SETVIEWEOL, SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS,
-    SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS,
-    SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE, SCI_SETWORDCHARS, SCI_SETXCARETPOLICY,
-    SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8,
-    SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO, SCI_WORDENDPOSITION,
-    SCI_WORDLEFT, SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND, SCI_WORDPARTLEFT,
-    SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND, SCI_WORDRIGHT,
-    SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND, SCI_WORDSTARTPOSITION,
-    SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
-    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CURSORARROW, SC_CURSORNORMAL,
-    SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_DEFAULT, SC_LINE_END_TYPE_UNICODE,
+    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING, SCI_SETLENGTHFORENCODE,
+    SCI_SETLINEENDTYPESALLOWED, SCI_SETLINESTATE, SCI_SETMAINSELECTION, SCI_SETMOUSEDOWNCAPTURES,
+    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE,
+    SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS,
+    SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
+    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
+    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
+    SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS,
+    SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
+    SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND,
+    SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETSTYLING, SCI_SETSTYLINGEX,
+    SCI_SETTABDRAWMODE, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION,
+    SCI_SETVIEWEOL, SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY,
+    SCI_SETVSCROLLBAR, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS, SCI_SETWHITESPACEFORE,
+    SCI_SETWHITESPACESIZE, SCI_SETWORDCHARS, SCI_SETXCARETPOLICY, SCI_SETXOFFSET,
+    SCI_SETYCARETPOLICY, SCI_STARTSTYLING, SCI_STYLECLEARALL, SCI_STYLEGETBACK, SCI_STYLEGETCASE,
+    SCI_STYLEGETCHANGEABLE, SCI_STYLEGETCHARACTERSET, SCI_STYLEGETEOLFILLED, SCI_STYLEGETFONT,
+    SCI_STYLEGETFORE, SCI_STYLEGETHOTSPOT, SCI_STYLEGETITALIC, SCI_STYLEGETSIZE,
+    SCI_STYLEGETSIZEFRACTIONAL, SCI_STYLEGETUNDERLINE, SCI_STYLEGETVISIBLE, SCI_STYLEGETWEIGHT,
+    SCI_STYLERESETDEFAULT, SCI_STYLESETBACK, SCI_STYLESETCASE, SCI_STYLESETCHANGEABLE,
+    SCI_STYLESETCHARACTERSET, SCI_STYLESETEOLFILLED, SCI_STYLESETFONT, SCI_STYLESETFORE,
+    SCI_STYLESETHOTSPOT, SCI_STYLESETITALIC, SCI_STYLESETSIZE, SCI_STYLESETSIZEFRACTIONAL,
+    SCI_STYLESETUNDERLINE, SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT, SCI_SWAPMAINANCHORCARET,
+    SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO,
+    SCI_WORDENDPOSITION, SCI_WORDLEFT, SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND,
+    SCI_WORDPARTLEFT, SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND,
+    SCI_WORDRIGHT, SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND,
+    SCI_WORDSTARTPOSITION, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE,
+    SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CURSORARROW,
+    SC_CURSORNORMAL, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_DEFAULT,
+    SC_LINE_END_TYPE_UNICODE, SC_WEIGHT_BOLD, SC_WEIGHT_NORMAL, SC_WEIGHT_SEMIBOLD,
     UNDO_MAY_COALESCE, VISIBLE_SLOP, VISIBLE_STRICT,
 };
 
+use crate::scintilla::character::CharacterSet;
+use crate::scintilla::style::Case;
 use crate::scintilla::{
     eol::EolMode,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
     status::Status,
+    style::IdleStyling,
 };
 use win_wrap::{
     common::{LPARAM, WPARAM},
@@ -1623,6 +1639,277 @@ pub trait Scintilla: Edit {
      * SCI_DELWORDRIGHTEND.
      * */
     fn del_word_right_end(&self);
+
+    /**
+     * Scintilla会记录最后一个可能被正确设置样式的字符。当设置其后面的字符的样式时，它会向前移动，如果更改其前面文档的文本，它会向后移动。在绘制文本之前，会检查此位置以查看是否需要任何样式，如果需要，则会向容器发送SCN_STYLENEDED通知消息。容器可以发送SCI_GETENDSTYLED来确定它需要在哪里开始设置样式。闪烁体总是要求整条线的样式。
+     * */
+    fn get_end_styled(&self) -> usize;
+
+    /**
+     * 这是通过将样式设置位置的起始位置设置为起始位置来准备样式设置的。在SCI_STARTSTYLING之后，为每个要样式化或发送的词法实体发送多条SCI_SETSTYLING消息。
+     * `start` 开始点。
+     * */
+    fn start_styling(&self, start: usize);
+
+    /**
+     * 从样式位置开始设置长度字符的样式，然后按长度增加样式位置，为下一次调用做好准备。应在第一次调用之前调用SCI_STARTSTYLEING。
+     * `length` 要设置样式的字符长度。
+     * `style` 样式。
+     * */
+    fn set_styling(&self, length: usize, style: i32);
+
+    /**
+     * 作为对每个字节应用相同样式的SCI_SETSTYLING的替代方案，您可以使用此消息，该消息从样式位置指定每个长度字节的样式，然后按长度增加样式位置，为下一次调用做好准备。应在第一次调用之前调用SCI_STARTSTYLEING。
+     * `length` 要设置样式的字符长度。
+     * `style` 样式。
+     * */
+    fn set_styling_ex(&self, length: usize, styles: String);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置空闲样式。
+     * 由于换行还需要执行样式设置，并且还需要使用空闲时间，因此当文档显示为换行时，此设置不起作用。
+     * `idle_styling` 样式。
+     * */
+    fn set_idle_styling(&self, idle_styling: IdleStyling);
+
+    /**
+     * 获取空闲样式。
+     * */
+    fn get_idle_styling(&self) -> IdleStyling;
+
+    /**
+     * 设置某行状态。除了为每个字符存储的8位词法状态外，还为每行存储一个整数。这可以用于寿命更长的解析状态，例如ASP页面中的当前脚本语言。使用SCI_SETLINESTATE设置整数值，使用SCI_GETLINESTATE获取值。更改该值会产生SC_MOD_CHANGELINESTATE通知。
+     * `line` 行号。
+     * `state` 状态值。
+     * */
+    fn set_line_state(&self, line: usize, state: i32);
+
+    /**
+     * 获取某行状态。
+     * `line` 行号。
+     * */
+    fn get_line_state(&self, line: usize) -> i32;
+
+    /**
+     * 这将返回最后一行具有任何行状态的值。如果设置了任何行的状态，则总是为所有行进行分配的优化使这一点变得不那么有用。它仍然可以区分从未为任何行设置行状态的情况。
+     * */
+    fn get_max_line_state(&self) -> i32;
+
+    /**
+     * 将STYLE_DEFAULT重置为闪烁体初始化时的状态。
+     * */
+    fn style_reset_default(&self);
+
+    /**
+     * 此消息将所有样式设置为具有与STYLE_DEFAULT相同的属性。如果您正在为语法着色设置Scintilla，那么您设置的词汇样式很可能非常相似。设置样式的一种方法是：
+     * 1.将STYLE_DEFAULT设置为所有样式的共同功能。
+     * 2.使用SCI_STYLECLEARALL将其复制到所有样式。
+     * 3.设置使你的词汇风格不同的风格属性。
+     * */
+    fn style_clear_all(&self);
+
+    /**
+     * 样式设置字体。
+     * `style` 样式。
+     * `font` 包含字体的名称。在Windows下，只使用名称的前32个字符，名称被解码为UTF-8，并且名称不区分大小写。对于内部缓存，Scintilla按名称跟踪字体，并关心字体名称的大小写，因此请保持一致。在GTK上，Pango用于显示文本，并且名称直接发送给Pango而不进行转换。在Qt上，名称被解码为UTF-8。在Cocoa上，这个名字被解码为MacRoman。
+     * */
+    fn style_set_font(&self, style: i32, font: String);
+
+    /**
+     * 样式获取字体。
+     * `style` 样式。
+     * */
+    fn style_get_font(&self, style: i32) -> Option<String>;
+
+    /**
+     * 样式设置大小。
+     * `style` 样式。
+     * `size_points` 大小为整数个像素点。
+     * */
+    fn style_set_size(&self, style: i32, size_points: i32);
+
+    /**
+     * 样式获取大小。
+     * `style` 样式。
+     * */
+    fn style_get_size(&self, style: i32) -> i32;
+
+    /**
+     * 样式设置大小。
+     * `style` 样式。
+     * `size_hundredth_points` 将大小乘以100（SC_FONT_SIZE_MULTIPLIER）以点的百分之一为单位设置小数点大小。例如，使用SCI_STYLESETSIZEFRACTIONAL（style，940）设置9.4像素点的文字大小。
+     * */
+    fn style_set_size_fractional(&self, style: i32, size_hundredth_points: i32);
+
+    /**
+     * 样式获取大小。
+     * `style` 样式。
+     * */
+    fn style_get_size_fractional(&self, style: i32) -> i32;
+
+    /**
+     * 样式设置粗体。
+     * `style` 样式。
+     * `bold` 粗体。
+     * */
+    fn style_set_bold(&self, style: i32, bold: bool);
+
+    /**
+     * 样式获取粗体。
+     * `style` 样式。
+     * */
+    fn style_get_bold(&self, style: i32) -> bool;
+
+    /**
+     * 样式设置权重(字体粗细）。
+     * `style` 样式。
+     * `weight` 介于1和999之间的数字，其中1非常轻，999非常重。虽然可以使用任何值，但字体通常只支持2到4个权重，其中三个权重足够常见，可以具有符号名称：SC_WEIGHT_NORMAL（400）、SC_WEIGHT_SEMIBOLD（600）和SC_WEIGHT_BOLD（700）。
+     * */
+    fn style_set_weight(&self, style: i32, weight: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 样式获取权重（字体粗细）。
+     * `style` 样式。
+     * */
+    fn style_get_weight(&self, style: i32) -> i32;
+
+    /**
+     * 样式设置斜体。
+     * `style` 样式。
+     * `italic` 斜体。
+     * */
+    fn style_set_italic(&self, style: i32, italic: bool);
+
+    /**
+     * 样式获取斜体。
+     * `style` 样式。
+     * */
+    fn style_get_italic(&self, style: i32) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 样式设置下划线。下划线是用前景色画的。样式包含下划线属性的所有字符都会加下划线，即使它们是空白字符。
+     * `style` 样式。
+     * `underline` 下划线。
+     * */
+    fn style_set_underline(&self, style: i32, underline: bool);
+
+    /**
+     * 样式获取下划线。
+     * `style` 样式。
+     * */
+    fn style_get_underline(&self, style: i32) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 样式设置前景色。文本以前景色绘制。
+     * `style` 样式。
+     * `fore` 前景色。
+     * */
+    fn style_set_fore(&self, style: i32, fore: i32);
+
+    /**
+     * 样式获取前景色。
+     * `style` 样式。
+     * */
+    fn style_get_fore(&self, style: i32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 样式设置背景色。每个字符单元格中未被该字符占用的空间以背景色绘制。
+     * `style` 样式。
+     * `back` 背景色。
+     * */
+    fn style_set_back(&self, style: i32, back: i32);
+
+    /**
+     * 样式获取背景色。
+     * `style` 样式。
+     * */
+    fn style_get_back(&self, style: i32) -> i32;
+
+    /**
+     * 样式设置行尾填充。如果行中的最后一个字符具有此属性集的样式，则该行直到窗口右边缘的其余部分将填充为最后一个角色设置的背景色。当文档包含另一种语言的嵌入部分时，例如具有嵌入JavaScript的HTML页面，这一点非常有用。通过将eol_filled设置为true，并为所有JavaScript样式设置一致的背景颜色（不同于为HTML样式设置的背景颜色），可以轻松地将JavaScript部分与HTML区分开来。
+     * `style` 样式。
+     * `eol_filled` 行尾填充。
+     * */
+    fn style_set_eol_filled(&self, style: i32, eol_filled: bool);
+
+    /**
+     * 样式获取行尾填充。
+     * `style` 样式。
+     * */
+    fn style_get_eol_filled(&self, style: i32) -> bool;
+
+    /**
+     * 样式设置字符集。可以将样式设置为使用与默认字符集不同的字符集。这些字符集可能有用的地方是注释和文字字符串。例如，SCI_STYLESETCHARACTERSET(SCE_C_STRING, SC_CHARSET_RUSSIAN)将确保俄语字符串在C和C++中正确显示（SCE_C_STRING是C和C++lexer用于显示文字字符串的样式号；其值为6）。此功能在Windows和GTK上的工作方式不同。
+     * SC_CHARSET_ANSI和SC_CHARSET_DEFAULT指定欧洲Windows代码页1252，除非设置了代码页。
+     * `style` 样式。
+     * `character_set` 字符集。
+     * */
+    fn style_set_character_set(&self, style: i32, charset_set: CharacterSet);
+
+    /**
+     * 样式获取字符集。
+     * `style` 样式。
+     * */
+    fn style_get_character_set(&self, style: i32) -> CharacterSet;
+
+    //noinspection StructuralWrap
+    /**
+     * 样式设置大小写形式。这不会更改存储的文本，只会更改文本的显示方式。
+     * `style` 样式。
+     * `case_visible` 显示方式。
+     * */
+    fn style_set_case(&self, style: i32, case_visible: Case);
+
+    //noinspection StructuralWrap
+    /**
+     * 样式获取大小写形式。
+     * `style` 样式。
+     * */
+    fn style_get_case(&self, style: i32) -> Case;
+
+    /**
+     * 样式设置可见性。文本通常可见。但是，您可以通过将可见设置为false的样式来完全隐藏它。这可以用来隐藏HTML或XML中嵌入的格式化指令或超文本关键字。用户操作可能无法删除不可见的文本，但应用程序可以通过调用SCI_DELETERANGE来删除不可见文本。
+     * `style` 样式。
+     * `visible` 是否可见。
+     * */
+    fn style_set_visible(&self, style: i32, visible: bool);
+
+    /**
+     * 样式获取可见性。
+     * `style` 样式。
+     * */
+    fn style_get_visible(&self, style: i32) -> bool;
+
+    /**
+     * 样式设置可变性。这是一个实验性的、未完全实现的样式属性。默认设置是可变的，设置为true，但设置为false时，文本将变为只读。用户不能在不可更改的文本中移动插入符号，也不能删除不可更改文本。应用程序可以通过调用SCI_DELETERANGE来删除不可更改的文本。
+     * `style` 样式。
+     * `changeable` 是否可变。
+     * */
+    fn style_set_changeable(&self, style: i32, changeable: bool);
+
+    /**
+     * 样式获取可变性。
+     * `style` 样式。
+     * */
+    fn style_get_changeable(&self, style: i32) -> bool;
+
+    /**
+     * 样式设置热点。此样式用于标记可以检测鼠标单击的文本范围。光标变为切换热点，前景和背景颜色可能会发生变化，并出现下划线以指示这些区域对点击敏感。这可以用于允许指向其他文档的超链接。
+     * `style` 样式。
+     * `hotspot` 热点。
+     * */
+    fn style_set_hotspot(&self, style: i32, hotspot: bool);
+
+    /**
+     * 样式获取热点。
+     * `style` 样式。
+     * */
+    fn style_get_hotspot(&self, style: i32) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -3329,6 +3616,301 @@ impl Scintilla for WindowControl {
     fn del_word_right_end(&self) {
         self.send_message(SCI_DELWORDRIGHTEND, WPARAM::default(), LPARAM::default());
     }
+
+    fn get_end_styled(&self) -> usize {
+        let (_, res) = self.send_message(SCI_GETENDSTYLED, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn start_styling(&self, start: usize) {
+        self.send_message(SCI_STARTSTYLING, WPARAM(start), LPARAM::default());
+    }
+
+    fn set_styling(&self, length: usize, style: i32) {
+        self.send_message(SCI_SETSTYLING, WPARAM(length), LPARAM(style as isize));
+    }
+
+    fn set_styling_ex(&self, length: usize, styles: String) {
+        let size = styles.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        mem.write(styles.as_ptr() as *const c_void, size);
+        self.send_message(
+            SCI_SETSTYLINGEX,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn set_idle_styling(&self, idle_styling: IdleStyling) {
+        self.send_message(
+            SCI_SETIDLESTYLING,
+            WPARAM(Into::<u32>::into(idle_styling) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_idle_styling(&self) -> IdleStyling {
+        let (_, res) = self.send_message(SCI_GETIDLESTYLING, WPARAM::default(), LPARAM::default());
+        IdleStyling::from(res as u32)
+    }
+
+    fn set_line_state(&self, line: usize, state: i32) {
+        self.send_message(SCI_SETLINESTATE, WPARAM(line), LPARAM(state as isize));
+    }
+
+    fn get_line_state(&self, line: usize) -> i32 {
+        let (_, res) = self.send_message(SCI_GETLINESTATE, WPARAM(line), LPARAM::default());
+        res as i32
+    }
+
+    fn get_max_line_state(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETMAXLINESTATE, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn style_reset_default(&self) {
+        self.send_message(SCI_STYLERESETDEFAULT, WPARAM::default(), LPARAM::default());
+    }
+
+    fn style_clear_all(&self) {
+        self.send_message(SCI_STYLECLEARALL, WPARAM::default(), LPARAM::default());
+    }
+
+    fn style_set_font(&self, style: i32, font: String) {
+        let length = font.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(font.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_STYLESETFONT,
+            WPARAM(style as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn style_get_font(&self, style: i32) -> Option<String> {
+        let (_, length) = self.send_message(SCI_STYLEGETFONT, WPARAM::default(), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_STYLEGETFONT,
+            WPARAM(style as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn style_set_size(&self, style: i32, size_points: i32) {
+        self.send_message(
+            SCI_STYLESETSIZE,
+            WPARAM(style as usize),
+            LPARAM(size_points as isize),
+        );
+    }
+
+    fn style_get_size(&self, style: i32) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_STYLEGETSIZE, WPARAM(style as usize), LPARAM::default());
+        res as i32
+    }
+
+    fn style_set_size_fractional(&self, style: i32, size_hundredth_points: i32) {
+        self.send_message(
+            SCI_STYLESETSIZEFRACTIONAL,
+            WPARAM(style as usize),
+            LPARAM(size_hundredth_points as isize),
+        );
+    }
+
+    fn style_get_size_fractional(&self, style: i32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETSIZEFRACTIONAL,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn style_set_bold(&self, style: i32, bold: bool) {
+        let bold = if bold { 1 } else { 0 };
+        self.send_message(SCI_STYLESETBOLD, WPARAM(style as usize), LPARAM(bold));
+    }
+
+    fn style_get_bold(&self, style: i32) -> bool {
+        let (_, res) =
+            self.send_message(SCI_STYLEGETBOLD, WPARAM(style as usize), LPARAM::default());
+        res != 0
+    }
+
+    fn style_set_weight(&self, style: i32, weight: i32) {
+        self.send_message(
+            SCI_STYLESETWEIGHT,
+            WPARAM(style as usize),
+            LPARAM(weight as isize),
+        );
+    }
+
+    fn style_get_weight(&self, style: i32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETWEIGHT,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn style_set_italic(&self, style: i32, italic: bool) {
+        let italic = if italic { 1 } else { 0 };
+        self.send_message(SCI_STYLESETITALIC, WPARAM(style as usize), LPARAM(italic));
+    }
+
+    fn style_get_italic(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETITALIC,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn style_set_underline(&self, style: i32, underline: bool) {
+        let underline = if underline { 1 } else { 0 };
+        self.send_message(
+            SCI_STYLESETUNDERLINE,
+            WPARAM(style as usize),
+            LPARAM(underline),
+        );
+    }
+
+    fn style_get_underline(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETUNDERLINE,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn style_set_fore(&self, style: i32, fore: i32) {
+        self.send_message(
+            SCI_STYLESETFORE,
+            WPARAM(style as usize),
+            LPARAM(fore as isize),
+        );
+    }
+
+    fn style_get_fore(&self, style: i32) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_STYLEGETFORE, WPARAM(style as usize), LPARAM::default());
+        res as i32
+    }
+
+    fn style_set_back(&self, style: i32, back: i32) {
+        self.send_message(
+            SCI_STYLESETBACK,
+            WPARAM(style as usize),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn style_get_back(&self, style: i32) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_STYLEGETBACK, WPARAM(style as usize), LPARAM::default());
+        res as i32
+    }
+
+    fn style_set_eol_filled(&self, style: i32, eol_filled: bool) {
+        let eol_filled = if eol_filled { 1 } else { 0 };
+        self.send_message(
+            SCI_STYLESETEOLFILLED,
+            WPARAM(style as usize),
+            LPARAM(eol_filled),
+        );
+    }
+
+    fn style_get_eol_filled(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETEOLFILLED,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn style_set_character_set(&self, style: i32, charset_set: CharacterSet) {
+        self.send_message(
+            SCI_STYLESETCHARACTERSET,
+            WPARAM(style as usize),
+            LPARAM(Into::<u32>::into(charset_set) as isize),
+        );
+    }
+
+    fn style_get_character_set(&self, style: i32) -> CharacterSet {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETCHARACTERSET,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        CharacterSet::from(res as u32)
+    }
+
+    fn style_set_case(&self, style: i32, case_visible: Case) {
+        self.send_message(
+            SCI_STYLESETCASE,
+            WPARAM(style as usize),
+            LPARAM(Into::<u32>::into(case_visible) as isize),
+        );
+    }
+
+    fn style_get_case(&self, style: i32) -> Case {
+        let (_, res) =
+            self.send_message(SCI_STYLEGETCASE, WPARAM(style as usize), LPARAM::default());
+        Case::from(res as u32)
+    }
+
+    fn style_set_visible(&self, style: i32, visible: bool) {
+        let visible = if visible { 1 } else { 0 };
+        self.send_message(SCI_STYLESETVISIBLE, WPARAM(style as usize), LPARAM(visible));
+    }
+
+    fn style_get_visible(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETUNDERLINE,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn style_set_changeable(&self, style: i32, changeable: bool) {
+        let changeable = if changeable { 1 } else { 0 };
+        self.send_message(
+            SCI_STYLESETCHANGEABLE,
+            WPARAM(style as usize),
+            LPARAM(changeable),
+        );
+    }
+
+    fn style_get_changeable(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETCHANGEABLE,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn style_set_hotspot(&self, style: i32, hotspot: bool) {
+        let hotspot = if hotspot { 1 } else { 0 };
+        self.send_message(SCI_STYLESETHOTSPOT, WPARAM(style as usize), LPARAM(hotspot));
+    }
+
+    fn style_get_hotspot(&self, style: i32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_STYLEGETHOTSPOT,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -3339,10 +3921,12 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
+        character::CharacterSet,
         eol::EolMode,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
+        style::{Case, IdleStyling},
         Scintilla, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE, SC_CURSORWAIT,
         SC_LINE_END_TYPE_UNICODE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
@@ -3592,6 +4176,45 @@ mod test_scintilla {
         control.del_word_left();
         control.del_word_right();
         control.del_word_right_end();
+        dbg!(control.get_end_styled());
+        control.start_styling(2);
+        control.set_styling(1, 0);
+        control.set_styling_ex(2, "b".to_string());
+        control.set_idle_styling(IdleStyling::All);
+        assert_eq!(IdleStyling::All, control.get_idle_styling());
+        control.set_line_state(1, 4);
+        assert_eq!(4, control.get_line_state(1));
+        dbg!(control.get_max_line_state());
+        control.style_reset_default();
+        control.style_clear_all();
+        control.style_set_font(0, "Verdana".to_string());
+        assert_eq!(Some("Verdana".to_string()), control.style_get_font(0));
+        control.style_set_size(0, 22);
+        assert_eq!(22, control.style_get_size(0));
+        control.style_set_size_fractional(0, 220);
+        assert_eq!(220, control.style_get_size_fractional(0));
+        control.style_set_bold(0, true);
+        assert_eq!(true, control.style_get_bold(0));
+        control.style_set_italic(0, true);
+        assert_eq!(true, control.style_get_italic(0));
+        control.style_set_weight(0, 333);
+        assert_eq!(333, control.style_get_weight(0));
+        control.style_set_back(0, 0xffffff);
+        assert_eq!(0xffffff, control.style_get_back(0));
+        control.style_set_fore(0, 0xff0000);
+        assert_eq!(0xff0000, control.style_get_fore(0));
+        control.style_set_eol_filled(0, true);
+        assert_eq!(true, control.style_get_eol_filled(0));
+        control.style_set_character_set(0, CharacterSet::Default);
+        assert_eq!(CharacterSet::Default, control.style_get_character_set(0));
+        control.style_set_case(0, Case::Upper);
+        assert_eq!(Case::Upper, control.style_get_case(0));
+        control.style_set_visible(0, false);
+        assert_eq!(false, control.style_get_visible(0));
+        control.style_set_changeable(0, false);
+        assert_eq!(false, control.style_get_changeable(0));
+        control.style_set_hotspot(0, false);
+        assert_eq!(false, control.style_get_hotspot(0));
         dbg!(control);
     }
 }
