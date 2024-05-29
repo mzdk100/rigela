@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+pub mod caret;
 pub mod character;
 pub mod eol;
 pub mod selection;
@@ -28,49 +29,58 @@ use scintilla_sys::{
     SCI_TARGETFROMSELECTION,
 };
 pub use scintilla_sys::{
-    CARET_EVEN, CARET_JUMPS, CARET_SLOP, CARET_STRICT, SCFIND_CXX11REGEX, SCFIND_MATCHCASE,
-    SCFIND_POSIX, SCFIND_REGEXP, SCFIND_WHOLEWORD, SCFIND_WORDSTART, SCI_ADDSELECTION,
-    SCI_ADDSTYLEDTEXT, SCI_ADDTEXT, SCI_ADDUNDOACTION, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES,
-    SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO,
-    SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE,
-    SCI_CLEARSELECTIONS, SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
-    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT,
-    SCI_DELWORDRIGHTEND, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8,
-    SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE,
-    SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA,
-    SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCURLINE,
-    SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE, SCI_GETENDSTYLED, SCI_GETEXTRAASCENT,
-    SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE, SCI_GETHSCROLLBAR, SCI_GETIDLESTYLING,
-    SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION,
-    SCI_GETLINEENDTYPESACTIVE, SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION,
-    SCI_GETLINESELSTARTPOSITION, SCI_GETLINESTATE, SCI_GETMAINSELECTION, SCI_GETMAXLINESTATE,
-    SCI_GETMODIFY, SCI_GETMOUSEDOWNCAPTURES, SCI_GETMOUSESELECTIONRECTANGULARSWITCH,
-    SCI_GETMOUSEWHEELCAPTURES, SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE,
-    SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE, SCI_GETPASTECONVERTENDINGS, SCI_GETPUNCTUATIONCHARS,
-    SCI_GETREADONLY, SCI_GETRECTANGULARSELECTIONANCHOR,
-    SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONCARET,
-    SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_GETRECTANGULARSELECTIONMODIFIER,
-    SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING, SCI_GETSEARCHFLAGS, SCI_GETSELECTIONEMPTY,
-    SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
-    SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
-    SCI_GETSELECTIONS, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT,
-    SCI_GETTABDRAWMODE, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT,
-    SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIEWEOL,
-    SCI_GETVIEWWS, SCI_GETVIRTUALSPACEOPTIONS, SCI_GETVSCROLLBAR, SCI_GETWHITESPACECHARS,
-    SCI_GETWHITESPACESIZE, SCI_GETWORDCHARS, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS,
-    SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_ISRANGEWORD, SCI_LINEFROMPOSITION, SCI_LINELENGTH,
-    SCI_LINESCROLL, SCI_LINESONSCREEN, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN,
-    SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE,
-    SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE,
-    SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO,
-    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE,
-    SCI_ROTATESELECTION, SCI_SCROLLCARET, SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET,
-    SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
-    SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
-    SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
-    SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETCHARSDEFAULT, SCI_SETCURRENTPOS, SCI_SETCURSOR,
-    SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT,
-    SCI_SETFIRSTVISIBLELINE, SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING, SCI_SETLENGTHFORENCODE,
+    CARETSTYLE_BLOCK, CARETSTYLE_INVISIBLE, CARETSTYLE_LINE, CARET_EVEN, CARET_JUMPS, CARET_SLOP,
+    CARET_STRICT, SCFIND_CXX11REGEX, SCFIND_MATCHCASE, SCFIND_POSIX, SCFIND_REGEXP,
+    SCFIND_WHOLEWORD, SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT,
+    SCI_ADDUNDOACTION, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT,
+    SCI_BEGINUNDOACTION, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION,
+    SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS,
+    SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT, SCI_COUNTCHARACTERS,
+    SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT, SCI_DELWORDRIGHTEND,
+    SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION,
+    SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK,
+    SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING,
+    SCI_GETANCHOR, SCI_GETCARETFORE, SCI_GETCARETLINEBACK, SCI_GETCARETLINEBACKALPHA,
+    SCI_GETCARETLINEFRAME, SCI_GETCARETLINEVISIBLE, SCI_GETCARETLINEVISIBLEALWAYS,
+    SCI_GETCARETPERIOD, SCI_GETCARETSTICKY, SCI_GETCARETSTYLE, SCI_GETCARETWIDTH, SCI_GETCHARAT,
+    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE,
+    SCI_GETENDSTYLED, SCI_GETEXTRAASCENT, SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE,
+    SCI_GETHOTSPOTACTIVEBACK, SCI_GETHOTSPOTACTIVEFORE, SCI_GETHOTSPOTACTIVEUNDERLINE,
+    SCI_GETHOTSPOTSINGLELINE, SCI_GETHSCROLLBAR, SCI_GETIDLESTYLING, SCI_GETLENGTH, SCI_GETLINE,
+    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINEENDTYPESACTIVE,
+    SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
+    SCI_GETLINESTATE, SCI_GETMAINSELECTION, SCI_GETMAXLINESTATE, SCI_GETMODIFY,
+    SCI_GETMOUSEDOWNCAPTURES, SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOUSEWHEELCAPTURES,
+    SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
+    SCI_GETPASTECONVERTENDINGS, SCI_GETPUNCTUATIONCHARS, SCI_GETREADONLY,
+    SCI_GETRECTANGULARSELECTIONANCHOR, SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+    SCI_GETRECTANGULARSELECTIONCARET, SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+    SCI_GETRECTANGULARSELECTIONMODIFIER, SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING,
+    SCI_GETSEARCHFLAGS, SCI_GETSELALPHA, SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND,
+    SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET, SCI_GETSELECTIONNCARETVIRTUALSPACE,
+    SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART, SCI_GETSELECTIONS, SCI_GETSELEOLFILLED,
+    SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT, SCI_GETTABDRAWMODE,
+    SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT, SCI_GETTEXT,
+    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIEWEOL, SCI_GETVIEWWS,
+    SCI_GETVIRTUALSPACEOPTIONS, SCI_GETVSCROLLBAR, SCI_GETWHITESPACECHARS, SCI_GETWHITESPACESIZE,
+    SCI_GETWORDCHARS, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT,
+    SCI_ISRANGEWORD, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN,
+    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
+    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION,
+    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
+    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES,
+    SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SCROLLCARET,
+    SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV,
+    SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
+    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
+    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
+    SCI_SETANCHOR, SCI_SETCARETFORE, SCI_SETCARETLINEBACK, SCI_SETCARETLINEBACKALPHA,
+    SCI_SETCARETLINEFRAME, SCI_SETCARETLINEVISIBLE, SCI_SETCARETLINEVISIBLEALWAYS,
+    SCI_SETCARETPERIOD, SCI_SETCARETSTICKY, SCI_SETCARETSTYLE, SCI_SETCARETWIDTH,
+    SCI_SETCHARSDEFAULT, SCI_SETCURRENTPOS, SCI_SETCURSOR, SCI_SETEMPTYSELECTION,
+    SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT, SCI_SETFIRSTVISIBLELINE,
+    SCI_SETHOTSPOTACTIVEBACK, SCI_SETHOTSPOTACTIVEFORE, SCI_SETHOTSPOTACTIVEUNDERLINE,
+    SCI_SETHOTSPOTSINGLELINE, SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING, SCI_SETLENGTHFORENCODE,
     SCI_SETLINEENDTYPESALLOWED, SCI_SETLINESTATE, SCI_SETMAINSELECTION, SCI_SETMOUSEDOWNCAPTURES,
     SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE,
     SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS,
@@ -78,22 +88,23 @@ pub use scintilla_sys::{
     SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
     SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
     SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS,
-    SCI_SETSEL, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
-    SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND,
-    SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSTATUS, SCI_SETSTYLING, SCI_SETSTYLINGEX,
-    SCI_SETTABDRAWMODE, SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION,
-    SCI_SETVIEWEOL, SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY,
-    SCI_SETVSCROLLBAR, SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS, SCI_SETWHITESPACEFORE,
-    SCI_SETWHITESPACESIZE, SCI_SETWORDCHARS, SCI_SETXCARETPOLICY, SCI_SETXOFFSET,
-    SCI_SETYCARETPOLICY, SCI_STARTSTYLING, SCI_STYLECLEARALL, SCI_STYLEGETBACK, SCI_STYLEGETCASE,
-    SCI_STYLEGETCHANGEABLE, SCI_STYLEGETCHARACTERSET, SCI_STYLEGETEOLFILLED, SCI_STYLEGETFONT,
-    SCI_STYLEGETFORE, SCI_STYLEGETHOTSPOT, SCI_STYLEGETITALIC, SCI_STYLEGETSIZE,
-    SCI_STYLEGETSIZEFRACTIONAL, SCI_STYLEGETUNDERLINE, SCI_STYLEGETVISIBLE, SCI_STYLEGETWEIGHT,
-    SCI_STYLERESETDEFAULT, SCI_STYLESETBACK, SCI_STYLESETCASE, SCI_STYLESETCHANGEABLE,
-    SCI_STYLESETCHARACTERSET, SCI_STYLESETEOLFILLED, SCI_STYLESETFONT, SCI_STYLESETFORE,
-    SCI_STYLESETHOTSPOT, SCI_STYLESETITALIC, SCI_STYLESETSIZE, SCI_STYLESETSIZEFRACTIONAL,
-    SCI_STYLESETUNDERLINE, SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT, SCI_SWAPMAINANCHORCARET,
-    SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_UNDO,
+    SCI_SETSEL, SCI_SETSELALPHA, SCI_SETSELBACK, SCI_SETSELECTION, SCI_SETSELECTIONEND,
+    SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE,
+    SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSELEOLFILLED,
+    SCI_SETSELFORE, SCI_SETSTATUS, SCI_SETSTYLING, SCI_SETSTYLINGEX, SCI_SETTABDRAWMODE,
+    SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION, SCI_SETVIEWEOL,
+    SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR,
+    SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS, SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE,
+    SCI_SETWORDCHARS, SCI_SETXCARETPOLICY, SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_STARTSTYLING,
+    SCI_STYLECLEARALL, SCI_STYLEGETBACK, SCI_STYLEGETCASE, SCI_STYLEGETCHANGEABLE,
+    SCI_STYLEGETCHARACTERSET, SCI_STYLEGETEOLFILLED, SCI_STYLEGETFONT, SCI_STYLEGETFORE,
+    SCI_STYLEGETHOTSPOT, SCI_STYLEGETITALIC, SCI_STYLEGETSIZE, SCI_STYLEGETSIZEFRACTIONAL,
+    SCI_STYLEGETUNDERLINE, SCI_STYLEGETVISIBLE, SCI_STYLEGETWEIGHT, SCI_STYLERESETDEFAULT,
+    SCI_STYLESETBACK, SCI_STYLESETCASE, SCI_STYLESETCHANGEABLE, SCI_STYLESETCHARACTERSET,
+    SCI_STYLESETEOLFILLED, SCI_STYLESETFONT, SCI_STYLESETFORE, SCI_STYLESETHOTSPOT,
+    SCI_STYLESETITALIC, SCI_STYLESETSIZE, SCI_STYLESETSIZEFRACTIONAL, SCI_STYLESETUNDERLINE,
+    SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8,
+    SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_TOGGLECARETSTICKY, SCI_UNDO,
     SCI_WORDENDPOSITION, SCI_WORDLEFT, SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND,
     SCI_WORDPARTLEFT, SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND,
     SCI_WORDRIGHT, SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND,
@@ -104,13 +115,14 @@ pub use scintilla_sys::{
     UNDO_MAY_COALESCE, VISIBLE_SLOP, VISIBLE_STRICT,
 };
 
-use crate::scintilla::character::CharacterSet;
-use crate::scintilla::style::Case;
 use crate::scintilla::{
+    caret::CaretSticky,
+    character::CharacterSet,
     eol::EolMode,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
     status::Status,
+    style::Case,
     style::IdleStyling,
 };
 use win_wrap::{
@@ -1910,6 +1922,217 @@ pub trait Scintilla: Edit {
      * `style` 样式。
      * */
     fn style_get_hotspot(&self, style: i32) -> bool;
+
+    /**
+     * 设置选区前景色。
+     * `use_setting` 设置为true，则使用您提供的颜色。如果设置为false，则使用默认样式的着色，fore参数无效。
+     * `fore` 前景色。
+     * */
+    fn set_sel_fore(&self, use_setting: bool, fore: i32);
+
+    /**
+     * 设置选区背景色。
+     * `use_setting` 设置为true，则使用您提供的颜色。如果设置为false，则使用默认样式的着色，back参数无效。
+     * `back` 背景色。
+     * */
+    fn set_sel_back(&self, use_setting: bool, back: i32);
+
+    /**
+     * 设置选区半透明。
+     * `alpha` 半透明。
+     * */
+    fn set_sel_alpha(&self, alpha: i32);
+
+    /**
+     * 获取选区半透明。
+     * */
+    fn get_sel_alpha(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 通过设置此属性，可以将所选内容绘制到右侧边框。
+     * `filled` 是否填充。
+     * */
+    fn set_sel_eol_filled(&self, filled: bool);
+
+    /**
+     * 获取所选内容是否绘制到右侧边框。
+     * */
+    fn get_sel_eol_filled(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置插入点的前景色。
+     * `fore` 前景色。
+     * */
+    fn set_caret_fore(&self, fore: i32);
+
+    /**
+     * 获取插入点的前景色。
+     * */
+    fn get_caret_fore(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置插入点的行的显示。
+     * `show` 是否显示。
+     * */
+    fn set_caret_line_visible(&self, show: bool);
+
+    /**
+     * 获取插入点的行的显示。
+     * */
+    fn get_caret_line_visible(&self) -> bool;
+
+    /**
+     * 设置包含插入点的行的背景颜色，然后使用SCI_SETACRETLINEVISIBLE(true)启用效果。您可以使用SCI_SETCARETLINEVISIBLE(false)取消效果。当线条具有会改变背景颜色的标记时，这种形式的背景颜色具有最高优先级。
+     * `back` 背景色。
+     * */
+    fn set_caret_line_back(&self, back: i32);
+
+    /**
+     * 获取插入点的行的背景色。
+     * */
+    fn get_caret_line_back(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置插入点的行的半透明。插入点的行也可以半透明地绘制，这允许其他背景颜色显示出来。当alpha不是SC_ALPHA_NOALPHA时，插入点的行会在所有其他特征之后绘制，因此会影响所有其他特征的颜色。
+     * `alpha` 半透明。
+     * */
+    fn set_caret_line_back_alpha(&self, alpha: i32);
+
+    /**
+     * 获取插入点的行的半透明。
+     * */
+    fn get_caret_line_back_alpha(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置显示插入点的行边框，而不是填充整个背景。设置width!=0可启用此选项，width=0可禁用此选项。
+     * `width` 宽度。
+     * */
+    fn set_caret_line_frame(&self, width: i32);
+
+    /**
+     * 获取显示插入点的行边框。
+     * */
+    fn get_caret_line_frame(&self) -> i32;
+
+    /**
+     * 设置插入点的行的始终显示。选择使插入点的行始终可见，即使窗口不在焦点上。默认行为SCI_SETCARETLINEVISIBLEALWAYS(false)插入点的行仅在窗口聚焦时可见。
+     * `always_visible` 是否始终显示。
+     * */
+    fn set_caret_line_visible_always(&self, always_visible: bool);
+
+    /**
+     * 获取插入点的行的始终显示。
+     * */
+    fn get_caret_line_visible_always(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置插入点闪烁的速率，它确定在更改状态之前插入符号可见或不可见的时间（以毫秒为单位）。将period设置为0将停止插入点闪烁。默认值为500毫秒。
+     * `period_milliseconds` 频率。
+     * */
+    fn set_caret_period(&self, period_milliseconds: i32);
+
+    /**
+     * 获取插入点闪烁的速率。
+     * */
+    fn get_caret_period(&self) -> i32;
+
+    /**
+     * 设置插入点的样式。插入模式（低位4位，CARETSTYLE_INS_MASK）、重写模式（位4）和诅咒模式（位5）有不同的样式。
+     * `caret_style` Caret样式
+     * CARETSTYLE_INVISIBLE | 0 | 根本没有绘制插入点。
+     * CARETSTYLE_LINE | 1 | 将插入点绘制为线条。这是默认设置。
+     * CARETSTYLE_BLOCK | 2 | 将插入点绘制为块。
+     * CARETSTYLE_OVERSTRICE_BAR | 0 | 将加粗插入点绘制为条形。这是默认设置。
+     * CARETSTYLE_OVERSTRICE_BLOCK | 16 | 将加粗插入点绘制为块。这应该用前三种风格中的一种来探索。
+     * CARETSTYLE_CURSES | 32 | 绘制无法在CURSES（终端）环境中绘制的插入点（如其他插入点），并将其绘制为块。主插入点由终端本身绘制。此设置通常是独立设置。
+     * CARETSTYLE_BLOCK_AFTER | 256 | 当范围的插入点末尾在末尾并且选择了块插入点样式时，将块绘制在所选内容的外部而不是内部。这可以用CARETSTYLE_BLOCK或CARETSTYLE_CURSES进行搜索。
+     * 块插入点成功地绘制了大多数组合字符和多字节字符序列，尽管当光标位于这些字符时，一些字体（如泰国字体（可能还有其他字体））有时会显得奇怪，这可能导致只绘制光标字符序列的一部分。这在Windows平台上最为显著。
+     * */
+    fn set_caret_style(&self, caret_style: u32);
+
+    /**
+     * 获取插入点样式。
+     * */
+    fn get_caret_style(&self) -> u32;
+
+    /**
+     * 将行插入点的宽度设置为0到20像素之间的值。默认宽度为1像素。宽度为0使插入点不可见，类似于将插入点样式设置为CARETSTYLE_INVISIBLE（尽管不能互换）。当光标样式设置为行插入点模式时，此设置仅影响光标的宽度，而不影响块插入点的宽度。
+     * `pixel_width` 像素宽度。
+     * */
+    fn set_caret_width(&self, pixel_width: i32);
+
+    /**
+     * 获取插入点宽度。
+     * */
+    fn get_caret_width(&self) -> i32;
+
+    /**
+     * 设置插入点Sticky设置，该设置控制何时保存行上插入点的最后位置。
+     * `use_caret_sticky_behaviour` 使用插入点粘性。
+     * */
+    fn set_caret_sticky(&self, use_caret_sticky_behaviour: CaretSticky);
+
+    /**
+     * 获取插入点Sticky设置。
+     * */
+    fn get_caret_sticky(&self) -> CaretSticky;
+
+    /**
+     * 切换插入点Sticky设置。从SC_CARETSTICKY_ON和SC_CARETSSTICKY_WHITESPACE切换到SC_CARETSCTICKY_OFF，并从SC_CARETSTICKY_OFF切换到SC_CARETSTICKY_ON。
+     * */
+    fn toggle_caret_sticky(&self);
+
+    /**
+     * 设置热点激活前景色。当光标悬停在设置了热点属性的样式中的文本上时，可以修改默认颜色，并使用这些设置绘制下划线。
+     * `use_setting` 使用设置。
+     * `fore` 前景色。
+     * */
+    fn set_hotspot_active_fore(&self, use_setting: bool, fore: i32);
+
+    /**
+     * 获取热点激活前景色。
+     * */
+    fn get_hotspot_active_fore(&self) -> i32;
+
+    /**
+     * 设置热点激活背景色。当光标悬停在设置了热点属性的样式中的文本上时，可以修改默认颜色，并使用这些设置绘制下划线。
+     * `use_setting` 使用设置。
+     * `back` 背景色。
+     * */
+    fn set_hotspot_active_back(&self, use_setting: bool, back: i32);
+
+    /**
+     * 获取热点激活背景色。
+     * */
+    fn get_hotspot_active_back(&self) -> i32;
+
+    /**
+     * 设置热点激活下划线。当光标悬停在设置了热点属性的样式中的文本上时，可以修改默认颜色，并使用这些设置绘制下划线。
+     * `underline` 下划线。
+     * */
+    fn set_hotspot_active_underline(&self, underline: bool);
+
+    /**
+     * 获取热点激活下划线。
+     * */
+    fn get_hotspot_active_underline(&self) -> bool;
+
+    /**
+     * 设置热点单行模式。单行模式阻止热点换行到下一行。
+     * `single_line` 单行模式。
+     * */
+    fn set_hotspot_single_line(&self, single_line: bool);
+
+    /**
+     * 获取热点单行模式。
+     * */
+    fn get_hotspot_single_line(&self) -> bool;
 }
 
 impl Scintilla for WindowControl {
@@ -3911,6 +4134,249 @@ impl Scintilla for WindowControl {
         );
         res != 0
     }
+
+    fn set_sel_fore(&self, use_setting: bool, fore: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(SCI_SETSELFORE, WPARAM(use_setting), LPARAM(fore as isize));
+    }
+
+    fn set_sel_back(&self, use_setting: bool, back: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(SCI_SETSELBACK, WPARAM(use_setting), LPARAM(back as isize));
+    }
+
+    fn set_sel_alpha(&self, alpha: i32) {
+        self.send_message(SCI_SETSELALPHA, WPARAM(alpha as usize), LPARAM::default());
+    }
+
+    fn get_sel_alpha(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETSELALPHA, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_sel_eol_filled(&self, filled: bool) {
+        let filled = if filled { 1 } else { 0 };
+        self.send_message(SCI_SETSELEOLFILLED, WPARAM(filled), LPARAM::default());
+    }
+
+    fn get_sel_eol_filled(&self) -> bool {
+        let (_, res) = self.send_message(SCI_GETSELEOLFILLED, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn set_caret_fore(&self, fore: i32) {
+        self.send_message(SCI_SETCARETFORE, WPARAM(fore as usize), LPARAM::default());
+    }
+
+    fn get_caret_fore(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETCARETFORE, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_caret_line_visible(&self, show: bool) {
+        let show = if show { 1 } else { 0 };
+        self.send_message(SCI_SETCARETLINEVISIBLE, WPARAM(show), LPARAM::default());
+    }
+
+    fn get_caret_line_visible(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETCARETLINEVISIBLE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_caret_line_back(&self, back: i32) {
+        self.send_message(
+            SCI_SETCARETLINEBACK,
+            WPARAM(back as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_line_back(&self) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_GETCARETLINEBACK, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_caret_line_back_alpha(&self, alpha: i32) {
+        self.send_message(
+            SCI_SETCARETLINEBACKALPHA,
+            WPARAM(alpha as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_line_back_alpha(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETCARETLINEBACKALPHA,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_caret_line_frame(&self, width: i32) {
+        self.send_message(
+            SCI_SETCARETLINEFRAME,
+            WPARAM(width as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_line_frame(&self) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_GETCARETLINEFRAME, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_caret_line_visible_always(&self, always_visible: bool) {
+        let always_visible = if always_visible { 1 } else { 0 };
+        self.send_message(
+            SCI_SETCARETLINEVISIBLEALWAYS,
+            WPARAM(always_visible),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_line_visible_always(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETCARETLINEVISIBLEALWAYS,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_caret_period(&self, period_milliseconds: i32) {
+        self.send_message(
+            SCI_SETCARETPERIOD,
+            WPARAM(period_milliseconds as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_period(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETCARETPERIOD, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_caret_style(&self, caret_style: u32) {
+        self.send_message(
+            SCI_SETCARETSTYLE,
+            WPARAM(caret_style as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_style(&self) -> u32 {
+        let (_, res) = self.send_message(SCI_GETCARETSTYLE, WPARAM::default(), LPARAM::default());
+        res as u32
+    }
+
+    fn set_caret_width(&self, pixel_width: i32) {
+        self.send_message(
+            SCI_SETCARETWIDTH,
+            WPARAM(pixel_width as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_width(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETCARETWIDTH, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_caret_sticky(&self, use_caret_sticky_behaviour: CaretSticky) {
+        self.send_message(
+            SCI_SETCARETSTICKY,
+            WPARAM(Into::<u32>::into(use_caret_sticky_behaviour) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_caret_sticky(&self) -> CaretSticky {
+        let (_, res) = self.send_message(SCI_GETCARETSTICKY, WPARAM::default(), LPARAM::default());
+        CaretSticky::from(res as u32)
+    }
+
+    fn toggle_caret_sticky(&self) {
+        self.send_message(SCI_TOGGLECARETSTICKY, WPARAM::default(), LPARAM::default());
+    }
+
+    fn set_hotspot_active_fore(&self, use_setting: bool, fore: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(
+            SCI_SETHOTSPOTACTIVEFORE,
+            WPARAM(use_setting),
+            LPARAM(fore as isize),
+        );
+    }
+
+    fn get_hotspot_active_fore(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETHOTSPOTACTIVEFORE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_hotspot_active_back(&self, use_setting: bool, back: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(
+            SCI_SETHOTSPOTACTIVEBACK,
+            WPARAM(use_setting),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn get_hotspot_active_back(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETHOTSPOTACTIVEBACK,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_hotspot_active_underline(&self, underline: bool) {
+        let underline = if underline { 1 } else { 0 };
+        self.send_message(
+            SCI_SETHOTSPOTACTIVEUNDERLINE,
+            WPARAM(underline),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_hotspot_active_underline(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETHOTSPOTACTIVEUNDERLINE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_hotspot_single_line(&self, single_line: bool) {
+        let single_line = if single_line { 1 } else { 0 };
+        self.send_message(
+            SCI_SETHOTSPOTSINGLELINE,
+            WPARAM(single_line),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_hotspot_single_line(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETHOTSPOTSINGLELINE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
 }
 
 #[cfg(test)]
@@ -3921,14 +4387,15 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
+        caret::CaretSticky,
         character::CharacterSet,
         eol::EolMode,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
         style::{Case, IdleStyling},
-        Scintilla, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE, SC_CURSORWAIT,
-        SC_LINE_END_TYPE_UNICODE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
+        SC_CURSORWAIT, SC_LINE_END_TYPE_UNICODE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     #[test]
@@ -4215,6 +4682,41 @@ mod test_scintilla {
         assert_eq!(false, control.style_get_changeable(0));
         control.style_set_hotspot(0, false);
         assert_eq!(false, control.style_get_hotspot(0));
+        control.set_sel_fore(true, 0xff0000);
+        control.set_sel_back(true, 0x00ff00);
+        control.set_sel_alpha(0x00);
+        assert_eq!(0x00, control.get_sel_alpha());
+        control.set_sel_eol_filled(true);
+        assert_eq!(true, control.get_sel_eol_filled());
+        control.set_caret_fore(0xff0000);
+        assert_eq!(0xff0000, control.get_caret_fore());
+        control.set_caret_line_back(0xff0000);
+        assert_eq!(0xff0000, control.get_caret_line_back());
+        control.set_caret_line_back_alpha(0xff);
+        assert_eq!(0xff, control.get_caret_line_back_alpha());
+        control.set_caret_line_visible(true);
+        assert_eq!(true, control.get_caret_line_visible());
+        control.set_caret_line_frame(1);
+        assert_eq!(1, control.get_caret_line_frame());
+        control.set_caret_line_visible_always(true);
+        assert_eq!(true, control.get_caret_line_visible_always());
+        control.set_caret_period(2000);
+        assert_eq!(2000, control.get_caret_period());
+        control.set_caret_style(CARETSTYLE_LINE);
+        assert_eq!(CARETSTYLE_LINE, control.get_caret_style());
+        control.set_caret_width(4);
+        assert_eq!(4, control.get_caret_width());
+        control.set_caret_sticky(CaretSticky::On);
+        assert_eq!(CaretSticky::On, control.get_caret_sticky());
+        control.toggle_caret_sticky();
+        control.set_hotspot_active_fore(true, 0xff0000);
+        assert_eq!(0xff0000, control.get_hotspot_active_fore());
+        control.set_hotspot_active_back(true, 0x00ff00);
+        assert_eq!(0x00ff00, control.get_hotspot_active_back());
+        control.set_hotspot_active_underline(true);
+        assert_eq!(true, control.get_hotspot_active_underline());
+        control.set_hotspot_single_line(true);
+        assert_eq!(true, control.get_hotspot_single_line());
         dbg!(control);
     }
 }
