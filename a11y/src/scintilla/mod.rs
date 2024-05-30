@@ -14,6 +14,7 @@
 pub mod caret;
 pub mod character;
 pub mod eol;
+pub mod margin;
 pub mod selection;
 pub mod space;
 pub mod status;
@@ -34,37 +35,43 @@ pub use scintilla_sys::{
     SCFIND_WHOLEWORD, SCFIND_WORDSTART, SCI_ADDSELECTION, SCI_ADDSTYLEDTEXT, SCI_ADDTEXT,
     SCI_ADDUNDOACTION, SCI_ALLOCATE, SCI_ALLOCATEEXTENDEDSTYLES, SCI_APPENDTEXT,
     SCI_BEGINUNDOACTION, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION,
-    SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARSELECTIONS,
-    SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT, SCI_COUNTCHARACTERS,
-    SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT, SCI_DELWORDRIGHTEND,
-    SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION,
-    SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK,
-    SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING,
-    SCI_GETANCHOR, SCI_GETCARETFORE, SCI_GETCARETLINEBACK, SCI_GETCARETLINEBACKALPHA,
-    SCI_GETCARETLINEFRAME, SCI_GETCARETLINEVISIBLE, SCI_GETCARETLINEVISIBLEALWAYS,
-    SCI_GETCARETPERIOD, SCI_GETCARETSTICKY, SCI_GETCARETSTYLE, SCI_GETCARETWIDTH, SCI_GETCHARAT,
-    SCI_GETCOLUMN, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE,
-    SCI_GETENDSTYLED, SCI_GETEXTRAASCENT, SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE,
-    SCI_GETHOTSPOTACTIVEBACK, SCI_GETHOTSPOTACTIVEFORE, SCI_GETHOTSPOTACTIVEUNDERLINE,
-    SCI_GETHOTSPOTSINGLELINE, SCI_GETHSCROLLBAR, SCI_GETIDLESTYLING, SCI_GETLENGTH, SCI_GETLINE,
-    SCI_GETLINECOUNT, SCI_GETLINEENDPOSITION, SCI_GETLINEENDTYPESACTIVE,
-    SCI_GETLINEENDTYPESALLOWED, SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION,
-    SCI_GETLINESTATE, SCI_GETMAINSELECTION, SCI_GETMAXLINESTATE, SCI_GETMODIFY,
+    SCI_CHOOSECARETX, SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARREPRESENTATION,
+    SCI_CLEARSELECTIONS, SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
+    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT,
+    SCI_DELWORDRIGHTEND, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8,
+    SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE,
+    SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA,
+    SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR, SCI_GETCARETFORE, SCI_GETCARETLINEBACK,
+    SCI_GETCARETLINEBACKALPHA, SCI_GETCARETLINEFRAME, SCI_GETCARETLINEVISIBLE,
+    SCI_GETCARETLINEVISIBLEALWAYS, SCI_GETCARETPERIOD, SCI_GETCARETSTICKY, SCI_GETCARETSTYLE,
+    SCI_GETCARETWIDTH, SCI_GETCHARAT, SCI_GETCOLUMN, SCI_GETCONTROLCHARSYMBOL, SCI_GETCURLINE,
+    SCI_GETCURRENTPOS, SCI_GETCURSOR, SCI_GETENDATLASTLINE, SCI_GETENDSTYLED, SCI_GETEXTRAASCENT,
+    SCI_GETEXTRADESCENT, SCI_GETFIRSTVISIBLELINE, SCI_GETHOTSPOTACTIVEBACK,
+    SCI_GETHOTSPOTACTIVEFORE, SCI_GETHOTSPOTACTIVEUNDERLINE, SCI_GETHOTSPOTSINGLELINE,
+    SCI_GETHSCROLLBAR, SCI_GETIDLESTYLING, SCI_GETLENGTH, SCI_GETLINE, SCI_GETLINECOUNT,
+    SCI_GETLINEENDPOSITION, SCI_GETLINEENDTYPESACTIVE, SCI_GETLINEENDTYPESALLOWED,
+    SCI_GETLINESELENDPOSITION, SCI_GETLINESELSTARTPOSITION, SCI_GETLINESTATE, SCI_GETMAINSELECTION,
+    SCI_GETMARGINBACKN, SCI_GETMARGINCURSORN, SCI_GETMARGINLEFT, SCI_GETMARGINMASKN,
+    SCI_GETMARGINOPTIONS, SCI_GETMARGINRIGHT, SCI_GETMARGINS, SCI_GETMARGINSENSITIVEN,
+    SCI_GETMARGINTYPEN, SCI_GETMARGINWIDTHN, SCI_GETMAXLINESTATE, SCI_GETMODIFY,
     SCI_GETMOUSEDOWNCAPTURES, SCI_GETMOUSESELECTIONRECTANGULARSWITCH, SCI_GETMOUSEWHEELCAPTURES,
     SCI_GETMOVEEXTENDSSELECTION, SCI_GETMULTIPASTE, SCI_GETMULTIPLESELECTION, SCI_GETOVERTYPE,
     SCI_GETPASTECONVERTENDINGS, SCI_GETPUNCTUATIONCHARS, SCI_GETREADONLY,
     SCI_GETRECTANGULARSELECTIONANCHOR, SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
     SCI_GETRECTANGULARSELECTIONCARET, SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE,
-    SCI_GETRECTANGULARSELECTIONMODIFIER, SCI_GETSCROLLWIDTH, SCI_GETSCROLLWIDTHTRACKING,
-    SCI_GETSEARCHFLAGS, SCI_GETSELALPHA, SCI_GETSELECTIONEMPTY, SCI_GETSELECTIONEND,
-    SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET, SCI_GETSELECTIONNCARETVIRTUALSPACE,
-    SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART, SCI_GETSELECTIONS, SCI_GETSELEOLFILLED,
-    SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT, SCI_GETSTYLEDTEXT, SCI_GETTABDRAWMODE,
-    SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART, SCI_GETTARGETTEXT, SCI_GETTEXT,
-    SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION, SCI_GETVIEWEOL, SCI_GETVIEWWS,
-    SCI_GETVIRTUALSPACEOPTIONS, SCI_GETVSCROLLBAR, SCI_GETWHITESPACECHARS, SCI_GETWHITESPACESIZE,
-    SCI_GETWORDCHARS, SCI_GETXOFFSET, SCI_GOTOLINE, SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT,
-    SCI_ISRANGEWORD, SCI_LINEFROMPOSITION, SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN,
+    SCI_GETRECTANGULARSELECTIONMODIFIER, SCI_GETREPRESENTATION, SCI_GETSCROLLWIDTH,
+    SCI_GETSCROLLWIDTHTRACKING, SCI_GETSEARCHFLAGS, SCI_GETSELALPHA, SCI_GETSELECTIONEMPTY,
+    SCI_GETSELECTIONEND, SCI_GETSELECTIONMODE, SCI_GETSELECTIONNCARET,
+    SCI_GETSELECTIONNCARETVIRTUALSPACE, SCI_GETSELECTIONNEND, SCI_GETSELECTIONNSTART,
+    SCI_GETSELECTIONS, SCI_GETSELEOLFILLED, SCI_GETSELTEXT, SCI_GETSTATUS, SCI_GETSTYLEAT,
+    SCI_GETSTYLEDTEXT, SCI_GETTABDRAWMODE, SCI_GETTAG, SCI_GETTARGETEND, SCI_GETTARGETSTART,
+    SCI_GETTARGETTEXT, SCI_GETTEXT, SCI_GETTEXTLENGTH, SCI_GETTEXTRANGE, SCI_GETUNDOCOLLECTION,
+    SCI_GETVIEWEOL, SCI_GETVIEWWS, SCI_GETVIRTUALSPACEOPTIONS, SCI_GETVSCROLLBAR,
+    SCI_GETWHITESPACECHARS, SCI_GETWHITESPACESIZE, SCI_GETWORDCHARS, SCI_GETXOFFSET, SCI_GOTOLINE,
+    SCI_GOTOPOS, SCI_HIDESELECTION, SCI_INSERTTEXT, SCI_ISRANGEWORD, SCI_LINEFROMPOSITION,
+    SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN, SCI_MARGINGETSTYLE,
+    SCI_MARGINGETSTYLEOFFSET, SCI_MARGINGETSTYLES, SCI_MARGINGETTEXT, SCI_MARGINSETSTYLE,
+    SCI_MARGINSETSTYLEOFFSET, SCI_MARGINSETSTYLES, SCI_MARGINSETTEXT, SCI_MARGINTEXTCLEARALL,
     SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
     SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION,
     SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
@@ -77,53 +84,58 @@ pub use scintilla_sys::{
     SCI_SETANCHOR, SCI_SETCARETFORE, SCI_SETCARETLINEBACK, SCI_SETCARETLINEBACKALPHA,
     SCI_SETCARETLINEFRAME, SCI_SETCARETLINEVISIBLE, SCI_SETCARETLINEVISIBLEALWAYS,
     SCI_SETCARETPERIOD, SCI_SETCARETSTICKY, SCI_SETCARETSTYLE, SCI_SETCARETWIDTH,
-    SCI_SETCHARSDEFAULT, SCI_SETCURRENTPOS, SCI_SETCURSOR, SCI_SETEMPTYSELECTION,
-    SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT, SCI_SETFIRSTVISIBLELINE,
+    SCI_SETCHARSDEFAULT, SCI_SETCONTROLCHARSYMBOL, SCI_SETCURRENTPOS, SCI_SETCURSOR,
+    SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT,
+    SCI_SETFIRSTVISIBLELINE, SCI_SETFOLDMARGINCOLOUR, SCI_SETFOLDMARGINHICOLOUR,
     SCI_SETHOTSPOTACTIVEBACK, SCI_SETHOTSPOTACTIVEFORE, SCI_SETHOTSPOTACTIVEUNDERLINE,
     SCI_SETHOTSPOTSINGLELINE, SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING, SCI_SETLENGTHFORENCODE,
-    SCI_SETLINEENDTYPESALLOWED, SCI_SETLINESTATE, SCI_SETMAINSELECTION, SCI_SETMOUSEDOWNCAPTURES,
-    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE,
-    SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS,
-    SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
-    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
-    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
-    SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS,
-    SCI_SETSEL, SCI_SETSELALPHA, SCI_SETSELBACK, SCI_SETSELECTION, SCI_SETSELECTIONEND,
-    SCI_SETSELECTIONMODE, SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE,
-    SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSELEOLFILLED,
-    SCI_SETSELFORE, SCI_SETSTATUS, SCI_SETSTYLING, SCI_SETSTYLINGEX, SCI_SETTABDRAWMODE,
-    SCI_SETTARGETEND, SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION, SCI_SETVIEWEOL,
-    SCI_SETVIEWWS, SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR,
-    SCI_SETWHITESPACEBACK, SCI_SETWHITESPACECHARS, SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE,
-    SCI_SETWORDCHARS, SCI_SETXCARETPOLICY, SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_STARTSTYLING,
-    SCI_STYLECLEARALL, SCI_STYLEGETBACK, SCI_STYLEGETCASE, SCI_STYLEGETCHANGEABLE,
-    SCI_STYLEGETCHARACTERSET, SCI_STYLEGETEOLFILLED, SCI_STYLEGETFONT, SCI_STYLEGETFORE,
-    SCI_STYLEGETHOTSPOT, SCI_STYLEGETITALIC, SCI_STYLEGETSIZE, SCI_STYLEGETSIZEFRACTIONAL,
-    SCI_STYLEGETUNDERLINE, SCI_STYLEGETVISIBLE, SCI_STYLEGETWEIGHT, SCI_STYLERESETDEFAULT,
-    SCI_STYLESETBACK, SCI_STYLESETCASE, SCI_STYLESETCHANGEABLE, SCI_STYLESETCHARACTERSET,
-    SCI_STYLESETEOLFILLED, SCI_STYLESETFONT, SCI_STYLESETFORE, SCI_STYLESETHOTSPOT,
-    SCI_STYLESETITALIC, SCI_STYLESETSIZE, SCI_STYLESETSIZEFRACTIONAL, SCI_STYLESETUNDERLINE,
-    SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8,
-    SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH, SCI_TOGGLECARETSTICKY, SCI_UNDO,
-    SCI_WORDENDPOSITION, SCI_WORDLEFT, SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND,
-    SCI_WORDPARTLEFT, SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND,
-    SCI_WORDRIGHT, SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND,
-    SCI_WORDSTARTPOSITION, SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE,
-    SCVS_NOWRAPLINESTART, SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CURSORARROW,
-    SC_CURSORNORMAL, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_DEFAULT,
-    SC_LINE_END_TYPE_UNICODE, SC_WEIGHT_BOLD, SC_WEIGHT_NORMAL, SC_WEIGHT_SEMIBOLD,
-    UNDO_MAY_COALESCE, VISIBLE_SLOP, VISIBLE_STRICT,
+    SCI_SETLINEENDTYPESALLOWED, SCI_SETLINESTATE, SCI_SETMAINSELECTION, SCI_SETMARGINBACKN,
+    SCI_SETMARGINCURSORN, SCI_SETMARGINLEFT, SCI_SETMARGINMASKN, SCI_SETMARGINOPTIONS,
+    SCI_SETMARGINRIGHT, SCI_SETMARGINS, SCI_SETMARGINSENSITIVEN, SCI_SETMARGINTYPEN,
+    SCI_SETMARGINWIDTHN, SCI_SETMOUSEDOWNCAPTURES, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE,
+    SCI_SETPASTECONVERTENDINGS, SCI_SETPUNCTUATIONCHARS, SCI_SETREADONLY,
+    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETREPRESENTATION, SCI_SETSAVEPOINT,
+    SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS, SCI_SETSEL,
+    SCI_SETSELALPHA, SCI_SETSELBACK, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
+    SCI_SETSELECTIONNCARET, SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND,
+    SCI_SETSELECTIONNSTART, SCI_SETSELECTIONSTART, SCI_SETSELEOLFILLED, SCI_SETSELFORE,
+    SCI_SETSTATUS, SCI_SETSTYLING, SCI_SETSTYLINGEX, SCI_SETTABDRAWMODE, SCI_SETTARGETEND,
+    SCI_SETTARGETSTART, SCI_SETTEXT, SCI_SETUNDOCOLLECTION, SCI_SETVIEWEOL, SCI_SETVIEWWS,
+    SCI_SETVIRTUALSPACEOPTIONS, SCI_SETVISIBLEPOLICY, SCI_SETVSCROLLBAR, SCI_SETWHITESPACEBACK,
+    SCI_SETWHITESPACECHARS, SCI_SETWHITESPACEFORE, SCI_SETWHITESPACESIZE, SCI_SETWORDCHARS,
+    SCI_SETXCARETPOLICY, SCI_SETXOFFSET, SCI_SETYCARETPOLICY, SCI_STARTSTYLING, SCI_STYLECLEARALL,
+    SCI_STYLEGETBACK, SCI_STYLEGETCASE, SCI_STYLEGETCHANGEABLE, SCI_STYLEGETCHARACTERSET,
+    SCI_STYLEGETEOLFILLED, SCI_STYLEGETFONT, SCI_STYLEGETFORE, SCI_STYLEGETHOTSPOT,
+    SCI_STYLEGETITALIC, SCI_STYLEGETSIZE, SCI_STYLEGETSIZEFRACTIONAL, SCI_STYLEGETUNDERLINE,
+    SCI_STYLEGETVISIBLE, SCI_STYLEGETWEIGHT, SCI_STYLERESETDEFAULT, SCI_STYLESETBACK,
+    SCI_STYLESETCASE, SCI_STYLESETCHANGEABLE, SCI_STYLESETCHARACTERSET, SCI_STYLESETEOLFILLED,
+    SCI_STYLESETFONT, SCI_STYLESETFORE, SCI_STYLESETHOTSPOT, SCI_STYLESETITALIC, SCI_STYLESETSIZE,
+    SCI_STYLESETSIZEFRACTIONAL, SCI_STYLESETUNDERLINE, SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT,
+    SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT,
+    SCI_TEXTWIDTH, SCI_TOGGLECARETSTICKY, SCI_UNDO, SCI_WORDENDPOSITION, SCI_WORDLEFT,
+    SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND, SCI_WORDPARTLEFT,
+    SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND, SCI_WORDRIGHT,
+    SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND, SCI_WORDSTARTPOSITION,
+    SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
+    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CURSORARROW, SC_CURSORNORMAL,
+    SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_DEFAULT, SC_LINE_END_TYPE_UNICODE,
+    SC_MARGIN_BACK, SC_MARGIN_COLOUR, SC_MARGIN_FORE, SC_MARGIN_NUMBER, SC_MARGIN_RTEXT,
+    SC_MARGIN_SYMBOL, SC_MARGIN_TEXT, SC_MASK_FOLDERS, SC_WEIGHT_BOLD, SC_WEIGHT_NORMAL,
+    SC_WEIGHT_SEMIBOLD, UNDO_MAY_COALESCE, VISIBLE_SLOP, VISIBLE_STRICT,
 };
 
 use crate::scintilla::{
     caret::CaretSticky,
     character::CharacterSet,
     eol::EolMode,
+    margin::MarginOptions,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
     status::Status,
-    style::Case,
-    style::IdleStyling,
+    style::{Case, IdleStyling},
 };
 use win_wrap::{
     common::{LPARAM, WPARAM},
@@ -2133,6 +2145,243 @@ pub trait Scintilla: Edit {
      * 获取热点单行模式。
      * */
     fn get_hotspot_single_line(&self) -> bool;
+
+    /**
+     * 设置字符表示。任何字符，包括那些通常显示为助记符的字符，都可以用倒圆矩形的Unicode字符串表示。
+     * 例如，欧姆符号Ω U+2126看起来与希腊语Omega字符ΩU+03C9非常相似，因此，对于UTF-8编码，要将欧姆符号区分为"U+2126Ω"可以进行此调用：SCI_SETREPRESENTATION("\xe2\x84\xa6", "U+2126 \xe2\x64\xa6")
+     * `encoded_character` 当前编码中一个字符的字符串。这不能用于设置多个字符串的表示形式。
+     * `representation` 一个UTF-8字符串，最大长度为200字节。
+     * 单字符限制的一个例外是，两个字符序列“\r\n”（回车+换行）可以具有在行结束查看（SCI_SETVIEWEOL）模式下可见的表示形式。如果没有“\r\n”的表示形式，则会看到单独的“\r\n”和“\n”表示形式。
+     * NUL（0）字符是一种特殊情况，因为encoded_character参数以NUL结尾，所以NUL字符被指定为空字符串。
+     * 对于UTF-8和DBCS代码页，单字节≥128的清晰表示可能会导致意外行为。
+     * */
+    fn set_representation(&self, encoded_character: String, representation: String);
+
+    /**
+     * 获取字符表示。
+     * `encoded_character` 当前编码中一个字符的字符串。
+     * */
+    fn get_representation(&self, encoded_character: String) -> Option<String>;
+
+    /**
+     * 清除字符表示。
+     * `encoded_character` 当前编码中一个字符的字符串。
+     * */
+    fn clear_representation(&self, encoded_character: String);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置控制字符。
+     * `symbol` 助记符可以由具有在32到 255 范围内的ASCII码的指定符号代替。如果将符号值设置为小于32，则所有控制字符都显示为助记符。您设置的符号将以字符样式集的字体呈现。默认符号值为0。
+     * */
+    fn set_control_char_symbol(&self, symbol: i32);
+
+    /**
+     * 获取控制字符。
+     * */
+    fn get_control_char_symbol(&self) -> i32;
+
+    /**
+     * 分配页边距数量。
+     * `margins` 边距数量。
+     * */
+    fn set_margins(&self, margins: i32);
+
+    /**
+     * 查找当前分配的页边距数量。
+     * */
+    fn get_margins(&self) -> i32;
+
+    /**
+     * 设置边距的类型。
+     * `margin` 应为0、1、2、3或4。可以使用预定义的常数SC_MARGIN_SYMBOL（0）和SC_MARTIN_NUMBER（1）将边距设置为行号或符号边距。具有应用程序定义的文本的边距可以使用SC_MARGIN_TEXT（4）或SC_MARGIN_RTEXT（5）来右对齐文本。按照惯例，边距0用于行号，后面两个用于符号。您也可以使用常数SC_MARGIN_BACK（2）、SC_MARGIN_FORE（3）和SC_MARGIN_COLOUR（6）作为符号边距，将其背景颜色设置为与STYLE_DEFAULT背景和前景色或指定的颜色相匹配。
+     * `margin_type` 边距类型。
+     * */
+    fn set_margin_type_n(&self, margin: u32, margin_type: i32);
+
+    /**
+     * 获取边距的类型。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_type_n(&self, margin: u32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置以像素为单位的边距宽度。宽度为零的边距是不可见的。默认情况下，Scintilla为宽度为16像素的符号设置边距1，所以如果您不确定什么是合适的，这是一个合理的猜测。行号边距宽度应考虑文档中的行数和行号样式。您可以使用SCI_TEXTWIDTH(STYLE_LINENUMBER,"_99999")来获得合适的宽度。
+     * `margin` 边距序号。
+     * `pixel_width` 像素宽度。
+     * */
+    fn set_margin_width_n(&self, margin: u32, pixel_width: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取以像素为单位的边距宽度。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_width_n(&self, margin: u32) -> i32;
+
+    /**
+     * 设置边距标志。掩码为32位值。每个比特对应于32个逻辑符号中的一个，这些逻辑符号可以显示在为符号启用的空白中。有一个有用的常数SC_MASK_FOLDERS（0xFE000000或-3354432），它是用于表示折叠的7个逻辑符号的掩码。您可以为32个逻辑符号中的每一个分配广泛的符号和颜色，有关详细信息，请参阅标记。如果（mask&SC_MASK_FOLDERS）==0，页边空白背景颜色由样式33（STYLE_LINENUMBER）控制。
+     * 您可以使用SCI_MARKERADD将逻辑标记添加到一行。如果一条线的相关标记没有出现在任何宽度为非零的边距的掩码中，则该标记会更改该线的背景色。例如，假设您决定使用逻辑标记10来标记有语法错误的行，并且您希望通过更改背景色来显示这些行。此标记的掩码向左移动1次（1<<10），即0x400。如果确保掩码中没有包含0x400的符号边距，则任何带有标记的行都会更改背景颜色。
+     * 要设置非折叠边距1，请使用Scintilla默认设置的SCI_SETMARGINMASKN(1, ~SC_MASK_FOLDERS)。要设置折叠边距2，请使用SCI_SETMARGINMASKN(2, SC_MASK_FOLDERS)~SC_MASK_FOLDERS是十六进制的0x1FFFFFF或十进制的33554431。当然，您可能需要在空白处显示所有32个符号，在这种情况下，请使用SCI_SETMARGINMASKN(margin, -1)。
+     * `margin` 边距序号。
+     * `mask` 位标志。
+     * */
+    fn set_margin_mask_n(&self, margin: u32, mask: i32);
+
+    /**
+     * 获取边距标志。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_mask_n(&self, margin: u32) -> i32;
+
+    /**
+     * 设置边距鼠标单击敏感性。五个边距中的每一个都可以设置为对鼠标单击敏感或不敏感。在敏感页边距中单击会向容器发送SCN_MARGINCLICK或SCN_MARGINRIGHTCLICK通知。不敏感的页边距用作选择页边距，这样可以很容易地选择行的范围。默认情况下，所有边距都不敏感。
+     * `margin` 边距序号。
+     * `sensitive` 是否敏感。
+     * */
+    fn set_margin_sensitive_n(&self, margin: u32, sensitive: bool);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取边距鼠标单击敏感性。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_sensitive_n(&self, margin: u32) -> bool;
+
+    /**
+     * 设置边距光标。反向箭头光标通常显示在所有页边距上。这可以用SCI_SETMARGINCURSORN(margin, SC_CURSORARROW)更改为正常箭头，或用SCI_SETMARGINCURSORN(margin, SC _CURSORREVERSERROW)恢复为反向箭头。
+     * `margin` 边距序号。
+     * `cursor` 光标。
+     * */
+    fn set_margin_cursor_n(&self, margin: u32, cursor: u32);
+
+    /**
+     * 获取边距光标。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_cursor_n(&self, margin: u32) -> u32;
+
+    /**
+     * 设置边距背景色。SC_MARGIN_COLOUR类型的边距的颜色可以设置为SCI_SETMARGINBACKN。
+     * `margin` 边距序号。
+     * `back` 背景色。
+     * */
+    fn set_margin_back_n(&self, margin: u32, back: i32);
+
+    /**
+     * 获取边距背景色。
+     * `margin` 边距序号。
+     * */
+    fn get_margin_back_n(&self, margin: u32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置文本左侧空白页边距的宽度（以像素为单位）。默认为一个像素。
+     * `pixel_width` 像素宽度。
+     * */
+    fn set_margin_left(&self, pixel_width: i32);
+
+    /**
+     * 获取文本左侧空白页边距的宽度（以像素为单位）。
+     * */
+    fn get_margin_left(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置文本右侧空白页边距的宽度（以像素为单位）。默认为一个像素。
+     * `pixel_width` 像素宽度。
+     * */
+    fn set_margin_right(&self, pixel_width: i32);
+
+    /**
+     * 获取文本右侧空白页边距的宽度（以像素为单位）。
+     * */
+    fn get_margin_right(&self) -> i32;
+
+    /**
+     * 更改折叠页边距显示的颜色。在Windows上，折叠边距颜色默认为：GetSysColor(COLOR_3DFACE)。
+     * `use_setting` 使用设置。
+     * `back` 背景色。
+     * */
+    fn set_fold_margin_colour(&self, use_setting: bool, back: i32);
+
+    /**
+     * 更改折叠页边距高亮显示的颜色。在Windows上，折叠边距高亮显示颜色为：GetSysColor(COLOR_3DHIGHLIGHT)。
+     * `use_setting` 使用设置。
+     * `fore` 前景色。
+     * */
+    fn set_fold_margin_hi_colour(&self, use_setting: bool, fore: i32);
+
+    /**
+     * 设置边距文字。文本边距是使用类型SC_MARGIN_TEXT或SC_MARTIN_RTEXT创建的。可以使用SCI_MARGINSETTEXT为每一行设置不同的字符串。设置文本边距将导致发送SC_MOD_CHANGEMARGIN通知。
+     * 只有一些样式属性在文本页边距中处于活动状态：字体、大小分数、粗体、斜体、前、后和字符集。
+     * `line` 行号。
+     * `text` 要设置的文字。
+     * */
+    fn margin_set_text(&self, line: usize, text: String);
+
+    /**
+     * 获取边距文字。
+     * `line` 行号。
+     * */
+    fn margin_get_text(&self, line: usize) -> Option<String>;
+
+    /**
+     * 设置边距样式。文本边距是使用类型SC_MARGIN_TEXT或SC_MARTIN_RTEXT创建的。一行上的整个文本边距可以用SCI_MARGINSETSTYLE以特定样式显示，或者每个字符可以用SCI_SETSTYLINGEX。设置文本边距将导致发送SC_MOD_CHANGEMARGIN通知。
+     * 只有一些样式属性在文本页边距中处于活动状态：字体、大小分数、粗体、斜体、前、后和字符集。
+     * `line` 行号。
+     * `style` 要设置的样式。
+     * */
+    fn margin_set_style(&self, line: usize, style: u32);
+
+    /**
+     * 获取边距样式。
+     * `line` 行号。
+     * */
+    fn margin_get_style(&self, line: usize) -> u32;
+
+    /**
+     * 设置边距样式。文本边距是使用类型SC_MARGIN_TEXT或SC_MARTIN_RTEXT创建的。设置文本边距将导致发送SC_MOD_CHANGEMARGIN通知。
+     * 只有一些样式属性在文本页边距中处于活动状态：字体、大小分数、粗体、斜体、前、后和字符集。
+     * `line` 行号。
+     * `styles` 要设置的样式。
+     * */
+    fn margin_set_styles(&self, line: usize, styles: String);
+
+    /**
+     * 获取边距样式。
+     * `line` 行号。
+     * */
+    fn margin_get_styles(&self, line: usize) -> Option<String>;
+
+    /**
+     * 清除所有边距文字。
+     * */
+    fn margin_text_clear_all(&self);
+
+    /**
+     * 设置样式偏移量。通过设置样式偏移量，页边距样式可以与标准文本样式完全分离。例如，SCI_MARGINSETSTYLEOFFSET(256)将允许将裕度样式从256编号到511，这样它们就不会与lexer设置的样式重叠。在查找样式之前，使用SCI_MARGINSETSTYLE或SCI_MARGINSETSTYLES设置的每个样式编号都会添加偏移量。
+     * 始终在SCI_MARGINSETSTYLEOFFSET之前调用SCI_ALLOCATEEXTENDEDSTYLES，并将结果用作SCI_MARGINSETSTYLEOFSET的参数。
+     * `style` 样式。
+     * */
+    fn margin_set_style_offset(&self, style: i32);
+
+    /**
+     * 获取样式偏移量。
+     * */
+    fn margin_get_style_offset(&self) -> i32;
+
+    /**
+     * 设置边距选项。
+     * `margin_options` 边距选项。
+     * */
+    fn set_margin_options(&self, margin_options: MarginOptions);
+
+    /**
+     * 获取边距选项。
+     * */
+    fn get_margin_options(&self) -> MarginOptions;
 }
 
 impl Scintilla for WindowControl {
@@ -4377,6 +4626,310 @@ impl Scintilla for WindowControl {
         );
         res != 0
     }
+
+    fn set_representation(&self, encoded_character: String, representation: String) {
+        let length = encoded_character.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(encoded_character.as_ptr() as *const c_void, length);
+        let length = representation.as_bytes().len();
+        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem2.write(representation.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_SETREPRESENTATION,
+            WPARAM(mem.as_ptr() as usize),
+            LPARAM(mem2.as_ptr() as isize),
+        );
+    }
+
+    fn get_representation(&self, encoded_character: String) -> Option<String> {
+        let length = encoded_character.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(encoded_character.as_ptr() as *const c_void, length);
+        let (_, length) = self.send_message(
+            SCI_GETREPRESENTATION,
+            WPARAM(mem.as_ptr() as usize),
+            LPARAM::default(),
+        );
+        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_GETREPRESENTATION,
+            WPARAM(mem.as_ptr() as usize),
+            LPARAM(mem2.as_ptr() as isize),
+        );
+        mem2.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn clear_representation(&self, encoded_character: String) {
+        let length = encoded_character.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(encoded_character.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_CLEARREPRESENTATION,
+            WPARAM(mem.as_ptr() as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn set_control_char_symbol(&self, symbol: i32) {
+        self.send_message(
+            SCI_SETCONTROLCHARSYMBOL,
+            WPARAM(symbol as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_control_char_symbol(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETCONTROLCHARSYMBOL,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margins(&self, margins: i32) {
+        self.send_message(SCI_SETMARGINS, WPARAM(margins as usize), LPARAM::default());
+    }
+
+    fn get_margins(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETMARGINS, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_margin_type_n(&self, margin: u32, margin_type: i32) {
+        self.send_message(
+            SCI_SETMARGINTYPEN,
+            WPARAM(margin as usize),
+            LPARAM(margin_type as isize),
+        );
+    }
+
+    fn get_margin_type_n(&self, margin: u32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINTYPEN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margin_width_n(&self, margin: u32, pixel_width: i32) {
+        self.send_message(
+            SCI_SETMARGINWIDTHN,
+            WPARAM(margin as usize),
+            LPARAM(pixel_width as isize),
+        );
+    }
+
+    fn get_margin_width_n(&self, margin: u32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINWIDTHN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margin_mask_n(&self, margin: u32, mask: i32) {
+        self.send_message(
+            SCI_SETMARGINMASKN,
+            WPARAM(margin as usize),
+            LPARAM(mask as isize),
+        );
+    }
+
+    fn get_margin_mask_n(&self, margin: u32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINMASKN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margin_sensitive_n(&self, margin: u32, sensitive: bool) {
+        let sensitive = if sensitive { 1 } else { 0 };
+        self.send_message(
+            SCI_SETMARGINSENSITIVEN,
+            WPARAM(margin as usize),
+            LPARAM(sensitive),
+        );
+    }
+
+    fn get_margin_sensitive_n(&self, margin: u32) -> bool {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINSENSITIVEN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn set_margin_cursor_n(&self, margin: u32, cursor: u32) {
+        self.send_message(
+            SCI_SETMARGINCURSORN,
+            WPARAM(margin as usize),
+            LPARAM(cursor as isize),
+        );
+    }
+
+    fn get_margin_cursor_n(&self, margin: u32) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINCURSORN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn set_margin_back_n(&self, margin: u32, back: i32) {
+        self.send_message(
+            SCI_SETMARGINBACKN,
+            WPARAM(margin as usize),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn get_margin_back_n(&self, margin: u32) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_GETMARGINBACKN,
+            WPARAM(margin as usize),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margin_left(&self, pixel_width: i32) {
+        self.send_message(
+            SCI_SETMARGINLEFT,
+            WPARAM::default(),
+            LPARAM(pixel_width as isize),
+        );
+    }
+
+    fn get_margin_left(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETMARGINLEFT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_margin_right(&self, pixel_width: i32) {
+        self.send_message(
+            SCI_SETMARGINRIGHT,
+            WPARAM::default(),
+            LPARAM(pixel_width as isize),
+        );
+    }
+
+    fn get_margin_right(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_GETMARGINRIGHT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn set_fold_margin_colour(&self, use_setting: bool, back: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(
+            SCI_SETFOLDMARGINCOLOUR,
+            WPARAM(use_setting),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn set_fold_margin_hi_colour(&self, use_setting: bool, fore: i32) {
+        let use_setting = if use_setting { 1 } else { 0 };
+        self.send_message(
+            SCI_SETFOLDMARGINHICOLOUR,
+            WPARAM(use_setting),
+            LPARAM(fore as isize),
+        );
+    }
+
+    fn margin_set_text(&self, line: usize, text: String) {
+        let length = text.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(text.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_MARGINSETTEXT,
+            WPARAM(line),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn margin_get_text(&self, line: usize) -> Option<String> {
+        let (_, length) = self.send_message(SCI_MARGINGETTEXT, WPARAM(line), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_MARGINGETTEXT,
+            WPARAM(line),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn margin_set_style(&self, line: usize, style: u32) {
+        self.send_message(SCI_MARGINSETSTYLE, WPARAM(line), LPARAM(style as isize));
+    }
+
+    fn margin_get_style(&self, line: usize) -> u32 {
+        let (_, res) = self.send_message(SCI_MARGINGETSTYLE, WPARAM(line), LPARAM::default());
+        res as u32
+    }
+
+    fn margin_set_styles(&self, line: usize, styles: String) {
+        let length = styles.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(styles.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_MARGINSETSTYLES,
+            WPARAM(line),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn margin_get_styles(&self, line: usize) -> Option<String> {
+        let (_, length) = self.send_message(SCI_MARGINGETSTYLES, WPARAM(line), LPARAM::default());
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_MARGINGETSTYLES,
+            WPARAM(line),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn margin_text_clear_all(&self) {
+        self.send_message(SCI_MARGINTEXTCLEARALL, WPARAM::default(), LPARAM::default());
+    }
+
+    fn margin_set_style_offset(&self, style: i32) {
+        self.send_message(
+            SCI_MARGINSETSTYLEOFFSET,
+            WPARAM(style as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn margin_get_style_offset(&self) -> i32 {
+        let (_, res) = self.send_message(
+            SCI_MARGINGETSTYLEOFFSET,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as i32
+    }
+
+    fn set_margin_options(&self, margin_options: MarginOptions) {
+        self.send_message(
+            SCI_SETMARGINOPTIONS,
+            WPARAM(Into::<u32>::into(margin_options) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn get_margin_options(&self) -> MarginOptions {
+        let (_, res) =
+            self.send_message(SCI_GETMARGINOPTIONS, WPARAM::default(), LPARAM::default());
+        MarginOptions::from(res as u32)
+    }
 }
 
 #[cfg(test)]
@@ -4390,12 +4943,14 @@ mod test_scintilla {
         caret::CaretSticky,
         character::CharacterSet,
         eol::EolMode,
+        margin::MarginOptions,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
-        style::{Case, IdleStyling},
+        style::{Case, IdleStyling, STYLE_BRACEBAD},
         Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
-        SC_CURSORWAIT, SC_LINE_END_TYPE_UNICODE, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER,
+        UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     #[test]
@@ -4717,6 +5272,48 @@ mod test_scintilla {
         assert_eq!(true, control.get_hotspot_active_underline());
         control.set_hotspot_single_line(true);
         assert_eq!(true, control.get_hotspot_single_line());
+        control.set_representation("Ω".to_string(), "U+2126 Ω".to_string());
+        assert_eq!(
+            Some("U+2126 Ω".to_string()),
+            control.get_representation("Ω".to_string())
+        );
+        control.clear_representation("Ω".to_string());
+        control.set_control_char_symbol(88);
+        assert_eq!(88, control.get_control_char_symbol());
+        control.set_margins(8);
+        assert_eq!(8, control.get_margins());
+        control.set_margin_type_n(SC_MARGIN_NUMBER, 0);
+        assert_eq!(0, control.get_margin_type_n(SC_MARGIN_NUMBER));
+        control.set_margin_width_n(SC_MARGIN_NUMBER, 20);
+        assert_eq!(20, control.get_margin_width_n(SC_MARGIN_NUMBER));
+        control.set_margin_mask_n(SC_MARGIN_NUMBER, 0x40);
+        assert_eq!(0x40, control.get_margin_mask_n(SC_MARGIN_NUMBER));
+        control.set_margin_sensitive_n(SC_MARGIN_NUMBER, true);
+        assert_eq!(true, control.get_margin_sensitive_n(SC_MARGIN_NUMBER));
+        control.set_margin_cursor_n(SC_MARGIN_NUMBER, SC_CURSORREVERSEARROW);
+        assert_eq!(
+            SC_CURSORREVERSEARROW,
+            control.get_margin_cursor_n(SC_MARGIN_NUMBER)
+        );
+        control.set_margin_back_n(SC_MARGIN_NUMBER, 0xff0000);
+        assert_eq!(0xff0000, control.get_margin_back_n(SC_MARGIN_NUMBER));
+        control.set_margin_left(14);
+        assert_eq!(14, control.get_margin_left());
+        control.set_margin_right(15);
+        assert_eq!(15, control.get_margin_right());
+        control.set_fold_margin_colour(true, 0x000000);
+        control.set_fold_margin_hi_colour(true, 0xffffff);
+        control.margin_set_text(0, "测试".to_string());
+        assert_eq!(Some("测试".to_string()), control.margin_get_text(0));
+        control.margin_set_style(0, STYLE_BRACEBAD);
+        assert_eq!(STYLE_BRACEBAD, control.margin_get_style(0));
+        control.margin_set_styles(0, "ccc".to_string());
+        assert_eq!(Some("ccc".to_string()), control.margin_get_styles(0));
+        control.margin_text_clear_all();
+        control.margin_set_style_offset(255);
+        assert_eq!(255, control.margin_get_style_offset());
+        control.set_margin_options(MarginOptions::SubLineSelect);
+        assert_eq!(MarginOptions::SubLineSelect, control.get_margin_options());
         dbg!(control);
     }
 }
