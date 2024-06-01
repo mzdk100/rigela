@@ -14,26 +14,36 @@
 mod internal;
 
 pub mod annotation;
+pub mod bidirectional;
 pub mod caret;
 pub mod character;
 pub mod eol;
+pub mod ime;
 pub mod margin;
+pub mod phases;
 pub mod selection;
 pub mod space;
 pub mod status;
 pub mod style;
+pub mod technology;
 
 pub use crate::scintilla::internal::*;
+use crate::scintilla::{
+    annotation::Annotation,
+    bidirectional::Bidirectional,
+    caret::CaretSticky,
+    character::CharacterSet,
+    eol::EolMode,
+    ime::Ime,
+    margin::MarginOptions,
+    phases::Phases,
+    selection::SelectionMode,
+    space::{TabDrawMode, WhiteSpace},
+    status::Status,
+    style::{Case, IdleStyling},
+    technology::Technology,
+};
 use win_wrap::control::edit::Edit;
-use crate::scintilla::annotation::Annotation;
-use crate::scintilla::caret::CaretSticky;
-use crate::scintilla::character::CharacterSet;
-use crate::scintilla::eol::EolMode;
-use crate::scintilla::margin::MarginOptions;
-use crate::scintilla::selection::SelectionMode;
-use crate::scintilla::space::{TabDrawMode, WhiteSpace};
-use crate::scintilla::status::Status;
-use crate::scintilla::style::{Case, IdleStyling};
 
 /**
  * 一些搜索例程使用标志选项，其中包括一个简单的正则表达式搜索。通过添加标志选项来组合它们：
@@ -2348,8 +2358,141 @@ pub trait Scintilla: Edit {
      * 获取批注样式偏移量。
      * */
     fn annotation_get_style_offset(&self) -> i32;
-}
 
+    /**
+     * 打开或关闭缓冲绘图。缓冲绘图将每条线绘制到位图中，而不是直接绘制到屏幕上，然后将位图复制到屏幕上。这样可以避免闪烁，尽管它确实需要更长的时间。默认情况下，绘图在Win32和GTK上缓冲，而在Cocoa和Qt上不缓冲。Cocoa不支持缓冲绘图。
+     * 当前平台执行窗口缓冲，因此关闭此选项几乎总是更好的。对于Win32和GTK，客户端代码应该在初始化时关闭缓冲。在一些较旧的平台和不寻常的模式中，缓冲可能仍然有用。
+     * `buffered` 是否缓冲。
+     * */
+    fn set_buffered_draw(&self, buffered: bool);
+
+    /**
+     * 查询缓冲绘图的状态。
+     * */
+    fn get_buffered_draw(&self) -> bool;
+
+    /**
+     * 设置绘图阶段。
+     * `phases` 阶段。
+     * */
+    fn set_phases_draw(&self, phases: Phases);
+
+    /**
+     * 获取绘图阶段。
+     * */
+    fn get_phases_draw(&self) -> Phases;
+
+    /**
+     * 设置绘图技术。
+     * `technology` 绘图技术。
+     * */
+    fn set_technology(&self, technology: Technology);
+
+    /**
+     * 获取绘图技术。
+     * */
+    fn get_technology(&self) -> Technology;
+
+    /**
+     * 设置字体质量（抗锯齿方法）。目前，以下值在Windows上可用：SC_EFF_QUALITY_DEFAULT（向后兼容）、SC_EFF_QUALITY_NON_ANTIALIASED、SC_EFF_QUALITY_ANTIALIASED和SC_EFF_QUALITY_LCD_OPTIMIZED。
+     * 如果需要将更多选项压缩到该属性中，则只有SC_EFF_QUALITY_MASK（0xF）定义的有限数量的位将用于质量。
+     * */
+    fn set_font_quality(&self, font_quality: u32);
+
+    /**
+     * 获取字体质量。
+     * */
+    fn get_font_quality(&self) -> u32;
+
+    /**
+     * 设置代码页。Scintilla支持UTF-8、日语、中文和韩语DBCS以及Latin-1等单字节编码。UTF-8（SC_CP_UTF8）是默认值。使用此消息时，将codePage设置为代码页码，将Scintilla设置为使用代码页信息，以确保将多个字节字符视为一个字符而不是多个字符。这也会阻止插入符号在多字节字符的字节之间移动。不要使用此消息在不同的单字节字符集之间进行选择-请使用SCI_STYLESETCHARACTERSET。在codePage设置为零的情况下调用以禁用多字节支持。
+     * 代码页SC_CP_UTF8（65001）将闪烁体设置为Unicode模式，文档被视为以UTF-8表示的字符序列。文本在被操作系统绘制之前被转换为平台的正常Unicode编码，因此可以显示希伯来语、阿拉伯语、西里尔语和汉族字符。可以在一个水平空间中使用两个垂直堆叠的字符的语言，如泰语，基本上可以使用，但也存在一些问题，即字符是分开绘制的，这会导致视觉问题。不支持双向文本。
+     * 代码页可以设置为65001（UTF-8）、932（日语Shift-JIS）、936（简体中文GBK）、949（朝鲜统一韩文代码）、950（繁体中文Big5）或1361（朝鲜语Johab）。
+     * `code_page` 代码页。
+     * */
+    fn set_code_page(&self, code_page: u32);
+
+    /**
+     * 获取代码页。
+     * */
+    fn get_code_page(&self) -> u32;
+
+    /**
+     * 设置输入法交互。
+     * IME 交互 | Windows | GTK | Qt | macOS
+     * 检索周围 | ✓ | ✓ | ✓ | ✓
+     * 重新转换 | ✓ | ✓ | ✓ | ✓
+     * 删除周围 | ✓ | ✓ | ✓ | ✓
+     * `ime_interaction` 输入法交互。
+     * */
+    fn set_ime_interaction(&self, ime_interaction: Ime);
+
+    /**
+     * 获取输入法交互。
+     * */
+    fn get_ime_interaction(&self) -> Ime;
+
+    /**
+     * 设置文字方向。
+     * `bidirectional` 双向模式。
+     * */
+    fn set_bidirectional(&self, bidirectional: Bidirectional);
+
+    /**
+     * 获取文字方向。
+     * */
+    fn get_bidirectional(&self) -> Bidirectional;
+
+    /**
+     * 抓住焦点。这在GTK上更需要，因为它的焦点处理比在Windows上更复杂。
+     * */
+    fn grab_focus(&self);
+
+    /**
+     * 设置内部焦点标志。这是由具有复杂焦点要求的客户端使用的，例如有自己的窗口来获得真正的焦点，但需要指示Scintilla具有逻辑焦点。
+     * `focus` 焦点标志。
+     * */
+    fn set_focus(&self, focus: bool);
+
+    /**
+     * 获取内部焦点。
+     * */
+    fn get_focus(&self) -> bool;
+
+    /**
+     * 在“大括号突出显示样式”中最多可以突出显示两个字符，该样式定义为样式号STYLE_BRACELIGHT（34）。如果已启用缩进辅助线，则可能还希望突出显示与大括号对应的缩进。可以使用SCI_GETCOLUMN查找列，并使用SCI_SETHIGHLIGUITE高亮显示缩进。
+     * `pos_a` 位置a。
+     * `pos_b` 位置b。
+     * */
+    fn brace_highlight(&self, pos_a: usize, pos_b: usize);
+
+    /**
+     * 如果没有匹配的支撑，则可以使用支撑徽章样式STYLE_BRACEBAD（35）来显示不匹配的支撑。使用INVALID_POSITION（-1）的位置可移除高亮显示。
+     * */
+    fn brace_badlight(&self, pos: usize);
+
+    /**
+     * 使用指定的指示器高亮显示匹配的大括号，而不是更改其样式。
+     * `use_setting` 使用设置。
+     * `indicator` 指示器。
+     * */
+    fn brace_highlight_indicator(&self, use_setting: bool, indicator: i32);
+
+    /**
+     * 使用指定的指示器高亮显示不匹配的大括号，而不是更改其样式。
+     * `use_setting` 使用设置。
+     * `indicator` 指示器。
+     * */
+    fn brace_badlight_indicator(&self, use_setting: bool, indicator: i32);
+
+    /**
+     * 在给定位置（一个括号的位置）找到相应的匹配括号。所处理的括号字符为“(”，“)”，“[”，“]”，“{”，“}”、“<”和“>”。搜索从左括号向前，从右括号向后。如果位置处的字符不是括号字符，或者找不到匹配的括号，则返回值为-1。否则，返回值为匹配括号的位置。
+     * 只有当匹配括号的样式与起始括号相同或匹配括号超出样式末尾时，才会发生匹配。正确处理嵌套括号。
+     * `pos` 位置。
+     * max_re_style` 当前必须为0，将来可能会用于限制括号搜索的长度。
+     * */
+    fn brace_match(&self, pos: usize, max_re_style: i32) -> usize;
+}
 
 #[cfg(test)]
 mod test_scintilla {
@@ -2359,17 +2502,22 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
+        annotation::Annotation,
+        bidirectional::Bidirectional,
         caret::CaretSticky,
         character::CharacterSet,
         eol::EolMode,
+        ime::Ime,
         margin::MarginOptions,
+        phases::Phases,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
         style::{Case, IdleStyling, STYLE_BRACEBAD},
+        technology::Technology,
         Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
-        SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER,
-        UNDO_MAY_COALESCE, VISIBLE_STRICT, annotation::Annotation,
+        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED,
+        SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     #[test]
@@ -2745,6 +2893,28 @@ mod test_scintilla {
         assert_eq!(Annotation::Standard, control.annotation_get_visible());
         control.annotation_set_style_offset(512);
         assert_eq!(512, control.annotation_get_style_offset());
+        control.set_buffered_draw(true);
+        assert_eq!(true, control.get_buffered_draw());
+        control.set_phases_draw(Phases::Two);
+        assert_eq!(Phases::Two, control.get_phases_draw());
+        control.set_technology(Technology::DirectWrite);
+        assert_eq!(Technology::DirectWrite, control.get_technology());
+        control.set_font_quality(SC_EFF_QUALITY_ANTIALIASED);
+        assert_eq!(SC_EFF_QUALITY_ANTIALIASED, control.get_font_quality());
+        control.set_code_page(SC_CP_UTF8);
+        assert_eq!(SC_CP_UTF8, control.get_code_page());
+        control.set_ime_interaction(Ime::Inline);
+        assert_eq!(Ime::Inline, control.get_ime_interaction());
+        control.set_bidirectional(Bidirectional::R2L);
+        assert_eq!(Bidirectional::R2L, control.get_bidirectional());
+        control.grab_focus();
+        control.set_focus(true);
+        assert_eq!(true, control.get_focus());
+        control.brace_highlight(3, 6);
+        control.brace_badlight(3);
+        control.brace_highlight_indicator(true, 0xff0000);
+        control.brace_badlight_indicator(true, 0xff0000);
+        dbg!(control.brace_match(3, 0));
         dbg!(control);
     }
 }
