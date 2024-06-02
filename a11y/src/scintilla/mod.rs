@@ -19,6 +19,7 @@ pub mod caret;
 pub mod character;
 pub mod eol;
 pub mod ime;
+pub mod indentation;
 pub mod margin;
 pub mod phases;
 pub mod selection;
@@ -35,6 +36,7 @@ use crate::scintilla::{
     character::CharacterSet,
     eol::EolMode,
     ime::Ime,
+    indentation::IndentView,
     margin::MarginOptions,
     phases::Phases,
     selection::SelectionMode,
@@ -2492,6 +2494,127 @@ pub trait Scintilla: Edit {
      * max_re_style` 当前必须为0，将来可能会用于限制括号搜索的长度。
      * */
     fn brace_match(&self, pos: usize, max_re_style: i32) -> usize;
+
+    /**
+     * 将制表符的大小设置为STYLE_DEFAULT中空格字符大小的倍数。默认制表符宽度为 8 个字符。制表符大小没有限制，但小于 1 的值或过大的值可能会产生不良影响。
+     * `tab_width` 制表符宽度。
+     * */
+    fn set_tab_width(&self, tab_width: i32);
+
+    /**
+     * 获取制表符宽度。
+     * */
+    fn get_tab_width(&self) -> i32;
+
+    /**
+     * 清除行上的显式制表位。更改制表位会产生 SC_MOD_CHANGETABSTOPS 通知。
+     * `line` 行号。
+     * */
+    fn clear_tabstops(&self, line: usize);
+
+    /**
+     * 在距左侧指定距离（以像素为单位）处添加显式制表位。更改制表位会产生 SC_MOD_CHANGETABSTOPS 通知。
+     * `line` 行号。
+     * `x` x坐标。
+     * */
+    fn add_tabstop(&self, line: usize, x: i32);
+
+    /**
+     * 获取在给定 x 位置之后设置的下一个显式制表位位置，如果没有，则获取零。更改制表位会产生 SC_MOD_CHANGETABSTOPS 通知。
+     * `line` 行号。
+     * `x` x坐标。
+     * */
+    fn get_next_tabstop(&self, line: usize, x: i32) -> i32;
+
+    /**
+     * 确定是否应从制表符和空格的混合物中创建缩进，还是纯粹基于空格。将use_tabs设置为false（0），以在空格中创建所有制表符和缩进。默认值为true。您可以使用SCI_GETCOLUMN来获取位置的列，将制表符的宽度考虑在内。
+     * `use_tabs` 是否使用制表符。
+     * */
+    fn set_use_tabs(&self, use_tabs: bool);
+
+    /**
+     * 获取是否使用制表符。
+     * */
+    fn get_use_tabs(&self) -> bool;
+
+    /**
+     * 根据STYLE_DEFAULT中的空格宽度设置缩进的大小。如果将宽度设置为 0，则缩进大小与制表符大小相同。缩进大小没有限制，但小于 0 的值或较大的值可能会产生不良影响。
+     * `indent_size` 缩进大小。
+     * */
+    fn set_indent(&self, indent_size: i32);
+
+    /**
+     * 获取缩进大小。
+     * */
+    fn get_indent(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 在缩进空白处，可以使制表符缩进，而不是插入制表符。
+     * `tab_indents` 制表符缩进。
+     * */
+    fn set_tab_indents(&self, tab_indents: bool);
+
+    /**
+     * 获取制表符缩进。
+     * */
+    fn get_tab_indents(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 在缩进空白处，可以使退格键取消缩进，而不是删除字符。
+     * `bs_un_indents` 退格取消缩进。
+     * */
+    fn set_backspace_un_indents(&self, bs_un_indents: bool);
+
+    /**
+     * 获取退格取消缩进。
+     * */
+    fn get_backspace_un_indents(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置行上的缩进量。缩进以字符列为单位进行测量，这对应于空格字符的宽度。
+     * `line` 行号。
+     * `indentation` 缩进。
+     * */
+    fn set_line_indentation(&self, line: usize, indentation: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取行上的缩进量。缩进以字符列为单位进行测量，这对应于空格字符的宽度。
+     * `line` 行号。
+     * */
+    fn get_line_indentation(&self, line: usize) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 这将返回行缩进末尾的位置。
+     * `line` 行号。
+     * */
+    fn get_line_indent_position(&self, line: usize) -> usize;
+
+    /**
+     * 设置缩进指南。
+     * `indent_view` 缩进显示。
+     * */
+    fn set_indentation_guides(&self, indent_view: IndentView);
+
+    /**
+     * 获取缩进指南。
+     * */
+    fn get_indentation_guides(&self) -> IndentView;
+
+    /**
+     * 设置高亮指南。当出现括号高亮时，括号对应的缩进指南可能会使用括号高亮样式 STYLE_BRACELIGHT (34) 进行高亮。将 column 设置为 0 可取消此高亮。
+     * `column` 位置。
+     * */
+    fn set_highlight_guide(&self, column: usize);
+
+    /**
+     * 获取高亮指南。
+     * */
+    fn get_highlight_guide(&self) -> usize;
 }
 
 #[cfg(test)]
@@ -2508,6 +2631,7 @@ mod test_scintilla {
         character::CharacterSet,
         eol::EolMode,
         ime::Ime,
+        indentation::IndentView,
         margin::MarginOptions,
         phases::Phases,
         selection::SelectionMode,
@@ -2915,6 +3039,26 @@ mod test_scintilla {
         control.brace_highlight_indicator(true, 0xff0000);
         control.brace_badlight_indicator(true, 0xff0000);
         dbg!(control.brace_match(3, 0));
+        control.set_tab_width(16);
+        assert_eq!(16, control.get_tab_width());
+        control.clear_tabstops(1);
+        control.add_tabstop(1, 5);
+        dbg!(control.get_next_tabstop(1, 5));
+        control.set_use_tabs(false);
+        assert_eq!(false, control.get_use_tabs());
+        control.set_indent(6);
+        assert_eq!(6, control.get_indent());
+        control.set_tab_indents(true);
+        assert_eq!(true, control.get_tab_indents());
+        control.set_backspace_un_indents(true);
+        assert_eq!(true, control.get_backspace_un_indents());
+        control.set_line_indentation(1, 10);
+        assert_eq!(10, control.get_line_indentation(1));
+        dbg!(control.get_line_indent_position(1));
+        control.set_indentation_guides(IndentView::Real);
+        assert_eq!(IndentView::Real, control.get_indentation_guides());
+        control.set_highlight_guide(5);
+        assert_eq!(5, control.get_highlight_guide());
         dbg!(control);
     }
 }
