@@ -73,13 +73,18 @@ pub use scintilla_sys::{
     SCI_LINELENGTH, SCI_LINESCROLL, SCI_LINESONSCREEN, SCI_MARGINGETSTYLE,
     SCI_MARGINGETSTYLEOFFSET, SCI_MARGINGETSTYLES, SCI_MARGINGETTEXT, SCI_MARGINSETSTYLE,
     SCI_MARGINSETSTYLEOFFSET, SCI_MARGINSETSTYLES, SCI_MARGINSETTEXT, SCI_MARGINTEXTCLEARALL,
-    SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP,
-    SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION,
-    SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT,
-    SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES,
-    SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_ROTATESELECTION, SCI_SCROLLCARET,
-    SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV,
-    SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
+    SCI_MARKERADD, SCI_MARKERADDSET, SCI_MARKERDEFINE, SCI_MARKERDEFINEPIXMAP,
+    SCI_MARKERDEFINERGBAIMAGE, SCI_MARKERDELETE, SCI_MARKERDELETEALL, SCI_MARKERDELETEHANDLE,
+    SCI_MARKERENABLEHIGHLIGHT, SCI_MARKERGET, SCI_MARKERLINEFROMHANDLE, SCI_MARKERNEXT,
+    SCI_MARKERPREVIOUS, SCI_MARKERSETALPHA, SCI_MARKERSETBACK, SCI_MARKERSETBACKSELECTED,
+    SCI_MARKERSETFORE, SCI_MARKERSYMBOLDEFINED, SCI_MOVECARETINSIDEVIEW, SCI_MOVESELECTEDLINESDOWN,
+    SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH, SCI_MULTIPLESELECTADDNEXT, SCI_PASTE,
+    SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION, SCI_POSITIONAFTER, SCI_POSITIONBEFORE,
+    SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE, SCI_POSITIONRELATIVE, SCI_REDO,
+    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE,
+    SCI_RGBAIMAGESETHEIGHT, SCI_RGBAIMAGESETSCALE, SCI_RGBAIMAGESETWIDTH, SCI_ROTATESELECTION,
+    SCI_SCROLLCARET, SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT,
+    SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
     SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
     SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
     SCI_SETANCHOR, SCI_SETBACKSPACEUNINDENTS, SCI_SETBIDIRECTIONAL, SCI_SETBUFFEREDDRAW,
@@ -150,6 +155,7 @@ use crate::scintilla::{
     ime::Ime,
     indentation::IndentView,
     margin::MarginOptions,
+    marker::Mark,
     phases::Phases,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
@@ -3076,5 +3082,172 @@ impl Scintilla for WindowControl {
         let (_, res) =
             self.send_message(SCI_GETHIGHLIGHTGUIDE, WPARAM::default(), LPARAM::default());
         res
+    }
+
+    fn marker_define(&self, marker_number: u32, marker_symbol: Mark) {
+        self.send_message(
+            SCI_MARKERDEFINE,
+            WPARAM(marker_number as usize),
+            LPARAM(Into::<u32>::into(marker_symbol) as isize),
+        );
+    }
+
+    fn marker_define_pixmap(&self, marker_number: u32, pixmap: &[&str]) {
+        self.send_message(
+            SCI_MARKERDEFINEPIXMAP,
+            WPARAM(marker_number as usize),
+            LPARAM(pixmap.as_ptr() as isize),
+        );
+    }
+
+    fn rgba_image_set_width(&self, width: i32) {
+        self.send_message(
+            SCI_RGBAIMAGESETWIDTH,
+            WPARAM(width as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn rgba_image_set_height(&self, height: i32) {
+        self.send_message(
+            SCI_RGBAIMAGESETHEIGHT,
+            WPARAM(height as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn rgba_image_set_scale(&self, scale_percent: i32) {
+        self.send_message(
+            SCI_RGBAIMAGESETSCALE,
+            WPARAM(scale_percent as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn marker_define_rgba_image(&self, marker_number: u32, pixels: &[u8]) {
+        let length = pixels.len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(pixels.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_MARKERDEFINERGBAIMAGE,
+            WPARAM(marker_number as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn marker_symbol_defined(&self, marker_number: u32) -> Mark {
+        let (_, res) = self.send_message(
+            SCI_MARKERSYMBOLDEFINED,
+            WPARAM(marker_number as usize),
+            LPARAM::default(),
+        );
+        Mark::from(res as u32)
+    }
+
+    fn marker_set_fore(&self, marker_number: u32, fore: i32) {
+        self.send_message(
+            SCI_MARKERSETFORE,
+            WPARAM(marker_number as usize),
+            LPARAM(fore as isize),
+        );
+    }
+
+    fn marker_set_back(&self, marker_number: u32, back: i32) {
+        self.send_message(
+            SCI_MARKERSETBACK,
+            WPARAM(marker_number as usize),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn marker_set_back_selected(&self, marker_number: u32, back: i32) {
+        self.send_message(
+            SCI_MARKERSETBACKSELECTED,
+            WPARAM(marker_number as usize),
+            LPARAM(back as isize),
+        );
+    }
+
+    fn marker_enable_highlight(&self, enabled: bool) {
+        let enabled = if enabled { 1 } else { 0 };
+        self.send_message(
+            SCI_MARKERENABLEHIGHLIGHT,
+            WPARAM(enabled),
+            LPARAM::default(),
+        );
+    }
+
+    fn marker_set_alpha(&self, marker_number: u32, alpha: i32) {
+        self.send_message(
+            SCI_MARKERSETALPHA,
+            WPARAM(marker_number as usize),
+            LPARAM(alpha as isize),
+        );
+    }
+
+    fn marker_add(&self, line: usize, marker_number: u32) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_MARKERADD, WPARAM(line), LPARAM(marker_number as isize));
+        res as i32
+    }
+
+    fn marker_add_set(&self, line: usize, marker_set: i32) {
+        self.send_message(SCI_MARKERADDSET, WPARAM(line), LPARAM(marker_set as isize));
+    }
+
+    fn marker_delete(&self, line: usize, marker_number: u32) {
+        self.send_message(
+            SCI_MARKERDELETE,
+            WPARAM(line),
+            LPARAM(marker_number as isize),
+        );
+    }
+
+    fn marker_get(&self, line: usize) -> i32 {
+        let (_, res) = self.send_message(SCI_MARKERGET, WPARAM(line), LPARAM::default());
+        res as i32
+    }
+
+    fn marker_delete_all(&self, marker_number: u32) {
+        self.send_message(
+            SCI_MARKERDELETEALL,
+            WPARAM(marker_number as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn marker_next(&self, line_start: usize, marker_mask: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_MARKERNEXT,
+            WPARAM(line_start),
+            LPARAM(marker_mask as isize),
+        );
+        res
+    }
+
+    fn marker_previous(&self, line_start: usize, marker_mask: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_MARKERPREVIOUS,
+            WPARAM(line_start),
+            LPARAM(marker_mask as isize),
+        );
+        res
+    }
+
+    fn marker_line_from_handle(&self, marker_handle: i32) -> usize {
+        let (_, res) = self.send_message(
+            SCI_MARKERLINEFROMHANDLE,
+            WPARAM(marker_handle as usize),
+            LPARAM::default(),
+        );
+        res
+    }
+
+    fn marker_delete_handle(&self, marker_handle: i32) {
+        self.send_message(
+            SCI_MARKERDELETEHANDLE,
+            WPARAM(marker_handle as usize),
+            LPARAM::default(),
+        );
     }
 }

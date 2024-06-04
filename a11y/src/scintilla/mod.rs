@@ -21,6 +21,7 @@ pub mod eol;
 pub mod ime;
 pub mod indentation;
 pub mod margin;
+pub mod marker;
 pub mod phases;
 pub mod selection;
 pub mod space;
@@ -38,6 +39,7 @@ use crate::scintilla::{
     ime::Ime,
     indentation::IndentView,
     margin::MarginOptions,
+    marker::Mark,
     phases::Phases,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
@@ -2615,6 +2617,147 @@ pub trait Scintilla: Edit {
      * 获取高亮指南。
      * */
     fn get_highlight_guide(&self) -> usize;
+
+    /**
+     * 此消息将 0 到 31 范围内的标记号与其中一个标记符号或 ASCII 字符关联。
+     * `marker_number` 标记序号。
+     * `marker_symbol` 标记符号。
+     * */
+    fn marker_define(&self, marker_number: u32, marker_symbol: Mark);
+
+    /**
+     * 将标记设置为像素图。像素图使用 XPM 格式。像素图使用 SC_MARK_PIXMAP 标记符号。
+     * `marker_number` 标记序号。
+     * `pixmap` 标记图像。
+     * */
+    fn marker_define_pixmap(&self, marker_number: u32, pixmap: &[&str]);
+
+    /**
+     * 设置RGBA图像宽度。
+     * `width` 宽度。
+     * */
+    fn rgba_image_set_width(&self, width: i32);
+
+    /**
+     * 设置RGBA图像高度。
+     * `height` 高度。
+     * */
+    fn rgba_image_set_height(&self, height: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置RGBA图像百分比比例因子。这在具有视网膜显示屏的macOS上很有用，其中每个显示单元为2个像素：使用200的系数，以便每个图像像素都使用屏​​幕像素显示。默认比例100将拉伸每个图像像素以覆盖视网膜显示屏上的4个屏幕像素。
+     * `scale_percent` 百分比系数。
+     * */
+    fn rgba_image_set_scale(&self, scale_percent: i32);
+
+    /**
+     * 将标记设置为半透明像素图。像素图使用 RGBA 格式。必须先使用 SCI_RGBAIMAGESETWIDTH 和 SCI_RGBAIMAGESETHEIGHT 消息设置宽度和高度。像素图使用 SC_MARK_RGBAIMAGE 标记符号。
+     * `marker_number` 标记序号。
+     * `pixels` 像素。
+     * */
+    fn marker_define_rgba_image(&self, marker_number: u32, pixels: &[u8]);
+
+    /**
+     * 返回使用 SCI_MARKERDEFINE 或 SC_MARK_PIXMAP（如果使用 SCI_MARKERDEFINEPIXMAP 定义）或 SC_MARK_RGBAIMAGE（如果使用 SCI_MARKERDEFINERGBAIMAGE 定义）为 marker_number 定义的符号。
+     * `marker_number` 标记序号。
+     * */
+    fn marker_symbol_defined(&self, marker_number: u32) -> Mark;
+
+    /**
+     * 设置标记序号的前景色。
+     * `marker_number` 标记序号。
+     * `fore` 前景色。
+     * */
+    fn marker_set_fore(&self, marker_number: u32, fore: i32);
+
+    /**
+     * 设置标记序号的背景色。
+     * `marker_number` 标记序号。
+     * `back` 背景色。
+     * */
+    fn marker_set_back(&self, marker_number: u32, back: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置标记编号在选定其折叠块时的高亮背景颜色。默认颜色为#FF0000。
+     * `marker_number` 标记序号。
+     * */
+    fn marker_set_back_selected(&self, marker_number: u32, back: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 允许在选择高亮折叠块时启用/禁用它。（即包含插入符号的块）
+     * `enabled` 是否启用。
+     * */
+    fn marker_enable_highlight(&self, enabled: bool);
+
+    /**
+     * 设置标记序号的半透明度。
+     * `marker_number` 标记序号。
+     * `alpha` 透明度。
+     * */
+    fn marker_set_alpha(&self, marker_number: u32, alpha: i32);
+
+    /**
+     * 将标记号 marker_number 添加到一行。如果此操作失败（非法行号、内存不足），则该消息返回-1，否则将返回标识已添加标记的标记句柄号。您可以将此返回的句柄与 SCI_MARKERLINEFROMHANDLE一起使用，以在移动或合并行后查找标记的位置，并与 SCI_MARKERDELETEHANDLE一起使用，以根据其句柄删除标记。该消息不会检查 marker_number 的值，也不会检查该行是否已包含标记。
+     * `line` 行号。
+     * `marker_number` 标记序号。
+     * */
+    fn marker_add(&self, line: usize, marker_number: u32) -> i32;
+
+    /**
+     * 可通过一次调用将一个或多个标记添加到一行，并以 SCI_MARKERGET 返回的相同“每个标记一位”32 位整数格式指定（并由基于掩码的标记搜索函数 SCI_MARKERNEXT 和 SCI_MARKERPREVIOUS 使用）。与 SCI_MARKERADD 一样，不会检查目标行上是否已存在任何标记。
+     * `line` 行号。
+     * `marker_set` 标记集合。
+     * */
+    fn marker_add_set(&self, line: usize, marker_set: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 这将在给定的行号中搜索给定的标记号，如果存在则删除它。如果您多次将同一个标记添加到该行，则每次使用时都会删除一个副本。如果您传入的标记号为-1，则所有标记都会从该行中删除。
+     * `line` 行号。
+     * `marker_number` 标记序号。
+     * */
+    fn marker_delete(&self, line: usize, marker_number: u32);
+
+    //noinspection StructuralWrap
+    /**
+     * 这将返回一个32位整数，指示该行上存在哪些标记。如果存在标记0，则设置位0；如果存在标记1，则设置位1，依此类推。
+     * `line` 行号。
+     * */
+    fn marker_get(&self, line: usize) -> i32;
+
+    /**
+     * 这将从所有行中删除指定序号的标记。如果 marker_number 为 -1，它将从所有行中删除所有标记。
+     * */
+    fn marker_delete_all(&self, marker_number: u32);
+
+    /**
+     * 返回包含marker_mask中标记之一的第一行的行号，如果未找到标记，则返回 -1。可高效搜索包含给定标记集的行。搜索从行号 line_start 开始，向前继续到文件末尾(SCI_MARKERNEXT)。
+     * `line_start` 开始行号。
+     * `marker_mask` 应为要查找的每个标记设置一个位。设置位 0 可查找标记 0，设置位 1 可查找标记 1，依此类推。
+     * */
+    fn marker_next(&self, line_start: usize, marker_mask: i32) -> usize;
+
+    /**
+     * 返回包含marker_mask 中标记之一的第一行的行号，如果未找到标记，则返回 -1。可高效搜索包含给定标记集的行。搜索从行号 line_start 开始，向后继续到文件开头 (SCI_MARKERPREVIOUS)。
+     * `line_start` 开始行号。
+     * `marker_mask` 应为要查找的每个标记设置一个位。设置位 0 可查找标记 0，设置位 1 可查找标记 1，依此类推。
+     * */
+    fn marker_previous(&self, line_start: usize, marker_mask: i32) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 此函数在文档中搜索具有句柄的标记，并返回包含该标记的行号，如果未找到则返回-1。
+     * `marker_handle` 由SCI_MARKERADD 返回的标记的标识符。
+     * */
+    fn marker_line_from_handle(&self, marker_handle: i32) -> usize;
+    /**
+     * 此函数在文档中搜索具有句柄的标记，如果找到则删除该标记。
+     * `marker_handle` 由SCI_MARKERADD 返回的标记的标识符。
+     * */
+    fn marker_delete_handle(&self, marker_handle: i32);
 }
 
 #[cfg(test)]
@@ -2633,6 +2776,7 @@ mod test_scintilla {
         ime::Ime,
         indentation::IndentView,
         margin::MarginOptions,
+        marker::{Mark, MarkerNumber},
         phases::Phases,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
@@ -2644,6 +2788,7 @@ mod test_scintilla {
         SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
+    //noinspection GrazieInspection
     #[test]
     fn main() {
         let h_wnd = find_window_ex(HWND::default(), HWND::default(), Some("Notepad++"), None);
@@ -3059,6 +3204,37 @@ mod test_scintilla {
         assert_eq!(IndentView::Real, control.get_indentation_guides());
         control.set_highlight_guide(5);
         assert_eq!(5, control.get_highlight_guide());
+        control.marker_define(u32::FOLDER_MID_TAIL, Mark::Bookmark);
+        /* has bugs
+        const IMAGE_XPM: [&str; 4] = [
+            /* columns rows colors chars-per-pixel */
+            "2 2 1 1 ",
+            "  c white",
+            /* pixels */
+            "  ",
+            "  "
+        ];
+        control.marker_define_pixmap(1, &IMAGE_XPM);
+        */
+        control.rgba_image_set_width(2);
+        control.rgba_image_set_height(2);
+        control.rgba_image_set_scale(200);
+        control.marker_define_rgba_image(1, &[0, 0, 0, 0]);
+        dbg!(control.marker_symbol_defined(1));
+        control.marker_set_fore(1, 0xff0000);
+        control.marker_set_back(1, 0x0000ff);
+        control.marker_set_back_selected(1, 0x000ccc);
+        control.marker_enable_highlight(true);
+        control.marker_set_alpha(1, 0x0);
+        let handle = control.marker_add(1, 1);
+        control.marker_add_set(1, 0b1);
+        control.marker_delete(1, 1);
+        control.marker_delete_all(1);
+        dbg!(control.marker_get(1));
+        dbg!(control.marker_next(0, 0b1));
+        dbg!(control.marker_previous(2, 0b1));
+        dbg!(control.marker_line_from_handle(handle));
+        control.marker_delete_handle(handle);
         dbg!(control);
     }
 }
