@@ -20,6 +20,7 @@ pub mod character;
 pub mod eol;
 pub mod ime;
 pub mod indentation;
+pub mod indicator;
 pub mod margin;
 pub mod marker;
 pub mod phases;
@@ -38,6 +39,7 @@ use crate::scintilla::{
     eol::EolMode,
     ime::Ime,
     indentation::IndentView,
+    indicator::Indicator,
     margin::MarginOptions,
     marker::Mark,
     phases::Phases,
@@ -2758,6 +2760,205 @@ pub trait Scintilla: Edit {
      * `marker_handle` 由SCI_MARKERADD 返回的标记的标识符。
      * */
     fn marker_delete_handle(&self, marker_handle: i32);
+
+    /**
+     * 设置指示符的样式。
+     * `indicator` 指示符。
+     * `indicator_style` 指示符样式。
+     * */
+    fn indic_set_style(&self, indicator: i32, indicator_style: Indicator);
+
+    /**
+     * 获取指示符的样式。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_style(&self, indicator: i32) -> Indicator;
+
+    /**
+     * 设置用于绘制指示符的颜色。默认指示器颜色相当于：
+     * SCI_INDICSETFORE(0, 0x007f00); (dark green)
+     * SCI_INDICSETFORE(1, 0xff0000); (light blue)
+     * SCI_INDICSETFORE(2, 0x0000ff); (light red)
+     * `indicator` 指示符。
+     * `fore` 前景色。
+     * */
+    fn indic_set_fore(&self, indicator: i32, fore: i32);
+
+    /**
+     * 获取用于绘制指示符的颜色。默认指示器颜色相当于：
+     * SCI_INDICSETFORE(0, 0x007f00); (dark green)
+     * SCI_INDICSETFORE(1, 0xff0000); (light blue)
+     * SCI_INDICSETFORE(2, 0x0000ff); (light red)
+     * `indicator` 指示符。
+     * */
+    fn indic_get_fore(&self, indicator: i32) -> i32;
+
+    /**
+     * 设置用于绘制 INDIC_ROUNDBOX 和 INDIC_STRAIGHTBOX 矩形的填充颜色的 alpha 透明度。
+     * `indicator` 指示符。
+     * `alpha` 透明度，范围可以从 0（完全透明）到 255（不透明）。
+     * */
+    fn indic_set_alpha(&self, indicator: i32, alpha: i32);
+
+    /**
+     * 获取用于绘制 INDIC_ROUNDBOX 和 INDIC_STRAIGHTBOX 矩形的填充颜色的 alpha 透明度。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_alpha(&self, indicator: i32) -> i32;
+
+    /**
+     * 设置用于绘制 INDIC_ROUNDBOX 和 INDIC_STRAIGHTBOX 矩形轮廓颜色的 alpha 透明度。
+     * `indicator` 指示符。
+     * `alpha` 透明度，范围可以从 0（完全透明）到 255（不透明）。
+     * */
+    fn indic_set_outline_alpha(&self, indicator: i32, alpha: i32);
+
+    /**
+     * 获取用于绘制 INDIC_ROUNDBOX 和 INDIC_STRAIGHTBOX 矩形轮廓颜色的 alpha 透明度。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_outline_alpha(&self, indicator: i32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置指示符是绘制在文本下方还是上方（默认）。在文本下方绘制不适用于已弃用的单相绘制模式。
+     * `indicator` 指示符。
+     * `under` 下方。
+     * */
+    fn indic_set_under(&self, indicator: i32, under: bool);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取指示符是绘制在文本下方还是上方（默认）。在文本下方绘制不适用于已弃用的单相绘制模式。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_under(&self, indicator: i32) -> bool;
+
+    /**
+     * 设置当鼠标悬停在指示符上方或插入符号移入指示符时用于绘制指示符的样式。指示符以悬停样式绘制时，鼠标光标也会发生变化。默认情况下，悬停外观与正常外观相同，调用SCI_INDICSETFORE或SCI_INDICSETSTYLE 也会重置悬停属性。
+     * `indicator` 指示符。
+     * `indicator_style` 指示符样式。
+     * */
+    fn indic_set_hover_style(&self, indicator: i32, indicator_style: Indicator);
+
+    /**
+     * 获取当鼠标悬停在指示符上方或插入符号移入指示符时用于绘制指示符的样式。当指示符以悬停样式绘制时，鼠标光标也会发生变化。默认情况下，悬停外观与正常外观相同，调用SCI_INDICSETFORE或SCI_INDICSETSTYLE也会重置悬停属性。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_hover_style(&self, indicator: i32) -> Indicator;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置当鼠标悬停在指示符上方或插入符号移入指示符时用于绘制指示符的颜色。
+     * `indicator` 指示符。
+     * `fore` 前景色。
+     * */
+    fn indic_set_hover_fore(&self, indicator: i32, fore: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取当鼠标悬停在指示符上方或插入符号移入指示符时用于绘制指示符的颜色。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_hover_fore(&self, indicator: i32) -> i32;
+
+    /**
+     * 设置与指示符关联的标志。当前定义了一个标志，SC_INDICFLAG_VALUEFORE：设置此标志时，指示符使用的颜色不是来自指示符的前端设置，而是来自文件中该点的指示符值。SC_INDICFLAG_NONE 是默认值。这允许为单个指示符显示多种颜色。该值是调用 SCI_SETINDICATORVALUE 时已与 SC_INDICVALUEBIT(0x1000000) 进行或运算的 RGB 整数颜色。要从值中找到颜色，请使用 SC_INDICVALUEMASK(0xFFFFFF) 的值。
+     * `indicator` 指示符。
+     * `flags` 位标志。
+     * */
+    fn indic_set_flags(&self, indicator: i32, flags: u32);
+
+    /**
+     * 获取与指示符关联的标志。
+     * `indicator` 指示符。
+     * */
+    fn indic_get_flags(&self, indicator: i32) -> u32;
+
+    /**
+     * 设置将受 SCI_INDICATORFILLRANGE(position start,position length_fill)和 SCI_INDICATORCLEARRANGE(position start,position length_clear) 调用影响的指示符。
+     * `indicator` 指示符。
+     * */
+    fn set_indicator_current(&self, indicator: i32);
+
+    /**
+     * 获取将受 SCI_INDICATORFILLRANGE(position start,position length_fill)和 SCI_INDICATORCLEARRANGE(position start,position length_clear) 调用影响的指示符。
+     * */
+    fn get_indicator_current(&self) -> i32;
+
+    /**
+     * 设置通过调用 SCI_INDICATORFILLRANGE 设置的值。
+     * `value` 指示符的值。
+     * */
+    fn set_indicator_value(&self, value: i32);
+
+    /**
+     * 获取通过调用 SCI_INDICATORFILLRANGE 设置的值。
+     * */
+    fn get_indicator_value(&self) -> i32;
+
+    /**
+     * 填充当前指示符的范围。SCI_INDICATORFILLRANGE 用当前值填充。
+     * `start` 开始点。
+     * `length_fill` 要填充的长度。
+     * */
+    fn indicator_fill_range(&self, start: usize, length_fill: usize);
+
+    /**
+     * 清除当前指示符的范围。
+     * `start` 开始点。
+     * `length_clear` 要清除的长度。
+     * */
+    fn indicator_clear_range(&self, start: usize, length_clear: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 查询表示某个位置上哪些指示符非零的位图值。结果中仅表示前32个指示符，因此不包括IME指示符。
+     * `pos` 位置。
+     * */
+    fn indicator_all_on_for(&self, pos: usize) -> i32;
+
+    /**
+     * 查询某个位置的特定指示符的值。
+     * `indicator` 指示符。
+     * `pos` 位置。
+     * */
+    fn indicator_value_at(&self, indicator: i32, pos: usize) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 从范围内的某个位置查找具有一个值的范围的起点。可用于遍历文档以发现所有指示符位置。
+     * `indicator` 指示符。
+     * `pos` 位置。
+     * */
+    fn indicator_start(&self, indicator: i32, pos: usize) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 从范围内的某个位置查找具有一个值的范围的结束点。可用于遍历文档以发现所有指示符位置。
+     * `indicator` 指示符。
+     * `pos` 位置。
+     * */
+    fn indicator_end(&self, indicator: i32, pos: usize) -> usize;
+
+    /**
+     * 显示查找指示符。指示符在 SCI_FINDINDICATORSHOW 下保持可见。SCI_FINDINDICATORSHOW 的行为类似于 macOS TextEdit 和 Safari 应用程序，最适合编辑搜索目标通常是单词的文档。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn find_indicator_show(&self, start: usize, end: usize);
+
+    /**
+     * 动画显示查找指示符。指示符在 SCI_FINDINDICATORFLASH 下显示半秒后淡出。SCI_FINDINDICATORFLASH 与 Xcode 类似，适合编辑源代码，其中匹配通常位于运算符旁边，否则运算符会隐藏在指示符的填充下。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn find_indicator_flash(&self, start: usize, end: usize);
+
+    /**
+     * 隐藏了查找指示符。 Scintilla 的早期版本允许在样式编号和指示符之间划分样式字节，并提供了用于设置和查询此功能的 API。
+     * */
+    fn find_indicator_hide(&self);
 }
 
 #[cfg(test)]
@@ -2775,6 +2976,7 @@ mod test_scintilla {
         eol::EolMode,
         ime::Ime,
         indentation::IndentView,
+        indicator::Indicator,
         margin::MarginOptions,
         marker::{Mark, MarkerNumber},
         phases::Phases,
@@ -2785,7 +2987,8 @@ mod test_scintilla {
         technology::Technology,
         Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
         SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED,
-        SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE,
+        VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -3235,6 +3438,35 @@ mod test_scintilla {
         dbg!(control.marker_previous(2, 0b1));
         dbg!(control.marker_line_from_handle(handle));
         control.marker_delete_handle(handle);
+        control.indic_set_style(0, Indicator::Plain);
+        assert_eq!(Indicator::Plain, control.indic_get_style(0));
+        control.indic_set_fore(0, 0xffccdd);
+        assert_eq!(0xffccdd, control.indic_get_fore(0));
+        control.indic_set_alpha(0, 32);
+        assert_eq!(32, control.indic_get_alpha(0));
+        control.indic_set_outline_alpha(0, 32);
+        assert_eq!(32, control.indic_get_outline_alpha(0));
+        control.indic_set_under(0, true);
+        assert_eq!(true, control.indic_get_under(0));
+        control.indic_set_hover_style(0, Indicator::Point);
+        assert_eq!(Indicator::Point, control.indic_get_hover_style(0));
+        control.indic_set_hover_fore(0, 0x00ccdd);
+        assert_eq!(0x00ccdd, control.indic_get_hover_fore(0));
+        control.indic_set_flags(0, SC_INDICFLAG_VALUEFORE);
+        assert_eq!(SC_INDICFLAG_VALUEFORE, control.indic_get_flags(0));
+        control.set_indicator_current(0);
+        assert_eq!(0, control.get_indicator_current());
+        control.set_indicator_value(0);
+        dbg!(control.get_indicator_value());
+        control.indicator_fill_range(2, 10);
+        control.indicator_clear_range(2, 10);
+        dbg!(control.indicator_all_on_for(4));
+        dbg!(control.indicator_value_at(0, 8));
+        dbg!(control.indicator_start(0, 4));
+        dbg!(control.indicator_end(0, 4));
+        control.find_indicator_show(4, 8);
+        control.find_indicator_flash(4, 8);
+        control.find_indicator_hide();
         dbg!(control);
     }
 }
