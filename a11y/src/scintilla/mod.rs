@@ -14,6 +14,7 @@
 mod internal;
 
 pub mod annotation;
+pub mod autoc;
 pub mod bidirectional;
 pub mod caret;
 pub mod character;
@@ -23,6 +24,7 @@ pub mod indentation;
 pub mod indicator;
 pub mod margin;
 pub mod marker;
+pub mod order;
 pub mod phases;
 pub mod selection;
 pub mod space;
@@ -33,6 +35,7 @@ pub mod technology;
 pub use crate::scintilla::internal::*;
 use crate::scintilla::{
     annotation::Annotation,
+    autoc::MultiAutoc,
     bidirectional::Bidirectional,
     caret::CaretSticky,
     character::CharacterSet,
@@ -42,6 +45,7 @@ use crate::scintilla::{
     indicator::Indicator,
     margin::MarginOptions,
     marker::Mark,
+    order::Order,
     phases::Phases,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
@@ -2959,6 +2963,229 @@ pub trait Scintilla: Edit {
      * 隐藏了查找指示符。 Scintilla 的早期版本允许在样式编号和指示符之间划分样式字节，并提供了用于设置和查询此功能的 API。
      * */
     fn find_indicator_hide(&self);
+
+    /**
+     * 显示一个列表。初始分隔符是空格，但可以使用 SCI_AUTOCSETSEPARATOR 和 SCI_AUTOCGETSEPARATOR 设置或获取。使用默认设置，单词列表应按排序顺序排列。如果使用 SCI_AUTOCSETIGNORECASE 设置为忽略大小写模式，则字符串在转换为大写后进行匹配。这样做的一个结果是列表应按字母后的标点符号 '['、'\'、']'、'^'、'_' 和 '`' 排序。可以使用 SCI_AUTOCSETORDER 指定列表顺序的替代处理
+     * `item_list` 用分隔符分隔的单词列表。
+     * */
+    fn autoc_show(&self, item_list: String);
+
+    /**
+     * 取消显示的任何自动完成列表。在自动完成模式下，当用户输入不能成为自动完成一部分的字符时，列表应该消失，例如在输入标识符时输入“.”、“(”或“[”。可以使用SCI_AUTOCSTOPS指定一组将取消自动完成的字符。
+     * */
+    fn autoc_cancel(&self);
+
+    /**
+     * 如果存在活动的自动完成列表，则此消息返回true，如果没有，则返回false。
+     * */
+    fn autoc_active(&self) -> bool;
+
+    /**
+     * 返回 SCI_AUTOCSHOW 开始显示列表时的当前位置的值。
+     * */
+    fn autoc_pos_start(&self) -> usize;
+
+    /**
+     * 触发自动完成。其效果与 Tab 键相同。
+     * */
+    fn autoc_complete(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置停止的字符。
+     * `character_set` 一个字符串，其中包含将自动取消自动完成列表的字符列表。启动编辑器时，此列表为空。
+     * */
+    fn autoc_stops(&self, character_set: String);
+
+    /**
+     * 设置 SCI_AUTOCSHOW 列表中用于分隔单词的分隔符。默认为空格字符。
+     * `separator_character` 分隔字符。
+     * */
+    fn autoc_set_separator(&self, separator_character: u32);
+
+    /**
+     * 获取 SCI_AUTOCSHOW 列表中用于分隔单词的分隔符。
+     * */
+    fn autoc_get_separator(&self) -> u32;
+
+    /**
+     * 选择自动完成列表中的一项。它在单词列表中搜索第一个与select 匹配的单词。默认情况下，比较区分大小写，但您可以使用 SCI_AUTOCSETIGNORECASE 更改此设置。匹配是按 select 字符串的长度逐个字符进行的。也就是说，如果 select 是“Fred”，则如果这是列表中以“Fred”开头的第一项，它将匹配“Frederick”。如果找到一项，则选择它。如果未找到该项，则自动完成列表将关闭（如果自动隐藏为真）（请参阅 SCI_AUTOCSETAUTOHIDE）。
+     * `select` 要选择项目的前缀文本。
+     * */
+    fn autoc_select(&self, select: String);
+
+    /**
+     * 查询当前选择索引。
+     * */
+    fn autoc_get_current(&self) -> i32;
+
+    /**
+     * 查询自动完成列表中当前选定的文本。通常使用 SCN_AUTOCSELECTION 通知。
+     * */
+    fn autoc_get_current_text(&self) -> Option<String>;
+
+    //noinspection StructuralWrap
+    /**
+     * 默认行为是，如果插入点移动到列表显示时的位置，列表将被取消。通过以false参数调用此消息，列表不会被取消，直到插入点移动到单词完成前至少一个字符。
+     * `cancel` 是否取消。
+     * */
+    fn autoc_set_cancel_at_start(&self, cancel: bool);
+
+    /**
+     * 获取插入点移动到列表开始处时是否取消。
+     * */
+    fn autoc_get_cancel_at_start(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 如果在自动完成列表处于活动状态时输入填充字符，则列表中当前选定的项目将添加到文档中，然后添加填充字符。常见的填充字符是“(”、“[”和“。”，但根据语言的不同，其他填充字符也可能存在。默认情况下，不设置填充字符。
+     * `character_set` 字符集。
+     * */
+    fn autoc_set_fillups(&self, character_set: String);
+
+    /**
+     * 如果您使用SCI_AUTOCSETCHOOSESINGLE(1)并且列表只有一个项目，则会自动添加该项目并且不显示任何列表。默认情况下，即使只有一个项目也会显示列表。
+     * `choose_single` 选择单项。
+     * */
+    fn autoc_set_choose_single(&self, choose_single: bool);
+
+    /**
+     * 获取只有一项时是否显示列表。
+     * */
+    fn autoc_get_choose_single(&self) -> bool;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置区分大小写。默认情况下，列表成员的字符匹配区分大小写。
+     * `ignore_case` 是否区分大小写。
+     * */
+    fn autoc_set_ignore_case(&self, ignore_case: bool);
+
+    /**
+     * 获取区分大小写。
+     * */
+    fn autoc_get_ignore_case(&self) -> bool;
+
+    /**
+     * 当自动完成设置为忽略大小写 (SCI_AUTOCSETIGNORECASE) 时，默认情况下，它仍会选择第一个以区分大小写的方式与输入字符匹配的列表成员。这对应于行为属性 SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE (0)。如果您希望自动完成完全忽略大小写，请选择 SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE (1)。
+     * `behaviour` 大小写行为。
+     * */
+    fn autoc_set_case_in_sensitive_behaviour(&self, behaviour: u32);
+
+    /**
+     * 获取大小写敏感行为。
+     * */
+    fn autoc_get_case_in_sensitive_behaviour(&self) -> u32;
+
+    /**
+     * 当自动完成多个选择时，自动完成的文本可以仅进入主选择（SC_MULTIAUTOC_ONCE (0)）或进入每个选择（SC_MULTIAUTOC_EACH (1)。默认值为 SC_MULTIAUTOC_ONCE。
+     * `multi` 多选模式。
+     * */
+    fn autoc_set_multi(&self, multi: MultiAutoc);
+
+    /**
+     * 获取多选模式。
+     * */
+    fn autoc_get_multi(&self) -> MultiAutoc;
+
+    /**
+     * 自动完成设置排序。默认设置 SC_ORDER_PRESORTED (0) 要求列表按字母顺序排列。 Scintilla 可以对列表进行排序，而不是使用 SC_ORDER_PERFORMSORT (1) 的应用程序。这将花费更多时间。希望优先考虑某些值并按优先级而不是字母顺序显示列表的应用程序可以使用 SC_ORDER_CUSTOM (2)。这需要在 SCI_AUTOCSHOW 中进行额外处理以创建排序索引。应在调用 SCI_AUTOCSHOW 之前设置顺序。
+     * `order` 排序方式。
+     * */
+    fn autoc_set_order(&self, order: Order);
+
+    /**
+     * 自动完成获取排序。
+     * */
+    fn autoc_get_order(&self) -> Order;
+
+    /**
+     * 默认情况下，如果没有可行匹配项（用户输入的字符不再与列表条目匹配），列表将被取消。如果您想继续显示原始列表，请将auto_hide设置为 false。这也会影响 SCI_AUTOCSELECT。
+     * `auto_hide` 是否自动隐藏。
+     * */
+    fn autoc_set_auto_hide(&self, auto_hide: bool);
+
+    /**
+     * 获取自动完成列表是否自动隐藏。
+     * */
+    fn autoc_get_auto_hide(&self) -> bool;
+
+    /**
+     * 当选择某项时，如果 drop_rest_of_word 设置为 true，则首先删除插入符号后面的所有单词字符。默认值为 false。
+     * `drop_rest_of_word` 是否删除单词的剩余部分。
+     * */
+    fn autoc_set_drop_rest_of_word(&self, drop_rest_of_word: bool);
+
+    /**
+     * 获取是否删除单词的剩余部分。
+     * */
+    fn autoc_get_drop_rest_of_word(&self) -> bool;
+
+    /**
+     * 自动完成列表项可以显示图像和文本。每个图像首先用整数类型注册。然后，这个整数包含在列表的文本中，并用“?”与文本分隔。例如，“fclose?2 fopen”在字符串“fclose”之前显示图像 2，在“fopen”之前不显示图像。
+     * 图像采用 XPM 格式 (SCI_REGISTERIMAGE)。
+     * `type` 类型。
+     * `xpm_data` 图像数据。
+     * */
+    fn register_image(&self, r#type: i32, xpm_data: &[&str]);
+
+    /**
+     * 自动完成列表项可以显示图像和文本。每个图像首先用整数类型注册。然后，这个整数包含在列表的文本中，并用“?”与文本分隔。例如，“fclose?2 fopen”在字符串“fclose”之前显示图像 2，在“fopen”之前不显示图像。
+     * 图像采用RGBA 格式 (SCI_REGISTERRGBAIMAGE)。必须先使用 SCI_RGBAIMAGESETWIDTH 和 SCI_RGBAIMAGESETHEIGHT 消息设置宽度和高度。
+     * `type` 类型。
+     * `pixels` 像素数据。
+     * */
+    fn register_rgba_image(&self, r#type: i32, pixels: &[u8]);
+
+    /**
+     * 清除已注册图像集。
+     * */
+    fn clear_registered_images(&self);
+
+    /**
+     * 更改“?”分隔符。
+     * `separator_character` 分隔字符。
+     * */
+    fn autoc_set_type_separator(&self, separator_character: u32);
+
+    /**
+     * 获取分隔字符。
+     * */
+    fn autoc_get_type_separator(&self) -> u32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置自动完成列表中可见的最大行数。如果列表中有更多行，则会显示垂直滚动条。默认值为5。
+     * `row_count` 行数。
+     * */
+    fn autoc_set_max_height(&self, row_count: i32);
+
+    /**
+     * 获取自动完成列表中可见的最大行数。如果列表中有更多行，则会显示垂直滚动条。
+     * */
+    fn autoc_get_max_height(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置自动完成列表的最大宽度，以完全可见的最长项目中的字符数表示。如果为零（默认值），则列表的宽度将计算为适合字符最多的项目。任何无法在可用宽度内完全显示的项目都以省略号表示。
+     * `character_count` 字符数。
+     * */
+    fn autoc_set_max_width(&self, character_count: i32);
+
+    /**
+     * 获取自动完成列表的最大宽度，以完全可见的最长项目中的字符数表示。如果为零（默认值），则列表的宽度将计算为适合字符最多的项目。任何无法在可用宽度内完全显示的项目都以省略号表示。
+     * */
+    fn autoc_get_max_width(&self) -> i32;
+
+    /**
+     * 用户列表使用与自动完成列表相同的内部机制，并且列出的所有自动完成调用都适用于它们；您不能在自动完成列表处于活动状态时显示用户列表。它们在以下方面有所不同：
+     * - SCI_AUTOCSETCHOOSESINGLE 消息无效。
+     * - 当用户进行选择时，您会收到 SCN_USERLISTSELECTION 通知消息，而不是 SCN_AUTOCSELECTION。
+     * 注意：如果您设置了填充字符或停止字符，这些字符仍将与用户列表一起处于活动状态，并且可能导致由于用户在编辑器中输入而选择项目或取消用户列表。
+     * `list_type` 作为SCNotification结构的wParam字段返回到容器。它必须大于0，因为这是Scintilla区分自动完成列表和用户列表的方式。如果您有不同类型的列表，例如缓冲区列表和宏列表，则可以使用list_type来判断哪一个返回了选择。
+     * `item_list` 用分隔符分隔的单词列表。
+     * */
+    fn user_list_show(&self, list_type: i32, item_list: String);
 }
 
 #[cfg(test)]
@@ -2970,6 +3197,7 @@ mod test_scintilla {
 
     use crate::scintilla::{
         annotation::Annotation,
+        autoc::MultiAutoc,
         bidirectional::Bidirectional,
         caret::CaretSticky,
         character::CharacterSet,
@@ -2979,6 +3207,7 @@ mod test_scintilla {
         indicator::Indicator,
         margin::MarginOptions,
         marker::{Mark, MarkerNumber},
+        order::Order,
         phases::Phases,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
@@ -2986,9 +3215,9 @@ mod test_scintilla {
         style::{Case, IdleStyling, STYLE_BRACEBAD},
         technology::Technology,
         Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
-        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED,
-        SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE,
-        VISIBLE_STRICT,
+        SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT,
+        SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE,
+        SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -3467,6 +3696,57 @@ mod test_scintilla {
         control.find_indicator_show(4, 8);
         control.find_indicator_flash(4, 8);
         control.find_indicator_hide();
+        control.autoc_show("ab cd".to_string());
+        control.autoc_cancel();
+        dbg!(control.autoc_active());
+        dbg!(control.autoc_pos_start());
+        control.autoc_complete();
+        control.autoc_stops("efg".to_string());
+        control.autoc_set_separator(44);
+        assert_eq!(44, control.autoc_get_separator());
+        control.autoc_select("a".to_string());
+        dbg!(control.autoc_get_current());
+        dbg!(control.autoc_get_current_text());
+        control.autoc_set_cancel_at_start(true);
+        assert_eq!(true, control.autoc_get_cancel_at_start());
+        control.autoc_set_fillups("([{".to_string());
+        control.autoc_set_choose_single(true);
+        assert_eq!(true, control.autoc_get_choose_single());
+        control.autoc_set_ignore_case(true);
+        assert_eq!(true, control.autoc_get_ignore_case());
+        control.autoc_set_case_in_sensitive_behaviour(SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE);
+        assert_eq!(
+            SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE,
+            control.autoc_get_case_in_sensitive_behaviour()
+        );
+        control.autoc_set_multi(MultiAutoc::Once);
+        assert_eq!(MultiAutoc::Once, control.autoc_get_multi());
+        control.autoc_set_order(Order::Presorted);
+        assert_eq!(Order::Presorted, control.autoc_get_order());
+        control.autoc_set_auto_hide(true);
+        assert_eq!(true, control.autoc_get_auto_hide());
+        control.autoc_set_drop_rest_of_word(true);
+        assert_eq!(true, control.autoc_get_drop_rest_of_word());
+        /* has bugs
+        const IMAGE_XPM: [&str; 4] = [
+            /* columns rows colors chars-per-pixel */
+            "2 2 1 1 ",
+            "  c white",
+            /* pixels */
+            "  ",
+            "  "
+        ];
+        control.register_image(1, &IMAGE_XPM);
+        */
+        control.register_rgba_image(1, &[0, 0, 0, 0]);
+        control.clear_registered_images();
+        control.autoc_set_type_separator(59);
+        assert_eq!(59, control.autoc_get_type_separator());
+        control.autoc_set_max_height(5);
+        assert_eq!(5, control.autoc_get_max_height());
+        control.autoc_set_max_width(10);
+        assert_eq!(10, control.autoc_get_max_width());
+        control.user_list_show(1, "ab cd ef gh".to_string());
         dbg!(control);
     }
 }

@@ -23,18 +23,28 @@ pub use scintilla_sys::{
     SCI_ANNOTATIONGETSTYLE, SCI_ANNOTATIONGETSTYLEOFFSET, SCI_ANNOTATIONGETSTYLES,
     SCI_ANNOTATIONGETTEXT, SCI_ANNOTATIONGETVISIBLE, SCI_ANNOTATIONSETSTYLE,
     SCI_ANNOTATIONSETSTYLEOFFSET, SCI_ANNOTATIONSETSTYLES, SCI_ANNOTATIONSETTEXT,
-    SCI_ANNOTATIONSETVISIBLE, SCI_APPENDTEXT, SCI_BEGINUNDOACTION, SCI_BRACEBADLIGHT,
-    SCI_BRACEBADLIGHTINDICATOR, SCI_BRACEHIGHLIGHT, SCI_BRACEHIGHLIGHTINDICATOR, SCI_BRACEMATCH,
-    SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION, SCI_CHOOSECARETX, SCI_CLEAR,
-    SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARREPRESENTATION, SCI_CLEARSELECTIONS,
-    SCI_CLEARTABSTOPS, SCI_CONVERTEOLS, SCI_COPY, SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT,
-    SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE, SCI_DELWORDLEFT, SCI_DELWORDRIGHT,
-    SCI_DELWORDRIGHTEND, SCI_DROPSELECTIONN, SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8,
-    SCI_ENDUNDOACTION, SCI_FINDCOLUMN, SCI_FINDINDICATORFLASH, SCI_FINDINDICATORHIDE,
-    SCI_FINDINDICATORSHOW, SCI_FINDTEXT, SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK,
-    SCI_GETADDITIONALCARETSVISIBLE, SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING,
-    SCI_GETANCHOR, SCI_GETBACKSPACEUNINDENTS, SCI_GETBIDIRECTIONAL, SCI_GETBUFFEREDDRAW,
-    SCI_GETCARETFORE, SCI_GETCARETLINEBACK, SCI_GETCARETLINEBACKALPHA, SCI_GETCARETLINEFRAME,
+    SCI_ANNOTATIONSETVISIBLE, SCI_APPENDTEXT, SCI_AUTOCACTIVE, SCI_AUTOCCANCEL, SCI_AUTOCCOMPLETE,
+    SCI_AUTOCGETAUTOHIDE, SCI_AUTOCGETCANCELATSTART, SCI_AUTOCGETCASEINSENSITIVEBEHAVIOUR,
+    SCI_AUTOCGETCHOOSESINGLE, SCI_AUTOCGETCURRENT, SCI_AUTOCGETCURRENTTEXT,
+    SCI_AUTOCGETDROPRESTOFWORD, SCI_AUTOCGETIGNORECASE, SCI_AUTOCGETMAXHEIGHT,
+    SCI_AUTOCGETMAXWIDTH, SCI_AUTOCGETMULTI, SCI_AUTOCGETORDER, SCI_AUTOCGETSEPARATOR,
+    SCI_AUTOCGETTYPESEPARATOR, SCI_AUTOCPOSSTART, SCI_AUTOCSELECT, SCI_AUTOCSETAUTOHIDE,
+    SCI_AUTOCSETCANCELATSTART, SCI_AUTOCSETCASEINSENSITIVEBEHAVIOUR, SCI_AUTOCSETCHOOSESINGLE,
+    SCI_AUTOCSETDROPRESTOFWORD, SCI_AUTOCSETFILLUPS, SCI_AUTOCSETIGNORECASE, SCI_AUTOCSETMAXHEIGHT,
+    SCI_AUTOCSETMAXWIDTH, SCI_AUTOCSETMULTI, SCI_AUTOCSETORDER, SCI_AUTOCSETSEPARATOR,
+    SCI_AUTOCSETTYPESEPARATOR, SCI_AUTOCSHOW, SCI_AUTOCSTOPS, SCI_BEGINUNDOACTION,
+    SCI_BRACEBADLIGHT, SCI_BRACEBADLIGHTINDICATOR, SCI_BRACEHIGHLIGHT, SCI_BRACEHIGHLIGHTINDICATOR,
+    SCI_BRACEMATCH, SCI_CANPASTE, SCI_CANREDO, SCI_CANUNDO, SCI_CHANGEINSERTION, SCI_CHOOSECARETX,
+    SCI_CLEAR, SCI_CLEARALL, SCI_CLEARDOCUMENTSTYLE, SCI_CLEARREGISTEREDIMAGES,
+    SCI_CLEARREPRESENTATION, SCI_CLEARSELECTIONS, SCI_CLEARTABSTOPS, SCI_CONVERTEOLS, SCI_COPY,
+    SCI_COPYALLOWLINE, SCI_COPYRANGE, SCI_COPYTEXT, SCI_COUNTCHARACTERS, SCI_CUT, SCI_DELETERANGE,
+    SCI_DELWORDLEFT, SCI_DELWORDRIGHT, SCI_DELWORDRIGHTEND, SCI_DROPSELECTIONN,
+    SCI_EMPTYUNDOBUFFER, SCI_ENCODEDFROMUTF8, SCI_ENDUNDOACTION, SCI_FINDCOLUMN,
+    SCI_FINDINDICATORFLASH, SCI_FINDINDICATORHIDE, SCI_FINDINDICATORSHOW, SCI_FINDTEXT,
+    SCI_GETADDITIONALCARETFORE, SCI_GETADDITIONALCARETSBLINK, SCI_GETADDITIONALCARETSVISIBLE,
+    SCI_GETADDITIONALSELALPHA, SCI_GETADDITIONALSELECTIONTYPING, SCI_GETANCHOR,
+    SCI_GETBACKSPACEUNINDENTS, SCI_GETBIDIRECTIONAL, SCI_GETBUFFEREDDRAW, SCI_GETCARETFORE,
+    SCI_GETCARETLINEBACK, SCI_GETCARETLINEBACKALPHA, SCI_GETCARETLINEFRAME,
     SCI_GETCARETLINEVISIBLE, SCI_GETCARETLINEVISIBLEALWAYS, SCI_GETCARETPERIOD, SCI_GETCARETSTICKY,
     SCI_GETCARETSTYLE, SCI_GETCARETWIDTH, SCI_GETCHARAT, SCI_GETCODEPAGE, SCI_GETCOLUMN,
     SCI_GETCONTROLCHARSYMBOL, SCI_GETCURLINE, SCI_GETCURRENTPOS, SCI_GETCURSOR,
@@ -83,36 +93,36 @@ pub use scintilla_sys::{
     SCI_MOVESELECTEDLINESDOWN, SCI_MOVESELECTEDLINESUP, SCI_MULTIPLESELECTADDEACH,
     SCI_MULTIPLESELECTADDNEXT, SCI_PASTE, SCI_POINTXFROMPOSITION, SCI_POINTYFROMPOSITION,
     SCI_POSITIONAFTER, SCI_POSITIONBEFORE, SCI_POSITIONFROMPOINT, SCI_POSITIONFROMPOINTCLOSE,
-    SCI_POSITIONRELATIVE, SCI_REDO, SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL,
-    SCI_REPLACETARGET, SCI_REPLACETARGETRE, SCI_RGBAIMAGESETHEIGHT, SCI_RGBAIMAGESETSCALE,
-    SCI_RGBAIMAGESETWIDTH, SCI_ROTATESELECTION, SCI_SCROLLCARET, SCI_SCROLLRANGE, SCI_SEARCHANCHOR,
-    SCI_SEARCHINTARGET, SCI_SEARCHNEXT, SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE,
-    SCI_SETADDITIONALCARETFORE, SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE,
-    SCI_SETADDITIONALSELALPHA, SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING,
-    SCI_SETADDITIONALSELFORE, SCI_SETANCHOR, SCI_SETBACKSPACEUNINDENTS, SCI_SETBIDIRECTIONAL,
-    SCI_SETBUFFEREDDRAW, SCI_SETCARETFORE, SCI_SETCARETLINEBACK, SCI_SETCARETLINEBACKALPHA,
-    SCI_SETCARETLINEFRAME, SCI_SETCARETLINEVISIBLE, SCI_SETCARETLINEVISIBLEALWAYS,
-    SCI_SETCARETPERIOD, SCI_SETCARETSTICKY, SCI_SETCARETSTYLE, SCI_SETCARETWIDTH,
-    SCI_SETCHARSDEFAULT, SCI_SETCODEPAGE, SCI_SETCONTROLCHARSYMBOL, SCI_SETCURRENTPOS,
-    SCI_SETCURSOR, SCI_SETEMPTYSELECTION, SCI_SETENDATLASTLINE, SCI_SETEOLMODE, SCI_SETEXTRAASCENT,
-    SCI_SETEXTRADESCENT, SCI_SETFIRSTVISIBLELINE, SCI_SETFOCUS, SCI_SETFOLDMARGINCOLOUR,
-    SCI_SETFOLDMARGINHICOLOUR, SCI_SETFONTQUALITY, SCI_SETHIGHLIGHTGUIDE, SCI_SETHOTSPOTACTIVEBACK,
-    SCI_SETHOTSPOTACTIVEFORE, SCI_SETHOTSPOTACTIVEUNDERLINE, SCI_SETHOTSPOTSINGLELINE,
-    SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING, SCI_SETIMEINTERACTION, SCI_SETINDENT,
-    SCI_SETINDENTATIONGUIDES, SCI_SETINDICATORCURRENT, SCI_SETINDICATORVALUE,
-    SCI_SETLENGTHFORENCODE, SCI_SETLINEENDTYPESALLOWED, SCI_SETLINEINDENTATION, SCI_SETLINESTATE,
-    SCI_SETMAINSELECTION, SCI_SETMARGINBACKN, SCI_SETMARGINCURSORN, SCI_SETMARGINLEFT,
-    SCI_SETMARGINMASKN, SCI_SETMARGINOPTIONS, SCI_SETMARGINRIGHT, SCI_SETMARGINS,
-    SCI_SETMARGINSENSITIVEN, SCI_SETMARGINTYPEN, SCI_SETMARGINWIDTHN, SCI_SETMOUSEDOWNCAPTURES,
-    SCI_SETMOUSESELECTIONRECTANGULARSWITCH, SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE,
-    SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE, SCI_SETPASTECONVERTENDINGS, SCI_SETPHASESDRAW,
-    SCI_SETPUNCTUATIONCHARS, SCI_SETREADONLY, SCI_SETRECTANGULARSELECTIONANCHOR,
-    SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONCARET,
-    SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, SCI_SETRECTANGULARSELECTIONMODIFIER,
-    SCI_SETREPRESENTATION, SCI_SETSAVEPOINT, SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING,
-    SCI_SETSEARCHFLAGS, SCI_SETSEL, SCI_SETSELALPHA, SCI_SETSELBACK, SCI_SETSELECTION,
-    SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE, SCI_SETSELECTIONNANCHOR,
-    SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETSELECTIONNCARET,
+    SCI_POSITIONRELATIVE, SCI_REDO, SCI_REGISTERIMAGE, SCI_REGISTERRGBAIMAGE,
+    SCI_RELEASEALLEXTENDEDSTYLES, SCI_REPLACESEL, SCI_REPLACETARGET, SCI_REPLACETARGETRE,
+    SCI_RGBAIMAGESETHEIGHT, SCI_RGBAIMAGESETSCALE, SCI_RGBAIMAGESETWIDTH, SCI_ROTATESELECTION,
+    SCI_SCROLLCARET, SCI_SCROLLRANGE, SCI_SEARCHANCHOR, SCI_SEARCHINTARGET, SCI_SEARCHNEXT,
+    SCI_SEARCHPREV, SCI_SELECTALL, SCI_SELECTIONISRECTANGLE, SCI_SETADDITIONALCARETFORE,
+    SCI_SETADDITIONALCARETSBLINK, SCI_SETADDITIONALCARETSVISIBLE, SCI_SETADDITIONALSELALPHA,
+    SCI_SETADDITIONALSELBACK, SCI_SETADDITIONALSELECTIONTYPING, SCI_SETADDITIONALSELFORE,
+    SCI_SETANCHOR, SCI_SETBACKSPACEUNINDENTS, SCI_SETBIDIRECTIONAL, SCI_SETBUFFEREDDRAW,
+    SCI_SETCARETFORE, SCI_SETCARETLINEBACK, SCI_SETCARETLINEBACKALPHA, SCI_SETCARETLINEFRAME,
+    SCI_SETCARETLINEVISIBLE, SCI_SETCARETLINEVISIBLEALWAYS, SCI_SETCARETPERIOD, SCI_SETCARETSTICKY,
+    SCI_SETCARETSTYLE, SCI_SETCARETWIDTH, SCI_SETCHARSDEFAULT, SCI_SETCODEPAGE,
+    SCI_SETCONTROLCHARSYMBOL, SCI_SETCURRENTPOS, SCI_SETCURSOR, SCI_SETEMPTYSELECTION,
+    SCI_SETENDATLASTLINE, SCI_SETEOLMODE, SCI_SETEXTRAASCENT, SCI_SETEXTRADESCENT,
+    SCI_SETFIRSTVISIBLELINE, SCI_SETFOCUS, SCI_SETFOLDMARGINCOLOUR, SCI_SETFOLDMARGINHICOLOUR,
+    SCI_SETFONTQUALITY, SCI_SETHIGHLIGHTGUIDE, SCI_SETHOTSPOTACTIVEBACK, SCI_SETHOTSPOTACTIVEFORE,
+    SCI_SETHOTSPOTACTIVEUNDERLINE, SCI_SETHOTSPOTSINGLELINE, SCI_SETHSCROLLBAR, SCI_SETIDLESTYLING,
+    SCI_SETIMEINTERACTION, SCI_SETINDENT, SCI_SETINDENTATIONGUIDES, SCI_SETINDICATORCURRENT,
+    SCI_SETINDICATORVALUE, SCI_SETLENGTHFORENCODE, SCI_SETLINEENDTYPESALLOWED,
+    SCI_SETLINEINDENTATION, SCI_SETLINESTATE, SCI_SETMAINSELECTION, SCI_SETMARGINBACKN,
+    SCI_SETMARGINCURSORN, SCI_SETMARGINLEFT, SCI_SETMARGINMASKN, SCI_SETMARGINOPTIONS,
+    SCI_SETMARGINRIGHT, SCI_SETMARGINS, SCI_SETMARGINSENSITIVEN, SCI_SETMARGINTYPEN,
+    SCI_SETMARGINWIDTHN, SCI_SETMOUSEDOWNCAPTURES, SCI_SETMOUSESELECTIONRECTANGULARSWITCH,
+    SCI_SETMOUSEWHEELCAPTURES, SCI_SETMULTIPASTE, SCI_SETMULTIPLESELECTION, SCI_SETOVERTYPE,
+    SCI_SETPASTECONVERTENDINGS, SCI_SETPHASESDRAW, SCI_SETPUNCTUATIONCHARS, SCI_SETREADONLY,
+    SCI_SETRECTANGULARSELECTIONANCHOR, SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONCARET, SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE,
+    SCI_SETRECTANGULARSELECTIONMODIFIER, SCI_SETREPRESENTATION, SCI_SETSAVEPOINT,
+    SCI_SETSCROLLWIDTH, SCI_SETSCROLLWIDTHTRACKING, SCI_SETSEARCHFLAGS, SCI_SETSEL,
+    SCI_SETSELALPHA, SCI_SETSELBACK, SCI_SETSELECTION, SCI_SETSELECTIONEND, SCI_SETSELECTIONMODE,
+    SCI_SETSELECTIONNANCHOR, SCI_SETSELECTIONNANCHORVIRTUALSPACE, SCI_SETSELECTIONNCARET,
     SCI_SETSELECTIONNCARETVIRTUALSPACE, SCI_SETSELECTIONNEND, SCI_SETSELECTIONNSTART,
     SCI_SETSELECTIONSTART, SCI_SETSELEOLFILLED, SCI_SETSELFORE, SCI_SETSTATUS, SCI_SETSTYLING,
     SCI_SETSTYLINGEX, SCI_SETTABDRAWMODE, SCI_SETTABINDENTS, SCI_SETTABWIDTH, SCI_SETTARGETEND,
@@ -130,12 +140,13 @@ pub use scintilla_sys::{
     SCI_STYLESETITALIC, SCI_STYLESETSIZE, SCI_STYLESETSIZEFRACTIONAL, SCI_STYLESETUNDERLINE,
     SCI_STYLESETVISIBLE, SCI_STYLESETWEIGHT, SCI_SWAPMAINANCHORCARET, SCI_TARGETASUTF8,
     SCI_TARGETFROMSELECTION, SCI_TARGETWHOLEDOCUMENT, SCI_TEXTHEIGHT, SCI_TEXTWIDTH,
-    SCI_TOGGLECARETSTICKY, SCI_UNDO, SCI_WORDENDPOSITION, SCI_WORDLEFT, SCI_WORDLEFTEND,
-    SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND, SCI_WORDPARTLEFT, SCI_WORDPARTLEFTEXTEND,
-    SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND, SCI_WORDRIGHT, SCI_WORDRIGHTEND,
-    SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND, SCI_WORDSTARTPOSITION, SCMOD_ALT, SCMOD_CTRL,
-    SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
-    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CP_UTF8, SC_CURSORARROW, SC_CURSORNORMAL,
+    SCI_TOGGLECARETSTICKY, SCI_UNDO, SCI_USERLISTSHOW, SCI_WORDENDPOSITION, SCI_WORDLEFT,
+    SCI_WORDLEFTEND, SCI_WORDLEFTENDEXTEND, SCI_WORDLEFTEXTEND, SCI_WORDPARTLEFT,
+    SCI_WORDPARTLEFTEXTEND, SCI_WORDPARTRIGHT, SCI_WORDPARTRIGHTEXTEND, SCI_WORDRIGHT,
+    SCI_WORDRIGHTEND, SCI_WORDRIGHTENDEXTEND, SCI_WORDRIGHTEXTEND, SCI_WORDSTARTPOSITION,
+    SCMOD_ALT, SCMOD_CTRL, SCMOD_META, SCMOD_NORM, SCMOD_SHIFT, SCVS_NONE, SCVS_NOWRAPLINESTART,
+    SCVS_RECTANGULARSELECTION, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE,
+    SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE, SC_CP_UTF8, SC_CURSORARROW, SC_CURSORNORMAL,
     SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED, SC_EFF_QUALITY_DEFAULT,
     SC_EFF_QUALITY_LCD_OPTIMIZED, SC_EFF_QUALITY_MASK, SC_EFF_QUALITY_NON_ANTIALIASED,
     SC_INDICFLAG_VALUEFORE, SC_INDICVALUEMASK, SC_LINE_END_TYPE_DEFAULT, SC_LINE_END_TYPE_UNICODE,
@@ -153,6 +164,7 @@ use win_wrap::{
 
 use crate::scintilla::{
     annotation::Annotation,
+    autoc::MultiAutoc,
     bidirectional::Bidirectional,
     caret::CaretSticky,
     character::CharacterSet,
@@ -162,6 +174,7 @@ use crate::scintilla::{
     indicator::Indicator,
     margin::MarginOptions,
     marker::Mark,
+    order::Order,
     phases::Phases,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
@@ -3479,5 +3492,299 @@ impl Scintilla for WindowControl {
 
     fn find_indicator_hide(&self) {
         self.send_message(SCI_FINDINDICATORHIDE, WPARAM::default(), LPARAM::default());
+    }
+
+    fn autoc_show(&self, item_list: String) {
+        let length = item_list.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(item_list.as_ptr() as *const c_void, length);
+        self.send_message(SCI_AUTOCSHOW, WPARAM(length), LPARAM(mem.as_ptr() as isize));
+    }
+
+    fn autoc_cancel(&self) {
+        self.send_message(SCI_AUTOCCANCEL, WPARAM::default(), LPARAM::default());
+    }
+
+    fn autoc_active(&self) -> bool {
+        let (_, res) = self.send_message(SCI_AUTOCACTIVE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn autoc_pos_start(&self) -> usize {
+        let (_, res) = self.send_message(SCI_AUTOCPOSSTART, WPARAM::default(), LPARAM::default());
+        res
+    }
+
+    fn autoc_complete(&self) {
+        self.send_message(SCI_AUTOCCOMPLETE, WPARAM::default(), LPARAM::default());
+    }
+
+    fn autoc_stops(&self, character_set: String) {
+        let length = character_set.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(character_set.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_AUTOCSTOPS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn autoc_set_separator(&self, separator_character: u32) {
+        self.send_message(
+            SCI_AUTOCSETSEPARATOR,
+            WPARAM(separator_character as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_separator(&self) -> u32 {
+        let (_, res) =
+            self.send_message(SCI_AUTOCGETSEPARATOR, WPARAM::default(), LPARAM::default());
+        res as u32
+    }
+
+    fn autoc_select(&self, select: String) {
+        let length = select.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(select.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_AUTOCSELECT,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn autoc_get_current(&self) -> i32 {
+        let (_, res) = self.send_message(SCI_AUTOCGETCURRENT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn autoc_get_current_text(&self) -> Option<String> {
+        let (_, length) = self.send_message(
+            SCI_AUTOCGETCURRENTTEXT,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        self.send_message(
+            SCI_AUTOCGETCURRENTTEXT,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+        mem.read(|buf| (buf as *const u8).to_string())
+    }
+
+    fn autoc_set_cancel_at_start(&self, cancel: bool) {
+        let cancel = if cancel { 1 } else { 0 };
+        self.send_message(SCI_AUTOCSETCANCELATSTART, WPARAM(cancel), LPARAM::default());
+    }
+
+    fn autoc_get_cancel_at_start(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_AUTOCGETCANCELATSTART,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn autoc_set_fillups(&self, character_set: String) {
+        let length = character_set.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(character_set.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_AUTOCSETFILLUPS,
+            WPARAM(length),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn autoc_set_choose_single(&self, choose_single: bool) {
+        let choose_single = if choose_single { 1 } else { 0 };
+        self.send_message(
+            SCI_AUTOCSETCHOOSESINGLE,
+            WPARAM(choose_single),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_choose_single(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_AUTOCGETCHOOSESINGLE,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn autoc_set_ignore_case(&self, ignore_case: bool) {
+        let ignore_case = if ignore_case { 1 } else { 0 };
+        self.send_message(
+            SCI_AUTOCSETIGNORECASE,
+            WPARAM(ignore_case),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_ignore_case(&self) -> bool {
+        let (_, res) =
+            self.send_message(SCI_AUTOCGETIGNORECASE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn autoc_set_case_in_sensitive_behaviour(&self, behaviour: u32) {
+        self.send_message(
+            SCI_AUTOCSETCASEINSENSITIVEBEHAVIOUR,
+            WPARAM(behaviour as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_case_in_sensitive_behaviour(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_AUTOCGETCASEINSENSITIVEBEHAVIOUR,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn autoc_set_multi(&self, multi: MultiAutoc) {
+        self.send_message(
+            SCI_AUTOCSETMULTI,
+            WPARAM(Into::<u32>::into(multi) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_multi(&self) -> MultiAutoc {
+        let (_, res) = self.send_message(SCI_AUTOCGETMULTI, WPARAM::default(), LPARAM::default());
+        MultiAutoc::from(res as u32)
+    }
+
+    fn autoc_set_order(&self, order: Order) {
+        self.send_message(
+            SCI_AUTOCSETORDER,
+            WPARAM(Into::<u32>::into(order) as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_order(&self) -> Order {
+        let (_, res) = self.send_message(SCI_AUTOCGETORDER, WPARAM::default(), LPARAM::default());
+        Order::from(res as u32)
+    }
+
+    fn autoc_set_auto_hide(&self, auto_hide: bool) {
+        let auto_hide = if auto_hide { 1 } else { 0 };
+        self.send_message(SCI_AUTOCSETAUTOHIDE, WPARAM(auto_hide), LPARAM::default());
+    }
+
+    fn autoc_get_auto_hide(&self) -> bool {
+        let (_, res) =
+            self.send_message(SCI_AUTOCGETAUTOHIDE, WPARAM::default(), LPARAM::default());
+        res != 0
+    }
+
+    fn autoc_set_drop_rest_of_word(&self, drop_rest_of_word: bool) {
+        let drop_rest_of_word = if drop_rest_of_word { 1 } else { 0 };
+        self.send_message(
+            SCI_AUTOCSETDROPRESTOFWORD,
+            WPARAM(drop_rest_of_word),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_drop_rest_of_word(&self) -> bool {
+        let (_, res) = self.send_message(
+            SCI_AUTOCGETDROPRESTOFWORD,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res != 0
+    }
+
+    fn register_image(&self, r#type: i32, xpm_data: &[&str]) {
+        self.send_message(
+            SCI_REGISTERIMAGE,
+            WPARAM(r#type as usize),
+            LPARAM(xpm_data.as_ptr() as isize),
+        );
+    }
+
+    fn register_rgba_image(&self, r#type: i32, pixels: &[u8]) {
+        let length = pixels.len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(pixels.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_REGISTERRGBAIMAGE,
+            WPARAM(r#type as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
+    }
+
+    fn clear_registered_images(&self) {
+        self.send_message(
+            SCI_CLEARREGISTEREDIMAGES,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_set_type_separator(&self, separator_character: u32) {
+        self.send_message(
+            SCI_AUTOCSETTYPESEPARATOR,
+            WPARAM(separator_character as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_type_separator(&self) -> u32 {
+        let (_, res) = self.send_message(
+            SCI_AUTOCGETTYPESEPARATOR,
+            WPARAM::default(),
+            LPARAM::default(),
+        );
+        res as u32
+    }
+
+    fn autoc_set_max_height(&self, row_count: i32) {
+        self.send_message(
+            SCI_AUTOCSETMAXHEIGHT,
+            WPARAM(row_count as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_max_height(&self) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_AUTOCGETMAXHEIGHT, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn autoc_set_max_width(&self, character_count: i32) {
+        self.send_message(
+            SCI_AUTOCSETMAXWIDTH,
+            WPARAM(character_count as usize),
+            LPARAM::default(),
+        );
+    }
+
+    fn autoc_get_max_width(&self) -> i32 {
+        let (_, res) =
+            self.send_message(SCI_AUTOCGETMAXWIDTH, WPARAM::default(), LPARAM::default());
+        res as i32
+    }
+
+    fn user_list_show(&self, list_type: i32, item_list: String) {
+        let length = item_list.as_bytes().len();
+        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        mem.write(item_list.as_ptr() as *const c_void, length);
+        self.send_message(
+            SCI_USERLISTSHOW,
+            WPARAM(list_type as usize),
+            LPARAM(mem.as_ptr() as isize),
+        );
     }
 }
