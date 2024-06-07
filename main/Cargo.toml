@@ -74,7 +74,7 @@ workspace = true
 features = ["derive"]
 
 [dependencies.toml]
-version = "0.8.13"
+version = "0.8.14"
 
 [dependencies]
 # 配置I18N国际化多语言支持
