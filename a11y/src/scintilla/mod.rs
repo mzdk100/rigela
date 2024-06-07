@@ -1499,7 +1499,7 @@ pub trait Scintilla: Edit {
     fn set_chars_default(&self);
 
     /**
-     * SCI_WORDLEFT.
+     * 单词左移。
      * */
     fn word_left(&self);
 
@@ -1509,7 +1509,7 @@ pub trait Scintilla: Edit {
     fn word_left_extend(&self);
 
     /**
-     * SCI_WORDRIGHT.
+     * 单词右移。
      * */
     fn word_right(&self);
 
@@ -1519,7 +1519,7 @@ pub trait Scintilla: Edit {
     fn word_right_extend(&self);
 
     /**
-     * SCI_WORDLEFTEND.
+     * 单词结束左移。
      * */
     fn word_left_end(&self);
 
@@ -1529,7 +1529,7 @@ pub trait Scintilla: Edit {
     fn word_left_end_extend(&self);
 
     /**
-     * SCI_WORDRIGHTEND.
+     * 单词结束右移。
      * */
     fn word_right_end(&self);
 
@@ -1539,7 +1539,7 @@ pub trait Scintilla: Edit {
     fn word_right_end_extend(&self);
 
     /**
-     * SCI_WORDPARTLEFT.
+     * 在以大写字母（aCamelCaseIdentifier）或下划线（an_under_bar_ident）标记的词段之间左移。
      * */
     fn word_part_left(&self);
 
@@ -1549,7 +1549,7 @@ pub trait Scintilla: Edit {
     fn word_part_left_extend(&self);
 
     /**
-     * SCI_WORDPARTRIGHT.
+     * 在以大写字母（aCamelCaseIdentifier）或下划线（an_under_bar_ident）标记的词段之间右移。
      * */
     fn word_part_right(&self);
 
@@ -3186,6 +3186,450 @@ pub trait Scintilla: Edit {
      * `item_list` 用分隔符分隔的单词列表。
      * */
     fn user_list_show(&self, list_type: i32, item_list: String);
+
+    //noinspection StructuralWrap
+    /**
+     * 显示调用提示窗口来启动该过程。如果调用提示已处于活动状态，则此消息不起作用。这里会记住插入点的位置，以便如果后续删除操作将插入点移动到该位置之前，则可以自动取消调用提示。
+     * `pos` 是文档中对齐调用提示的位置。除非您在调用提示文本中包含向上和/或向下箭头，否则调用提示文本将对齐到此字符下方 1 行的开始位置，在这种情况下，提示将与最右侧箭头的右边缘对齐。假设您将以类似“\001 1 of 3 \002”的内容开始文本。
+     * `definition` 调用提示文本。这可以包含由“\n”（换行符，ASCII代码10）字符分隔的多行。不要包含“\r”（回车符，ASCII代码13），因为这很可能会打印为空框。如果您使用SCI_CALLTIPUSESTYLE设置制表符大小，则支持“\t”（制表符，ASCII代码9）。
+     * */
+    fn call_tip_show(&self, pos: usize, definition: String);
+
+    /**
+     * 将取消显示的任何调用提示。如果您使用任何与编辑函数参数列表不兼容的键盘命令，Scintilla 也会为您取消调用提示。如果您删除触发提示时插入点所在的位置，调用提示将被取消。
+     * */
+    fn call_tip_cancel(&self);
+
+    /**
+     * 如果调用提示处于活动状态则返回true，如果未处于活动状态则返回false。
+     * */
+    fn call_tip_active(&self) -> bool;
+
+    /**
+     * 返回开始显示调用提示时的当前位置的值。
+     * */
+    fn call_tip_pos_start(&self) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 返回开始显示调用提示时的当前位置的值。
+     * `pos_start` 开始位置。
+     * */
+    fn call_tip_set_pos_start(&self, pos_start: usize);
+
+    /**
+     * 这将设置要以高亮样式显示的调用提示文本区域。如果需要，高亮可以延伸到行尾。未高亮的文本以中灰色绘制。选定的文本以深蓝色绘制。背景为白色。可以使用 SCI_CALLTIPSETBACK、SCI_CALLTIPSETFORE 和 SCI_CALLTIPSETFOREHLT 更改这些。
+     * `highlight_start` 要高亮的第一个字符的字符串中的从零开始的索引。
+     * `highlight_end` 高亮后的第一个字符的索引。highlight_end必须大于highlight_start；highlight_end-highlight_start是要高亮的字符数。
+     * */
+    fn call_tip_set_hlt(&self, highlight_start: usize, highlight_end: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置调用提示的背景颜色；默认颜色为白色。将深色设置为背景不是一个好主意，因为普通调用提示文本的默认颜色是中灰色，而高亮文本的默认颜色是深蓝色。这还会设置STYLE_CALLTIP的背景颜色。
+     * `back` 背景色。
+     * */
+    fn call_tip_set_back(&self, back: i32);
+
+    /**
+     * 设置调用提示文本的颜色；默认颜色是中灰的。这也设置了style_calltip的前景颜色。
+     * `fore` 前景色。
+     * */
+    fn call_tip_set_fore(&self, fore: i32);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置高亮的调用提示文本的颜色；默认颜色为深蓝色。
+     * `fore` 前景色。
+     * */
+    fn call_tip_set_fore_hlt(&self, fore: i32);
+
+    /**
+     * 将用于调用提示的样式从STYLE_DEFAULT更改为 STYLE_CALLTIP，并设置屏幕像素中的制表符大小。如果tab_size 小于 1，则不会对制表符进行特殊处理。一旦使用此调用，调用提示的前景色和背景色也将从样式中获取。
+     * `tab_size` 制表符大小。
+     * */
+    fn call_tip_use_style(&self, tab_size: i32);
+
+    /**
+     * 默认情况下，calltip显示在文本下方，将 above 设置为 true (1) 将使其显示在文本上方。
+     * `above` 是否显示在文本上方。
+     * */
+    fn call_tip_set_position(&self, above: bool);
+
+    /**
+     * 下一行。
+     * */
+    fn line_down(&self);
+
+    /**
+     * 下一行扩展选区。
+     * */
+    fn line_down_extend(&self);
+
+    /**
+     * 下一行扩展矩形选区。
+     * */
+    fn line_down_rect_extend(&self);
+
+    /**
+     * 向下滚动一行。
+     * */
+    fn line_scroll_down(&self);
+
+    /**
+     * 上一行。
+     * */
+    fn line_up(&self);
+
+    /**
+     * 上一行扩展选区。
+     * */
+    fn line_up_extend(&self);
+
+    /**
+     * 上一行扩展矩形选区。
+     * */
+    fn line_up_rect_extend(&self);
+
+    /**
+     * 向上滚动一行。
+     * */
+    fn line_scroll_up(&self);
+
+    /**
+     * 下一个段落。
+     * */
+    fn para_down(&self);
+
+    /**
+     * 下一个段落扩展选区。
+     * */
+    fn para_down_extend(&self);
+
+    /**
+     * 上一个段落。
+     * */
+    fn para_up(&self);
+
+    /**
+     * 上一个段落扩展选区。
+     * */
+    fn para_up_extend(&self);
+
+    /**
+     * 向左移动字符。
+     * */
+    fn char_left(&self);
+
+    /**
+     * 向左移动字符扩展选区。
+     * */
+    fn char_left_extend(&self);
+
+    /**
+     * 向左移动字符扩展矩形选区。
+     * */
+    fn char_left_rect_extend(&self);
+
+    /**
+     * 向右移动字符。
+     * */
+    fn char_right(&self);
+
+    /**
+     * 向右移动字符扩展选区。
+     * */
+    fn char_right_extend(&self);
+
+    /**
+     * 向右移动字符扩展矩形选区。
+     * */
+    fn char_right_rect_extend(&self);
+
+    /**
+     * 将插入点移动至行首。
+     * */
+    fn home(&self);
+
+    /**
+     * 将插入点移动至行首并扩展选区。
+     * */
+    fn home_extend(&self);
+
+    /**
+     * 将插入点移动至行首并扩展矩形选区。
+     * */
+    fn home_rect_extend(&self);
+
+    /**
+     * 在换行模式下移动到显示行的开头，这与普通的 SCI_HOME 命令移动到文档行的开头不同。
+     * */
+    fn home_display(&self);
+
+    /**
+     * 在换行模式下移动到显示行的开头并扩展选区，这与普通的 SCI_HOME 命令移动到文档行的开头不同。
+     * */
+    fn home_display_extend(&self);
+
+    /**
+     * 与其同名的SCI_HOME*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的开始，就像SCI_HOMEDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的开始，以适合SCI_HOME*。
+     * */
+    fn home_wrap(&self);
+
+    /**
+     * 与其同名的SCI_HOME*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的开始，就像SCI_HOMEDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的开始，以适合SCI_HOME*，此命令会扩展选区。
+     * */
+    fn home_wrap_extend(&self);
+
+    /**
+     * 将插入点移动至行的第一个非空白字符（即缩进之后），除非它已经在那里；在这种情况下，它充当 SCI_HOME*。
+     * */
+    fn vc_home(&self);
+
+    /**
+     * 将插入点移动至行的第一个非空白字符（即缩进之后）并扩展选区，除非它已经在那里；在这种情况下，它充当 SCI_HOME*。
+     * */
+    fn vc_home_extend(&self);
+
+    /**
+     * 将插入点移动至行的第一个非空白字符（即缩进之后）并扩展矩形选区，除非它已经在那里；在这种情况下，它充当 SCI_HOME*。
+     * */
+    fn vc_home_rectextend(&self);
+
+    /**
+     * 与其同名的SCI_VCHOME*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的开始，就像SCI_HOMEDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的开始，以适合SCI_VCHOME*。
+     * */
+    fn vc_home_wrap(&self);
+
+    /**
+     * 与其同名的SCI_VCHOME*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的开始，就像SCI_HOMEDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的开始，以适合SCI_VCHOME*，此命令会扩展选区。
+     * */
+    fn vc_home_wrap_extend(&self);
+
+    /**
+     * 在换行模式下移动到显示行的开头，这与普通的 SCI_VCHOME 命令移动到文档行的开头不同。
+     * */
+    fn vc_home_display(&self);
+
+    /**
+     * 在换行模式下移动到显示行的开头并扩展选区，这与普通的 SCI_VCHOME 命令移动到文档行的开头不同。
+     * */
+    fn vc_home_display_extend(&self);
+
+    /**
+     * 将插入点移动至行尾。
+     * */
+    fn line_end(&self);
+
+    /**
+     * 将插入点移动至行尾扩展选区。
+     * */
+    fn line_end_extend(&self);
+
+    /**
+     * 将插入点移动至行尾扩展矩形选区。
+     * */
+    fn line_end_rect_extend(&self);
+
+    /**
+     * 在换行模式下移动到显示行的结尾，这与普通的 SCI_LINEEND 命令移动到文档行的结尾不同。
+     * */
+    fn line_end_display(&self);
+
+    /**
+     * 在换行模式下移动到显示行的结尾并扩展选区，这与普通的 SCI_LINEEND 命令移动到文档行的结尾不同。
+     * */
+    fn line_end_display_extend(&self);
+
+    /**
+     * 与其同名的SCI_LINEEND*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的结束，就像SCI_LINEENDDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的结束，以适合 SCI_LINEEND*。
+     * */
+    fn line_end_wrap(&self);
+
+    /**
+     * 与其同名的SCI_LINEEND*类似，只是在启用自动换行时它们的行为有所不同：它们首先转到显示行的结束，就像SCI_LINEENDDISPLAY*一样，但如果光标已经在该点，它会继续转到文档行的结束，以适合SCI_LINEEND*，此命令会扩展选区。
+     * */
+    fn line_end_wrap_extend(&self);
+
+    /**
+     * 移动到文档开始。
+     * */
+    fn document_start(&self);
+
+    /**
+     * 移动到文档开始扩展选区。
+     * */
+    fn document_start_extend(&self);
+
+    /**
+     * 移动到文档结束。
+     * */
+    fn document_end(&self);
+
+    /**
+     * 移动到文档结束扩展选区。
+     * */
+    fn document_end_extend(&self);
+
+    /**
+     * 向上翻页。
+     * */
+    fn page_up(&self);
+
+    /**
+     * 向上翻页扩展选区。
+     * */
+    fn page_up_extend(&self);
+
+    /**
+     * 向上翻页扩展矩形选区。
+     * */
+    fn page_up_rect_extend(&self);
+
+    /**
+     * 向下翻页。
+     * */
+    fn page_down(&self);
+
+    /**
+     * 向下翻页扩展选区。
+     * */
+    fn page_down_extend(&self);
+
+    /**
+     * 向下翻页扩展矩形选区。
+     * */
+    fn page_down_rect_extend(&self);
+
+    /**
+     * 缓慢向上翻页。
+     * */
+    fn stuttered_page_up(&self);
+
+    /**
+     * 缓慢向上翻页扩展选区。
+     * */
+    fn stuttered_page_up_extend(&self);
+
+    /**
+     * 缓慢向下翻页。
+     * */
+    fn stuttered_page_down(&self);
+
+    /**
+     * 缓慢向下翻页扩展选区。
+     * */
+    fn stuttered_page_down_extend(&self);
+
+    /**
+     * 向后删除。
+     * */
+    fn delete_back(&self);
+
+    /**
+     * 向后删除非空行。
+     * */
+    fn delete_back_not_line(&self);
+
+    /**
+     * 删除行左侧。
+     * */
+    fn del_line_left(&self);
+
+    /**
+     * 删除行右侧。
+     * */
+    fn del_line_right(&self);
+
+    /**
+     * 行删除。
+     * */
+    fn line_delete(&self);
+
+    /**
+     * 行剪切。
+     * */
+    fn line_cut(&self);
+
+    /**
+     * 行复制。
+     * */
+    fn line_copy(&self);
+
+    /**
+     * 行逆序。
+     * */
+    fn line_transpose(&self);
+
+    /**
+     * 行颠倒。
+     * */
+    fn line_reverse(&self);
+
+    /**
+     * 行副本。
+     * */
+    fn line_duplicate(&self);
+
+    /**
+     * 小写。
+     * */
+    fn lower_case(&self);
+
+    /**
+     * 大写。
+     * */
+    fn upper_case(&self);
+
+    /**
+     * 取消自动完成和调用提示显示并删除任何其他选择。
+     * */
+    fn cancel(&self);
+
+    /**
+     * 编辑切换改写。
+     * */
+    fn edit_toggle_overtype(&self);
+
+    /**
+     * 新行。
+     * */
+    fn new_line(&self);
+
+    /**
+     * 表单填充。
+     * */
+    fn form_feed(&self);
+
+    /**
+     * tab。
+     * */
+    fn tab(&self);
+
+    /**
+     * 反向tab。
+     * */
+    fn back_tab(&self);
+
+    /**
+     * 选区副本。
+     * */
+    fn selection_duplicate(&self);
+
+    /**
+     * 垂直中心插入点。
+     * */
+    fn vertical_centre_caret(&self);
+
+    /**
+     * 将文档滚动到开始，而不会更改选择。命令与 macOS 平台的 home 键行为惯例相符。通过将 home 键绑定到这些命令，可以使 Scintilla 与 macOS 应用程序相匹配。
+     * */
+    fn scroll_tostart(&self);
+
+    /**
+     * 将文档滚动到结束，而不会更改选择。这些命令与 macOS 平台的 end 键行为惯例相符。通过将 end 键绑定到这些命令，可以使 Scintilla 与 macOS 应用程序相匹配。
+     * */
+    fn scroll_to_end(&self);
 }
 
 #[cfg(test)]
@@ -3747,6 +4191,92 @@ mod test_scintilla {
         control.autoc_set_max_width(10);
         assert_eq!(10, control.autoc_get_max_width());
         control.user_list_show(1, "ab cd ef gh".to_string());
+        control.call_tip_show(7, "qqq\nwww".to_string());
+        control.call_tip_cancel();
+        dbg!(control.call_tip_active());
+        control.call_tip_set_pos_start(12);
+        assert_eq!(12, control.call_tip_pos_start());
+        control.call_tip_set_hlt(10, 14);
+        control.call_tip_set_back(0xfefefe);
+        control.call_tip_set_fore(0x1d1d1d);
+        control.call_tip_set_fore_hlt(0x1d1dff);
+        control.call_tip_use_style(5);
+        control.call_tip_set_position(true);
+        control.line_down();
+        control.line_down_extend();
+        control.line_down_rect_extend();
+        control.line_scroll_down();
+        control.line_up();
+        control.line_up_extend();
+        control.line_up_rect_extend();
+        control.line_scroll_up();
+        control.para_down();
+        control.para_down_extend();
+        control.para_up();
+        control.para_up_extend();
+        control.char_left();
+        control.char_left_extend();
+        control.char_left_rect_extend();
+        control.char_right();
+        control.char_right_extend();
+        control.char_right_rect_extend();
+        control.home();
+        control.home_extend();
+        control.home_rect_extend();
+        control.home_display();
+        control.home_display_extend();
+        control.home_wrap();
+        control.home_wrap_extend();
+        control.vc_home();
+        control.vc_home_extend();
+        control.vc_home_rectextend();
+        control.vc_home_wrap();
+        control.vc_home_wrap_extend();
+        control.vc_home_display();
+        control.vc_home_display_extend();
+        control.line_end();
+        control.line_end_extend();
+        control.line_end_rect_extend();
+        control.line_end_display();
+        control.line_end_display_extend();
+        control.line_end_wrap();
+        control.line_end_wrap_extend();
+        control.document_start();
+        control.document_start_extend();
+        control.document_end();
+        control.document_end_extend();
+        control.page_up();
+        control.page_up_extend();
+        control.page_up_rect_extend();
+        control.page_down();
+        control.page_down_extend();
+        control.page_down_rect_extend();
+        control.stuttered_page_up();
+        control.stuttered_page_up_extend();
+        control.stuttered_page_down();
+        control.stuttered_page_down_extend();
+        control.delete_back();
+        control.delete_back_not_line();
+        control.del_line_left();
+        control.del_line_right();
+        control.line_delete();
+        control.line_cut();
+        control.line_copy();
+        control.line_transpose();
+        control.line_reverse();
+        control.line_duplicate();
+        control.lower_case();
+        control.upper_case();
+        control.cancel();
+        control.edit_toggle_overtype();
+        control.new_line();
+        control.form_feed();
+        control.tab();
+        control.back_tab();
+        control.selection_duplicate();
+        control.vertical_centre_caret();
+        control.scroll_tostart();
+        control.scroll_to_end();
         dbg!(control);
     }
 }
