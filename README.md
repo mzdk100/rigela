@@ -3,14 +3,12 @@
 简体中文 (zh-CN) | [English (en)](README-EN.md)
 
 <!-- TOC -->
-
 * [RigelA（名称取自猎户座餐宿七的英文）](#rigela名称取自猎户座餐宿七的英文)
-    * [简介](#简介)
-    * [构建和运行](#构建和运行)
-    * [开发文档](#开发文档)
-    * [开发贡献](#开发贡献)
-    * [许可协议](#许可协议)
-
+  * [简介](#简介)
+  * [构建和运行](#构建和运行)
+  * [开发文档](#开发文档)
+  * [开发贡献](#开发贡献)
+  * [许可协议](#许可协议)
 <!-- TOC -->
 
 ## 简介
@@ -71,7 +69,6 @@
     - [用于非微软官方提供的辅助功能技术的实现参考文档](a11y/README)
     - [用于32位应用的代理模块参考文档](proxy32/README.md)
     - [RigelA资源增量更新参考文档](resources/README.md)
-    - [Windows API高级封装的实现参考文档](win-wrap/README.md)
 2. 如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
     - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
     - [Rust语言圣经](https://course.rs/about-book.html)

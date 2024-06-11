@@ -23,8 +23,7 @@ JabLib = ["rigela-utils/library"]
 IAccessible2Lib = ["rigela-utils/library", "windows-core"]
 
 [dependencies.win-wrap]
-path = "../win-wrap"
-version = "*"
+workspace = true
 optional = true
 
 [dependencies.rigela-utils]

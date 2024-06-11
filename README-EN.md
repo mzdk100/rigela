@@ -3,14 +3,12 @@
 English (en) | [简体中文 (zh-CN)](README.md)
 
 <!-- TOC -->
-
 * [RigelA (the name is taken from the Rigel-A of Orion)](#rigela-the-name-is-taken-from-the-rigel-a-of-orion)
-    * [Introduction](#introduction)
-    * [Build and run](#build-and-run)
-    * [Development documentation](#development-documentation)
-    * [Development Contribution](#development-contribution)
-    * [agreement](#agreement)
-
+  * [Introduction](#introduction)
+  * [Build and run](#build-and-run)
+  * [Development documentation](#development-documentation)
+  * [Development Contribution](#development-contribution)
+  * [agreement](#agreement)
 <!-- TOC -->
 
 ## Introduction
@@ -80,7 +78,6 @@ next section.
     - [Implementation Reference Document for Non Microsoft Official Accessibility Technology](a11y/README)
     - [Proxy module reference document for 32-bit applications](proxy32/README.md)
     - [RigelA resource incremental update reference document](resources/README.md)
-    - [Implementation Reference Document for Windows API Advanced Wrapping](win-wrap/README.md)
 2. If you are new to programming, you also need to learn the Rust language and understand the common libraries of Rust:
     - [Rust programming language Simplified Chinese version](https://kaisery.github.io/trpl-zh-cn)
     - [Rust Language Bible](https://course.rs/about-book.html)

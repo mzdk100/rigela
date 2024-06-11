@@ -55,8 +55,7 @@ version = "0.2.2"
 optional = true
 
 [dependencies.win-wrap]
-path = "../win-wrap"
-version = "*"
+workspace = true
 optional = true
 
 [dependencies.png]

@@ -33,7 +33,7 @@ features = ["server"]
 
 [dependencies.win-wrap]
 # Windows Api的安全封装
-path = "../win-wrap"
+workspace = true
 features = ["uia", "registry", "tts", "pth", "control", "shell"]
 
 [dependencies.tokio]

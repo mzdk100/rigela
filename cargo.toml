@@ -27,11 +27,14 @@ version = "1.38.0"
 [workspace.dependencies.serde]
 version = "1.0.203"
 
+[workspace.dependencies.win-wrap]
+version = "0.1.5"
+
 [workspace.dependencies.windows]
-version = "0.56.0"
+version = "0.57.0"
 
 [workspace.dependencies.windows-core]
-version = "0.56.0"
+version = "0.57.0"
 
 [workspace]
 members = [
@@ -42,7 +45,6 @@ members = [
     "peeper",
     "proxy32",
     "resources",
-    "utils",
-    "win-wrap"
+    "utils"
 ]
 resolver = "2"
