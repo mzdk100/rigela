@@ -22,10 +22,12 @@ pub mod eol;
 pub mod ime;
 pub mod indentation;
 pub mod indicator;
+pub mod key;
 pub mod margin;
 pub mod marker;
 pub mod order;
 pub mod phases;
+pub mod popup;
 pub mod selection;
 pub mod space;
 pub mod status;
@@ -43,10 +45,12 @@ use crate::scintilla::{
     ime::Ime,
     indentation::IndentView,
     indicator::Indicator,
+    key::KeyCode,
     margin::MarginOptions,
     marker::Mark,
     order::Order,
     phases::Phases,
+    popup::PopUpMode,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
     status::Status,
@@ -3630,6 +3634,43 @@ pub trait Scintilla: Edit {
      * 将文档滚动到结束，而不会更改选择。这些命令与 macOS 平台的 end 键行为惯例相符。通过将 end 键绑定到这些命令，可以使 Scintilla 与 macOS 应用程序相匹配。
      * */
     fn scroll_to_end(&self);
+
+    /**
+     * 这将给定的键定义分配给由 sci_command 标识的 Scintilla 命令。sci_command 可以是任何没有参数的 SCI_* 命令。
+     * 在 macOS 上，Command 键映射到 SCMOD_CTRL，Control 键映射到 SCMOD_META。SCMOD_SUPER 仅在 GTK 上可用，通常是 Windows 键。如果您正在构建表格，则可能需要使用 SCMOD_NORM（其值为 0），表示没有修饰键。在 Win32 上，按下 Alt 时的数字键盘可用于按数字输入字符。当分配功能键时，这可能会在非数字锁定模式下产生意外结果，因此可能会忽略有问题的键。例如，设置 SCMOD_ALT、SCK_UP 只会对主光标键上的向上键有效，而不是数字键盘。
+     * `modifier` SCMOD_ALT、SCMOD_CTRL、SCMOD_SHIFT、SCMOD_META 和 SCMOD_SUPER 中的零个或多个的组合。
+     * `key_code` 键代码。
+     * `sci_command` SCI_*无参数的命令消息。SCI_NULL 不执行任何操作，是分配给不执行任何操作的键的值。SCI_NULL 确保键不会传播到父窗口，因为这可能会导致焦点移动。如果您想要标准平台行为，请使用常量 0。
+     * */
+    fn assign_cmd_key(&self, modifier: u32, key_code: KeyCode, sci_command: u32);
+
+    /**
+     * 通过为给定的键定义分配操作 SCI_NULL，这会使给定的键定义不执行任何操作。
+     * `modifier` SCMOD_ALT、SCMOD_CTRL、SCMOD_SHIFT、SCMOD_META 和 SCMOD_SUPER 中的零个或多个的组合。
+     * `key_code` 键代码。
+     * */
+    fn clear_cmd_key(&self, modifier: u32, key_code: KeyCode);
+
+    /**
+     * 该命令通过设置一个 空的 映射表来删除所有键盘命令映射。
+     * */
+    fn clear_all_cmd_keys(&self);
+
+    /**
+     * 单击鼠标上的错误按钮会弹出一个简短的默认编辑菜单。可以使用 SCI_USEPOPUP(SC_POPUP_NEVER) 关闭此功能。如果将其关闭，Scintilla 将不会处理上下文菜单命令（在 Windows 中为 WM_CONTEXTMENU），因此 Scintilla 窗口的父窗口将有机会处理该消息。
+     * `pop_up_mode` 弹出模式。
+     * */
+    fn use_pop_up(&self, pop_up_mode: PopUpMode);
+
+    /**
+     * 打开宏录制。
+     * */
+    fn start_record(&self);
+
+    /**
+     * 关闭宏录制。
+     * */
+    fn stop_record(&self);
 }
 
 #[cfg(test)]
@@ -3649,19 +3690,21 @@ mod test_scintilla {
         ime::Ime,
         indentation::IndentView,
         indicator::Indicator,
+        key::KeyCode,
         margin::MarginOptions,
         marker::{Mark, MarkerNumber},
         order::Order,
         phases::Phases,
+        popup::PopUpMode,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
         style::{Case, IdleStyling, STYLE_BRACEBAD},
         technology::Technology,
-        Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCMOD_META, SCVS_USERACCESSIBLE,
-        SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT,
-        SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE,
-        SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT, SCMOD_META,
+        SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8,
+        SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE,
+        SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -4277,6 +4320,12 @@ mod test_scintilla {
         control.vertical_centre_caret();
         control.scroll_tostart();
         control.scroll_to_end();
+        control.assign_cmd_key(SCMOD_SUPER, KeyCode::Escape, SCI_COPYTEXT);
+        control.clear_cmd_key(SCMOD_SUPER, KeyCode::Escape);
+        control.clear_all_cmd_keys();
+        control.use_pop_up(PopUpMode::All);
+        control.start_record();
+        control.stop_record();
         dbg!(control);
     }
 }
