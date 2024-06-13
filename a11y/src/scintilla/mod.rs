@@ -28,11 +28,13 @@ pub mod marker;
 pub mod order;
 pub mod phases;
 pub mod popup;
+pub mod print;
 pub mod selection;
 pub mod space;
 pub mod status;
 pub mod style;
 pub mod technology;
+pub mod wrap;
 
 pub use crate::scintilla::internal::*;
 use crate::scintilla::{
@@ -51,11 +53,13 @@ use crate::scintilla::{
     order::Order,
     phases::Phases,
     popup::PopUpMode,
+    print::PrintMode,
     selection::SelectionMode,
     space::{TabDrawMode, WhiteSpace},
     status::Status,
     style::{Case, IdleStyling},
     technology::Technology,
+    wrap::WrapMode,
 };
 use win_wrap::control::edit::Edit;
 
@@ -3671,6 +3675,92 @@ pub trait Scintilla: Edit {
      * 关闭宏录制。
      * */
     fn stop_record(&self);
+
+    /**
+     * 此调用将一系列文本渲染到设备上下文中。如果您将其用于打印，则可能需要安排页眉和页脚；Scintilla不会为您执行此操作。有关示例，请参阅SciTEWinDlg.cxx 中的 SciTEWin::Print()。
+     * 每次使用此消息都会将一系列文本渲染到矩形区域中，并返回下一个要打印的字符在文档中的位置。min 和 max 定义要输出的字符的起始位置和最大位置。此字符范围内的每行都会被绘制。在 Cocoa 上，当调用视图的 drawRect 方法时，用于打印的表面 ID（draw=1）应该是当前上下文的图形端口 ((CGContextRef) [[NSGraphicsContext currentContext] graphicsPort])。表面 ID 并不真正用于测量（draw=0），但可以设置为位图上下文（使用 CGBitmapContextCreate 创建）以避免运行时警告。在 GTK 上，可以使用 gtk_print_context_get_cairo_context(context) 从打印上下文中找到要使用的表面 ID。 打印时，最繁琐的部分始终是确定页边距应为多少以留出纸张的不可打印区域并打印页眉和页脚。如果您查看 SciTE 中的打印代码，您会发现大部分内容都与此有关。如果您删除所有页边距、不可打印区域、页眉和页脚代码，则导致 Scintilla 渲染文本的循环非常简单。
+     * `draw` 控制是否完成任何输出。如果您要分页，请将其设置为 false（例如，如果您将其与 MFC 一起使用，则需要在输出每页之前在 OnBeginPrinting() 中进行分页。
+     * `hdc` 我们打印到的表面 ID。
+     * `hdc_target` 我们用于测量的表面 ID（可能与 hdc 相同）。在 Windows 上，hdc 和 hdc_target 都应设置为输出设备（通常是打印机）的设备上下文句柄。如果打印到图元文件，它们将与 Windows 图元文件不同（与扩展图元文件不同），不实现用于返回信息的完整 API。在这种情况下，将 hdc_target 设置为屏幕 DC。
+     * `rc` 打印的矩形。rc 是用于呈现文本的矩形（当然，它将适合 rc_page 定义的矩形）。
+     * `rc_page` 物理上可打印的页面大小。rc_page 是矩形 {0, 0, max_x, max_y}，其中 max_x+1 和 max_y+1 是 x 和 y 中物理上可打印的像素数。
+     * `min` 要打印的开始字符位置。
+     * `max` 要打印的结束字符位置。
+     * */
+    fn format_range(
+        &self,
+        draw: bool,
+        hdc: SurfaceId,
+        hdc_target: SurfaceId,
+        rc: Rectangle,
+        rc_page: Rectangle,
+        min: usize,
+        max: usize,
+    ) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 允许您以不同于屏幕字体的大小进行打印。放大倍数是添加到每个屏幕字体大小的点数。值为-3或-4时，打印尺寸会比较小。
+     * `magnification` 放大倍数。
+     * */
+    fn set_print_magnification(&self, magnification: i32);
+
+    /**
+     * 获取打印的放大倍数。
+     * */
+    fn get_print_magnification(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 设置在可能使用白纸的打印机上呈现彩色文本的方法。如果您使用深色或黑色屏幕背景，则考虑颜色处理尤其重要。在黑色上打印白色会比相反的方式消耗碳粉和墨水快很多倍。
+     * `mode` 打印模式。
+     * */
+    fn set_print_colour_mode(&self, mode: PrintMode);
+
+    /**
+     * 获取在可能使用白纸的打印机上呈现彩色文本的方法。
+     * */
+    fn get_print_colour_mode(&self) -> PrintMode;
+
+    /**
+     * 设置打印机换行模式。
+     * `wrap_mode` 换行模式。
+     * */
+    fn set_print_wrap_mode(&self, wrap_mode: WrapMode);
+
+    /**
+     * 获取打印机换行模式。
+     * */
+    fn get_print_wrap_mode(&self) -> WrapMode;
+
+    /**
+     * 此消息返回要调用的函数的地址，以处理 Scintilla 消息，而无需通过 Windows 消息系统的开销。无论您创建了多少个 Scintilla 窗口，都只需调用一次。
+     * */
+    fn get_direct_function(&self) -> fn(isize, u32, usize, isize) -> isize;
+
+    /**
+     * 这将返回一个指向数据的指针，该数据标识正在使用的 Scintilla 窗口。您必须为您创建的每个 Scintilla 窗口调用一次此函数。当您调用直接函数时，您必须传入与目标窗口关联的直接指针。
+     * */
+    fn get_direct_pointer(&self) -> isize;
+
+    /**
+     * 授予对Scintilla用于存储文档的内存的临时直接只读访问权限。
+     * 移动Scintilla内的间隙，以便连续存储文档的文本并确保文本后有一个NUL字符，然后返回指向第一个字符的指针。然后，应用程序可以将其传递给接受字符指针的函数，例如正则表达式搜索或解析器。不应写入指针，因为这可能会使Scintilla的内部状态不同步。由于Scintilla中的任何操作都可能改变其内部状态，因此此指针在任何调用或允许用户界面活动后变为无效。应用程序应在对Scintilla进行任何调用或执行任何用户界面调用（例如修改进度指示器）后重新获取指针。此调用所需的时间与在文档末尾插入字符的时间相似，这可能包括移动文档内容。
+     * 具体而言，文档间隙后的所有字符都移动到间隙之前。这种压缩状态应在不会更改文档内容的调用和用户界面操作中持续存在，因此之后重新获取指针非常快。如果此调用用于实现全局替换操作，则每次替换都会移动间隙，因此如果在每次替换后调用SCI_GETCHARACTERPOINTER，则操作将变为O(n^2)而不是O(n)。相反，应该找到并记住所有匹配项，然后执行所有替换。
+     * */
+    fn get_character_pointer(&self) -> isize;
+
+    /**
+     * 提供对请求范围的直接访问。除非间隙在请求的范围内，否则不会移动间隙，因此此调用可以比SCI_GETCHARACTERPOINTER更快。这可以由能够对文本块或行范围进行操作的应用程序代码使用。
+     * `start` 开始点。
+     * `length_range` 长度范围。
+     * */
+    fn get_range_pointer(&self, start: usize, length_range: usize) -> isize;
+
+    /**
+     * 返回当前间隙位置。这是一个提示，应用程序可以使用它来避免使用包含间隙的范围调用 SCI_GETRANGEPOINTER 以及移动间隙的后续成本。
+     * */
+    fn get_gap_position(&self) -> usize;
 }
 
 #[cfg(test)]
@@ -3696,15 +3786,18 @@ mod test_scintilla {
         order::Order,
         phases::Phases,
         popup::PopUpMode,
+        print::PrintMode,
         selection::SelectionMode,
         space::{TabDrawMode, WhiteSpace},
         status::Status,
         style::{Case, IdleStyling, STYLE_BRACEBAD},
         technology::Technology,
-        Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT, SCMOD_META,
-        SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8,
-        SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE,
-        SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        wrap::WrapMode,
+        Rectangle, Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT,
+        SCMOD_META, SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE,
+        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED,
+        SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE,
+        VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -4326,6 +4419,36 @@ mod test_scintilla {
         control.use_pop_up(PopUpMode::All);
         control.start_record();
         control.stop_record();
+        dbg!(control.format_range(
+            false,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            Rectangle {
+                left: 0,
+                top: 0,
+                right: 100,
+                bottom: 100,
+            },
+            Rectangle {
+                left: 0,
+                top: 0,
+                right: 100,
+                bottom: 100,
+            },
+            0,
+            20,
+        ));
+        control.set_print_magnification(2);
+        assert_eq!(2, control.get_print_magnification());
+        control.set_print_colour_mode(PrintMode::BlackOnWhite);
+        assert_eq!(PrintMode::BlackOnWhite, control.get_print_colour_mode());
+        control.set_print_wrap_mode(WrapMode::Word);
+        assert_eq!(WrapMode::Word, control.get_print_wrap_mode());
+        dbg!(control.get_direct_function());
+        dbg!(control.get_direct_pointer());
+        dbg!(control.get_character_pointer());
+        dbg!(control.get_range_pointer(5, 8));
+        dbg!(control.get_gap_position());
         dbg!(control);
     }
 }
