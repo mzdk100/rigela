@@ -887,7 +887,6 @@ pub(crate) struct AccessibleKeyBindings {
     pub(crate) keyBindingInfo: [AccessibleKeyBindingInfo; MAX_KEY_BINDINGS as usize],
 }
 
-
 /**
  ******************************************************
  *  AccessibleIcon packages
@@ -917,7 +916,6 @@ pub(crate) struct AccessibleIcons {
     /// the icons
     pub(crate) iconInfo: [AccessibleIconInfo; MAX_ICON_INFO as usize],
 }
-
 
 /**
  ******************************************************
@@ -955,7 +953,6 @@ pub(crate) struct AccessibleTableCellInfo {
     pub(crate) columnExtent: JInt,
     pub(crate) isSelected: JBoolean,
 }
-
 
 /**
  ******************************************************

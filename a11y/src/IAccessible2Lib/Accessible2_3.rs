@@ -55,7 +55,6 @@ pub(crate) unsafe trait IAccessible2_3: IAccessible2_2 {
     pub(crate) fn selectionRanges(&self, ranges: *mut *mut IA2Range, nRanges: *mut i32) -> HRESULT;
 }
 
-
 /*
  * Idl file copyright information:
  *  File Name (Accessible2_2.idl)
