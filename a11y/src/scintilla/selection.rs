@@ -11,8 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use scintilla_sys::{SC_SEL_STREAM, SC_SEL_RECTANGLE, SC_SEL_LINES, SC_SEL_THIN};
-
+use scintilla_sys::{SC_SEL_LINES, SC_SEL_RECTANGLE, SC_SEL_STREAM, SC_SEL_THIN};
 
 #[derive(Debug, PartialEq)]
 pub enum SelectionMode {
@@ -33,7 +32,7 @@ impl From<u32> for SelectionMode {
             SC_SEL_RECTANGLE => Self::Rectangle,
             SC_SEL_LINES => Self::Lines,
             SC_SEL_THIN => Self::Thin,
-            _ => Self::Stream
+            _ => Self::Stream,
         }
     }
 }
@@ -44,7 +43,7 @@ impl Into<u32> for SelectionMode {
             Self::Stream => SC_SEL_STREAM,
             Self::Rectangle => SC_SEL_RECTANGLE,
             Self::Lines => SC_SEL_LINES,
-            Self::Thin => SC_SEL_THIN
+            Self::Thin => SC_SEL_THIN,
         }
     }
 }

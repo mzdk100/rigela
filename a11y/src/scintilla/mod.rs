@@ -64,8 +64,8 @@ use crate::scintilla::{
 use win_wrap::control::edit::Edit;
 
 /**
- * 一些搜索例程使用标志选项，其中包括一个简单的正则表达式搜索。通过添加标志选项来组合它们：
  * 搜索标志
+ * 一些搜索例程使用标志选项，其中包括一个简单的正则表达式搜索。通过添加标志选项来组合它们：
  * SCFIND_NONE | 默认设置为不区分大小写的文字匹配。
  * SCFIND_MATCHCASE | 只有与搜索字符串大小写匹配的文本才会匹配。
  * SCFIND_WHOLEWORD | 只有当前面和后面的字符不是SCI_SETWORDCHARS定义的单词字符时，才会发生匹配。
@@ -90,6 +90,24 @@ use win_wrap::control::edit::Edit;
  * * | 这匹配了0次或更多次。例如，Sa*m匹配Sm、Sam、Saam、Saam等等。
  * + | 这匹配1次或多次。例如，Sa+m匹配Sam、Saam、Saam等等。
  * 正则表达式将只匹配单行内的范围，而不会匹配多行。当使用SCFIND_CXX11REGEX时，可以使用更多的功能，通常类似于JavaScript中的正则表达式支持。有关支持内容的详细信息，请参阅C++运行时的文档。
+ *
+ * 后台保存
+ * 想要在后台保存的应用程序应使用 SCI_SETREADONLY(1) 锁定文档以防止修改，并使用 SCI_GETCHARACTERPOINTER 检索指向统一文档内容的指针。锁定文档的缓冲区不会移动，因此指针在应用程序调用 SCI_SETREADONLY(0) 之前有效。如果用户在文档锁定时尝试执行修改，则会向应用程序发送 SCN_MODIFYATTEMPTRO 通知。然后，应用程序可能会决定忽略修改或终止后台保存线程并在从通知返回之前重新启用修改。
+ *
+ * 文档接口
+ * 应用程序可能想要操作不可见的文档，临时的 IDocumentEditable 接口可用于此目的。 IDocumentEditable 允许更直接地访问功能，并且比调用 Scintilla API 更快。 IDocumentEditable 指针由 SCI_CREATEDOCUMENT、SCI_GETDOCPOINTER 和 ILoader::ConvertToDocument 返回。它们可以传递给 SCI_ADDREFDOCUMENT、SCI_RELEASEDOCUMENT 和 SCI_SETDOCPOINTER。
+ * ```cpp
+ * class IDocumentEditable {
+ * public:
+ *         // Allow this interface to add methods over time and discover whether new methods available.
+ *         virtual int SCI_METHOD DEVersion() const noexcept = 0;
+ *
+ *         // Lifetime control
+ *         virtual int SCI_METHOD AddRef() noexcept = 0;
+ *         virtual int SCI_METHOD Release() = 0;
+ * };
+ * ```
+ * IDocumentEditable 接口正在开发中，将来会添加更多方法。方法也可能会更改签名或被删除。因此该功能是临时的，用户应该知道他们可能必须修改客户端代码以响应这些更改。当 IDocumentEditable 是临时的时，DEVersion 将返回 0，而对于第一个稳定版本，它将返回 1。此后，当添加新方法时，它将递增。
  * */
 pub trait Scintilla: Edit {
     /**
@@ -3761,6 +3779,65 @@ pub trait Scintilla: Edit {
      * 返回当前间隙位置。这是一个提示，应用程序可以使用它来避免使用包含间隙的范围调用 SCI_GETRANGEPOINTER 以及移动间隙的后续成本。
      * */
     fn get_gap_position(&self) -> usize;
+
+    /**
+     * 这将返回窗口当前正在使用的文档的指针。它没有其他作用。
+     * */
+    fn get_doc_pointer(&self) -> isize;
+
+    //noinspection StructuralWrap
+    /**
+     * 执行以下操作：
+     * 1. 从当前文档持有的列表中删除当前窗口。
+     * 2. 将当前文档的引用计数减少1。
+     * 3. 如果引用计数达到0，则删除该文档。
+     * 4. 将doc设置为窗口的新文档。
+     * 5. 如果doc为0，则创建一个新的空文档并将其附加到窗口。
+     * 6. 如果doc不为0，则将其引用计数增加1。
+     * `doc` 文档指针。
+     * */
+    fn set_doc_pointer(&self, doc: isize);
+
+    /**
+     * 创建一个新的空文档并返回指向它的指针。此文档未被选入编辑器，并以1的引用计数开始。这意味着您拥有它的所有权，并且必须在使用SCI_SETDOCPOINTER后将其引用计数减少 1，以便 Scintilla 窗口拥有它，或者您必须确保在关闭应用程序之前使用 SCI_RELEASEDOCUMENT 将引用计数减少 1，以避免内存泄漏。
+     * `bytes` 确定文档的初始内存分配，因为分配一次比依靠随着数据添加而增长的缓冲区更有效。如果 SCI_CREATEDOCUMENT 失败，则返回 0。
+     * `document_options` 在影响内存分配和性能的不同文档功能之间进行选择，其中 SC_DOCUMENTOPTION_DEFAULT (0) 选择标准选项。 SC_DOCUMENTOPTION_STYLES_NONE (0x1) 停止为样式字符分配内存，从而节省大量内存，通常可节省 40%，整个文档被视为样式 0。词法分析器仍可使用指示器生成视觉样式。SC_DOCUMENTOPTION_TEXT_LARGE (0x100) 可在 64 位可执行文件中容纳大于 2 GB 的文档。使用 SC_DOCUMENTOPTION_STYLES_NONE，词法分析器仍处于活动状态并可显示指示器。有些词法分析器可能生成折叠信息，但大多数词法分析器需要词汇样式才能正确确定折叠。将空词法分析器设置为 NULL 以便不运行词法分析器通常更有效。对于许多应用程序来说，对大于 4GB 的文档进行词法分析会过于缓慢，因此可以使用 SC_DOCUMENTOPTION_STYLES_NONE 和空词法分析器“null”。另一种方法是使用 SCI_SETIDLESTYLING 打开空闲样式。
+     * */
+    fn create_document(&self, bytes: usize, document_options: u32) -> isize;
+
+    /**
+     * 这会使文档的引用计数增加 1。如果您想要替换 Scintilla 窗口中的当前文档并取得当前文档的所有权，例如，如果您在一个窗口中编辑多个文档，请执行以下操作：
+     * 1. 使用 SCI_GETDOCPOINTER 获取指向文档 doc 的指针。
+     * 2. 使用 SCI_ADDREFDOCUMENT(0, doc) 增加引用计数。
+     * 3. 使用 SCI_SETDOCPOINTER(0, docNew) 设置其他文档或使用 SCI_SETDOCPOINTER(0, 0) 设置新的空文档。
+     * `doc` 文档指针。
+     * */
+    fn add_ref_document(&self, doc: isize);
+
+    /**
+     * 减少了由 doc 标识的文档的引用计数。
+     * `doc` 必须是 SCI_GETDOCPOINTER 或 SCI_CREATEDOCUMENT 的结果，并且必须指向仍然存在的文档。如果您对引用计数为 1 且仍附加到 Scintilla 窗口的文档调用此消息，则会发生糟糕的事情。为了让世界保持运转，您必须平衡对 SCI_CREATEDOCUMENT 或 SCI_ADDREFDOCUMENT 的每次调用与对 SCI_RELEASEDOCUMENT 的调用。
+     * */
+    fn release_document(&self, doc: isize);
+
+    /**
+     * 为了确保用户界面的响应，应用程序可能会决定使用与用户界面不同的线程来加载和保存文档。
+     * 应用程序可以将整个文件加载到它在后台线程上分配的缓冲区中，然后将该缓冲区中的数据添加到用户界面线程上的Scintilla 文档中。该技术使用额外的内存来存储文件的完整副本，也意味着 Scintilla 执行初始行尾发现所需的时间会阻塞用户界面。为了避免这些问题，可以创建一个加载器对象并使用它加载文件。加载器对象支持 ILoader 接口。
+     * 创建一个支持 ILoader 接口的对象，该对象可用于加载数据，然后转换为 Scintilla 文档对象以附加到视图对象。
+     * ```cpp
+     * class ILoader {
+     * public:
+     *        virtual int SCI_METHOD Release() = 0;
+     *        // Returns a status code from SC_STATUS_*
+     *        virtual int SCI_METHOD AddData(const char *data, Sci_Position length) = 0;
+     *        virtual void * SCI_METHOD ConvertToDocument() = 0;
+     * };
+     * ```
+     * 应用程序应该对从文件读取的每个数据块调用 AddData 方法。除非发生故障（例如内存耗尽），否则 AddData 将返回 SC_STATUS_OK。如果在 AddData 或文件读取调用中发生故障，则可以放弃加载并使用 Release 调用释放加载器。读取整个文件后，应调用 ConvertToDocument 以生成 Scintilla 文档指针。可以将此指针视为 void* cookie 以传递给其他 API 或转换为 IDocumentEditable* 指针。新创建的文档将具有 1 个引用计数，与从 SCI_CREATEDOCUMENT 返回的文档指针相同。在 ConvertToDocument 之后无需调用 Release。
+     * `bytes` 确定文档的初始内存分配，因为一次性分配比依靠随着数据添加而增长的缓冲区更有效。如果 SCI_CREATELOADER 失败，则返回 0。
+     * `document_options` 在 SCI_CREATEDOCUMENT 部分中描述。
+     * */
+    fn create_loader(&self, bytes: usize, document_options: u32) -> isize;
 }
 
 #[cfg(test)]
@@ -3795,9 +3872,9 @@ mod test_scintilla {
         wrap::WrapMode,
         Rectangle, Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT,
         SCMOD_META, SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE,
-        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_EFF_QUALITY_ANTIALIASED,
-        SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER, UNDO_MAY_COALESCE,
-        VISIBLE_STRICT,
+        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_DOCUMENTOPTION_DEFAULT,
+        SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE,
+        SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -4052,8 +4129,8 @@ mod test_scintilla {
         control.set_styling_ex(&[0u8, 2, 3, 4]);
         control.set_idle_styling(IdleStyling::All);
         assert_eq!(IdleStyling::All, control.get_idle_styling());
-        control.set_line_state(1, 4);
-        assert_eq!(4, control.get_line_state(1));
+        control.set_line_state(0, 4);
+        assert_eq!(4, control.get_line_state(0));
         dbg!(control.get_max_line_state());
         control.style_reset_default();
         control.style_clear_all();
@@ -4209,8 +4286,8 @@ mod test_scintilla {
         assert_eq!(true, control.get_tab_indents());
         control.set_backspace_un_indents(true);
         assert_eq!(true, control.get_backspace_un_indents());
-        control.set_line_indentation(1, 10);
-        assert_eq!(10, control.get_line_indentation(1));
+        control.set_line_indentation(0, 10);
+        assert_eq!(10, control.get_line_indentation(0));
         dbg!(control.get_line_indent_position(1));
         control.set_indentation_guides(IndentView::Real);
         assert_eq!(IndentView::Real, control.get_indentation_guides());
@@ -4449,6 +4526,13 @@ mod test_scintilla {
         dbg!(control.get_character_pointer());
         dbg!(control.get_range_pointer(5, 8));
         dbg!(control.get_gap_position());
+        dbg!(control.get_doc_pointer());
+        control.set_doc_pointer(0);
+        dbg!(control.create_document(20, SC_DOCUMENTOPTION_DEFAULT));
+        // has bugs
+        // control.add_ref_document(0);
+        // control.release_document(0);
+        dbg!(control.create_loader(20, SC_DOCUMENTOPTION_DEFAULT));
         dbg!(control);
     }
 }
