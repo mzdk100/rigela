@@ -19,6 +19,7 @@ pub mod bidirectional;
 pub mod caret;
 pub mod character;
 pub mod eol;
+pub mod folding;
 pub mod ime;
 pub mod indentation;
 pub mod indicator;
@@ -44,6 +45,7 @@ use crate::scintilla::{
     caret::CaretSticky,
     character::CharacterSet,
     eol::EolMode,
+    folding::{FoldAction, FoldDisplayText},
     ime::Ime,
     indentation::IndentView,
     indicator::Indicator,
@@ -3838,6 +3840,179 @@ pub trait Scintilla: Edit {
      * `document_options` 在 SCI_CREATEDOCUMENT 部分中描述。
      * */
     fn create_loader(&self, bytes: usize, document_options: u32) -> isize;
+
+    //noinspection StructuralWrap
+    /**
+     * 当某些行被隐藏和/或注释被显示时，文档中的特定行可能会显示在与其文档位置不同的位置。如果没有行被隐藏且没有注释，则此消息返回doc_line。否则，这将返回显示行（将第一个可见行计为0）。不可见行的显示行与前一个可见行相同。文档中第一行的显示行号为0。如果行被隐藏且doc_line超出文档中的行范围，则返回值为-1。如果行换行，则它们可以占据多个显示行。
+     * `doc_line` 文档行号。
+     * */
+    fn visible_from_doc_line(&self, doc_line: usize) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 将一系列线条标记为可见，然后重新绘制显示。对折叠级别或折叠标志没有影响。
+     * `line_start` 开始行号。
+     * `line_end` 结束行号。
+     * */
+    fn show_lines(&self, line_start: usize, line_end: usize);
+
+    //noinspection StructuralWrap
+    /**
+     * 将一系列线条标记为不可见，然后重新绘制显示。对折叠级别或折叠标志没有影响。
+     * `line_start` 开始行号。
+     * `line_end` 结束行号。
+     * */
+    fn hide_lines(&self, line_start: usize, line_end: usize);
+
+    /**
+     * 报告线条的可见状态，如果可见则返回true，如果不可见则返回false。对折叠级别或折叠标志没有影响。
+     * `line` 行号。
+     * */
+    fn get_line_visible(&self, line: usize) -> bool;
+
+    /**
+     * 如果所有线条都可见，返回true，如果某些线条隐藏，则返回false。对折叠级别或折叠标志没有影响。
+     * */
+    fn get_all_lines_visible(&self) -> bool;
+
+    /**
+     * 设置一个 32 位值，该值包含行的折叠级别和一些与折叠相关的标志。折叠级别是 0 到 SC_FOLDLEVELNUMBERMASK(0x0FFF) 范围内的数字。但是，初始折叠级别设置为 SC_FOLDLEVELBASE(0x400)，以允许对折叠级别进行无符号算术运算。有两个附加标志位。SC_FOLDLEVELWHITEFLAG表示该行为空白，并允许将其处理方式与其级别可能指示的方式略有不同。例如，空白行通常不应是折叠点，并且将被视为前一节的一部分，即使它们的折叠级别可能较低。SC_FOLDLEVELHEADERFLAG表示该行是标题（折叠点）。SC_FOLDLEVELNONE 是折叠前可能出现的默认级别。同样，要设置折叠级别，您必须在相关标志中。例如，要将级别设置为this_level 并将某行标记为折叠点，请使用：SCI_SETFOLDLEVEL(line, this_level | SC_FOLDLEVELHEADERFLAG)。如果您使用词法分析器，则不需要使用 SCI_SETFOLDLEVEL，因为词法分析器可以更好地处理这个问题。如果您确实更改了折叠级别，折叠边距将更新以匹配您的更改。
+     * `line` 行号。
+     * */
+    fn set_fold_level(&self, line: usize, level: u32);
+
+    /**
+     * 获取一个 32 位值，该值包含行的折叠级别和一些与折叠相关的标志。使用 SCI_GETFOLDLEVEL(line) & SC_FOLDLEVELNUMBERMASK 获取行的折叠级别。同样，使用 SCI_GETFOLDLEVEL(line) & SC_FOLDLEVEL*FLAG 获取标志的状态。您需要使用 SCI_GETFOLDLEVEL 来决定如何处理用户折叠请求。如果您确实更改了折叠级别，折叠边距将更新以匹配您的更改。
+     * `line` 行号。
+     * */
+    fn get_fold_level(&self, line: usize) -> u32;
+
+    /**
+     * 设置折叠标志，此消息导致显示重新绘制。除了在折叠边距中显示标记外，您还可以通过在文本区域中绘制线条来向用户指示折叠。如果设置了 SC_ELEMENT_FOLD_LINE 颜色，则线条将以该颜色绘制。如果未设置，则使用为 STYLE_DEFAULT 设置的前景颜色。
+     * `flags` 在标志中设置的位决定折叠线的绘制位置：
+     * 折叠标志符号 | 值 | 效果
+     * SC_FOLDFLAG_NONE | 0 | 默认值。
+     * | 1 | 已删除的实验功能。
+     * SC_FOLDFLAG_LINEBEFORE_EXPANDED | 2 | 如果展开，则绘制在上方
+     * SC_FOLDFLAG_LINEBEFORE_CONTRACTED | 4 | 如果未展开，则绘制在上方
+     * SC_FOLDFLAG_LINEAFTER_EXPANDED | 8 | 如果展开，则绘制在下方
+     * SC_FOLDFLAG_LINEAFTER_CONTRACTED | 16 | 如果未展开，则绘制在下方
+     * SC_FOLDFLAG_LEVELNUMBERS | 64 |在行边距中显示十六进制折叠级别以帮助调试折叠。此功能的外观将来可能会发生变化。
+     * SC_FOLDFLAG_LINESTATE | 128 | 在行边距中显示十六进制行状态以帮助调试词法分析和折叠。不能与 SC_FOLDFLAG_LEVELNUMBERS 同时使用。
+     * */
+    fn set_fold_flags(&self, flags: u32);
+
+    /**
+     * 逐行搜索折叠级别小于或等于 level 的下一行，然后返回前一行的行号。如果将 level 设置为 -1，level 将设置为行 line 的折叠级别。如果 from 是折叠点，SCI_GETLASTCHILD(from, -1) 将返回通过切换折叠状态可显示或隐藏的最后一行。
+     * `line` 行号。
+     * `level` 折叠级别。
+     * */
+    fn get_last_child(&self, line: usize, level: u32) -> usize;
+
+    /**
+     * 将返回line前的第一行的行号，该行被标记为带有SC_FOLDLEVELHEADERFLAG的折叠点，并且折叠级别小于line。如果找不到行，或者标头标志和折叠级别不一致，则返回值为-1。
+     * `line` 行号。
+     * */
+    fn get_fold_parent(&self, line: usize) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 每个折叠点可以展开，显示其所有子行，也可以收缩，隐藏所有子行。只要设置了SC_FOLDLEVELHEADERFLAG，这些消息就会切换给定行的折叠状态。这些消息负责折叠或展开依赖于该行的所有行。显示在此消息后更新。
+     * `line` 行号。
+     * */
+    fn toggle_fold(&self, line: usize);
+
+    /**
+     * 在折叠文本的右侧显示可选文本标记。可以使用 SCI_SETDEFAULTFOLDDISPLAYTEXT 设置所有标题行的默认文本。文本使用 STYLE_FOLDDISPLAYTEXT 样式绘制。
+     * `line` 行号。
+     * `text` 文字。
+     * */
+    fn toggle_fold_show_text(&self, line: usize, text: String);
+
+    //noinspection StructuralWrap
+    /**
+     * 改变了折叠文本标签的外观。
+     * `style` 样式。
+     * */
+    fn fold_display_text_set_style(&self, style: FoldDisplayText);
+
+    /**
+     * 设置单行的展开状态。设置消息对行或任何依赖它的行的可见状态没有影响。它确实会更改折叠边距中的标记。如果您请求文档外行的展开状态，则结果为false(0)。如果您只想切换一行的折叠状态并处理所有依赖它的行，使用SCI_TOGGLEFOLD会更容易。您可以使用 SCI_SETFOLDEXPANDED 消息来处理许多折叠，而无需在完成之前更新显示。有关使用这些消息的示例，请参阅 SciTEBase::FoldAll() 和 SciTEBase::Expand()。
+     * `line` 行号。
+     * `expanded` 展开状态。
+     * */
+    fn set_fold_expanded(&self, line: usize, expanded: bool);
+
+    //noinspection StructuralWrap
+    /**
+     * 获取单行的展开状态。
+     * `line` 行号。
+     * */
+    fn get_fold_expanded(&self, line: usize) -> bool;
+
+    /**
+     * 提供了一种更高级别的折叠方法，而不是设置扩展标志并显示或隐藏单个行。可以使用SCI_FOLDLINE收缩/扩展/切换单个折叠。使用 SC_FOLDACTION_TOGGLE 检查文档中的第一个折叠标题以决定是扩展还是收缩。
+     * `line` 行号。
+     * `action` 动作。
+     * */
+    fn fold_line(&self, line: usize, action: FoldAction);
+
+    /**
+     * 提供了一种更高级别的折叠方法，而不是设置扩展标志并显示或隐藏单个行。要影响所有子折叠，请调用SCI_FOLDCHILDREN。使用 SC_FOLDACTION_TOGGLE 检查文档中的第一个折叠标题以决定是扩展还是收缩。
+     * `line` 行号。
+     * `action` 动作。
+     * */
+    fn fold_children(&self, line: usize, action: FoldAction);
+
+    /**
+     * 提供了一种更高级别的折叠方法，而不是设置扩展标志并显示或隐藏单个行。要影响整个文档，请调用SCI_FOLDALL。使用SC_FOLDACTION_TOGGLE检查文档中的第一个折叠标题以决定是扩展还是收缩。
+     * `action` 动作。
+     * */
+    fn fold_all(&self, action: FoldAction);
+
+    //noinspection StructuralWrap
+    /**
+     * 这用于响应行的更改导致其折叠级别或是否是标题更改，可能是在添加或删除“{”时。当容器收到行已更改的通知时，折叠级别已经设置，因此容器必须在这次调用中使用前一个级别，以便可以显示隐藏在此行下方的任何范围。
+     * `line` 行号。
+     * `level` 折叠级别。
+     * */
+    fn expand_children(&self, line: usize, level: u32);
+
+    /**
+     * 设置自动折叠位标志。Scintilla无需在容器中实现处理折叠的所有逻辑，而是可以提供适用于许多应用程序的行为。
+     * `automatic_fold` 折叠标志，一个位集，定义应启用 3 个折叠实现中的哪一个。大多数应用程序应该能够使用 SC_AUTOMATICFOLD_SHOW 和 SC_AUTOMATICFOLD_CHANGE 标志，除非它们希望实现完全不同的行为（例如定义自己的折叠结构）。当应用程序想要添加或更改点击行为（例如仅在 Shift+Alt 与点击结合使用时显示方法标题）时，更有可能触发 SC_AUTOMATICFOLD_CLICK。
+     * 符号 | 值 | 效果
+     * SC_AUTOMATICFOLD_NONE | 0 | 无自动行为的值。
+     * SC_AUTOMATICFOLD_SHOW | 1 | 根据需要自动显示线条。这样可以避免发送 SCN_NEEDSHOWN 通知。
+     * SC_AUTOMATICFOLD_CLICK | 2 | 自动处理折叠边距中的点击。这样可以避免发送折叠边距的 SCN_MARGINCLICK 通知。
+     * SC_AUTOMATICFOLD_CHANGE | 4 | 折叠结构发生变化时根据需要显示线条。除非容器禁用 SCN_MODIFIED 通知，否则仍会发送该通知。
+     * */
+    fn set_automatic_fold(&self, automatic_fold: u32);
+
+    /**
+     * 获取自动折叠位标志。
+     * */
+    fn get_automatic_fold(&self) -> u32;
+
+    //noinspection StructuralWrap
+    /**
+     * 高效搜索收缩折叠标题行。这在切换文档时保存用户的折叠或保存文件的折叠时非常有用。搜索从行号line_start开始，一直到文件末尾。如果是收缩折叠标题，则返回line_start，否则返回下一个收缩折叠标题。如果没有其他收缩折叠标题，则返回-1。
+     * `line_start` 开始行号。
+     * */
+    fn contracted_fold_next(&self, line_start: usize) -> usize;
+
+    //noinspection StructuralWrap
+    /**
+     * 一行可能因为其父行中有不止一行被收缩而被隐藏。这会沿着折叠层次向上传递，展开任何收缩的折叠，直到它们到达顶层。然后该行将可见。
+     * `line` 行号。
+     * */
+    fn ensure_visible(&self, line: usize);
+
+    /**
+     * 一行可能因为其父行中有不止一行被收缩而被隐藏。这会沿着折叠层次向上传递，展开任何收缩的折叠，直到它们到达顶层。然后该行将可见。这将应用由SCI_SETVISIBLEPOLICY设置的垂直插入点策略。
+     * `line` 行号。
+     * */
+    fn ensure_visible_enforce_policy(&self, line: usize);
 }
 
 #[cfg(test)]
@@ -3854,6 +4029,7 @@ mod test_scintilla {
         caret::CaretSticky,
         character::CharacterSet,
         eol::EolMode,
+        folding::{FoldAction, FoldDisplayText},
         ime::Ime,
         indentation::IndentView,
         indicator::Indicator,
@@ -3871,10 +4047,11 @@ mod test_scintilla {
         technology::Technology,
         wrap::WrapMode,
         Rectangle, Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT,
-        SCMOD_META, SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE,
-        SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT, SC_DOCUMENTOPTION_DEFAULT,
-        SC_EFF_QUALITY_ANTIALIASED, SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE,
-        SC_MARGIN_NUMBER, UNDO_MAY_COALESCE, VISIBLE_STRICT,
+        SCMOD_META, SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_AUTOMATICFOLD_CLICK,
+        SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT,
+        SC_DOCUMENTOPTION_DEFAULT, SC_EFF_QUALITY_ANTIALIASED, SC_FOLDFLAG_LINEBEFORE_CONTRACTED,
+        SC_FOLDLEVELHEADERFLAG, SC_INDICFLAG_VALUEFORE, SC_LINE_END_TYPE_UNICODE, SC_MARGIN_NUMBER,
+        UNDO_MAY_COALESCE, VISIBLE_STRICT,
     };
 
     //noinspection GrazieInspection
@@ -4533,6 +4710,33 @@ mod test_scintilla {
         // control.add_ref_document(0);
         // control.release_document(0);
         dbg!(control.create_loader(20, SC_DOCUMENTOPTION_DEFAULT));
+        dbg!(control.visible_from_doc_line(0));
+        control.show_lines(0, 1);
+        control.hide_lines(0, 1);
+        dbg!(control.get_line_visible(0));
+        dbg!(control.get_all_lines_visible());
+        control.set_fold_level(0, SC_FOLDLEVELHEADERFLAG);
+        assert_eq!(
+            SC_FOLDLEVELHEADERFLAG,
+            control.get_fold_level(0) & SC_FOLDLEVELHEADERFLAG
+        );
+        control.set_fold_flags(SC_FOLDFLAG_LINEBEFORE_CONTRACTED);
+        dbg!(control.get_last_child(1, SC_FOLDLEVELHEADERFLAG));
+        dbg!(control.get_fold_parent(0));
+        control.toggle_fold(0);
+        control.toggle_fold_show_text(0, "折叠".to_string());
+        control.fold_display_text_set_style(FoldDisplayText::Boxed);
+        control.set_fold_expanded(0, true);
+        assert_eq!(true, control.get_fold_expanded(0));
+        control.fold_line(0, FoldAction::Toggle);
+        control.fold_children(0, FoldAction::Toggle);
+        control.fold_all(FoldAction::Toggle);
+        control.expand_children(0, SC_FOLDLEVELHEADERFLAG);
+        control.set_automatic_fold(SC_AUTOMATICFOLD_CLICK);
+        assert_eq!(SC_AUTOMATICFOLD_CLICK, control.get_automatic_fold());
+        dbg!(control.contracted_fold_next(0));
+        control.ensure_visible(0);
+        control.ensure_visible_enforce_policy(0);
         dbg!(control);
     }
 }
