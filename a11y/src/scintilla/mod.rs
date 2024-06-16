@@ -16,6 +16,7 @@ mod internal;
 pub mod annotation;
 pub mod autoc;
 pub mod bidirectional;
+pub mod cache;
 pub mod caret;
 pub mod character;
 pub mod eol;
@@ -42,6 +43,7 @@ use crate::scintilla::{
     annotation::Annotation,
     autoc::MultiAutoc,
     bidirectional::Bidirectional,
+    cache::CacheMode,
     caret::CaretSticky,
     character::CharacterSet,
     eol::EolMode,
@@ -61,7 +63,7 @@ use crate::scintilla::{
     status::Status,
     style::{Case, IdleStyling},
     technology::Technology,
-    wrap::WrapMode,
+    wrap::{WrapIndent, WrapMode},
 };
 use win_wrap::control::edit::Edit;
 
@@ -4013,6 +4015,125 @@ pub trait Scintilla: Edit {
      * `line` 行号。
      * */
     fn ensure_visible_enforce_policy(&self, line: usize);
+
+    /**
+     * 设置换行模式。
+     * `wrap_mode` 换行模式。
+     * */
+    fn set_wrap_mode(&self, wrap_mode: WrapMode);
+
+    /**
+     * 获取换行模式。
+     * */
+    fn get_wrap_mode(&self) -> WrapMode;
+
+    //noinspection StructuralWrap
+    /**
+     * 您可以启用视觉标志的绘制来指示行已换行。
+     * `wrap_visual_flags` 设置的位决定绘制哪些视觉标志。
+     * */
+    fn set_wrap_visual_flags(&self, wrap_visual_flags: u32);
+
+    /**
+     * 获取换行视觉标志。
+     * */
+    fn get_wrap_visual_flags(&self) -> u32;
+
+    //noinspection StructuralWrap
+    /**
+     * 您可以设置指示换行的视觉标志是在边框附近还是在文本附近绘制。
+     * `wrap_visual_flags_location` 设置的位将相应视觉标志的位置设置为靠近文本。
+     * */
+    fn set_wrap_visual_flags_location(&self, wrap_visual_flags_location: u32);
+
+    /**
+     * 获取换行视觉标志位置。
+     * */
+    fn get_wrap_visual_flags_location(&self) -> u32;
+
+    /**
+     * 换行的子行可以缩进到其第一个子行的位置或再缩进一个级别。默认值为 SC_WRAPINDENT_FIXED。
+     * `wrap_indent_mode` 换行缩进模式。
+     * */
+    fn set_wrap_indent_mode(&self, wrap_indent_mode: WrapIndent);
+
+    /**
+     * 获取换行缩进模式。
+     * */
+    fn get_wrap_indent_mode(&self) -> WrapIndent;
+
+    /**
+     * 根据STYLE_DEFAULT中的平均字符宽度设置换行的子行缩进大小。缩进大小没有限制，但小于 0 的值或较大的值可能会产生不良影响。子行的缩进与视觉标志无关，但如果设置了 SC_WRAPVISUALFLAG_START，则使用至少 1 的缩进。
+     * `indent` 缩进。
+     * */
+    fn set_wrap_start_indent(&self, indent: i32);
+
+    /**
+     * 获取换行子行缩进大小。
+     * */
+    fn get_wrap_start_indent(&self) -> i32;
+
+    /**
+     * 设置布局缓存模式。
+     * `cache_mode` 缓存模式。
+     * */
+    fn set_layout_cache(&self, cache_mode: CacheMode);
+
+    /**
+     * 获取布局缓存模式。
+     * */
+    fn get_layout_cache(&self) -> CacheMode;
+
+    //noinspection StructuralWrap
+    /**
+     * 位置缓存存储短文本的位置信息，以便在文本重复时可以更快地确定其布局。
+     * `size` 缓存的条目大小。
+     * */
+    fn set_position_cache(&self, size: i32);
+
+    /**
+     * 获取位置缓存。
+     * */
+    fn get_position_cache(&self) -> i32;
+
+    /**
+     * 将目标指示的行范围拆分为宽度最多为pixel_width的行。拆分尽可能发生在单词边界上，方式与换行类似。当 pixel_width 为 0 时，则使用窗口的宽度。
+     * `pixel_width` 像素宽度。
+     * */
+    fn lines_split(&self, pixel_width: i32);
+
+    /**
+     * 通过删除行尾字符将目标指示的行范围合并为一行。如果这会导致单词之间没有空格，则会插入一个额外的空格。
+     * */
+    fn lines_join(&self);
+
+    /**
+     * 如果doc_line换行，则它们可以占用多个显示行，这将返回一个doc_line换行所需的显示行数。
+     * `doc_line` 文档行号。
+     * */
+    fn wrap_count(&self, doc_line: usize) -> usize;
+
+    /**
+     * 如果当前缩放系数小于 20 点，则 SCI_ZOOMIN 将缩放系数增加 1 点。
+     * */
+    fn zoom_in(&self);
+
+    /**
+     * 如果当前缩放系数大于 -10 点，则 SCI_ZOOMOUT 将缩放系数减少 1 点。
+     * */
+    fn zoom_out(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 设置缩放系数。您可以设置的系数没有限制，因此将自己限制在-10到+20以匹配增量缩放功能是一个好主意。
+     * `zoom_in_points` 缩放系数。
+     * */
+    fn set_zoom(&self, zoom_in_points: i32);
+
+    /**
+     * 获取缩放系数。
+     * */
+    fn get_zoom(&self) -> i32;
 }
 
 #[cfg(test)]
@@ -4026,6 +4147,7 @@ mod test_scintilla {
         annotation::Annotation,
         autoc::MultiAutoc,
         bidirectional::Bidirectional,
+        cache::CacheMode,
         caret::CaretSticky,
         character::CharacterSet,
         eol::EolMode,
@@ -4045,7 +4167,9 @@ mod test_scintilla {
         status::Status,
         style::{Case, IdleStyling, STYLE_BRACEBAD},
         technology::Technology,
-        wrap::WrapMode,
+        wrap::{
+            WrapIndent, WrapMode, SC_WRAPVISUALFLAGLOC_START_BY_TEXT, SC_WRAPVISUALFLAG_MARGIN,
+        },
         Rectangle, Scintilla, CARETSTYLE_LINE, CARET_JUMPS, SCFIND_MATCHCASE, SCI_COPYTEXT,
         SCMOD_META, SCMOD_SUPER, SCVS_USERACCESSIBLE, SC_AUTOMATICFOLD_CLICK,
         SC_CASEINSENSITIVEBEHAVIOUR_IGNORECASE, SC_CP_UTF8, SC_CURSORREVERSEARROW, SC_CURSORWAIT,
@@ -4737,6 +4861,33 @@ mod test_scintilla {
         dbg!(control.contracted_fold_next(0));
         control.ensure_visible(0);
         control.ensure_visible_enforce_policy(0);
+        control.set_wrap_mode(WrapMode::Char);
+        assert_eq!(WrapMode::Char, control.get_wrap_mode());
+        control.set_wrap_visual_flags(SC_WRAPVISUALFLAG_MARGIN);
+        assert_eq!(
+            SC_WRAPVISUALFLAG_MARGIN,
+            control.get_wrap_visual_flags() & SC_WRAPVISUALFLAG_MARGIN
+        );
+        control.set_wrap_visual_flags_location(SC_WRAPVISUALFLAGLOC_START_BY_TEXT);
+        assert_eq!(
+            SC_WRAPVISUALFLAGLOC_START_BY_TEXT,
+            control.get_wrap_visual_flags_location() & SC_WRAPVISUALFLAGLOC_START_BY_TEXT
+        );
+        control.set_wrap_indent_mode(WrapIndent::DeepIndent);
+        assert_eq!(WrapIndent::DeepIndent, control.get_wrap_indent_mode());
+        control.set_wrap_start_indent(12);
+        assert_eq!(12, control.get_wrap_start_indent());
+        control.set_layout_cache(CacheMode::Document);
+        assert_eq!(CacheMode::Document, control.get_layout_cache());
+        control.set_position_cache(30);
+        assert_eq!(30, control.get_position_cache());
+        control.lines_split(50);
+        control.lines_join();
+        dbg!(control.wrap_count(0));
+        control.zoom_in();
+        control.zoom_out();
+        control.set_zoom(5);
+        assert_eq!(5, control.get_zoom());
         dbg!(control);
     }
 }
