@@ -13,12 +13,14 @@
 
 mod internal;
 
+pub mod accessibility;
 pub mod annotation;
 pub mod autoc;
 pub mod bidirectional;
 pub mod cache;
 pub mod caret;
 pub mod character;
+pub mod edge;
 pub mod eol;
 pub mod folding;
 pub mod ime;
@@ -36,16 +38,19 @@ pub mod space;
 pub mod status;
 pub mod style;
 pub mod technology;
+pub mod typing;
 pub mod wrap;
 
 pub use crate::scintilla::internal::*;
 use crate::scintilla::{
+    accessibility::Accessibility,
     annotation::Annotation,
     autoc::MultiAutoc,
     bidirectional::Bidirectional,
     cache::CacheMode,
     caret::CaretSticky,
     character::CharacterSet,
+    edge::EdgeMode,
     eol::EolMode,
     folding::{FoldAction, FoldDisplayText},
     ime::Ime,
@@ -63,6 +68,7 @@ use crate::scintilla::{
     status::Status,
     style::{Case, IdleStyling},
     technology::Technology,
+    typing::PropertyType,
     wrap::{WrapIndent, WrapMode},
 };
 use win_wrap::control::edit::Edit;
@@ -4134,6 +4140,142 @@ pub trait Scintilla: Edit {
      * 获取缩放系数。
      * */
     fn get_zoom(&self) -> i32;
+
+    /**
+     * 设置用于显示长行的模式。
+     * `edge_mode` 边缘模式。
+     * */
+    fn set_edge_mode(&self, edge_mode: EdgeMode);
+
+    /**
+     * 获取用于显示长行的模式。
+     * */
+    fn get_edge_mode(&self) -> EdgeMode;
+
+    /**
+     * 设置显示长行标记的列号。绘制线条时，列以 STYLE_DEFAULT 中空格字符的宽度为单位设置位置。设置背景颜色时，列是行中的字符数（允许制表符）。
+     * `column` 列号。
+     * */
+    fn set_edge_column(&self, column: usize);
+
+    /**
+     * 获取显示长行标记的列号。
+     * */
+    fn get_edge_column(&self) -> usize;
+
+    /**
+     * 设置用于显示行已超出 SCI_SETEDGECOLUMN 设置的长度的标记的颜色。
+     * `edge_colour` 边缘颜色。
+     * */
+    fn set_edge_colour(&self, edge_colour: i32);
+
+    /**
+     * 获取用于显示行已超出 SCI_SETEDGECOLUMN 设置的长度的标记的颜色。
+     * */
+    fn get_edge_colour(&self) -> i32;
+
+    /**
+     * 向视图添加新的垂直边。该边将显示在给定的列号处。结果边的位置取决于 STYLE_DEFAULT 中空格字符的度量。
+     * `column` 列号。
+     * `edge_colour` 边缘颜色。
+     * */
+    fn multi_edge_add_line(&self, column: usize, edge_colour: i32);
+
+    /**
+     * 清除所有边。
+     * */
+    fn multi_edge_clear_all(&self);
+
+    /**
+     * 启用或禁用无障碍。在大多数平台上，可访问性要么已实现，要么未实现，这可以通过 SCI_GETACCESSIBILITY 发现，而 SCI_SETACCESSIBILITY 不执行任何操作。在 GTK 上，可访问性会消耗存储和性能，因此可以通过调用 SCI_SETACCESSIBILITY 来禁用它。
+     * `accessibility` 无障碍状态。
+     * */
+    fn set_accessibility(&self, accessibility: Accessibility);
+
+    /**
+     * 获取当前无障碍启用状态。
+     * */
+    fn get_accessibility(&self) -> Accessibility;
+
+    /**
+     * 您可以从 SciLexer.h 中的 SCLEX_* 枚举中检索当前词法分析器的整数词法分析器 ID。某些词法分析器可能没有词法分析器 ID，只有词法分析器名称，在这种情况下会返回 0。
+     * */
+    fn get_lexer(&self) -> u32;
+
+    /**
+     * SCI_GETLEXERLANGUAGE 返回当前词法分析器的名称，该名称必须使用 SCI_SETILEXER 进行设置。要找到词法分析器的名称，请打开相关的 lexilla/lexers/Lex*.cxx 文件并搜索 LexerModule。LexerModule 构造函数中的第三个参数是要使用的名称。
+     * */
+    fn get_lexer_language(&self) -> Option<String>;
+
+    /**
+     * 这将请求当前词法分析器或容器（如果词法分析器设置为 NULL）在开始和结束之间设置文档样式。如果结束为 -1，则文档从开始到结束都设置样式。如果“折叠”属性设置为“1”，并且您的词法分析器或容器支持折叠，则还会设置折叠级别。此消息会导致重绘。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn colourise(&self, start: usize, end: usize);
+
+    /**
+     * 表明词法分析器的内部状态在一定范围内发生了变化，因此可能需要重新绘制。
+     * `start` 开始点。
+     * `end` 结束点。
+     * */
+    fn change_lexer_state(&self, start: usize, end: usize) -> i32;
+
+    /**
+     * 可以检索有关可以为当前词法分析器设置的属性的信息。此信息仅适用于较新的词法分析器。这返回一个字符串，其中所有有效属性都以“\n”分隔。如果词法分析器不支持此调用，则返回一个空字符串。
+     * */
+    fn property_names(&self) -> Option<String>;
+
+    /**
+     * 获取属性的类型。
+     * `name` 属性名。
+     * */
+    fn property_type(&self, name: String) -> PropertyType;
+
+    /**
+     * 返回属性的英文描述。
+     * `name` 属性名。
+     * */
+    fn describe_property(&self, name: String) -> Option<String>;
+
+    /**
+     * 您可以使用键：值字符串对将设置传达给词法分析器。除了可用内存之外，您可以设置的关键字对数量没有限制。如果已经有与关键字关联的值字符串，则会替换该值字符串。如果您传递的是零长度字符串，则消息不执行任何操作。key 和 value 均无需修改即可使用；key 开头或结尾的额外空格很重要。 value 字符串不再能引用其他关键字，而 Scintilla 的旧版本中却可以这样做。词法分析器只能存储它们支持的关键字的值。目前，大多数词法分析器都定义了“fold”属性，如果设置为“1”，则设置折叠结构。
+     * SCLEX_PYTHON 将“tab.timmy.whinge.level”理解为确定如何指示错误缩进的设置。大多数关键字的值都被解释为整数。在词法分析器源中搜索 GetPropertyInt 以了解如何使用属性。词法分析器使用的属性命名有一个约定，以便脚本可以找到属性集。当属性名称适用于一个词法分析器时，应以“lexer..”或“fold..”开头，如果适用于多个词法分析器，则应以“lexer.”或“fold.”开头。
+     * 应用程序可以通过在词法分析器的源代码中搜索包含 GetProperty 或 DefineProperty 和双引号字符串的行来发现所使用的属性集，并提取双引号字符串的值作为属性名称。lexilla/scripts/LexillaData.py 脚本执行此操作，可以用作示例。
+     * `key` 区分大小写的关键字。
+     * `value` 与关键字关联的字符串。
+     * */
+    fn set_property(&self, key: String, value: String);
+
+    /**
+     * 现在，这与 SCI_GETPROPERTY 相同 - 不执行扩展。使用指定的键查找键：值对。
+     * `key` 区分大小写的关键字。
+     * */
+    fn get_property_expanded(&self, key: String) -> Option<String>;
+
+    /**
+     * 使用指定键查找键：值对；如果找到，则将值解释为整数并返回。如果未找到（或值为空字符串），则返回提供的默认值。如果找到关键字：值对但不是数字，则返回 0。
+     * `key` 区分大小写的关键字。
+     * `default_value` 默认值。
+     * */
+    fn get_property_int(&self, key: String, default_value: u32) -> u32;
+
+    /**
+     * 使用指定键查找键：值对。
+     * */
+    fn get_property(&self, key: String) -> Option<String>;
+
+    /**
+     * 您最多可以设置 9 个关键字列表供当前词法分析器使用。如何使用这些关键字完全取决于词法分析器。某些语言（例如 HTML）可能包含嵌入语言，VBScript 和 JavaScript 对 HTML 很常见。对于 HTML，关键字集 0 代表 HTML，1 代表 JavaScript，2 代表 VBScript，3 代表 Python，4 代表 PHP，5 代表 SGML 和 DTD 关键字。查看词法分析器代码以查看关键字列表的示例。完全符合规范的词法分析器将 LexerModule 构造函数的第四个参数设置为描述关键字列表用途的字符串列表。或者，您可以将集合 0 用于一般关键字，将集合 1 用于导致缩进的关键字，将集合 2 用于导致取消缩进的关键字。同样，您可能有一个为关键字着色的简单词法分析器，并且您可以通过更改集合 0 中的关键字来更改语言。没有什么可以阻止您在词法分析器中构建自己的关键字列表，但这意味着如果添加更多关键字，则必须重建词法分析器。
+     * `key_word_set` 可以是 0 到 8（实际上是 0 到 KEYWORDSET_MAX），并选择要替换的关键字列表。
+     * `key_words` 是由空格、制表符、“\n”或“\r”或这些的任意组合分隔的关键字列表。预计关键字将由标准 ASCII 打印字符组成，但没有什么可以阻止您使用 1 到 255 之间的任何非分隔符字符代码（常识除外）。
+     * */
+    fn set_keywords(&self, key_word_set: u32, key_words: String);
+
+    /**
+     * 返回以“\n”分隔的所有关键字集的描述。
+     * */
+    fn describe_keyword_sets(&self) -> Option<String>;
 }
 
 #[cfg(test)]
@@ -4144,12 +4286,14 @@ mod test_scintilla {
     };
 
     use crate::scintilla::{
+        accessibility::Accessibility,
         annotation::Annotation,
         autoc::MultiAutoc,
         bidirectional::Bidirectional,
         cache::CacheMode,
         caret::CaretSticky,
         character::CharacterSet,
+        edge::EdgeMode,
         eol::EolMode,
         folding::{FoldAction, FoldDisplayText},
         ime::Ime,
@@ -4888,6 +5032,29 @@ mod test_scintilla {
         control.zoom_out();
         control.set_zoom(5);
         assert_eq!(5, control.get_zoom());
+        control.set_edge_mode(EdgeMode::Line);
+        assert_eq!(EdgeMode::Line, control.get_edge_mode());
+        control.set_edge_column(4);
+        assert_eq!(4, control.get_edge_column());
+        control.set_edge_colour(0xccefef);
+        assert_eq!(0xccefef, control.get_edge_colour());
+        control.multi_edge_add_line(3, 0xc2c2ef);
+        control.multi_edge_clear_all();
+        control.set_accessibility(Accessibility::Enabled);
+        assert_eq!(Accessibility::Enabled, control.get_accessibility());
+        dbg!(control.get_lexer());
+        dbg!(control.get_lexer_language());
+        control.colourise(3, 6);
+        dbg!(control.change_lexer_state(4, 7));
+        dbg!(control.property_names());
+        dbg!(control.property_type("fold".to_string()));
+        dbg!(control.describe_property("fold".to_string()));
+        control.set_property("fold".to_string(), "1".to_string());
+        dbg!(control.get_property_expanded("fold".to_string()));
+        dbg!(control.get_property_int("fold".to_string(), 0));
+        dbg!(control.get_property("fold".to_string()));
+        control.set_keywords(0, "pub unsafe".to_string());
+        dbg!(control.describe_keyword_sets());
         dbg!(control);
     }
 }
