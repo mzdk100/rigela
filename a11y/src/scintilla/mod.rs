@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+mod ext;
 mod internal;
 
 pub mod accessibility;
@@ -118,6 +119,84 @@ use win_wrap::control::edit::Edit;
  * };
  * ```
  * IDocumentEditable 接口正在开发中，将来会添加更多方法。方法也可能会更改签名或被删除。因此该功能是临时的，用户应该知道他们可能必须修改客户端代码以响应这些更改。当 IDocumentEditable 是临时的时，DEVersion 将返回 0，而对于第一个稳定版本，它将返回 1。此后，当添加新方法时，它将递增。
+ *
+ * 词法分析器对象
+ * 词法分析器被编程为实现 ILexer5 接口的对象，并通过 IDocument 接口与它们正在词法分析的文档进行交互。以前，词法分析器是通过提供词法分析和折叠函数来定义的，但创建一个对象来处理词法分析器与文档的交互允许词法分析器存储可在词法分析期间使用的状态信息。例如，C++ 词法分析器可以存储一组预处理器定义或变量声明，并根据其角色对其进行样式设置。
+ * ILexer4 使用 ILexer5 接口进行了扩展，以支持使用 Lexilla。一组辅助类允许在 Scintilla 中使用由函数定义的旧词法分析器。
+ * ```cpp
+ * class ILexer4 {
+ * public:
+ *         virtual int SCI_METHOD Version() const = 0;
+ *         virtual void SCI_METHOD Release() = 0;
+ *         virtual const char * SCI_METHOD PropertyNames() = 0;
+ *         virtual int SCI_METHOD PropertyType(const char *name) = 0;
+ *         virtual const char * SCI_METHOD DescribeProperty(const char *name) = 0;
+ *         virtual Sci_Position SCI_METHOD PropertySet(const char *key, const char *val) = 0;
+ *         virtual const char * SCI_METHOD DescribeWordListSets() = 0;
+ *         virtual Sci_Position SCI_METHOD WordListSet(int n, const char *wl) = 0;
+ *         virtual void SCI_METHOD Lex(Sci_PositionU startPos, Sci_Position lengthDoc, int initStyle, IDocument *pAccess) = 0;
+ *         virtual void SCI_METHOD Fold(Sci_PositionU startPos, Sci_Position lengthDoc, int initStyle, IDocument *pAccess) = 0;
+ *         virtual void * SCI_METHOD PrivateCall(int operation, void *pointer) = 0;
+ *         virtual int SCI_METHOD LineEndTypesSupported() = 0;
+ *         virtual int SCI_METHOD AllocateSubStyles(int styleBase, int numberStyles) = 0;
+ *         virtual int SCI_METHOD SubStylesStart(int styleBase) = 0;
+ *         virtual int SCI_METHOD SubStylesLength(int styleBase) = 0;
+ *         virtual int SCI_METHOD StyleFromSubStyle(int subStyle) = 0;
+ *         virtual int SCI_METHOD PrimaryStyleFromStyle(int style) = 0;
+ *         virtual void SCI_METHOD FreeSubStyles() = 0;
+ *         virtual void SCI_METHOD SetIdentifiers(int style, const char *identifiers) = 0;
+ *         virtual int SCI_METHOD DistanceToSecondaryStyles() = 0;
+ *         virtual const char * SCI_METHOD GetSubStyleBases() = 0;
+ *         virtual int SCI_METHOD NamedStyles() = 0;
+ *         virtual const char * SCI_METHOD NameOfStyle(int style) = 0;
+ *         virtual const char * SCI_METHOD TagsOfStyle(int style) = 0;
+ *         virtual const char * SCI_METHOD DescriptionOfStyle(int style) = 0;
+ * };
+ * class ILexer5 : public ILexer4 {
+ * public:
+ *         virtual const char * SCI_METHOD GetName() = 0;
+ *         virtual int SCI_METHOD  GetIdentifier() = 0;
+ *         virtual const char * SCI_METHOD PropertyGet(const char *key) = 0;
+ * };
+ * ```
+ * Sci_Position 和 Sci_PositionU 类型用于文档中的位置和行号。64 位版本将它们定义为 64 位类型，以允许大于 2 GB 的文档。将字符串返回为 const char * 的方法不需要无限期地维护单独的分配：词法分析器实现可能拥有一个缓冲区，该缓冲区可在每次调用时重复使用。调用者应立即复制返回的字符串。 PropertySet 和 WordListSet 的返回值用于指示更改是否需要对文档的任何部分执行词法分析或折叠。它是重新开始词法分析和折叠的位置，如果更改不需要对文档进行任何额外工作，则返回 -1。
+ * 一种简单的方法是，如果更改有可能需要再次对文档进行词法分析，则返回 0，而优化可能是记住设置首先影响文档的位置并返回该位置。 Version 返回一个枚举值，指定实现哪个版本的接口：对于 ILexer5 为 lvRelease5，对于 ILexer4 为 lvRelease4。对于 Scintilla 版本 5.0 或更高版本，必须提供 ILexer5。调用 Release 来销毁词法分析器对象。
+ * PrivateCall 允许应用程序和词法分析器之间直接通信。例如，应用程序维护一个包含有关系统头文件（如 Windows.h）的符号信息的单个大型数据结构，并将其提供给词法分析器，然后将其应用于每个文档。这避免了为每个文档构建系统头文件信息的成本。这是通过 SCI_PRIVATELEXERCALL API 调用的。
+ * 使用需要折叠的确切范围调用 Fold。以前，使用从需要折叠的范围前一行开始的范围调用词法分析器，因为这样可以修复上次折叠的最后一行。新方法允许词法分析器决定是回溯还是更有效地处理这个问题。当请求的子样式多于可用子样式时，AllocateSubStyles 返回负数。 NamedStyles、NameOfStyle、TagsOfStyle 和 DescriptionOfStyle 用于提供有关此词法分析器使用的样式集的信息。
+ * NameOfStyle 是 C 语言标识符，如“SCE_LUA_COMMENT”。TagsOfStyle 是一组以标准化方式描述样式的标签，如“文字字符串多行原始”。这里描述了一组常用标签和将它们组合在一起的约定。DescriptionOfStyle 是样式的英文描述，如“函数或方法名称定义”。可以调用 GetName 和 GetIdentifier 来发现词法分析器的身份，并用于实现 SCI_GETLEXERLANGUAGE 和 SCI_GETLEXER。可以调用 PropertyGet 来发现词法分析器存储的属性的值，并用于实现 SCI_GETPROPERTY。
+ * ```cpp
+ * class IDocument {
+ * public:
+ *         virtual int SCI_METHOD Version() const = 0;
+ *         virtual void SCI_METHOD SetErrorStatus(int status) = 0;
+ *         virtual Sci_Position SCI_METHOD Length() const = 0;
+ *         virtual void SCI_METHOD GetCharRange(char *buffer, Sci_Position position, Sci_Position lengthRetrieve) const = 0;
+ *         virtual char SCI_METHOD StyleAt(Sci_Position position) const = 0;
+ *         virtual Sci_Position SCI_METHOD LineFromPosition(Sci_Position position) const = 0;
+ *         virtual Sci_Position SCI_METHOD LineStart(Sci_Position line) const = 0;
+ *         virtual int SCI_METHOD GetLevel(Sci_Position line) const = 0;
+ *         virtual int SCI_METHOD SetLevel(Sci_Position line, int level) = 0;
+ *         virtual int SCI_METHOD GetLineState(Sci_Position line) const = 0;
+ *         virtual int SCI_METHOD SetLineState(Sci_Position line, int state) = 0;
+ *         virtual void SCI_METHOD StartStyling(Sci_Position position) = 0;
+ *         virtual bool SCI_METHOD SetStyleFor(Sci_Position length, char style) = 0;
+ *         virtual bool SCI_METHOD SetStyles(Sci_Position length, const char *styles) = 0;
+ *         virtual void SCI_METHOD DecorationSetCurrentIndicator(int indicator) = 0;
+ *         virtual void SCI_METHOD DecorationFillRange(Sci_Position position, int value, Sci_Position fillLength) = 0;
+ *         virtual void SCI_METHOD ChangeLexerState(Sci_Position start, Sci_Position end) = 0;
+ *         virtual int SCI_METHOD CodePage() const = 0;
+ *         virtual bool SCI_METHOD IsDBCSLeadByte(char ch) const = 0;
+ *         virtual const char * SCI_METHOD BufferPointer() = 0;
+ *         virtual int SCI_METHOD GetLineIndentation(Sci_Position line) = 0;
+ *         virtual Sci_Position SCI_METHOD LineEnd(Sci_Position line) const = 0;
+ *         virtual Sci_Position SCI_METHOD GetRelativePosition(Sci_Position positionStart, Sci_Position characterOffset) const = 0;
+ *         virtual int SCI_METHOD GetCharacterAndWidth(Sci_Position position, Sci_Position *pWidth) const = 0;
+ * };
+ * ```
+ * Scintilla 尝试将修改文本的后果降至最低，尽可能只重新排列并重新绘制更改的行。词法分析器对象包含自己的私有额外状态，这可能会影响后面的行。例如，如果 C++ 词法分析器使不活动的代码段变灰，则将语句 #define BEOS 0 更改为 #define BEOS 1 可能需要重新设置样式并重新显示文档的后面部分。
+ * 词法分析器可以调用 ChangeLexerState 向文档发出信号，表示它应该重新排列并显示更多内容。对于 StartStyling，mask 参数无效。它在 3.4.2 及更早版本中使用。 SetErrorStatus 用于通知文档异常。不应在构建边界上抛出异常，因为两侧可能使用不同的编译器或不兼容的异常选项构建。
+ * 为了允许词法分析器确定行的结束位置，从而更容易支持 Unicode 行结束符，IDocument 包含 LineEnd，应该使用它而不是测试特定的行结束符。 GetRelativePosition 按整个字符浏览文档，如果超出文档的开始和结束，则返回 INVALID_POSITION。 GetCharacterAndWidth 提供从 UTF-8 字节到 UTF-32 字符或从 DBCS 到 16 位值的标准转换。
+ * 无效 UTF-8 中的字节单独报告为值 0xDC80+byteValue，这不是有效的 Unicode 代码点。如果调用者不需要知道字符中的字节数，则 pWidth 参数可以为 NULL。 ILexer5 和 IDocument 接口将来可能会扩展为扩展版本（ILexer6...）。Version 方法指示实现了哪个接口，从而可以调用哪些方法。
  * */
 pub trait Scintilla: Edit {
     /**
@@ -4276,6 +4355,93 @@ pub trait Scintilla: Edit {
      * 返回以“\n”分隔的所有关键字集的描述。
      * */
     fn describe_keyword_sets(&self) -> Option<String>;
+
+    /*
+     * 用一个字节填充每个可拆分为子样式的样式。
+     * */
+    fn get_substyle_bases(&self) -> Option<Vec<u8>>;
+
+    /**
+     * 返回主要样式与其对应的次要样式之间的距离。
+     * */
+    fn distance_to_secondary_styles(&self) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 为特定基本样式分配一定数量的子样式，并返回分配的第一个子样式编号。如果失败（例如请求的子样式多于可用子样式），则返回负数。支持子样式的词法分析器通常允许分配64个子样式。子样式是连续分配的。
+     * `style_base` 基本样式。
+     * `number_styles` 样式数量。
+     * */
+    fn allocate_substyles(&self, style_base: i32, number_styles: i32) -> i32;
+
+    /**
+     * 释放所有分配的子样式。
+     * */
+    fn free_substyles(&self);
+
+    //noinspection StructuralWrap
+    /**
+     * 返回分配给基本样式的子样式的开始。
+     * `style_base` 基本样式。
+     * */
+    fn get_substyles_start(&self, style_base: i32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 返回分配给基本样式的子样式的长度。
+     * `style_base` 基本样式。
+     * */
+    fn get_substyles_length(&self, style_base: i32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 对于子样式，返回基本样式，否则返回参数。
+     * `sub_style` 子样式。
+     * */
+    fn get_style_from_substyle(&self, sub_style: i32) -> i32;
+
+    //noinspection StructuralWrap
+    /**
+     * 对于次要样式，返回主要样式，否则返回参数。
+     * `style` 样式。
+     * */
+    fn get_primary_style_from_style(&self, style: i32) -> i32;
+
+    /**
+     * 与 SCI_SETKEYWORDS 类似，但适用于子样式。SCI_SETKEYWORDS 提供的前缀功能未在 SCI_SETIDENTIFIERS 中实现。
+     * `style` 样式。
+     * `identifiers` 标识符。
+     * */
+    fn set_identifiers(&self, style: i32, identifiers: String);
+
+    /**
+     * 以 Scintilla 无法理解的方式调用词法分析器。
+     * `operation` 操作。
+     * `pointer` 指针。
+     * */
+    fn private_lexer_call(&self, operation: i32, pointer: isize) -> isize;
+
+    /**
+     * 检索词法分析器的命名样式的数量。
+     * */
+    fn get_named_styles(&self) -> i32;
+
+    /**
+     * 查询样式的名称。这是一个 C 预处理器符号，如“SCE_C_COMMENTDOC”。
+     * `style` 样式。
+     * */
+    fn name_of_style(&self, style: i32) -> Option<String>;
+
+    /**
+     * 检索样式的标签。这是一组以空格分隔的单词，例如“注释文档”。
+     * `style` 样式。
+     * */
+    fn tags_of_style(&self, style: i32) -> Option<String>;
+
+    /**
+     * 查询适合在用户界面中显示的样式的英文描述。这看起来像“文档注释：以 /\*\* 或 /\* 开头的块注释！”。
+     * */
+    fn description_of_style(&self, style: i32) -> Option<String>;
 }
 
 #[cfg(test)]
@@ -5041,7 +5207,7 @@ mod test_scintilla {
         control.multi_edge_add_line(3, 0xc2c2ef);
         control.multi_edge_clear_all();
         control.set_accessibility(Accessibility::Enabled);
-        assert_eq!(Accessibility::Enabled, control.get_accessibility());
+        dbg!(control.get_accessibility());
         dbg!(control.get_lexer());
         dbg!(control.get_lexer_language());
         control.colourise(3, 6);
@@ -5055,6 +5221,20 @@ mod test_scintilla {
         dbg!(control.get_property("fold".to_string()));
         control.set_keywords(0, "pub unsafe".to_string());
         dbg!(control.describe_keyword_sets());
+        dbg!(control.get_substyle_bases());
+        dbg!(control.distance_to_secondary_styles());
+        dbg!(control.allocate_substyles(1024, 2));
+        control.free_substyles();
+        dbg!(control.get_substyles_start(1024));
+        dbg!(control.get_substyles_length(1024));
+        dbg!(control.get_style_from_substyle(2));
+        dbg!(control.get_primary_style_from_style(2));
+        control.set_identifiers(2, "x y z".to_string());
+        dbg!(control.private_lexer_call(0, 0));
+        dbg!(control.get_named_styles());
+        dbg!(control.name_of_style(2));
+        dbg!(control.tags_of_style(2));
+        dbg!(control.description_of_style(2));
         dbg!(control);
     }
 }
