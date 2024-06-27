@@ -91,9 +91,7 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
                 #doc_raw
             }
 
-            async  fn perform(&self, context: Weak<Context>) {
-                #body
-            }
+            async  fn perform(&self, context: Weak<Context>) #body
         }
         impl crate::talent::TalentProvider {
             pub fn #id2(&self) -> #id {#id}

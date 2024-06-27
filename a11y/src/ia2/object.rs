@@ -11,17 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub use crate::IAccessible2Lib::{
+pub use crate::ia2::ia2_lib::{
     Accessible2::IA2Locale,
     AccessibleStates::AccessibleStates,
     IA2CommonTypes::{IA2CoordinateType, IA2ScrollType},
 };
-use crate::{
-    ia2::relation::AccessibleRelation,
-    IAccessible2Lib::{
+use crate::ia2::{
+    ia2_lib::{
         Accessible2::IAccessible2, Accessible2_2::IAccessible2_2, Accessible2_3::IA2Range,
         Accessible2_3::IAccessible2_3,
     },
+    relation::AccessibleRelation,
 };
 use std::{
     ffi::c_void,

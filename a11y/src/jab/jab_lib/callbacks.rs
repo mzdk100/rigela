@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::JabLib::packages::JObject64;
+use crate::jab::jab_lib::packages::JObject64;
 
 /**
  * Header file defining callback typedefs for Windows routines

@@ -2750,7 +2750,7 @@ impl Scintilla for WindowControl {
             v.extend_from_slice(&*slice_from_raw_parts(buf as *const u8, length));
             v
         })
-            .unwrap_or(Vec::new())
+        .unwrap_or(Vec::new())
     }
 
     fn margin_text_clear_all(&self) {
@@ -2848,7 +2848,7 @@ impl Scintilla for WindowControl {
             v.extend_from_slice(&*slice_from_raw_parts(buf as *const u8, length));
             v
         })
-            .unwrap_or(Vec::new())
+        .unwrap_or(Vec::new())
     }
 
     fn annotation_get_lines(&self, line: usize) -> i32 {

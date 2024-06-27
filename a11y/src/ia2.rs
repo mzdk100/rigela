@@ -11,13 +11,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+//noinspection RsModuleNaming
+#[cfg(feature = "ia2_lib")]
+#[doc(hidden)]
+pub(crate) mod ia2_lib;
+
 pub mod object;
 pub mod relation;
 pub mod text;
 
-use crate::{
-    ia2::{object::Accessible2Object, text::AccessibleText},
-    IAccessible2Lib::AccessibleEventID::IA2EventID::{
+use crate::ia2::{
+    ia2_lib::AccessibleEventID::IA2EventID::{
         IA2_EVENT_ACTION_CHANGED, IA2_EVENT_ACTIVE_DESCENDANT_CHANGED,
         IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED, IA2_EVENT_DOCUMENT_CONTENT_CHANGED,
         IA2_EVENT_DOCUMENT_LOAD_COMPLETE, IA2_EVENT_DOCUMENT_LOAD_STOPPED,
@@ -35,6 +39,8 @@ use crate::{
         IA2_EVENT_TEXT_REMOVED, IA2_EVENT_TEXT_SELECTION_CHANGED, IA2_EVENT_TEXT_UPDATED,
         IA2_EVENT_VISIBLE_DATA_CHANGED,
     },
+    object::Accessible2Object,
+    text::AccessibleText,
 };
 use std::sync::RwLock;
 use win_wrap::{
@@ -587,9 +593,9 @@ impl Ia2 {
 
 #[cfg(test)]
 mod test_ia2 {
-    use crate::{
-        ia2::{object::Accessible2Object, Ia2, WinEventSourceExt},
-        IAccessible2Lib::IA2CommonTypes::IA2CoordinateType,
+    use crate::ia2::{
+        ia2_lib::IA2CommonTypes::IA2CoordinateType, object::Accessible2Object, Ia2,
+        WinEventSourceExt,
     };
     use win_wrap::{com::co_initialize_multi_thread, common::beep};
 

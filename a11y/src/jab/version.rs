@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::JabLib::packages::AccessBridgeVersionInfo as ABVI;
+use crate::jab::jab_lib::packages::AccessBridgeVersionInfo as ABVI;
 
 #[derive(Debug)]
 pub struct AccessBridgeVersionInfo {

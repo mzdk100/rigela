@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    jab::hyperlink::AccessibleHyperlink,
-    JabLib::{
+use crate::jab::{
+    hyperlink::AccessibleHyperlink,
+    jab_lib::{
         packages::{AccessibleContext as AC, AccessibleHypertextInfo},
         JabLib,
     },

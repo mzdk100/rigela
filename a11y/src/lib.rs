@@ -13,20 +13,11 @@
 
 #![doc = include_str!("../README.md")]
 
-#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
+#[cfg(any(feature = "jab_lib", feature = "ia2_lib"))]
 use rigela_utils::library::{get_library_path, setup_library};
-#[cfg(any(feature = "JabLib", feature = "IAccessible2Lib"))]
+#[cfg(any(feature = "jab_lib", feature = "ia2_lib"))]
 use std::path::PathBuf;
 
-//noinspection RsModuleNaming
-#[cfg(feature = "IAccessible2Lib")]
-#[doc(hidden)]
-pub(crate) mod IAccessible2Lib;
-//noinspection RsModuleNaming
-#[cfg(feature = "JabLib")]
-#[allow(non_snake_case)]
-#[doc(hidden)]
-pub(crate) mod JabLib;
 
 #[cfg(feature = "ia2")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ia2")))]
@@ -38,12 +29,12 @@ pub mod jab;
 #[cfg_attr(docsrs, doc(cfg(feature = "scintilla")))]
 pub mod scintilla;
 
-#[cfg(feature = "IAccessible2Lib")]
+#[cfg(feature = "ia2_lib")]
 const IA2_LIB_NAME: &str = "IAccessible2Proxy.dll";
 
-#[cfg(all(target_arch = "x86", feature = "JabLib"))]
+#[cfg(all(target_arch = "x86", feature = "jab_lib"))]
 const JAB_LIB_NAME: &str = "windowsaccessbridge-32.dll";
-#[cfg(all(target_arch = "x86_64", feature = "JabLib"))]
+#[cfg(all(target_arch = "x86_64", feature = "jab_lib"))]
 const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
 
 /**
@@ -51,19 +42,19 @@ const JAB_LIB_NAME: &str = "windowsaccessbridge-64.dll";
  * */
 pub fn setup() {
     // 注册IAccessible2Proxy.dll
-    #[cfg(feature = "IAccessible2Lib")]
+    #[cfg(feature = "ia2_lib")]
     setup_library(IA2_LIB_NAME, include_bytes!("../lib/IAccessible2Proxy.dll"));
 
     // 释放windowsaccessbridge.dll
     // 二进制提取自https://builds.openlogic.com/downloadJDK/openlogic-openjdk/8u402-b06/openlogic-openjdk-8u402-b06-windows-x32.zip
-    #[cfg(all(target_arch = "x86", feature = "JabLib"))]
+    #[cfg(all(target_arch = "x86", feature = "jab_lib"))]
     setup_library(
         JAB_LIB_NAME,
         include_bytes!("../lib/WindowsAccessBridge-32.dll"),
     );
 
     // 二进制提取自https://corretto.aws/downloads/resources/17.0.8.7.1/amazon-corretto-17.0.8.7.1-windows-x64-jdk.zip
-    #[cfg(all(target_arch = "x86_64", feature = "JabLib"))]
+    #[cfg(all(target_arch = "x86_64", feature = "jab_lib"))]
     setup_library(
         JAB_LIB_NAME,
         include_bytes!("../lib/windowsaccessbridge-64.dll"),
@@ -73,7 +64,7 @@ pub fn setup() {
 /**
  * 获取IA2动态库的安装路径。
  * */
-#[cfg(feature = "IAccessible2Lib")]
+#[cfg(feature = "ia2_lib")]
 pub fn get_ia2_lib_path() -> PathBuf {
     get_library_path(IA2_LIB_NAME)
 }
@@ -81,7 +72,7 @@ pub fn get_ia2_lib_path() -> PathBuf {
 /**
  * 获取JAB动态库的安装路径。
  * */
-#[cfg(feature = "JabLib")]
+#[cfg(feature = "jab_lib")]
 pub fn get_jab_lib_path() -> PathBuf {
     get_library_path(JAB_LIB_NAME)
 }

@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    ia2::object::Accessible2Object, IAccessible2Lib::AccessibleRelation::IAccessibleRelation,
-};
+use crate::ia2::{ia2_lib::AccessibleRelation::IAccessibleRelation, object::Accessible2Object};
 use std::ffi::c_void;
 use windows::core::Type;
 

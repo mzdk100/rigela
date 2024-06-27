@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::JabLib::packages::AccessibleTextAttributesInfo;
+use crate::jab::jab_lib::packages::AccessibleTextAttributesInfo;
 
 #[derive(Debug)]
 pub struct AccessibleTextAttributes {

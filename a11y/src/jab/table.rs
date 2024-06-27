@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    jab::context::AccessibleContext,
-    JabLib::{
+use crate::jab::{
+    context::AccessibleContext,
+    jab_lib::{
         packages::{AccessibleContext as AC, AccessibleTableCellInfo, AccessibleTableInfo},
         JabLib,
     },

@@ -23,7 +23,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use rigela_macros::talent;
-#[allow(unused_imports)]
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 

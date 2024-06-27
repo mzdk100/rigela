@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-pub use crate::IAccessible2Lib::AccessibleText::{IA2TextBoundaryType, IA2TextSegment};
-use crate::{
-    ia2::object::{IA2CoordinateType, IA2ScrollType},
-    IAccessible2Lib::{AccessibleText::IAccessibleText, AccessibleText2::IAccessibleText2},
+pub use crate::ia2::ia2_lib::AccessibleText::{IA2TextBoundaryType, IA2TextSegment};
+use crate::ia2::{
+    ia2_lib::{AccessibleText::IAccessibleText, AccessibleText2::IAccessibleText2},
+    object::{IA2CoordinateType, IA2ScrollType},
 };
 use std::fmt::{Debug, Formatter};
 use win_wrap::msaa::object::AccessibleObject;

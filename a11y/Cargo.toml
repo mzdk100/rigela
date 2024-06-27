@@ -16,11 +16,11 @@ rustc-args = ["--cfg", "docsrs"]
 rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 
 [features]
-jab = ["JabLib"]
-ia2 = ["IAccessible2Lib", "win-wrap/msaa", "windows/Win32_Foundation"]
+jab = ["jab_lib"]
+ia2 = ["ia2_lib", "win-wrap/msaa", "windows/Win32_Foundation"]
 scintilla = ["win-wrap/control", "scintilla-sys"]
-JabLib = ["rigela-utils/library"]
-IAccessible2Lib = ["rigela-utils/library", "windows-core"]
+jab_lib = ["rigela-utils/library"]
+ia2_lib = ["rigela-utils/library", "windows-core"]
 
 [dependencies.win-wrap]
 workspace = true

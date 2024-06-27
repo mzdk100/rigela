@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::JabLib::packages::{
+use crate::jab::jab_lib::packages::{
     AccessibleKeyBindingInfo, ACCESSIBLE_ALT_GRAPH_KEYSTROKE, ACCESSIBLE_ALT_KEYSTROKE,
     ACCESSIBLE_BUTTON1_KEYSTROKE, ACCESSIBLE_BUTTON2_KEYSTROKE, ACCESSIBLE_BUTTON3_KEYSTROKE,
     ACCESSIBLE_CONTROLCODE_KEYSTROKE, ACCESSIBLE_CONTROL_KEYSTROKE, ACCESSIBLE_FKEY_KEYSTROKE,

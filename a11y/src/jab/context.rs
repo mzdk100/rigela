@@ -11,13 +11,9 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{
-    jab::{
-        hypertext::AccessibleHypertext, key_binding::AccessibleKeyBinding,
-        relation::AccessibleRelation, role::AccessibleRole, table::AccessibleTable,
-        text::AccessibleTextAttributes, version::AccessBridgeVersionInfo,
-    },
-    JabLib::{
+use crate::jab::{
+    hypertext::AccessibleHypertext,
+    jab_lib::{
         packages::{
             AccessibleActionInfo, AccessibleActions, AccessibleActionsToDo,
             AccessibleContext as AC, AccessibleContextInfo, JInt, MAX_ACTION_INFO, MAX_STRING_SIZE,
@@ -25,6 +21,12 @@ use crate::{
         },
         JabLib,
     },
+    key_binding::AccessibleKeyBinding,
+    relation::AccessibleRelation,
+    role::AccessibleRole,
+    table::AccessibleTable,
+    text::AccessibleTextAttributes,
+    version::AccessBridgeVersionInfo,
 };
 use std::{
     cmp::min,

@@ -24,7 +24,6 @@ use crate::{
         tts::{Direction, TtsProperty, ValueChange},
     },
 };
-#[allow(unused_imports)]
 use async_trait::async_trait;
 use rigela_macros::talent;
 use rigela_utils::clip::set_clipboard_text;

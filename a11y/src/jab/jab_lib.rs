@@ -17,7 +17,7 @@ pub(crate) mod packages;
 
 use crate::{
     jab,
-    JabLib::{
+    jab::jab_lib::{
         callbacks::{
             AccessBridgeCaretUpdateFp, AccessBridgeFocusGainedFp, AccessBridgeFocusLostFp,
             AccessBridgeJavaShutdownFp, AccessBridgeMenuCanceledFp, AccessBridgeMenuDeselectedFp,

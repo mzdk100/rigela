@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::JabLib::packages::{
+use crate::jab::jab_lib::packages::{
     ACCESSIBLE_ALERT, ACCESSIBLE_AWT_COMPONENT, ACCESSIBLE_CANVAS, ACCESSIBLE_CHECK_BOX,
     ACCESSIBLE_COLOR_CHOOSER, ACCESSIBLE_COLUMN_HEADER, ACCESSIBLE_COMBO_BOX,
     ACCESSIBLE_DATE_EDITOR, ACCESSIBLE_DESKTOP_ICON, ACCESSIBLE_DESKTOP_PANE, ACCESSIBLE_DIALOG,

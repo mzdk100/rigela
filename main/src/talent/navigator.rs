@@ -25,7 +25,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use rigela_macros::talent;
-#[allow(unused_imports)]
 use std::sync::Weak;
 
 const WAVE: &str = "boundary.wav";

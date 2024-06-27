@@ -28,7 +28,7 @@ version = "1.38.0"
 version = "1.0.203"
 
 [workspace.dependencies.win-wrap]
-version = "0.1.5"
+version = "0.1.6"
 
 [workspace.dependencies.windows]
 version = "0.57.0"

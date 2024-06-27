@@ -13,6 +13,11 @@
 
 #![allow(non_upper_case_globals)]
 
+//noinspection RsModuleNaming
+#[cfg(feature = "jab_lib")]
+#[doc(hidden)]
+pub(crate) mod jab_lib;
+
 pub mod callback;
 pub mod context;
 pub mod hyperlink;
@@ -29,8 +34,8 @@ use crate::{
     jab::{
         callback::{AccessibleCallback, AccessibleContextType},
         context::AccessibleContext,
+        jab_lib::{packages::JObject64, JabLib},
     },
-    JabLib::{packages::JObject64, JabLib},
 };
 use rigela_utils::library::get_library_path;
 use std::sync::{Arc, Mutex, OnceLock};
