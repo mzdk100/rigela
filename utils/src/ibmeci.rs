@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{call_proc, library::setup_library};
+use crate::{call_proc, common::SafeModuleHandle, library::setup_library};
 use encoding_rs::GBK;
 use log::info;
 use std::{
@@ -23,7 +23,7 @@ use std::{
 };
 use tokio::sync::oneshot::{self, channel, Sender};
 use win_wrap::{
-    common::{free_library, get_proc_address, load_library, FARPROC, HMODULE, LPARAM, WPARAM},
+    common::{free_library, get_proc_address, load_library, FARPROC, LPARAM, WPARAM},
     message::{message_loop, post_thread_message, register_window_message},
     threading::get_current_thread_id,
     wm,
@@ -194,7 +194,7 @@ pub struct Ibmeci {
     buffer_layout: Layout,
     buffer_ptr: *mut u8,
     data: Vec<u8>,
-    h_module: HMODULE,
+    h_module: SafeModuleHandle,
     h_eci: i32,
     thread: u32,
 }
@@ -215,7 +215,7 @@ impl Ibmeci {
         let eci_path = setup_library(LIB_NAME, include_bytes!("../lib/ibmeci.dll"));
 
         let h_module = match load_library(eci_path.to_str().unwrap()) {
-            Ok(h) => h,
+            Ok(h) => SafeModuleHandle(h),
             Err(e) => {
                 return Err(format!(
                     "Can't open the library ({}). {}",
@@ -227,7 +227,7 @@ impl Ibmeci {
         info!("{} loaded.", eci_path.display());
         let (tx, rx) = oneshot::channel();
         thread::spawn(move || {
-            let h_eci = eci!(h_module, new).unwrap_or(0);
+            let h_eci = eci!(h_module.0, new).unwrap_or(0);
             let buffer_layout = Layout::new::<[u8; 8192]>();
             let buffer_ptr = unsafe { alloc_zeroed(buffer_layout) };
 
@@ -235,20 +235,20 @@ impl Ibmeci {
                 buffer_layout,
                 buffer_ptr,
                 data: vec![],
-                h_module,
+                h_module: h_module.clone(),
                 h_eci,
                 thread: get_current_thread_id(),
             };
 
-            eci!(h_module, register_callback, h_eci, _callback_internal, 0);
+            eci!(h_module.0, register_callback, h_eci, _callback_internal, 0);
             eci!(
-                h_module,
+                h_module.0,
                 set_output_buffer,
                 h_eci,
                 (buffer_layout.size() / 2) as u32,
                 buffer_ptr
             );
-            info!("Module handle: {}, eci handle: {}", h_module.0, h_eci);
+            info!("Module handle: {:?}, eci handle: {}", h_module.0, h_eci);
             unsafe {
                 IBMECI.set(self_).unwrap();
                 tx.send(IBMECI.get().unwrap()).unwrap();
@@ -256,9 +256,9 @@ impl Ibmeci {
             message_loop(|m| {
                 if wm!(SYNTH_TASK) == m.message {
                     let b = unsafe { Box::from_raw(m.wParam.0 as *mut Cow<[u8]>) };
-                    eci!(h_module, add_text, h_eci, *b);
-                    eci!(h_module, synthesize, h_eci);
-                    eci!(h_module, synchronize, h_eci);
+                    eci!(h_module.0, add_text, h_eci, *b);
+                    eci!(h_module.0, synthesize, h_eci);
+                    eci!(h_module.0, synchronize, h_eci);
                     let b = unsafe { Box::from_raw(m.lParam.0 as *mut Sender<()>) };
                     b.send(()).unwrap_or(());
                 }
@@ -274,7 +274,7 @@ impl Ibmeci {
      * 合成语音。
      * */
     pub async fn synth(&self, text: &str) -> Vec<u8> {
-        eci!(self.h_module, stop, self.h_eci);
+        eci!(self.h_module.0, stop, self.h_eci);
         let (text, _, unmapped) = GBK.encode(text);
         let text = if unmapped {
             // 如果有不能被编码成gbk的字符，我们需要过滤他们
@@ -335,14 +335,14 @@ impl Ibmeci {
      * `params` 参数数据。
      * */
     pub fn set_voice_param(&self, vp: u32, value: i32) {
-        eci!(self.h_module, set_voice_param, self.h_eci, 0, vp, value);
+        eci!(self.h_module.0, set_voice_param, self.h_eci, 0, vp, value);
     }
 
     /**
      * 获取语音参数。
      * */
     pub fn get_voice_param(&self, vp: u32) -> i32 {
-        eci!(self.h_module, get_voice_param, self.h_eci, 0, vp).unwrap_or(0)
+        eci!(self.h_module.0, get_voice_param, self.h_eci, 0, vp).unwrap_or(0)
     }
 
     /**
@@ -369,15 +369,15 @@ impl Ibmeci {
      * `voice_id` 声音id。
      * */
     pub fn set_voice(&self, voice_id: u32) {
-        eci!(self.h_module, copy_voice, self.h_eci, voice_id, 0);
+        eci!(self.h_module.0, copy_voice, self.h_eci, voice_id, 0);
     }
 }
 
 impl Drop for Ibmeci {
     fn drop(&mut self) {
         if !self.h_module.is_invalid() {
-            eci!(self.h_module, delete, self.h_eci);
-            free_library(self.h_module);
+            eci!(self.h_module.0, delete, self.h_eci);
+            free_library(self.h_module.0);
         }
         unsafe {
             dealloc(self.buffer_ptr, self.buffer_layout);

@@ -325,7 +325,7 @@ impl BassChannelOutputStream {
         static _LOADED: OnceLock<()> = OnceLock::new();
         _LOADED.get_or_init(|| {
             info!(
-                "{} loaded, library handle is {}.",
+                "{} loaded, library handle is {:?}.",
                 bass_path.display(),
                 h_module.0
             )

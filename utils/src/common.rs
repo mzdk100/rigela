@@ -11,29 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-#[cfg(feature = "bass")]
-pub mod bass;
-#[cfg(feature = "common")]
-pub mod common;
-#[cfg(feature = "clip")]
-pub mod clip;
-#[cfg(feature = "color")]
-pub mod color;
-#[cfg(feature = "fs")]
-pub mod fs;
-//noinspection SpellCheckingInspection
-#[cfg(all(feature = "ibmeci", target_arch = "x86"))]
-pub mod ibmeci;
-#[cfg(feature = "killer")]
-pub mod killer;
-#[cfg(feature = "library")]
-pub mod library;
-#[cfg(feature = "logger")]
-pub mod logger;
-#[cfg(feature = "pipe")]
-pub mod pipe;
-#[cfg(feature = "screen")]
-pub mod screen;
+use win_wrap::common::HMODULE;
 
-//noinspection HttpUrlsUsage
-pub const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
+#[derive(Clone, Debug)]
+pub(crate) struct SafeModuleHandle(pub(crate) HMODULE);
+
+unsafe impl Send for SafeModuleHandle {}
+unsafe impl Sync for SafeModuleHandle {}
+
+impl std::ops::Deref for SafeModuleHandle {
+    type Target = HMODULE;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
