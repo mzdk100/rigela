@@ -57,18 +57,19 @@ impl Parse for Metadata {
 pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
     let metadata: Metadata = syn::parse2(args).unwrap();
     let doc = metadata.doc;
-    let doc_raw = doc.clone();
     let cmd_list = metadata.cmd_list;
     let input: ItemFn = syn::parse2(item).unwrap();
     let id_raw = input.sig.ident.to_string();
     let id = get_struct_name(&input.sig.ident, "Talent");
     let id2 = format!("get_{}_talent", input.sig.ident.to_string());
     let id2 = Ident::new(id2.as_str(), Span::call_site());
+    let attrs = input.attrs.clone();
     let body = input.block.to_token_stream();
+
     quote! {
         pub(crate) struct #id;
 
-        #[async_trait]
+        #(#attrs)*
         impl crate::talent::Talented for #id {
             fn get_supported_cmd_list(&self) -> Vec<crate::commander::CommandType> {
                 #cmd_list
@@ -88,11 +89,15 @@ pub fn parse_talent(args: TokenStream, item: TokenStream) -> TokenStream {
             }
 
             fn get_doc(&self) -> String {
-                #doc_raw
+                #doc
             }
 
-            async  fn perform(&self, context: Weak<Context>) #body
+            fn perform(&self, context: Weak<Context>) {
+                let ctx = context.clone();
+                ctx.get_work_runtime().spawn(async move #body);
+            }
         }
+
         impl crate::talent::TalentProvider {
             pub fn #id2(&self) -> #id {#id}
         }
