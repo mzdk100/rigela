@@ -14,7 +14,7 @@
 use win_wrap::common::HMODULE;
 
 #[derive(Clone, Debug)]
-pub(crate) struct SafeModuleHandle(pub(crate) HMODULE);
+pub struct SafeModuleHandle(pub(crate) HMODULE);
 
 unsafe impl Send for SafeModuleHandle {}
 unsafe impl Sync for SafeModuleHandle {}

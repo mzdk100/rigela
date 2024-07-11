@@ -466,6 +466,13 @@ impl BassChannelOutputStream {
     }
 
     /**
+     * 判断播放状态是否已经停止。
+     * */
+    pub fn is_stopped(&self) -> bool {
+        self.is_active() == BASS_ACTIVE_STOPPED
+    }
+
+    /**
      * 等待直到停止状态或没有数据可以播放。
      * */
     pub async fn wait_until_stopped_or_stalled(&self) {
@@ -492,6 +499,9 @@ impl BassChannelOutputStream {
         }
     }
 }
+
+unsafe impl Send for BassChannelOutputStream {}
+unsafe impl Sync for BassChannelOutputStream {}
 
 impl Drop for BassChannelOutputStream {
     fn drop(&mut self) {
