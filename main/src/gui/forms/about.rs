@@ -12,8 +12,11 @@
  */
 
 use crate::{bring_window_front, context::Context};
-use nwd::NwgUi;
-use nwg::{EventData, NoticeSender};
+use native_windows_derive::NwgUi;
+use native_windows_gui::{
+    keys::TAB, stop_thread_dispatch, Button, EventData, GridLayout, Notice, NoticeSender, TextBox,
+    Window,
+};
 use rigela_macros::GuiFormImpl;
 use std::sync::{OnceLock, Weak};
 
@@ -25,28 +28,28 @@ pub struct AboutForm {
 
     #[nwg_control(title: & t ! ("about.title"), size: (0, 0), position: (300, 300), flags: "WINDOW|VISIBLE")]
     #[nwg_events(OnWindowClose: [AboutForm::on_exit], OnInit: [AboutForm::on_init])]
-    window: nwg::Window,
+    window: Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_control(text: & t ! ("about.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [AboutForm::on_key_press(SELF, EVT_DATA)])]
-    text_box: nwg::TextBox,
+    text_box: TextBox,
 
     #[nwg_control(text: & t ! ("about.btn_ok"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 4, col: 2, col_span: 2)]
     #[nwg_events(OnButtonClick: [AboutForm::on_btn_ok])]
-    btn_ok: nwg::Button,
+    btn_ok: Button,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [AboutForm::on_show_notice])]
-    show_notice: nwg::Notice,
+    show_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [AboutForm::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    exit_notice: Notice,
 }
 
 impl AboutForm {
@@ -59,7 +62,7 @@ impl AboutForm {
     }
 
     fn on_key_press(&self, data: &EventData) {
-        if data.on_key() == nwg::keys::TAB {
+        if data.on_key() == TAB {
             self.btn_ok.set_focus();
         }
     }
@@ -75,6 +78,6 @@ impl AboutForm {
     }
 
     fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch()
+        stop_thread_dispatch()
     }
 }

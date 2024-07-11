@@ -15,10 +15,9 @@ use crate::{
     commander::keyboard::{combo_keys::ComboKey, keys::Keys},
     context::{Context, ContextAccessor},
 };
-//noinspection RsUnresolvedPath
 use arc_swap::ArcSwap;
 use log::error;
-use nwg::NoticeSender;
+use native_windows_gui::NoticeSender;
 use rigela_utils::fs::{get_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
@@ -47,7 +46,7 @@ use win_wrap::{
     },
     shell::ShellLink,
 };
-use zip::{write::FileOptions, CompressionMethod, ZipArchive, ZipWriter};
+use zip::{write::SimpleFileOptions, CompressionMethod, ZipArchive, ZipWriter};
 
 const HELP_URL: &str =
     "https://gitcode.net/mzdk100/rigela/-/blob/dev/main/docs/user/help.md?format=json&viewer=simple";
@@ -211,7 +210,7 @@ pub(crate) fn backup_data(target: &PathBuf) -> Result<(), Box<dyn Error>> {
     let zip_file = File::create(&zip_file_path)?;
 
     let mut zip = ZipWriter::new(zip_file);
-    let options = FileOptions::default().compression_method(CompressionMethod::DEFLATE);
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::DEFLATE);
 
     let mut files_to_compress: Vec<PathBuf> = vec![];
     let resources_path = get_program_directory().join("resources");

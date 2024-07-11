@@ -24,12 +24,10 @@ use crate::{
         tts::{Direction, TtsProperty, ValueChange},
     },
 };
-use async_trait::async_trait;
 use rigela_macros::talent;
 use rigela_utils::clip::set_clipboard_text;
 use std::sync::Weak;
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("语音属性值增加"), key = combo_key!("RigelA_Ctrl", VkUp))]
 async fn increase(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -39,7 +37,6 @@ async fn increase(context: Weak<Context>) {
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("语音属性值降低"), key = combo_key!("RigelA_Ctrl", VkDown))]
 async fn reduce(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -49,7 +46,6 @@ async fn reduce(context: Weak<Context>) {
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("语音下一属性"), key = combo_key!("RigelA_Ctrl", VkRight))]
 async fn next_prop(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -59,7 +55,6 @@ async fn next_prop(context: Weak<Context>) {
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("语音上一属性"), key = combo_key!("RigelA_Ctrl", VkLeft))]
 async fn prev_prop(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -69,7 +64,6 @@ async fn prev_prop(context: Weak<Context>) {
     speak_tts_prop(context).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("缓冲区上一字符"), key = combo_key!("RigelA", VkLeft))]
 async fn prev_cache_char(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -83,7 +77,6 @@ async fn prev_cache_char(context: Weak<Context>) {
     tts.speak(text).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("缓冲区下一字符"), key = combo_key!("RigelA", VkRight))]
 async fn next_cache_char(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -97,7 +90,6 @@ async fn next_cache_char(context: Weak<Context>) {
     tts.speak(text).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("解释缓冲区当前字符"), key = combo_key!("RigelA", VkUp))]
 async fn trans_cache_char(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -113,7 +105,6 @@ async fn trans_cache_char(context: Weak<Context>) {
     tts.speak(text).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("缓冲区当前字符组词"), key = combo_key!("RigelA", VkDown))]
 async fn make_word_cache_char(context: Weak<Context>) {
     cancel_edge_handle!(context);
@@ -127,7 +118,6 @@ async fn make_word_cache_char(context: Weak<Context>) {
     tts.speak(words).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("拷贝缓冲区"), key = combo_key!("RigelA", VkC))]
 async fn cache_to_clipboard(context: Weak<Context>) {
     let Some(cache) = context.get_performer().get_cache() else {

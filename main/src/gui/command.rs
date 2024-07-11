@@ -26,7 +26,7 @@ use crate::{
     talent::Talented,
 };
 use log::error;
-use nwg::{message, MessageParams};
+use native_windows_gui::{message, MessageButtons, MessageChoice, MessageIcons, MessageParams};
 use rigela_utils::fs::get_program_directory;
 use std::{
     env::current_exe,
@@ -42,11 +42,8 @@ use win_wrap::{
 
 /// 退出程序。
 pub(crate) fn exit_cmd(context: Weak<Context>) {
-    let ctx = context.clone();
-    context.get_work_runtime().spawn(async move {
-        let talent = ctx.get_talent_provider().get_exit_talent();
-        talent.perform(ctx.clone()).await;
-    });
+    let talent = context.get_talent_provider().get_exit_talent();
+    talent.perform(context);
 }
 
 /// 打开帮助文档。
@@ -354,10 +351,10 @@ pub(crate) fn reset_config_cmd(context: Weak<Context>) {
     let msg_params = MessageParams {
         title: &t!("command.msg_confirm_title"),
         content: &t!("command.msg_reset_confirm"),
-        buttons: nwg::MessageButtons::OkCancel,
-        icons: nwg::MessageIcons::Question,
+        buttons: MessageButtons::OkCancel,
+        icons: MessageIcons::Question,
     };
-    if message(&msg_params) == nwg::MessageChoice::Cancel {
+    if message(&msg_params) == MessageChoice::Cancel {
         return;
     }
 

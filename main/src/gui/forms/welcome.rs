@@ -16,8 +16,11 @@ use crate::{
     context::Context,
     gui::command::{donate_cmd, help_cmd, settings_cmd},
 };
-use nwd::NwgUi;
-use nwg::{EventData, NoticeSender};
+use native_windows_derive::NwgUi;
+use native_windows_gui::{
+    keys::TAB, stop_thread_dispatch, Button, EventData, GridLayout, Notice, NoticeSender, TextBox,
+    Window,
+};
 use rigela_macros::GuiFormImpl;
 use std::sync::{OnceLock, Weak};
 
@@ -29,43 +32,43 @@ pub struct WelcomeForm {
 
     #[nwg_control(title: & t ! ("welcome.title"), size: (0, 0), position: (300, 300), flags: "WINDOW|VISIBLE")]
     #[nwg_events(OnWindowClose: [WelcomeForm::on_exit])]
-    window: nwg::Window,
+    window: Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_control(text: & t ! ("welcome.info"), readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 0, col: 0, row_span: 4, col_span: 6)]
     #[nwg_events(OnKeyPress: [WelcomeForm::on_key_press(SELF, EVT_DATA)])]
-    text_box: nwg::TextBox,
+    text_box: TextBox,
 
     #[nwg_control(text: & t ! ("welcome.btn_donate"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 4, col: 1, col_span: 4)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_donate])]
-    btn_donate: nwg::Button,
+    btn_donate: Button,
 
     #[nwg_control(text: & t ! ("welcome.btn_setting"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 3)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_setting])]
-    btn_setting: nwg::Button,
+    btn_setting: Button,
 
     #[nwg_control(text: & t ! ("welcome.btn_help"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 4)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_help])]
-    btn_help: nwg::Button,
+    btn_help: Button,
 
     #[nwg_control(text: & t ! ("welcome.btn_close"), size: (100, 30), flags: "TAB_STOP|VISIBLE")]
     #[nwg_layout_item(layout: layout, row: 5, col: 5)]
     #[nwg_events(OnButtonClick: [WelcomeForm::on_btn_close])]
-    btn_close: nwg::Button,
+    btn_close: Button,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [WelcomeForm::on_show_notice])]
-    show_notice: nwg::Notice,
+    show_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [WelcomeForm::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    exit_notice: Notice,
 }
 
 impl WelcomeForm {
@@ -76,7 +79,7 @@ impl WelcomeForm {
 
     // 修复编辑框Tab切换到按钮
     fn on_key_press(&self, data: &EventData) {
-        if data.on_key() == nwg::keys::TAB {
+        if data.on_key() == TAB {
             self.btn_donate.set_focus();
         }
     }
@@ -104,6 +107,6 @@ impl WelcomeForm {
     }
 
     fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch()
+        stop_thread_dispatch()
     }
 }

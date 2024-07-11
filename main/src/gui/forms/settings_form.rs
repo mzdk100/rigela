@@ -32,14 +32,16 @@ use crate::{
     performer::tts::{TtsProperty, VoiceInfo},
 };
 use arc_swap::{ArcSwap, Guard};
-use nwd::{NwgPartial, NwgUi};
-use nwg::{
-    modal_message,
+use native_windows_derive::{NwgPartial, NwgUi};
+use native_windows_gui::{
+    modal_message, stop_thread_dispatch,
     stretch::{
         geometry::Size,
         style::{Dimension as D, Style},
     },
-    CheckBox, CheckBoxState, MessageParams, NoticeSender,
+    Button, CheckBox, CheckBoxState, ComboBox, FileDialog, FlexboxLayout, Frame, GridLayout, Label,
+    ListBox, MessageButtons, MessageChoice, MessageIcons, MessageParams, Notice, NoticeSender,
+    Window,
 };
 use rigela_macros::GuiFormImpl;
 use rust_i18n::AtomicStr;
@@ -77,10 +79,10 @@ pub struct SettingsForm {
 
     #[nwg_control(size: (0, 0), position: (200, 200), title: & t ! ("settings.title"))]
     #[nwg_events(OnWindowClose: [SettingsForm::on_exit], OnInit: [SettingsForm::on_init, SettingsForm::load_data])]
-    pub(crate) window: nwg::Window,
+    pub(crate) window: Window,
 
     #[nwg_layout(parent: window)]
-    layout: nwg::FlexboxLayout,
+    layout: FlexboxLayout,
 
     #[nwg_control(collection: vec ! [
     t ! ("settings.menu_general_item").to_string(),
@@ -91,23 +93,23 @@ pub struct SettingsForm {
     ])]
     #[nwg_layout_item(layout: layout, size: Size{width: D::Points(150.0), height: D::Auto})]
     #[nwg_events(OnListBoxSelect: [SettingsForm::change_interface])]
-    menu: nwg::ListBox<String>,
+    menu: ListBox<String>,
 
     #[nwg_control]
     #[nwg_layout_item(layout: layout, size: FRAME_SIZE)]
-    general_frame: nwg::Frame,
+    general_frame: Frame,
 
     #[nwg_control(flags: "BORDER")]
-    voice_frame: nwg::Frame,
+    voice_frame: Frame,
 
     #[nwg_control(flags: "BORDER")]
-    hotkeys_frame: nwg::Frame,
+    hotkeys_frame: Frame,
 
     #[nwg_control(flags: "BORDER")]
-    mouse_frame: nwg::Frame,
+    mouse_frame: Frame,
 
     #[nwg_control(flags: "BORDER")]
-    advanced_frame: nwg::Frame,
+    advanced_frame: Frame,
 
     #[nwg_partial(parent: general_frame)]
     #[nwg_events(
@@ -165,15 +167,15 @@ pub struct SettingsForm {
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SettingsForm::on_show_notice])]
-    show_notice: nwg::Notice,
+    show_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SettingsForm::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    exit_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SettingsForm::on_show_hotkeys_notice])]
-    pub(crate) show_hotkeys_notice: nwg::Notice,
+    pub(crate) show_hotkeys_notice: Notice,
 }
 
 impl SettingsForm {
@@ -267,10 +269,10 @@ impl SettingsForm {
         let msg_params = MessageParams {
             title: "确认",
             content: &info,
-            buttons: nwg::MessageButtons::OkCancel,
-            icons: nwg::MessageIcons::Question,
+            buttons: MessageButtons::OkCancel,
+            icons: MessageIcons::Question,
         };
-        if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+        if modal_message(&self.window, &msg_params) == MessageChoice::Cancel {
             return;
         }
 
@@ -448,7 +450,7 @@ impl SettingsForm {
     }
 
     fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch()
+        stop_thread_dispatch()
     }
 
     fn on_show_hotkeys_notice(&self) {
@@ -485,10 +487,10 @@ pub struct GeneralUi {
     hook: RefCell<Option<WindowsHook>>,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
-    layout2: nwg::GridLayout,
+    layout2: GridLayout,
 
     #[nwg_control(text: & t ! ("settings.ck_add_desktop_shortcut"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
@@ -504,11 +506,11 @@ pub struct GeneralUi {
 
     #[nwg_control(text: & t ! ("settings.check_update"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
-    btn_check_update: nwg::Button,
+    btn_check_update: Button,
 
     #[nwg_control(text: & t ! ("settings.lang"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 6)]
-    lb_lang: nwg::Label,
+    lb_lang: Label,
 
     #[nwg_control(collection: vec ! [
     t ! ("settings.lang_follow_system_item").to_string(),
@@ -516,74 +518,74 @@ pub struct GeneralUi {
     t ! ("settings.lang_zh_item").to_string(),
     ])]
     #[nwg_layout_item(layout: layout, col: 2, row: 6)]
-    cb_lang: nwg::ComboBox<String>,
+    cb_lang: ComboBox<String>,
 
     #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_close: nwg::Button,
+    btn_close: Button,
 
     #[nwg_control]
-    finish_program_hotkeys_notice: nwg::Notice,
+    finish_program_hotkeys_notice: Notice,
 
     #[nwg_control]
-    cancel_program_hotkeys_notice: nwg::Notice,
+    cancel_program_hotkeys_notice: Notice,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct VoiceUi {
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(4), max_row: Some(10))]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
-    layout2: nwg::GridLayout,
+    layout2: GridLayout,
 
     #[nwg_control(text: & t ! ("settings.lb_role"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
-    lb_role: nwg::Label,
+    lb_role: Label,
 
     #[nwg_control(collection: vec ! [])]
     #[nwg_layout_item(layout: layout, col: 2, row: 1)]
-    cb_role: nwg::ComboBox<String>,
+    cb_role: ComboBox<String>,
 
     #[nwg_control(text: & t ! ("settings.lb_speed"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
-    lb_speed: nwg::Label,
+    lb_speed: Label,
 
     #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 2)]
-    cb_speed: nwg::ComboBox<String>,
+    cb_speed: ComboBox<String>,
 
     #[nwg_control(text: & t ! ("settings.lb_pitch"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
-    lb_pitch: nwg::Label,
+    lb_pitch: Label,
 
     #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 3)]
-    cb_pitch: nwg::ComboBox<String>,
+    cb_pitch: ComboBox<String>,
 
     #[nwg_control(text: & t ! ("settings.lb_volume"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 4)]
-    lb_volume: nwg::Label,
+    lb_volume: Label,
 
     #[nwg_control(collection: (1..101).map(| i | format ! ("{}", i)).rev().collect())]
     #[nwg_layout_item(layout: layout, col: 2, row: 4)]
-    cb_volume: nwg::ComboBox<String>,
+    cb_volume: ComboBox<String>,
 
     #[nwg_control]
-    update_voice_notice: nwg::Notice,
+    update_voice_notice: Notice,
 
     #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_close: nwg::Button,
+    btn_close: Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct MouseUi {
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
-    layout2: nwg::GridLayout,
+    layout2: GridLayout,
 
     #[nwg_control(text: & t ! ("settings.ck_mouse_read"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
@@ -591,38 +593,38 @@ pub struct MouseUi {
 
     #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_close: nwg::Button,
+    btn_close: Button,
 }
 
 #[derive(Default, NwgPartial)]
 pub struct AdvancedUi {
     #[nwg_resource(title: t ! ("settings.export_title").to_string(), action: nwg::FileDialogAction::Save, filters: "Zip(*.zip)")]
-    export_dialog: nwg::FileDialog,
+    export_dialog: FileDialog,
 
     #[nwg_resource(title: t ! ("settings.import_title").to_string(), action: nwg::FileDialogAction::Open, filters: "Zip(*.zip)")]
-    import_dialog: nwg::FileDialog,
+    import_dialog: FileDialog,
 
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(3), max_row: Some(10))]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
-    layout2: nwg::GridLayout,
+    layout2: GridLayout,
 
     #[nwg_control(text: & t ! ("settings.btn_export"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 2)]
-    btn_export: nwg::Button,
+    btn_export: Button,
 
     #[nwg_control(text: & t ! ("settings.btn_import"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 1)]
-    btn_import: nwg::Button,
+    btn_import: Button,
 
     #[nwg_control(text: & t ! ("settings.btn_reset"))]
     #[nwg_layout_item(layout: layout, col: 1, row: 3)]
-    btn_reset: nwg::Button,
+    btn_reset: Button,
 
     #[nwg_control(text: & t ! ("settings.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    btn_close: nwg::Button,
+    btn_close: Button,
 }
 
 struct AStr(AtomicStr);

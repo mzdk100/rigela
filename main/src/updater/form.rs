@@ -13,8 +13,11 @@
 
 use crate::{utils, utils::download_and_replace_bin};
 use log::error;
-use nwd::NwgUi;
-use nwg::EventData;
+use native_windows_derive::NwgUi;
+use native_windows_gui::{
+    keys::TAB, stop_thread_dispatch, Button, EventData, GridLayout, Label, Notice, ProgressBar,
+    TextBox, Window,
+};
 use rust_i18n::AtomicStr;
 use std::{
     ops::{Deref, DerefMut},
@@ -32,45 +35,45 @@ pub struct App {
 
     #[nwg_control(title: TITLE, size: (480, 320), position: (300, 300))]
     #[nwg_events(OnWindowClose: [nwg::stop_thread_dispatch()   ], OnInit: [App::on_init])]
-    window: nwg::Window,
+    window: Window,
 
     #[nwg_layout(parent: window, spacing: 5)]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_control(text: "更新日志:")]
     #[nwg_layout_item(layout: layout, row: 0, col: 0)]
-    label: nwg::Label,
+    label: Label,
 
     #[nwg_control(readonly: true, flags: "TAB_STOP|VISIBLE", focus: true)]
     #[nwg_layout_item(layout: layout, row: 1, col: 0, row_span: 6, col_span: 4)]
     #[nwg_events(OnKeyPress: [App::on_key_press(SELF, EVT_DATA)])]
-    text_box: nwg::TextBox,
+    text_box: TextBox,
 
     #[nwg_control(text: "下载进度:")]
     #[nwg_layout_item(layout: layout, row: 7, col: 0)]
-    progress_label: nwg::Label,
+    progress_label: Label,
 
     #[nwg_control(range: 1..100)]
     #[nwg_layout_item(layout: layout, row: 7, col: 1, col_span: 3)]
-    progress_bar: nwg::ProgressBar,
+    progress_bar: ProgressBar,
 
     #[nwg_control(text: "立即更新 (&U)", size: (100, 30))]
     #[nwg_layout_item(layout: layout, row: 8, col: 2)]
     #[nwg_events(OnButtonClick: [App::on_update])]
-    update_btn: nwg::Button,
+    update_btn: Button,
 
     #[nwg_control(text: "取消 (&C)", size: (100, 30))]
     #[nwg_layout_item(layout: layout, row: 8, col: 3)]
     #[nwg_events(OnButtonClick: [App::on_cancel])]
-    cancel_btn: nwg::Button,
+    cancel_btn: Button,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [App::on_get_info_notice])]
-    get_info_notice: nwg::Notice,
+    get_info_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [App::on_download_process])]
-    download_process_notice: nwg::Notice,
+    download_process_notice: Notice,
 }
 
 impl App {
@@ -93,7 +96,7 @@ impl App {
     }
 
     fn on_key_press(&self, data: &EventData) {
-        if data.on_key() == nwg::keys::TAB {
+        if data.on_key() == TAB {
             self.update_btn.set_focus();
         }
     }
@@ -124,7 +127,7 @@ impl App {
     }
 
     fn on_cancel(&self) {
-        nwg::stop_thread_dispatch();
+        stop_thread_dispatch();
     }
 
     // 获取到新的日志更新到编辑框
@@ -139,7 +142,7 @@ impl App {
         let num = self.progress.lock().unwrap().deref().clone();
 
         if num > 100 {
-            nwg::stop_thread_dispatch();
+            stop_thread_dispatch();
             return;
         }
 

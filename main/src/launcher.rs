@@ -64,10 +64,7 @@ impl Launcher {
         let ctx = Arc::downgrade(&self.context);
         self.context.get_work_runtime().spawn(async move {
             wait_until_killed().await;
-            ctx.get_talent_provider()
-                .get_exit_talent()
-                .perform(ctx)
-                .await;
+            ctx.get_talent_provider().get_exit_talent().perform(ctx);
         });
 
         // 播放启动时的音效

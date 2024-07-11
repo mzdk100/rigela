@@ -23,13 +23,11 @@ use crate::{
     navigator::linear::LinearNavigator,
     performer::sound::SoundArgument::Single,
 };
-use async_trait::async_trait;
 use rigela_macros::talent;
 use std::sync::Weak;
 
 const WAVE: &str = "boundary.wav";
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_prev_doc").to_string(), key = combo_key ! (VkNumPad7))]
 async fn element_prev(context: Weak<Context>) {
     match context.get_ui_navigator().prev().await.current().await {
@@ -42,7 +40,6 @@ async fn element_prev(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_next_doc").to_string(), key = combo_key ! (VkNumPad9))]
 async fn element_next(context: Weak<Context>) {
     match context.get_ui_navigator().next().await.current().await {
@@ -53,7 +50,6 @@ async fn element_next(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_current_doc").to_string(), key = combo_key ! (VkNumPad8))]
 async fn element_current(context: Weak<Context>) {
     match context.get_ui_navigator().current().await {
@@ -66,25 +62,21 @@ async fn element_current(context: Weak<Context>) {
     };
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_prev_line_doc").to_string(), key = combo_key ! (VkNumPad4))]
 async fn element_prev_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_next_line_doc").to_string(), key = combo_key ! (VkNumPad6))]
 async fn element_next_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_current_line_doc").to_string(), key = combo_key ! (VkNumPad5))]
 async fn element_current_line(context: Weak<Context>) {
     context.get_performer().play_sound(Single(WAVE)).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.mode_next_doc").to_string(), key = combo_key ! (VkAdd))]
 async fn mode_next(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
@@ -109,7 +101,6 @@ async fn mode_next(context: Weak<Context>) {
     context.get_performer().speak(&text).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.mode_prev_doc").to_string(), key = combo_key ! (VkSubtract))]
 async fn mode_prev(context: Weak<Context>) {
     let mut config = context.get_config_manager().get_config();
@@ -134,7 +125,6 @@ async fn mode_prev(context: Weak<Context>) {
     context.get_performer().speak(&text).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = t ! ("navigator.element_color_set_doc").to_string(), key = combo_key ! (VkNumPad8, double))]
 async fn element_color_set(context: Weak<Context>) {
     let Some(element) = context.get_ui_navigator().current().await else {

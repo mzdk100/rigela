@@ -13,6 +13,7 @@
 
 use crate::performer::tts::TtsEngine;
 use rigela_utils::bass::BassChannelOutputStream;
+use std::sync::atomic::{AtomicBool, Ordering};
 use win_wrap::tts::Sapi5TtsSynthesizer;
 
 #[derive(Debug)]
@@ -36,13 +37,27 @@ impl TtsEngine for Sapi5Engine {
         self.output_stream.start();
 
         let text = text.to_string();
-        let data = self.synth.synth(text.as_str()).await;
-        if data.len() < 320 {
-            // sapi5语音的采样率是每秒16000个样本，320个字节等于160个样本（0.01秒）
-            return;
-        }
-        // 跳过开头的0.01秒，因为基本上他是静音的
-        self.output_stream.put_data(&data[320..]);
+        let first = AtomicBool::new(true);
+        self.synth.synth(text.as_str(), move |data| {
+            if self.output_stream.is_stopped() {
+                return false;
+            }
+
+            let first = first
+                .fetch_update(Ordering::Release, Ordering::Acquire, |_| Some(false))
+                .unwrap();
+            if !first {
+                self.output_stream.put_data(data);
+            }
+
+            if data.len() < 320 {
+                // sapi5语音的采样率是每秒16000个样本，320个字节等于160个样本（0.01秒）
+                return false;
+            }
+            // 跳过开头的0.01秒，因为基本上他是静音的
+            self.output_stream.put_data(&data[320..]);
+            true
+        });
     }
 
     async fn wait(&self) {

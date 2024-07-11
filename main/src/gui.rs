@@ -22,13 +22,15 @@ use crate::{
         system_tray::SystemTray, welcome::WelcomeForm,
     },
 };
-use nwg::{NativeUi, NoticeSender};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::OnceLock;
+use log::error;
+use native_windows_gui::{dispatch_thread_events, init, NativeUi, NoticeSender};
 use std::{
     fmt::{Debug, Formatter},
-    sync::{mpsc, Weak},
-    thread,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc, OnceLock, Weak,
+    },
+    thread::spawn,
 };
 use win_wrap::com::co_uninitialize;
 
@@ -88,8 +90,8 @@ impl GuiProvider {
 
         let (tx, rx) = mpsc::channel::<(NoticeSender, NoticeSender)>();
 
-        thread::spawn(move || {
-            nwg::init().expect("could not initialize nwg");
+        spawn(move || {
+            init().unwrap_or_else(|e| error!("Can't initialize the native window gui. ({})", e));
             // nwg的init中使用CoInitialize初始化com为单线程模型(STA)，和读屏使用的多线程模型(MTA)有冲突，因此我们恢复STA模型到MTA。
             // 例如IA2的调用在STA模型下有可能无法成功。
             co_uninitialize();
@@ -103,7 +105,7 @@ impl GuiProvider {
             let s = settings.show_hotkeys_notice.sender().clone();
             tx.send((s.clone(), s.clone())).unwrap();
 
-            nwg::dispatch_thread_events()
+            dispatch_thread_events()
         });
 
         let _ = self.welcome.set(rx.recv().unwrap());
@@ -156,7 +158,7 @@ impl Debug for GuiProvider {
 #[macro_export]
 macro_rules! bring_window_front {
     ($win:expr) => {
-        if let nwg::ControlHandle::Hwnd(h) = $win.handle {
+        if let native_windows_gui::ControlHandle::Hwnd(h) = $win.handle {
             let current_thread_id = win_wrap::threading::get_current_thread_id();
             let h_foreground = win_wrap::common::get_foreground_window();
             let (remote_thread_id, _) =
@@ -165,15 +167,15 @@ macro_rules! bring_window_front {
             win_wrap::common::attach_thread_input(current_thread_id, remote_thread_id, true);
 
             win_wrap::common::show_window(
-                win_wrap::common::HWND(h as isize),
+                win_wrap::common::HWND(h as _),
                 win_wrap::common::SW_HIDE,
             );
             win_wrap::common::show_window(
-                win_wrap::common::HWND(h as isize),
+                win_wrap::common::HWND(h as _),
                 win_wrap::common::SW_SHOW,
             );
-            win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as isize));
-            win_wrap::input::set_active_window(win_wrap::common::HWND(h as isize));
+            win_wrap::common::set_foreground_window(win_wrap::common::HWND(h as _));
+            win_wrap::input::set_active_window(win_wrap::common::HWND(h as _));
 
             win_wrap::common::attach_thread_input(current_thread_id, remote_thread_id, false);
         };

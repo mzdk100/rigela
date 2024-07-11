@@ -16,7 +16,7 @@
 mod form;
 mod utils;
 
-use nwg::NativeUi;
+use native_windows_gui::{dispatch_thread_events, init, NativeUi};
 use rigela_utils::logger::init_logger;
 use std::env::args;
 
@@ -29,10 +29,10 @@ async fn main() {
 
     init_logger(Some(format!("{}.log", module_path!()).as_str()));
 
-    nwg::init().expect("Failed to init Native Windows GUI");
+    init().expect("Failed to init Native Windows GUI");
 
     let app = form::App::build_ui(Default::default()).expect("Failed to build UI");
     app.handler.set(tokio::runtime::Handle::current()).unwrap();
 
-    nwg::dispatch_thread_events();
+    dispatch_thread_events();
 }

@@ -21,12 +21,10 @@ use crate::{
     configs::operations::apply_mouse_config,
     context::{Context, ContextAccessor},
 };
-use async_trait::async_trait;
 use rigela_macros::talent;
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("鼠标单击"), key = combo_key!(VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
@@ -34,7 +32,6 @@ async fn click(context: Weak<Context>) {
     context.get_performer().speak(&t!("mouse.click")).await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("鼠标右击"), key = combo_key!(VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
@@ -45,7 +42,6 @@ async fn right_click(context: Weak<Context>) {
         .await;
 }
 
-//noinspection RsUnresolvedPath
 #[talent(doc = String::from("鼠标朗读"), key = combo_key!("RigelA", VkM))]
 async fn read_mouse(context: Weak<Context>) {
     let is_read = !context

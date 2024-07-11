@@ -18,46 +18,51 @@ use crate::{
     gui::{forms::settings_form::SettingsForm, utils::set_hook},
 };
 use arc_swap::access::{DynAccess, DynGuard};
-use nwd::NwgPartial;
-use nwg::{modal_message, InsertListViewItem, MessageParams};
+use native_windows_derive::NwgPartial;
+use native_windows_gui::{
+    keys::{RETURN, TAB},
+    modal_message, Button, ControlHandle, EventData, GridLayout, InsertListViewColumn,
+    InsertListViewItem, Label, ListView, MessageButtons, MessageChoice, MessageIcons,
+    MessageParams, Notice, TextInput,
+};
 
 #[derive(Default, NwgPartial)]
 pub struct HotKeysUi {
     #[nwg_layout(max_size: [1200, 800], min_size: [650, 480], spacing: 20, max_column: Some(6), max_row: Some(10))]
-    layout: nwg::GridLayout,
+    layout: GridLayout,
 
     #[nwg_layout(min_size: [600, 480], max_column: Some(4), max_row: Some(10))]
-    layout2: nwg::GridLayout,
+    layout2: GridLayout,
 
     #[nwg_control(list_style: nwg::ListViewStyle::Detailed, ex_flags: nwg::ListViewExFlags::GRID | nwg::ListViewExFlags::FULL_ROW_SELECT)]
     #[nwg_layout_item(layout: layout, col: 0, col_span: 6, row: 0, row_span: 8)]
-    pub(crate) data_view: nwg::ListView,
+    pub(crate) data_view: ListView,
 
     #[nwg_control(text: & t ! ("hotkeys.lb_custom"))]
     #[nwg_layout_item(layout: layout, col: 0, row: 7)]
-    lb_custom: nwg::Label,
+    lb_custom: Label,
 
     #[nwg_control(readonly: true, text: & t ! ("hotkeys.tb_keys_info"), flags: "DISABLED|VISIBLE")]
     #[nwg_layout_item(layout: layout, col: 1, row: 8, col_span: 3)]
-    tb_keys_info: nwg::TextInput,
+    tb_keys_info: TextInput,
 
     #[nwg_control(text: & t ! ("hotkeys.btn_set"))]
     #[nwg_layout_item(layout: layout, col: 4, row: 8)]
-    pub(crate) btn_set: nwg::Button,
+    pub(crate) btn_set: Button,
 
     #[nwg_control(text: & t ! ("hotkeys.btn_clear"))]
     #[nwg_layout_item(layout: layout, col: 5, row: 8)]
-    pub(crate) btn_clear: nwg::Button,
+    pub(crate) btn_clear: Button,
 
     #[nwg_control(text: & t ! ("hotkeys.btn_close"))]
     #[nwg_layout_item(layout: layout2, col: 3, row: 9)]
-    pub(crate) btn_close: nwg::Button,
+    pub(crate) btn_close: Button,
 
     #[nwg_control()]
-    pub(crate) finish_custom: nwg::Notice,
+    pub(crate) finish_custom: Notice,
 
     #[nwg_control()]
-    pub(crate) cancel_custom: nwg::Notice,
+    pub(crate) cancel_custom: Notice,
 }
 
 impl SettingsForm {
@@ -80,7 +85,7 @@ impl SettingsForm {
         for (i, (n, s)) in col_data.into_iter().enumerate() {
             self.hotkeys_ui
                 .data_view
-                .insert_column(nwg::InsertListViewColumn {
+                .insert_column(InsertListViewColumn {
                     index: Some(i as i32),
                     fmt: None,
                     width: Some(n),
@@ -140,9 +145,9 @@ impl SettingsForm {
     }
 
     // 列表框键盘事件，当列表框有选中项按下回车，启动自定义热键配置
-    pub(crate) fn on_dv_key_press(&self, data: &nwg::EventData) {
+    pub(crate) fn on_dv_key_press(&self, data: &EventData) {
         let index = self.get_list_sel_index();
-        if data.on_key() == nwg::keys::RETURN && index.is_some() {
+        if data.on_key() == RETURN && index.is_some() {
             self.start_custom_hotkey();
         }
     }
@@ -165,8 +170,8 @@ impl SettingsForm {
 
     // 编辑框键盘事件
     #[allow(unused)]
-    pub(crate) fn on_tb_key_press(&self, data: &nwg::EventData) {
-        if data.on_key() != nwg::keys::TAB {
+    pub(crate) fn on_tb_key_press(&self, data: &EventData) {
+        if data.on_key() != TAB {
             self.start_custom_hotkey();
         }
     }
@@ -179,8 +184,8 @@ impl SettingsForm {
     }
 
     // 屏蔽设置按钮的回车事件，使用空格激活，避免回车响应错误
-    pub(crate) fn on_btn_key_release(&self, data: &nwg::EventData, _h: &nwg::ControlHandle) {
-        if data.on_key() == nwg::keys::RETURN {
+    pub(crate) fn on_btn_key_release(&self, data: &EventData, _h: &ControlHandle) {
+        if data.on_key() == RETURN {
             //  Todo: 这里没有拦截住回车事件,需要使用句柄发送message拦截
             // return;;
         }
@@ -207,10 +212,10 @@ impl SettingsForm {
             let msg_params = MessageParams {
                 title: &t!("hotkeys.confirm_title"),
                 content: &info,
-                buttons: nwg::MessageButtons::OkCancel,
-                icons: nwg::MessageIcons::Question,
+                buttons: MessageButtons::OkCancel,
+                icons: MessageIcons::Question,
             };
-            if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+            if modal_message(&self.window, &msg_params) == MessageChoice::Cancel {
                 return;
             }
 
@@ -254,10 +259,10 @@ impl SettingsForm {
             let msg_params = MessageParams {
                 title: &t!("hotkeys.confirm_title"),
                 content: &info,
-                buttons: nwg::MessageButtons::OkCancel,
-                icons: nwg::MessageIcons::Question,
+                buttons: MessageButtons::OkCancel,
+                icons: MessageIcons::Question,
             };
-            if modal_message(&self.window, &msg_params) == nwg::MessageChoice::Cancel {
+            if modal_message(&self.window, &msg_params) == MessageChoice::Cancel {
                 return;
             }
 

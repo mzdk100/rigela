@@ -38,7 +38,6 @@ use crate::{
         },
     },
 };
-use async_trait::async_trait;
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
@@ -51,7 +50,6 @@ pub(crate) type Talent = Arc<dyn Talented + Send + Sync + 'static>;
  * 一个能力的抽象接口。
  * 可以使用rigela-macros中的talent属性宏标记在async fn函数上自动实现。
  * */
-#[async_trait]
 pub(crate) trait Talented {
     /**
      * 获取能力的ID。
@@ -75,7 +73,7 @@ pub(crate) trait Talented {
      * 执行能力的入口方法。
      * `context` 框架的上下文环境。
      * */
-    async fn perform(&self, context: Weak<Context>);
+    fn perform(&self, context: Weak<Context>);
 }
 
 /// 能力提供者，包含所有能力对象列表

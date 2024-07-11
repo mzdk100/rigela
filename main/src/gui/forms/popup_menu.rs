@@ -19,8 +19,10 @@ use crate::{
         settings_cmd, visit_host_website_cmd, welcome_form_cmd,
     },
 };
-use nwd::NwgUi;
-use nwg::NoticeSender;
+use native_windows_derive::NwgUi;
+use native_windows_gui::{
+    stop_thread_dispatch, GlobalCursor, Menu, MenuItem, MessageWindow, Notice, NoticeSender,
+};
 use rigela_macros::GuiFormImpl;
 use std::sync::{OnceLock, Weak};
 
@@ -29,57 +31,57 @@ pub struct PopupMenuForm {
     context: OnceLock<Weak<Context>>,
 
     #[nwg_control]
-    window: nwg::MessageWindow,
+    window: MessageWindow,
 
     #[nwg_control(parent: window, popup: true)]
-    tray_menu: nwg::Menu,
+    tray_menu: Menu,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.setting_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_setting])]
-    setting_item: nwg::MenuItem,
+    setting_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.donate_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_donate])]
-    donate_item: nwg::MenuItem,
+    donate_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.welcome_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_welcome_form])]
-    welcome_form_item: nwg::MenuItem,
+    welcome_form_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.custom_hotkeys_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_custom_hotkeys])]
-    costom_hotkeys_item: nwg::MenuItem,
+    costom_hotkeys_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.help_item"))]
-    out_help_item: nwg::Menu,
+    out_help_item: Menu,
 
     #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.visit_host_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_visit_host])]
-    visit_host_item: nwg::MenuItem,
+    visit_host_item: MenuItem,
 
     #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.help_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_help])]
-    help_item: nwg::MenuItem,
+    help_item: MenuItem,
 
     #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.check_update_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_check_update])]
-    check_update_item: nwg::MenuItem,
+    check_update_item: MenuItem,
 
     #[nwg_control(parent: out_help_item, text: & t ! ("popupmenu.about_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_about])]
-    about_item: nwg::MenuItem,
+    about_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("popupmenu.exit_item"))]
     #[nwg_events(OnMenuItemSelected: [PopupMenuForm::on_exit])]
-    exit_item: nwg::MenuItem,
+    exit_item: MenuItem,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [PopupMenuForm::on_show_notice])]
-    show_notice: nwg::Notice,
+    show_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [PopupMenuForm::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    exit_notice: Notice,
 }
 
 impl PopupMenuForm {
@@ -121,11 +123,11 @@ impl PopupMenuForm {
 
     fn on_show_notice(&self) {
         bring_window_front!(&self.window);
-        let (x, y) = nwg::GlobalCursor::position();
+        let (x, y) = GlobalCursor::position();
         self.tray_menu.popup(x, y);
     }
 
     fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch()
+        stop_thread_dispatch()
     }
 }

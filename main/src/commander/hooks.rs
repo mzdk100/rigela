@@ -220,12 +220,8 @@ pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
  * `talent` 一个能力对象。
  * */
 fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
-    let ctx = context.clone();
-    let id = talent.get_id();
-    context.get_work_runtime().spawn(async move {
-        talent.perform(ctx.clone()).await;
-    });
-    if id == "stop_tts_output" {
+    talent.perform(context.clone());
+    if talent.get_id() == "stop_tts_output" {
         // 打断语音的能力不需要拦截键盘事件
         return LRESULT(0);
     }

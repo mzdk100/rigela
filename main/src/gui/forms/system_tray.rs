@@ -11,13 +11,16 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::configs::operations::get_auto_check_update;
 use crate::{
+    configs::operations::get_auto_check_update,
     context::Context,
     gui::command::{check_update_cmd, exit_cmd, help_cmd, settings_cmd},
 };
-use nwd::NwgUi;
-use nwg::NoticeSender;
+use native_windows_derive::NwgUi;
+use native_windows_gui::{
+    stop_thread_dispatch, GlobalCursor, Icon, Menu, MenuItem, MessageWindow, Notice, NoticeSender,
+    TrayNotification,
+};
 use rigela_macros::GuiFormImpl;
 use std::sync::{OnceLock, Weak};
 
@@ -27,37 +30,37 @@ pub struct SystemTray {
 
     #[nwg_control]
     #[nwg_events(OnInit: [SystemTray::on_init])]
-    window: nwg::MessageWindow,
+    window: MessageWindow,
 
     #[nwg_resource(source_file: Some("./test_rc/cog.ico"))]
-    icon: nwg::Icon,
+    icon: Icon,
 
     #[nwg_control(icon: Some(& data.icon), tip: Some(& t ! ("tray.tip")))]
     #[nwg_events(MousePressLeftUp: [SystemTray::show_menu], OnContextMenu: [SystemTray::show_menu])]
-    tray: nwg::TrayNotification,
+    tray: TrayNotification,
 
     #[nwg_control(parent: window, popup: true)]
-    tray_menu: nwg::Menu,
+    tray_menu: Menu,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("tray.setting_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_setting])]
-    setting_item: nwg::MenuItem,
+    setting_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("tray.help_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_help])]
-    help_item: nwg::MenuItem,
+    help_item: MenuItem,
 
     #[nwg_control(parent: tray_menu, text: & t ! ("tray.exit_item"))]
     #[nwg_events(OnMenuItemSelected: [SystemTray::on_exit])]
-    exit_item: nwg::MenuItem,
+    exit_item: MenuItem,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SystemTray::on_show_notice])]
-    show_notice: nwg::Notice,
+    show_notice: Notice,
 
     #[nwg_control()]
     #[nwg_events(OnNotice: [SystemTray::on_exit_notice])]
-    exit_notice: nwg::Notice,
+    exit_notice: Notice,
 }
 
 impl SystemTray {
@@ -69,7 +72,7 @@ impl SystemTray {
     }
 
     fn show_menu(&self) {
-        let (x, y) = nwg::GlobalCursor::position();
+        let (x, y) = GlobalCursor::position();
         self.tray_menu.popup(x, y);
     }
 
@@ -88,6 +91,6 @@ impl SystemTray {
     fn on_show_notice(&self) {}
 
     fn on_exit_notice(&self) {
-        nwg::stop_thread_dispatch();
+        stop_thread_dispatch();
     }
 }

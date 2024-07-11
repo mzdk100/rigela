@@ -80,7 +80,7 @@ pub fn mount() {
                 return;
             }
         };
-        debug!("Module handle: {}", handle.0);
+        debug!("Module handle: {:?}", handle.0);
 
         // 安装消息队列钩子
         let h_hook_get_message = loop {
@@ -94,7 +94,7 @@ pub fn mount() {
             sleep(Duration::from_millis(1000));
         };
         debug!(
-            "The hook of get message is ok, and it is {}.",
+            "The hook of get message is ok, and it is {:?}.",
             h_hook_get_message.0
         );
 
@@ -113,7 +113,7 @@ pub fn mount() {
             sleep(Duration::from_millis(1000));
         };
         debug!(
-            "The hook of call wnd proc is ok, and it is {}.",
+            "The hook of call wnd proc is ok, and it is {:?}.",
             h_hook_call_wnd_proc.0
         );
 
