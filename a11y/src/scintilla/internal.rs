@@ -258,14 +258,14 @@ pub type Rectangle = Sci_Rectangle;
 
 impl Scintilla for WindowControl {
     fn get_text(&self, length: usize) -> Option<String> {
-        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length).unwrap();
         self.send_message(SCI_GETTEXT, WPARAM(length), LPARAM(mem.as_ptr() as isize));
         mem.read(|buf| (buf as *const u8).to_string())
     }
 
     fn set_text(&self, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(SCI_SETTEXT, WPARAM(size), LPARAM(mem.as_ptr() as isize));
     }
@@ -280,14 +280,14 @@ impl Scintilla for WindowControl {
     }
 
     fn get_line(&self, line: usize, length: usize) -> Option<String> {
-        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length).unwrap();
         self.send_message(SCI_GETLINE, WPARAM(line), LPARAM(mem.as_ptr() as isize));
         mem.read(|buf| (buf as *const u8).to_string())
     }
 
     fn replace_sel(&self, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(SCI_REPLACESEL, WPARAM(size), LPARAM(mem.as_ptr() as isize));
     }
@@ -303,7 +303,8 @@ impl Scintilla for WindowControl {
     }
 
     fn get_text_range(&self, min: isize, max: isize) -> Option<String> {
-        let mem = InProcessMemory::new(self.get_pid(), ((max - min).abs() + 1) as usize).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), ((max - min).abs() + 1) as usize)
+            .unwrap();
         let param = Sci_TextRange {
             chrg: Sci_CharacterRange {
                 cpMax: max as Sci_PositionCR,
@@ -312,7 +313,7 @@ impl Scintilla for WindowControl {
             lpstrText: mem.as_ptr_mut() as *mut c_char,
         };
         let size = std::mem::size_of::<Sci_TextRange>();
-        let mem2 = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem2.write(&param as *const Sci_TextRange as *const c_void, size);
         self.send_message(
             SCI_GETTEXTRANGE,
@@ -323,8 +324,11 @@ impl Scintilla for WindowControl {
     }
 
     fn get_styled_text(&self, min: isize, max: isize) -> Option<Vec<Cell>> {
-        let mem =
-            InProcessMemory::new(self.get_pid(), (2 * (max - min).abs() + 2) as usize).unwrap();
+        let mem = InProcessMemory::new(
+            self.get_process_handle(),
+            (2 * (max - min).abs() + 2) as usize,
+        )
+        .unwrap();
         let param = Sci_TextRange {
             chrg: Sci_CharacterRange {
                 cpMax: max as Sci_PositionCR,
@@ -333,7 +337,7 @@ impl Scintilla for WindowControl {
             lpstrText: mem.as_ptr_mut() as *mut c_char,
         };
         let size = std::mem::size_of::<Sci_TextRange>();
-        let mem2 = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem2.write(&param as *const Sci_TextRange as *const c_void, size);
         let (_, len) = self.send_message(
             SCI_GETSTYLEDTEXT,
@@ -349,14 +353,14 @@ impl Scintilla for WindowControl {
 
     fn add_text(&self, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(SCI_ADDTEXT, WPARAM(size), LPARAM(mem.as_ptr() as isize));
     }
 
     fn add_styled_text(&self, text: &[Cell]) {
         let size = text.len() * std::mem::size_of::<Cell>();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_ADDSTYLEDTEXT,
@@ -367,21 +371,21 @@ impl Scintilla for WindowControl {
 
     fn append_text(&self, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(SCI_APPENDTEXT, WPARAM(size), LPARAM(mem.as_ptr() as isize));
     }
 
     fn insert_text(&self, pos: usize, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(SCI_INSERTTEXT, WPARAM(pos), LPARAM(mem.as_ptr() as isize));
     }
 
     fn change_insertion(&self, text: String) {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_CHANGEINSERTION,
@@ -437,14 +441,14 @@ impl Scintilla for WindowControl {
     fn encoded_from_utf8(&self, text: String) -> Vec<u8> {
         let size = text.as_bytes().len();
         self.send_message(SCI_SETLENGTHFORENCODE, WPARAM(size), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         let (_, len) = self.send_message(
             SCI_ENCODEDFROMUTF8,
             WPARAM(mem.as_ptr() as usize),
             LPARAM::default(),
         );
-        let mem2 = InProcessMemory::new(self.get_pid(), len + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), len + 1).unwrap();
         self.send_message(
             SCI_ENCODEDFROMUTF8,
             WPARAM(mem.as_ptr() as usize),
@@ -511,7 +515,7 @@ impl Scintilla for WindowControl {
 
     fn text_width(&self, style: i32, text: String) -> i32 {
         let size = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem.write(text.as_ptr() as *const c_void, size);
         let (_, res) = self.send_message(
             SCI_TEXTWIDTH,
@@ -650,7 +654,7 @@ impl Scintilla for WindowControl {
 
     fn get_sel_text(&self) -> Option<String> {
         let (_, len) = self.send_message(SCI_GETSELTEXT, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), len + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), len + 1).unwrap();
         self.send_message(
             SCI_GETSELTEXT,
             WPARAM::default(),
@@ -661,7 +665,7 @@ impl Scintilla for WindowControl {
 
     fn get_cur_line(&self) -> (Option<String>, usize) {
         let (_, len) = self.send_message(SCI_GETCURLINE, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), len + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), len + 1).unwrap();
         let (_, caret) =
             self.send_message(SCI_GETCURLINE, WPARAM(len), LPARAM(mem.as_ptr() as isize));
         (mem.read(|buf| (buf as *const u8).to_string()), caret)
@@ -1232,7 +1236,7 @@ impl Scintilla for WindowControl {
 
     fn search_in_target(&self, text: String) -> usize {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let (_, res) = self.send_message(
             SCI_SEARCHINTARGET,
@@ -1243,7 +1247,7 @@ impl Scintilla for WindowControl {
     }
 
     fn get_target_text(&self, length: usize) -> Option<String> {
-        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length).unwrap();
         self.send_message(
             SCI_GETTARGETTEXT,
             WPARAM(length),
@@ -1254,7 +1258,7 @@ impl Scintilla for WindowControl {
 
     fn replace_target(&self, text: String) -> usize {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let (_, res) = self.send_message(
             SCI_REPLACETARGET,
@@ -1266,7 +1270,7 @@ impl Scintilla for WindowControl {
 
     fn replace_target_re(&self, text: String) -> usize {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let (_, res) = self.send_message(
             SCI_REPLACETARGETRE,
@@ -1277,7 +1281,7 @@ impl Scintilla for WindowControl {
     }
 
     fn get_tag(&self, tag_number: i32, length: usize) -> (i32, Option<String>) {
-        let mem = InProcessMemory::new(self.get_pid(), length).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length).unwrap();
         let (_, res) = self.send_message(
             SCI_GETTAG,
             WPARAM(tag_number as usize),
@@ -1294,7 +1298,7 @@ impl Scintilla for WindowControl {
         search_flags: u32,
     ) -> (usize, Option<(usize, usize)>) {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let param = Sci_TextToFind {
             chrg: Sci_CharacterRange {
@@ -1305,7 +1309,7 @@ impl Scintilla for WindowControl {
             chrgText: Sci_CharacterRange { cpMin: 0, cpMax: 0 },
         };
         let size = std::mem::size_of::<Sci_TextToFind>();
-        let mem2 = InProcessMemory::new(self.get_pid(), size).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), size).unwrap();
         mem2.write(&param as *const Sci_TextToFind as *const c_void, size);
         let (_, res) = self.send_message(
             SCI_FINDTEXT,
@@ -1325,7 +1329,7 @@ impl Scintilla for WindowControl {
 
     fn search_prev(&self, search_flags: u32, text: String) -> usize {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let (_, res) = self.send_message(
             SCI_SEARCHPREV,
@@ -1337,7 +1341,7 @@ impl Scintilla for WindowControl {
 
     fn search_next(&self, search_flags: u32, text: String) -> usize {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         let (_, res) = self.send_message(
             SCI_SEARCHNEXT,
@@ -1378,7 +1382,7 @@ impl Scintilla for WindowControl {
 
     fn copy_text(&self, text: String) {
         let lentth = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), lentth + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), lentth + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, lentth);
         self.send_message(SCI_COPYTEXT, WPARAM(lentth), LPARAM(mem.as_ptr() as isize));
     }
@@ -1804,7 +1808,7 @@ impl Scintilla for WindowControl {
 
     fn set_word_chars(&self, characters: String) {
         let length = characters.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(characters.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_SETWORDCHARS,
@@ -1815,7 +1819,7 @@ impl Scintilla for WindowControl {
 
     fn get_word_chars(&self) -> Option<String> {
         let (_, length) = self.send_message(SCI_GETWORDCHARS, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETWORDCHARS,
             WPARAM(length),
@@ -1826,7 +1830,7 @@ impl Scintilla for WindowControl {
 
     fn set_white_space_chars(&self, characters: String) {
         let length = characters.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(characters.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_SETWHITESPACECHARS,
@@ -1838,7 +1842,7 @@ impl Scintilla for WindowControl {
     fn get_white_space_chars(&self) -> Option<String> {
         let (_, length) =
             self.send_message(SCI_GETWHITESPACECHARS, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETWHITESPACECHARS,
             WPARAM(length),
@@ -1849,7 +1853,7 @@ impl Scintilla for WindowControl {
 
     fn set_punctuation_chars(&self, characters: String) {
         let length = characters.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(characters.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_SETPUNCTUATIONCHARS,
@@ -1864,7 +1868,7 @@ impl Scintilla for WindowControl {
             WPARAM::default(),
             LPARAM::default(),
         );
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETPUNCTUATIONCHARS,
             WPARAM(length),
@@ -1956,7 +1960,7 @@ impl Scintilla for WindowControl {
 
     fn set_styling_ex(&self, styles: &[u8]) {
         let size = styles.len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(styles.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_SETSTYLINGEX,
@@ -2002,7 +2006,7 @@ impl Scintilla for WindowControl {
 
     fn style_set_font(&self, style: i32, font: String) {
         let length = font.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(font.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_STYLESETFONT,
@@ -2013,7 +2017,7 @@ impl Scintilla for WindowControl {
 
     fn style_get_font(&self, style: i32) -> Option<String> {
         let (_, length) = self.send_message(SCI_STYLEGETFONT, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_STYLEGETFONT,
             WPARAM(style as usize),
@@ -2481,10 +2485,10 @@ impl Scintilla for WindowControl {
 
     fn set_representation(&self, encoded_character: String, representation: String) {
         let length = encoded_character.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(encoded_character.as_ptr() as *const c_void, length);
         let length = representation.as_bytes().len();
-        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem2.write(representation.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_SETREPRESENTATION,
@@ -2495,14 +2499,14 @@ impl Scintilla for WindowControl {
 
     fn get_representation(&self, encoded_character: String) -> Option<String> {
         let length = encoded_character.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(encoded_character.as_ptr() as *const c_void, length);
         let (_, length) = self.send_message(
             SCI_GETREPRESENTATION,
             WPARAM(mem.as_ptr() as usize),
             LPARAM::default(),
         );
-        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETREPRESENTATION,
             WPARAM(mem.as_ptr() as usize),
@@ -2513,7 +2517,7 @@ impl Scintilla for WindowControl {
 
     fn clear_representation(&self, encoded_character: String) {
         let length = encoded_character.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(encoded_character.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_CLEARREPRESENTATION,
@@ -2697,7 +2701,7 @@ impl Scintilla for WindowControl {
 
     fn margin_set_text(&self, line: usize, text: String) {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_MARGINSETTEXT,
@@ -2708,7 +2712,7 @@ impl Scintilla for WindowControl {
 
     fn margin_get_text(&self, line: usize) -> Option<String> {
         let (_, length) = self.send_message(SCI_MARGINGETTEXT, WPARAM(line), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_MARGINGETTEXT,
             WPARAM(line),
@@ -2728,7 +2732,7 @@ impl Scintilla for WindowControl {
 
     fn margin_set_styles(&self, line: usize, styles: &[u8]) {
         let length = styles.len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(styles.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_MARGINSETSTYLES,
@@ -2739,7 +2743,7 @@ impl Scintilla for WindowControl {
 
     fn margin_get_styles(&self, line: usize) -> Vec<u8> {
         let (_, length) = self.send_message(SCI_MARGINGETSTYLES, WPARAM(line), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         let (_, length) = self.send_message(
             SCI_MARGINGETSTYLES,
             WPARAM(line),
@@ -2794,7 +2798,7 @@ impl Scintilla for WindowControl {
             return;
         };
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_ANNOTATIONSETTEXT,
@@ -2805,7 +2809,7 @@ impl Scintilla for WindowControl {
 
     fn annotation_get_text(&self, line: usize) -> Option<String> {
         let (_, length) = self.send_message(SCI_ANNOTATIONGETTEXT, WPARAM(line), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_ANNOTATIONGETTEXT,
             WPARAM(line),
@@ -2825,7 +2829,7 @@ impl Scintilla for WindowControl {
 
     fn annotation_set_styles(&self, line: usize, styles: &[u8]) {
         let length = styles.len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(styles.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_ANNOTATIONSETSTYLES,
@@ -2837,7 +2841,7 @@ impl Scintilla for WindowControl {
     fn annotation_get_styles(&self, line: usize) -> Vec<u8> {
         let (_, length) =
             self.send_message(SCI_ANNOTATIONGETSTYLES, WPARAM(line), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_ANNOTATIONGETSTYLES,
             WPARAM(line),
@@ -3195,7 +3199,7 @@ impl Scintilla for WindowControl {
 
     fn marker_define_rgba_image(&self, marker_number: u32, pixels: &[u8]) {
         let length = pixels.len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(pixels.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_MARKERDEFINERGBAIMAGE,
@@ -3546,7 +3550,7 @@ impl Scintilla for WindowControl {
 
     fn autoc_show(&self, item_list: String) {
         let length = item_list.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(item_list.as_ptr() as *const c_void, length);
         self.send_message(SCI_AUTOCSHOW, WPARAM(length), LPARAM(mem.as_ptr() as isize));
     }
@@ -3571,7 +3575,7 @@ impl Scintilla for WindowControl {
 
     fn autoc_stops(&self, character_set: String) {
         let length = character_set.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(character_set.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_AUTOCSTOPS,
@@ -3596,7 +3600,7 @@ impl Scintilla for WindowControl {
 
     fn autoc_select(&self, select: String) {
         let length = select.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(select.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_AUTOCSELECT,
@@ -3616,7 +3620,7 @@ impl Scintilla for WindowControl {
             WPARAM::default(),
             LPARAM::default(),
         );
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_AUTOCGETCURRENTTEXT,
             WPARAM(length),
@@ -3641,7 +3645,7 @@ impl Scintilla for WindowControl {
 
     fn autoc_set_fillups(&self, character_set: String) {
         let length = character_set.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(character_set.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_AUTOCSETFILLUPS,
@@ -3765,7 +3769,7 @@ impl Scintilla for WindowControl {
 
     fn register_rgba_image(&self, r#type: i32, pixels: &[u8]) {
         let length = pixels.len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(pixels.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_REGISTERRGBAIMAGE,
@@ -3829,7 +3833,7 @@ impl Scintilla for WindowControl {
 
     fn user_list_show(&self, list_type: i32, item_list: String) {
         let length = item_list.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(item_list.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_USERLISTSHOW,
@@ -3840,7 +3844,7 @@ impl Scintilla for WindowControl {
 
     fn call_tip_show(&self, pos: usize, definition: String) {
         let length = definition.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(definition.as_ptr() as *const c_void, length);
         self.send_message(SCI_CALLTIPSHOW, WPARAM(pos), LPARAM(mem.as_ptr() as isize));
     }
@@ -4286,7 +4290,7 @@ impl Scintilla for WindowControl {
         };
         let draw = if draw { 1 } else { 0 };
         let size = std::mem::size_of::<Sci_RangeToFormat>();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(&rtf as *const Sci_RangeToFormat as *const c_void, size);
         let (_, res) =
             self.send_message(SCI_FORMATRANGE, WPARAM(draw), LPARAM(mem.as_ptr() as isize));
@@ -4462,7 +4466,7 @@ impl Scintilla for WindowControl {
 
     fn toggle_fold_show_text(&self, line: usize, text: String) {
         let length = text.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         mem.write(text.as_ptr() as *const c_void, length);
         self.send_message(
             SCI_TOGGLEFOLDSHOWTEXT,
@@ -4758,7 +4762,7 @@ impl Scintilla for WindowControl {
     fn get_lexer_language(&self) -> Option<String> {
         let (_, length) =
             self.send_message(SCI_GETLEXERLANGUAGE, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETLEXERLANGUAGE,
             WPARAM(length),
@@ -4779,7 +4783,7 @@ impl Scintilla for WindowControl {
     fn property_names(&self) -> Option<String> {
         let (_, length) =
             self.send_message(SCI_PROPERTYNAMES, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_PROPERTYNAMES,
             WPARAM(length),
@@ -4790,7 +4794,7 @@ impl Scintilla for WindowControl {
 
     fn property_type(&self, name: String) -> PropertyType {
         let size = name.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(name.as_ptr() as *const c_void, size);
         let (_, res) = self.send_message(
             SCI_PROPERTYTYPE,
@@ -4802,14 +4806,14 @@ impl Scintilla for WindowControl {
 
     fn describe_property(&self, name: String) -> Option<String> {
         let size = name.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(name.as_ptr() as *const c_void, size);
         let (_, length) = self.send_message(
             SCI_DESCRIBEPROPERTY,
             WPARAM(mem.as_ptr() as usize),
             LPARAM::default(),
         );
-        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_DESCRIBEPROPERTY,
             WPARAM(mem.as_ptr() as usize),
@@ -4820,10 +4824,10 @@ impl Scintilla for WindowControl {
 
     fn set_property(&self, key: String, value: String) {
         let size = key.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(key.as_ptr() as *const c_void, size);
         let size = value.as_bytes().len();
-        let mem2 = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem2.write(value.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_SETPROPERTY,
@@ -4834,14 +4838,14 @@ impl Scintilla for WindowControl {
 
     fn get_property_expanded(&self, key: String) -> Option<String> {
         let size = key.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(key.as_ptr() as *const c_void, size);
         let (_, length) = self.send_message(
             SCI_GETPROPERTYEXPANDED,
             WPARAM(mem.as_ptr() as usize),
             LPARAM::default(),
         );
-        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETPROPERTYEXPANDED,
             WPARAM(mem.as_ptr() as usize),
@@ -4852,7 +4856,7 @@ impl Scintilla for WindowControl {
 
     fn get_property_int(&self, key: String, default_value: u32) -> u32 {
         let size = key.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(key.as_ptr() as *const c_void, size);
         let (_, res) = self.send_message(
             SCI_GETPROPERTYINT,
@@ -4864,14 +4868,14 @@ impl Scintilla for WindowControl {
 
     fn get_property(&self, key: String) -> Option<String> {
         let size = key.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(key.as_ptr() as *const c_void, size);
         let (_, length) = self.send_message(
             SCI_GETPROPERTY,
             WPARAM(mem.as_ptr() as usize),
             LPARAM::default(),
         );
-        let mem2 = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem2 = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETPROPERTY,
             WPARAM(mem.as_ptr() as usize),
@@ -4882,7 +4886,7 @@ impl Scintilla for WindowControl {
 
     fn set_keywords(&self, key_word_set: u32, key_words: String) {
         let size = key_words.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(key_words.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_SETKEYWORDS,
@@ -4897,7 +4901,7 @@ impl Scintilla for WindowControl {
             WPARAM::default(),
             LPARAM::default(),
         );
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_DESCRIBEKEYWORDSETS,
             WPARAM(length),
@@ -4909,7 +4913,7 @@ impl Scintilla for WindowControl {
     fn get_substyle_bases(&self) -> Option<Vec<u8>> {
         let (_, length) =
             self.send_message(SCI_GETSUBSTYLEBASES, WPARAM::default(), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_GETSUBSTYLEBASES,
             WPARAM(length),
@@ -4978,7 +4982,7 @@ impl Scintilla for WindowControl {
 
     fn set_identifiers(&self, style: i32, identifiers: String) {
         let size = identifiers.as_bytes().len();
-        let mem = InProcessMemory::new(self.get_pid(), size + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), size + 1).unwrap();
         mem.write(identifiers.as_ptr() as *const c_void, size);
         self.send_message(
             SCI_SETIDENTIFIERS,
@@ -5004,7 +5008,7 @@ impl Scintilla for WindowControl {
     fn name_of_style(&self, style: i32) -> Option<String> {
         let (_, length) =
             self.send_message(SCI_NAMEOFSTYLE, WPARAM(style as usize), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_NAMEOFSTYLE,
             WPARAM(style as usize),
@@ -5016,7 +5020,7 @@ impl Scintilla for WindowControl {
     fn tags_of_style(&self, style: i32) -> Option<String> {
         let (_, length) =
             self.send_message(SCI_TAGSOFSTYLE, WPARAM(style as usize), LPARAM::default());
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_TAGSOFSTYLE,
             WPARAM(style as usize),
@@ -5031,7 +5035,7 @@ impl Scintilla for WindowControl {
             WPARAM(style as usize),
             LPARAM::default(),
         );
-        let mem = InProcessMemory::new(self.get_pid(), length + 1).unwrap();
+        let mem = InProcessMemory::new(self.get_process_handle(), length + 1).unwrap();
         self.send_message(
             SCI_DESCRIPTIONOFSTYLE,
             WPARAM(style as usize),
