@@ -109,6 +109,9 @@ impl Jab {
     }
 }
 
+unsafe impl Send for Jab {}
+unsafe impl Sync for Jab {}
+
 add_event_fp!(
     general,
     LIB,

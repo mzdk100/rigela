@@ -484,7 +484,7 @@ impl Debug for Accessible2Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Accessible2Object(role:{}, states:{}, attributes:{}, n_relations:{}, window:{})",
+            "Accessible2Object(role:{}, states:{}, attributes:{}, n_relations:{}, window:{:?})",
             self.role(),
             self.states().unwrap_or(0),
             self.attributes(),
