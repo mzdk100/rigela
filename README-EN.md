@@ -80,6 +80,7 @@ next section.
     - [RigelA resource incremental update reference document](resources/README.md)
 2. If you are new to programming, you also need to learn the Rust language and understand the common libraries of Rust:
     - [Rust programming language Simplified Chinese version](https://kaisery.github.io/trpl-zh-cn)
+    - [Secret Handbook For Rust Beginners](https://rust-book.junmajinlong.com/)
     - [Rust Language Bible](https://course.rs/about-book.html)
     - [The Rust Reference](https://doc.rust-lang.org/stable/reference/)
     - [Rust for Windows repository](https://github.com/microsoft/windows-rs)

@@ -71,6 +71,7 @@
     - [RigelA资源增量更新参考文档](resources/README.md)
 2. 如果您是编程新手，您还需要学习Rust语言，了解Rust的常用库：
     - [Rust 程序设计语言 简体中文版](https://kaisery.github.io/trpl-zh-cn)
+    - [Rust入门秘籍](https://rust-book.junmajinlong.com/)
     - [Rust语言圣经](https://course.rs/about-book.html)
     - [Rust 参考手册（中文翻译非官方）](https://minstrel1977.gitee.io/rust-reference/)
     - [Rust for Windows 仓库](https://github.com/microsoft/windows-rs)
