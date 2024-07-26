@@ -11,7 +11,7 @@ repository.workspace = true
 
 [features]
 default = ["win-wrap/common", "win-wrap/hook"]
-client = ["model", "utils", "tokio/rt-multi-thread", "tokio/sync", "rigela-utils/pipe", "log/std"]
+client = ["model", "utils", "tokio/rt-multi-thread", "parking_lot/send_guard", "rigela-utils/pipe", "log/std"]
 dll = ["client", "handler", "win-wrap/common", "win-wrap/ext", "win-wrap/hook"]
 handler = ["win-wrap/input"]
 model = ["serde/derive"]
@@ -48,3 +48,7 @@ optional = true
 
 [build-dependencies.cargo-rigela]
 path = "../build_helper"
+
+[dependencies.parking_lot]
+optional = true
+workspace = true

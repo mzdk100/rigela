@@ -28,7 +28,8 @@ use std::{
     fmt::{Debug, Formatter},
     sync::{
         atomic::{AtomicBool, Ordering},
-        mpsc, OnceLock, Weak,
+        mpsc::channel,
+        OnceLock, Weak,
     },
     thread::spawn,
 };
@@ -88,7 +89,7 @@ impl GuiProvider {
         }
         ALREADY_INIT.store(true, Ordering::Release);
 
-        let (tx, rx) = mpsc::channel::<(NoticeSender, NoticeSender)>();
+        let (tx, rx) = channel::<(NoticeSender, NoticeSender)>();
 
         spawn(move || {
             init().unwrap_or_else(|e| error!("Can't initialize the native window gui. ({})", e));

@@ -16,6 +16,7 @@ use crate::{
     utils::get_pipe_name,
 };
 use log::{error, trace};
+use parking_lot::Mutex;
 use rigela_utils::pipe::PipeStream;
 use std::{
     sync::{Arc, OnceLock},
@@ -24,12 +25,11 @@ use std::{
 use tokio::{
     net::windows::named_pipe::{ClientOptions, NamedPipeClient},
     runtime::{Builder, Runtime},
-    sync::Mutex,
 };
 
 /**
- * peeper的client运行在远进程中。
- * */
+peeper的client运行在远进程中。
+*/
 pub(crate) struct PeeperClient {
     module: String,
     sender: Arc<OnceLock<Mutex<PipeStream<PeeperPacket, NamedPipeClient>>>>,
@@ -38,8 +38,8 @@ pub(crate) struct PeeperClient {
 
 impl PeeperClient {
     /**
-     * 创建一个peeper的客户端。
-     * */
+    创建一个peeper的客户端。
+    */
     pub fn new(module: String) -> Self {
         trace!("New pipe connection.");
         let self_ = Self {
@@ -72,9 +72,9 @@ impl PeeperClient {
     }
 
     /**
-     * 发送数据。
-     * `data` peeper的业务数据。
-     * */
+    发送数据。
+    `data` peeper的业务数据。
+    */
     pub fn push(&self, data: PeeperData) {
         let packet = PeeperPacket {
             name: self.module.clone(),
@@ -84,7 +84,7 @@ impl PeeperClient {
         if let Some(rt) = self.rt.get() {
             rt.spawn(async move {
                 let sender = sender.get_or_init(|| Self::get_stream().into());
-                let mut sender = sender.lock().await;
+                let mut sender = sender.lock();
                 if let Err(e) = sender.send(&packet).await {
                     error!("{}", e);
                 }
@@ -93,17 +93,17 @@ impl PeeperClient {
     }
 
     /**
-     * 发送日志。
-     * `msg` 日志消息。
-     * */
+    发送日志。
+    `msg` 日志消息。
+    */
     #[allow(unused)]
     pub fn log(&self, msg: String) {
         self.push(PeeperData::Log(msg));
     }
 
     /**
-     * 退出客户端，同时会通知服务端退出监听当前客户端的所有请求。
-     * */
+    退出客户端，同时会通知服务端退出监听当前客户端的所有请求。
+    */
     pub fn quit(&mut self) {
         if self.rt.get().is_none() {
             // 如果已经退出了就不要重复退出

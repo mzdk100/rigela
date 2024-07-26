@@ -32,8 +32,8 @@ pub(crate) struct Launcher {
 
 impl Launcher {
     /**
-     * 创建一个发射台，通常一个进程只有一个实例。
-     * */
+     创建一个发射台，通常一个进程只有一个实例。
+     */
     pub(crate) fn new(work_runtime: Weak<Runtime>, terminator: Weak<Terminator>) -> Self {
         // 初始化COM线程模型。
         let res = co_initialize_multi_thread();
@@ -57,8 +57,8 @@ impl Launcher {
 
     //noinspection RsUnresolvedPath
     /**
-     * 发射操作，这会启动整个框架，异步方式运行，直到程序结束。
-     * */
+     发射操作，这会启动整个框架，异步方式运行，直到程序结束。
+     */
     pub(crate) async fn launch(&self) {
         // 监听外部进程请求主程序退出，这是一种安全杀死主进程的方案
         let ctx = Arc::downgrade(&self.context);
@@ -120,8 +120,8 @@ impl Launcher {
 
     //noinspection RsUnresolvedPath
     /**
-     * 退出程序。
-     * */
+     退出程序。
+     */
     pub(crate) async fn exit(&self) {
         // 杀死32位代理模块
         #[cfg(target_arch = "x86_64")]
@@ -152,8 +152,8 @@ async fn register_service(path: &str) {
 }
 
 /**
- * 安装peeper.dll文件。
- * */
+ 安装peeper.dll文件。
+ */
 fn put_peeper() {
     // 获取peeper.dll的二进制数据并写入到用户目录中，原理是在编译时把peeper.dll的数据使用include_bytes!内嵌到主程序内部，在运行时释放到磁盘。
     // 注意：这里使用条件编译的方法，确保include_bytes!仅出现一次，不能使用if语句，那样会多次包含bytes，main.exe的大小会成倍增长。

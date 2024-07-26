@@ -12,6 +12,7 @@
  */
 
 pub(crate) const MODULE_PATH: &str = module_path!();
+
 #[macro_export]
 macro_rules! wm {
     ($field:ident) => {
@@ -20,8 +21,8 @@ macro_rules! wm {
 }
 
 /**
- * 获取一个管道名称。
- * */
+ 获取一个管道名称。
+ */
 pub(crate) fn get_pipe_name() -> String {
     format!(r"\\.\PIPE\{}", module_path!())
 }

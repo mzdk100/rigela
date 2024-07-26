@@ -47,9 +47,9 @@ impl Sound {
 
     //noinspection StructuralWrap
     /**
-     * 播放一个音效，并等待音效播放完毕。
-     * `arg` 声音参数。
-     * */
+    播放一个音效，并等待音效播放完毕。
+    `arg` 声音参数。
+    */
     pub(crate) async fn play(&self, arg: SoundArgument) {
         let context = loop {
             if let Some(x) = self.context.get() {
@@ -98,8 +98,8 @@ impl Sound {
     }
 
     /**
-     * 停止所有正在播放的音效。
-     * */
+    停止所有正在播放的音效。
+    */
     pub(crate) async fn stop_all(&self) {
         for x in self.sound_streams.lock().await.iter() {
             x.1.stop();

@@ -18,6 +18,9 @@ repository = "https://gitcode.net/mzdk100/rigela.git"
 [workspace.dependencies.chrono]
 version = "0.4.38"
 
+[workspace.dependencies.parking_lot]
+version = "0.12.3"
+
 [workspace.dependencies.log]
 version = "0.4.22"
 

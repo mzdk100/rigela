@@ -59,10 +59,10 @@ static HOOK_INIT: OnceLock<u32> = OnceLock::new();
 static HOOK_UNINIT: OnceLock<u32> = OnceLock::new();
 
 /**
- * 启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
- * 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
- * 注意： 当main引用本模块并构建时，会自动生成此dll。
- * */
+ 启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
+ 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
+ 注意： 当main引用本模块并构建时，会自动生成此dll。
+ */
 #[cfg(not(feature = "dll"))]
 pub fn mount() {
     debug!("mounted.");

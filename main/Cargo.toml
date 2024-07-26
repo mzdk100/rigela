@@ -41,7 +41,6 @@ features = ["uia", "registry", "tts", "pth", "control", "shell"]
 workspace = true
 features = [
     "rt-multi-thread",
-    "sync",
     "macros",
     "process",
     "time"
@@ -115,3 +114,7 @@ version = "1.0.5"
 
 [dependencies.native-windows-gui]
 version = "1.0.13"
+
+[dependencies.parking_lot]
+features = ["send_guard"]
+workspace = true

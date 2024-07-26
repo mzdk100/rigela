@@ -27,8 +27,8 @@ use std::{
 use win_wrap::hook::WindowsHook;
 
 /**
- * 命令类型枚举。
- * */
+命令类型枚举。
+*/
 #[allow(dead_code)]
 pub(crate) enum CommandType {
     // 键盘命令
@@ -40,8 +40,8 @@ pub(crate) enum CommandType {
 }
 
 /**
- * 指挥官结构。
- * */
+指挥官结构。
+*/
 pub(crate) struct Commander {
     keyboard_hook: OnceLock<WindowsHook>,
     mouse_hook: OnceLock<WindowsHook>,
@@ -50,9 +50,9 @@ pub(crate) struct Commander {
 
 impl Commander {
     /**
-     * 创建一个指挥官对象。
-     * 负责收集用户的操作请求，例如快捷键、触摸动作、语音命令等，之后把这些命令调度给具体的任务。
-     * */
+    创建一个指挥官对象。
+    负责收集用户的操作请求，例如快捷键、触摸动作、语音命令等，之后把这些命令调度给具体的任务。
+    */
     pub(crate) fn new() -> Self {
         Self {
             keyboard_hook: Default::default(),
@@ -62,9 +62,9 @@ impl Commander {
     }
 
     /**
-     * 让指挥官开始工作。
-     * `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
-     * */
+    让指挥官开始工作。
+    `context` 框架上下文环境，可以通过此对象访问整个框架的所有API。
+    */
     pub(crate) fn apply(&self, context: Weak<Context>) {
         self.keyboard_manager.apply(context.clone());
         self.keyboard_hook

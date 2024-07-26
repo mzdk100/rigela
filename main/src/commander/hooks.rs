@@ -20,11 +20,12 @@ use crate::{
     context::{Context, ContextAccessor},
     talent::{mouse::mouse_read, Talent},
 };
+use parking_lot::RwLock;
 use std::{
     collections::HashMap,
     sync::{
         atomic::{AtomicBool, AtomicU32, Ordering},
-        RwLock, Weak,
+        Weak,
     },
 };
 use win_wrap::{
@@ -74,7 +75,7 @@ pub(crate) fn set_keyboard_hook(context: Weak<Context>) -> WindowsHook {
         let key = key.trans_rigela();
 
         // 存储按键到缓冲
-        let mut map = key_track.write().unwrap();
+        let mut map = key_track.write();
         map.insert(key, pressed);
         let cur_combo_key: ComboKey = map
             .iter()
@@ -215,10 +216,10 @@ pub(crate) fn set_mouse_hook(context: Weak<Context>) -> WindowsHook {
 }
 
 /**
- * 执行能力项的操作
- * `context` 读屏的上下文环境。
- * `talent` 一个能力对象。
- * */
+执行能力项的操作
+`context` 读屏的上下文环境。
+`talent` 一个能力对象。
+*/
 fn execute(context: Weak<Context>, talent: Talent) -> LRESULT {
     talent.perform(context.clone());
     if talent.get_id() == "stop_tts_output" {

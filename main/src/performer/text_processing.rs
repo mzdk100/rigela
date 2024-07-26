@@ -11,8 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::{collections::HashMap, sync::LazyLock};
 
 /// 单个字符的预处理
 pub(crate) fn transform_single_char(ch: &char) -> String {
@@ -22,16 +21,15 @@ pub(crate) fn transform_single_char(ch: &char) -> String {
     }
 }
 
-fn get_single_char_transform_map() -> HashMap<char, &'static str> {
-    OnceLock::new()
-        .get_or_init(|| {
-            let mut map = HashMap::new();
-            for (k, v) in SINGLE_CHAR_TRANSFORM_DATA {
-                map.insert(*k, *v);
-            }
-            map
-        })
-        .to_owned()
+fn get_single_char_transform_map() -> &'static HashMap<char, &'static str> {
+    static MAP: LazyLock<HashMap<char, &'static str>> = LazyLock::new(|| {
+        let mut map = HashMap::new();
+        for (k, v) in SINGLE_CHAR_TRANSFORM_DATA {
+            map.insert(*k, *v);
+        }
+        map
+    });
+    &*MAP
 }
 
 const SINGLE_CHAR_TRANSFORM_DATA: &[(char, &str)] = &[

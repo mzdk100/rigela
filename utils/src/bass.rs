@@ -15,7 +15,7 @@ use crate::{call_proc, library::setup_library};
 use log::{error, info};
 use std::{
     ffi::{c_void, CString},
-    sync::OnceLock,
+    sync::Once,
     time::Duration,
 };
 use tokio::time::sleep;
@@ -322,8 +322,8 @@ impl BassChannelOutputStream {
                 return Self::null();
             }
         };
-        static _LOADED: OnceLock<()> = OnceLock::new();
-        _LOADED.get_or_init(|| {
+        static _LOADED: Once = Once::new();
+        _LOADED.call_once(|| {
             info!(
                 "{} loaded, library handle is {:?}.",
                 bass_path.display(),
@@ -337,10 +337,10 @@ impl BassChannelOutputStream {
 
     //noinspection RsUnresolvedReference
     /**
-     * 创建一个通道输出流。
-     * `sample_rate` 采样率。
-     * `num_channels` 声道数量。
-     * */
+    创建一个通道输出流。
+    `sample_rate` 采样率。
+    `num_channels` 声道数量。
+    */
     pub fn new(sample_rate: u32, num_channels: u32) -> Self {
         Self::create(|h_module| {
             bass!(
@@ -356,25 +356,25 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 从内存文件创建实例。
-     * `data` 文件数据。
-     * */
+    从内存文件创建实例。
+    `data` 文件数据。
+    */
     pub fn from_memory_file(data: &[u8]) -> Self {
         Self::create(|h_module| bass!(h_module, stream_create_file, true, data.as_ptr(), 0, 0, 0))
     }
 
     /**
-     * 从磁盘文件创建实例。
-     * `path` 文件路径。
-     * */
+    从磁盘文件创建实例。
+    `path` 文件路径。
+    */
     pub fn from_disk_file(path: &str) -> Self {
         let path = CString::new(path).unwrap();
         Self::create(|h_module| bass!(h_module, stream_create_file, false, path.as_ptr(), 0, 0, 0))
     }
 
     /**
-     * 创建一个空实例。
-     * */
+    创建一个空实例。
+    */
     fn null() -> Self {
         Self {
             h_bass: 0,
@@ -383,70 +383,70 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 判断输出流是否可用。
-     * */
+    判断输出流是否可用。
+    */
     pub fn is_valid(&self) -> bool {
         (!self.h_module.is_invalid()) && self.h_bass != 0
     }
     /**
-     * 清理释放。
-     * */
+    清理释放。
+    */
     pub fn dispose(&self) {
         bass!(self.h_module, stream_free, self.h_bass);
         bass!(self.h_module, free);
     }
 
     /**
-     * 播放操作，此方法和start方法的功能一样，但具有从头开始播放的选项。
-     * `restart` 重新开始。
-     * */
+    播放操作，此方法和start方法的功能一样，但具有从头开始播放的选项。
+    `restart` 重新开始。
+    */
     pub fn play(&self, restart: bool) {
         bass!(self.h_module, channel_play, self.h_bass, restart);
     }
 
     /**
-     * 暂停操作。
-     * */
+    暂停操作。
+    */
     pub fn pause(&self) {
         bass!(self.h_module, channel_pause, self.h_bass);
     }
 
     /**
-     * 停止操作。
-     * */
+    停止操作。
+    */
     pub fn stop(&self) {
         bass!(self.h_module, channel_stop, self.h_bass);
     }
 
     /**
-     * 开始或继续播放操作。
-     * */
+    开始或继续播放操作。
+    */
     pub fn start(&self) {
         bass!(self.h_module, channel_start, self.h_bass);
     }
 
     /**
-     * 写入数据。
-     * `data` 音频数据。
-     * */
+    写入数据。
+    `data` 音频数据。
+    */
     pub fn put_data(&self, data: &[u8]) -> i32 {
         bass!(self.h_module, stream_put_data, self.h_bass, data).unwrap_or(0)
     }
 
     //noinspection StructuralWrap
     /**
-     * 写入文件数据。
-     * `data` 音频文件数据。
-     * */
+    写入文件数据。
+    `data` 音频文件数据。
+    */
     pub fn put_file_data(&self, data: &[u8]) -> i32 {
         bass!(self.h_module, stream_put_file_data, self.h_bass, data).unwrap_or(0)
     }
 
     //noinspection StructuralWrap
     /**
-     * 设置播放频率。
-     * `value` 要播放的频率。
-     * */
+    设置播放频率。
+    `value` 要播放的频率。
+    */
     pub fn set_freq(&self, value: f32) {
         bass!(
             self.h_module,
@@ -459,30 +459,30 @@ impl BassChannelOutputStream {
     }
 
     /**
-     * 检查样本、流或MOD音乐是否处于活动状态（正在播放）或暂停状态。还可以检查是否正在录制。
-     * */
+    检查样本、流或MOD音乐是否处于活动状态（正在播放）或暂停状态。还可以检查是否正在录制。
+    */
     pub fn is_active(&self) -> i32 {
         bass!(self.h_module, channel_is_active, self.h_bass).unwrap_or(BASS_ACTIVE_STOPPED)
     }
 
     /**
-     * 判断播放状态是否已经停止。
-     * */
+    判断播放状态是否已经停止。
+    */
     pub fn is_stopped(&self) -> bool {
         self.is_active() == BASS_ACTIVE_STOPPED
     }
 
     /**
-     * 等待直到停止状态或没有数据可以播放。
-     * */
+    等待直到停止状态或没有数据可以播放。
+    */
     pub async fn wait_until_stopped_or_stalled(&self) {
         self.wait(|active| active == BASS_ACTIVE_STOPPED || active == BASS_ACTIVE_STALLED)
             .await;
     }
 
     /**
-     * 等待直到暂停。
-     * */
+    等待直到暂停。
+    */
     pub async fn wait_until_paused(&self) {
         self.wait(|active| active == BASS_ACTIVE_PAUSED).await;
     }
@@ -524,13 +524,13 @@ mod test_bass {
         }
         out.start();
         out.put_data(&data);
-        out.wait_until_stalled().await;
+        out.wait_until_stopped_or_stalled().await;
         let out = BassChannelOutputStream::from_disk_file(
             r"C:\Users\Administrator\.rigela\resources\tip.wav",
         );
         for _ in 0..5 {
             out.start();
-            out.wait_until_stopped().await;
+            out.wait_until_stopped_or_stalled().await;
         }
     }
 }

@@ -21,6 +21,7 @@ use crate::{
     performer::text_processing::transform_single_char,
 };
 use arc_swap::ArcSwapAny;
+use parking_lot::RwLock;
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
@@ -30,10 +31,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::{
-    sync::{OnceCell, RwLock},
-    time::sleep,
-};
+use tokio::{sync::OnceCell, time::sleep};
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct VoiceInfo {
@@ -102,10 +100,10 @@ impl Tts {
 
     //noinspection StructuralWrap
     /**
-     * 朗读文字，如果当前有朗读的任务，则进行排队。
-     * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
-     * `text` 需要朗读的文本。
-     * */
+    朗读文字，如果当前有朗读的任务，则进行排队。
+    本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
+    `text` 需要朗读的文本。
+    */
     pub(crate) async fn speak(&self, text: String) -> bool {
         assert!(text.len() > 0);
 
@@ -136,7 +134,7 @@ impl Tts {
         let ttc_cfg = self.context.get_config_manager().get_config().tts_config;
         let engine_name = ttc_cfg.voice.0.clone();
 
-        match { self.all_engines.read().await.get(&engine_name) } {
+        match { self.all_engines.read().get(&engine_name) } {
             Some(x) => Arc::downgrade(x),
 
             None => loop {
@@ -144,7 +142,7 @@ impl Tts {
                     sleep(Duration::from_millis(100)).await;
                     continue;
                 };
-                match { self.all_engines.read().await.get(engine_name) } {
+                match { self.all_engines.read().get(engine_name) } {
                     Some(x) => break Arc::downgrade(x),
                     None => sleep(Duration::from_millis(100)).await,
                 }
@@ -153,8 +151,8 @@ impl Tts {
     }
 
     /**
-     * * 停止当前的朗读任务。
-     * */
+    停止当前的朗读任务。
+    */
     pub(crate) async fn stop(&self) {
         self.is_cancelled.store(true, Ordering::Release);
         let engine = self
@@ -166,7 +164,7 @@ impl Tts {
             .0
             .clone();
 
-        let lock = self.all_engines.read().await;
+        let lock = self.all_engines.read();
         if let Some(x) = lock.get(&engine) {
             x.stop();
             return;
@@ -179,17 +177,13 @@ impl Tts {
     }
 
     /**
-     * 停止所有语音引擎的朗读。
-     * */
+    停止所有语音引擎的朗读。
+    */
     pub(crate) async fn stop_all(&self) {
         self.is_cancelled.store(true, Ordering::Release);
-        self.all_engines
-            .read()
-            .await
-            .iter()
-            .for_each(|(_, engine)| {
-                engine.stop();
-            });
+        self.all_engines.read().iter().for_each(|(_, engine)| {
+            engine.stop();
+        });
     }
 
     /// 设置当前TTS属性的值
@@ -264,9 +258,9 @@ impl Tts {
     }
 
     /**
-     * 设置默认引擎。
-     * `engine` 实现了TtsEngine特征的语音引擎对象。
-     * */
+    设置默认引擎。
+    `engine` 实现了TtsEngine特征的语音引擎对象。
+    */
     pub(crate) async fn put_default_engine<T>(&self, engine: T) -> &Self
     where
         T: TtsEngine + Sync + Send + 'static,
@@ -279,9 +273,9 @@ impl Tts {
     }
 
     /**
-     * 增加一个引擎。
-     * `engine` 实现了TtsEngine特征的语音引擎对象。
-     * */
+    增加一个引擎。
+    `engine` 实现了TtsEngine特征的语音引擎对象。
+    */
     pub(crate) async fn add_engine<T>(&self, engine: T) -> &Self
     where
         T: TtsEngine + Sync + Send + 'static,
@@ -299,7 +293,6 @@ impl Tts {
         {
             self.all_engines
                 .write()
-                .await
                 .insert(engine.get_name(), Arc::new(engine));
         }
         let cfg = self
@@ -315,7 +308,7 @@ impl Tts {
 
     // 应用配置到TTS
     pub(crate) async fn apply_config(&self, config: &TtsConfig) {
-        for (_, engine) in { self.all_engines.read().await.clone() }.iter() {
+        for (_, engine) in { self.all_engines.read().clone() }.iter() {
             let (engine_name, id) = config.voice.clone();
             if engine.get_name() == engine_name {
                 engine.set_voice(id).await;

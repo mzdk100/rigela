@@ -24,9 +24,9 @@ use win_wrap::{
 
 //noinspection SpellCheckingInspection
 /**
- * 订阅焦点改变事件。
- * `context` 读屏框架的上下文环境。
- * */
+ 订阅焦点改变事件。
+ `context` 读屏框架的上下文环境。
+ */
 pub(crate) async fn subscribe_focus_events(context: Weak<Context>) {
     let ctx = context.clone();
 

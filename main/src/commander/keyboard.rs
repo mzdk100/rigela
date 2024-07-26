@@ -67,9 +67,9 @@ impl KeyboardManager {
 
     //noinspection StructuralWrap
     /**
-     * 设置上下文环境。
-     * `context` 读屏的上下文环境。
-     * */
+    设置上下文环境。
+    `context` 读屏的上下文环境。
+    */
     pub(crate) fn apply(&self, context: Weak<Context>) {
         self.context.set(context).unwrap();
     }
@@ -119,18 +119,18 @@ impl KeyboardManager {
 
     //noinspection StructuralWrap
     /**
-     * 设置最后一次按下的键。
-     * `key` 键盘枚举。
-     * */
+    设置最后一次按下的键。
+    `key` 键盘枚举。
+    */
     pub(crate) fn set_last_pressed_key(&self, key: &Keys) {
         *self.last_pressed_key.lock().unwrap() = key.clone();
     }
 
     /**
-     * 添加键盘事件监听器
-     * `keys` 要监听的热键。
-     * `listener` 一个监听器函数。
-     * */
+    添加键盘事件监听器
+    `keys` 要监听的热键。
+    `listener` 一个监听器函数。
+    */
     pub(crate) fn add_key_event_listener(
         &self,
         keys: &[Keys],

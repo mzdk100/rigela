@@ -25,7 +25,7 @@ use log::error;
 use rigela_macros::talent;
 use rust_i18n;
 use std::{
-    sync::{OnceLock, Weak},
+    sync::{LazyLock, Weak},
     thread,
     time::Duration,
 };
@@ -52,20 +52,9 @@ async fn current_date(context: Weak<Context>) {
     context.get_performer().speak(&msg).await;
 }
 
-impl Speakable for &PdhCounter {
-    fn get_sentence(&self) -> String {
-        t!(
-            "program.current_cpu_usage",
-            value = self.get_value().1.round()
-        )
-        .to_string()
-    }
-}
-
 #[talent(doc = t ! ("program.current_cpu_usage_doc").to_string(), key = combo_key ! ("RigelA", VkQ))]
 async fn current_cpu_usage(context: Weak<Context>) {
-    static CPU_QUERY: OnceLock<(PdhCounter, PdhQuery)> = OnceLock::new();
-    let (counter, query) = CPU_QUERY.get_or_init(|| {
+    static CPU_QUERY: LazyLock<(PdhCounter, PdhQuery)> = LazyLock::new(|| {
         let query = PdhQuery::new();
         let counter = query.add_counter(format!(
             r"\Processor Information({})\% Processor Time",
@@ -75,8 +64,19 @@ async fn current_cpu_usage(context: Weak<Context>) {
         thread::sleep(Duration::from_millis(20));
         (counter, query)
     });
-    query.collect_data();
-    context.get_performer().speak(&counter).await;
+    CPU_QUERY.1.collect_data();
+
+    impl Speakable for PdhCounter {
+        fn get_sentence(&self) -> String {
+            t!(
+            "program.current_cpu_usage",
+            value = self.get_value().1.round()
+        )
+                .to_string()
+        }
+    }
+
+    context.get_performer().speak(&CPU_QUERY.0).await;
 }
 
 #[talent(doc = t ! ("program.popup_menu_doc").to_string(), key = combo_key ! ("RigelA", VkR))]

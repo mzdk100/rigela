@@ -55,9 +55,9 @@ impl Performer {
 
     //noinspection StructuralWrap
     /**
-     * 配置表演者。
-     * `context` 读屏框架的上下文环境。
-     * */
+     配置表演者。
+     `context` 读屏框架的上下文环境。
+     */
     pub(crate) async fn apply(&self, context: Weak<Context>) {
         self.sound.apply(context.clone());
 
@@ -86,11 +86,11 @@ impl Performer {
     }
 
     /**
-     * 朗读文字，如果当前有朗读的任务，则进行排队。
-     * 本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
-     * `speakable` 实现了Speakable特征的对象。
-     * */
-    pub(crate) async fn speak(&self, speakable: &(dyn Speakable + Sync + Send)) -> bool {
+     朗读文字，如果当前有朗读的任务，则进行排队。
+     本方法会等待朗读完毕，如果朗读成功，则返回true；如果中途通过stop函数停止，或者朗读失败，则返回false。
+     `speakable` 实现了Speakable特征的对象。
+     */
+    pub(crate) async fn speak<S: Speakable>(&self, speakable: &S) -> bool {
         let text = speakable.get_sentence();
         if text.is_empty() {
             return false;

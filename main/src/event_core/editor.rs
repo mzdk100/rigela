@@ -94,8 +94,8 @@ impl Editor {
     }
 
     /**
-     * 清除编辑框的焦点。
-     * */
+     清除编辑框的焦点。
+     */
     pub(crate) fn clear_focus_control(&self) {
         let control = self.control.clone();
         control.store(Control::None.into());
