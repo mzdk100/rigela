@@ -19,7 +19,7 @@ rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 jab = ["jab_lib"]
 ia2 = ["ia2_lib", "win-wrap/msaa", "windows/Win32_Foundation", "windows/implement"]
 scintilla = ["win-wrap/control", "scintilla-sys"]
-jab_lib = ["rigela-utils/library"]
+jab_lib = ["rigela-utils/library", "rigela-utils/common"]
 ia2_lib = ["rigela-utils/library", "windows-core"]
 
 [dependencies.win-wrap]
