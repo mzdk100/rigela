@@ -10,6 +10,12 @@ repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
+default-target = "x86_64-pc-windows-msvc"
+
 [features]
 bass = ["library", "win-wrap/common"]
 clip = ["clipboard"]
