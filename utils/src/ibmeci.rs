@@ -202,8 +202,8 @@ pub struct Ibmeci {
 impl Ibmeci {
     //noinspection SpellCheckingInspection
     /**
-     * 获取一个实例。
-     * */
+    获取一个实例。
+    */
     pub async fn get<'a>() -> Result<&'a Self, String> {
         unsafe {
             // 单例模式
@@ -215,7 +215,7 @@ impl Ibmeci {
         let eci_path = setup_library(LIB_NAME, include_bytes!("../lib/ibmeci.dll"));
 
         let h_module = match load_library(eci_path.to_str().unwrap()) {
-            Ok(h) => SafeModuleHandle(h),
+            Ok(h) => SafeModuleHandle::new(h),
             Err(e) => {
                 return Err(format!(
                     "Can't open the library ({}). {}",
@@ -227,7 +227,7 @@ impl Ibmeci {
         info!("{} loaded.", eci_path.display());
         let (tx, rx) = oneshot::channel();
         thread::spawn(move || {
-            let h_eci = eci!(h_module.0, new).unwrap_or(0);
+            let h_eci = eci!(*h_module, new).unwrap_or(0);
             let buffer_layout = Layout::new::<[u8; 8192]>();
             let buffer_ptr = unsafe { alloc_zeroed(buffer_layout) };
 
@@ -240,9 +240,9 @@ impl Ibmeci {
                 thread: get_current_thread_id(),
             };
 
-            eci!(h_module.0, register_callback, h_eci, _callback_internal, 0);
+            eci!(*h_module, register_callback, h_eci, _callback_internal, 0);
             eci!(
-                h_module.0,
+                *h_module,
                 set_output_buffer,
                 h_eci,
                 (buffer_layout.size() / 2) as u32,
@@ -256,9 +256,9 @@ impl Ibmeci {
             message_loop(|m| {
                 if wm!(SYNTH_TASK) == m.message {
                     let b = unsafe { Box::from_raw(m.wParam.0 as *mut Cow<[u8]>) };
-                    eci!(h_module.0, add_text, h_eci, *b);
-                    eci!(h_module.0, synthesize, h_eci);
-                    eci!(h_module.0, synchronize, h_eci);
+                    eci!(*h_module, add_text, h_eci, *b);
+                    eci!(*h_module, synthesize, h_eci);
+                    eci!(*h_module, synchronize, h_eci);
                     let b = unsafe { Box::from_raw(m.lParam.0 as *mut Sender<()>) };
                     b.send(()).unwrap_or(());
                 }
@@ -271,10 +271,11 @@ impl Ibmeci {
     }
 
     /**
-     * 合成语音。
-     * */
+    合成语音。
+    `text` 要合成的文字。
+    */
     pub async fn synth(&self, text: &str) -> Vec<u8> {
-        eci!(self.h_module.0, stop, self.h_eci);
+        eci!(*self.h_module, stop, self.h_eci);
         let (text, _, unmapped) = GBK.encode(text);
         let text = if unmapped {
             // 如果有不能被编码成gbk的字符，我们需要过滤他们
@@ -331,23 +332,25 @@ impl Ibmeci {
     }
 
     /**
-     * 设置语音参数。
-     * `params` 参数数据。
-     * */
+    设置语音参数。
+    `vp` 参数key。
+    `value` 参数值。
+    */
     pub fn set_voice_param(&self, vp: u32, value: i32) {
-        eci!(self.h_module.0, set_voice_param, self.h_eci, 0, vp, value);
+        eci!(*self.h_module, set_voice_param, self.h_eci, 0, vp, value);
     }
 
     /**
-     * 获取语音参数。
-     * */
+    获取语音参数。
+    `vp` 参数key。
+    */
     pub fn get_voice_param(&self, vp: u32) -> i32 {
-        eci!(self.h_module.0, get_voice_param, self.h_eci, 0, vp).unwrap_or(0)
+        eci!(*self.h_module, get_voice_param, self.h_eci, 0, vp).unwrap_or(0)
     }
 
     /**
-     * 获取发音人列表。
-     * */
+    获取发音人列表。
+    */
     pub fn get_voices(&self) -> Vec<(u32, String)> {
         vec![
             (1, "Adult Male 1"),
@@ -365,19 +368,19 @@ impl Ibmeci {
     }
 
     /**
-     * 设置当前发音人。
-     * `voice_id` 声音id。
-     * */
+    设置当前发音人。
+    `voice_id` 声音id。
+    */
     pub fn set_voice(&self, voice_id: u32) {
-        eci!(self.h_module.0, copy_voice, self.h_eci, voice_id, 0);
+        eci!(*self.h_module, copy_voice, self.h_eci, voice_id, 0);
     }
 }
 
 impl Drop for Ibmeci {
     fn drop(&mut self) {
         if !self.h_module.is_invalid() {
-            eci!(self.h_module.0, delete, self.h_eci);
-            free_library(self.h_module.0);
+            eci!(*self.h_module, delete, self.h_eci);
+            free_library(*self.h_module);
         }
         unsafe {
             dealloc(self.buffer_ptr, self.buffer_layout);

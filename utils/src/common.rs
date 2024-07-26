@@ -14,7 +14,16 @@
 use win_wrap::common::HMODULE;
 
 #[derive(Clone, Debug)]
-pub struct SafeModuleHandle(pub(crate) HMODULE);
+pub struct SafeModuleHandle(HMODULE);
+
+impl SafeModuleHandle {
+    /**
+    创建新实例。
+    */
+    pub fn new(h_module: HMODULE) -> Self {
+        Self(h_module)
+    }
+}
 
 unsafe impl Send for SafeModuleHandle {}
 unsafe impl Sync for SafeModuleHandle {}

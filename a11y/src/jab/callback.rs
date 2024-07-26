@@ -61,14 +61,8 @@ pub(crate) enum AccessibleCallback {
 macro_rules! add_event_fp {
     (general,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
         extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64) {
-            let source = unsafe {
-                let Some(lib) = $lib.get() else {
-                    return;
-                };
-                let source = Arc::new(AccessibleContext::new(lib, vm_id, source));
-                lib.release_java_object(vm_id, event);
-                source
-            };
+            let source = Arc::new(AccessibleContext::new(&*$lib, vm_id, source));
+            $lib.release_java_object(vm_id, event);
 
             let lock = $store.lock().unwrap();
             lock.iter().for_each(move |cb| {
@@ -80,8 +74,8 @@ macro_rules! add_event_fp {
         impl Jab {
             #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
             pub fn $func_name(&self, func: impl Fn(AccessibleContextType) + Sync + Send + 'static) {
-                static $origin_name: OnceLock<()> = OnceLock::new();
-                $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+                static $origin_name: std::sync::Once = std::sync::Once::new();
+                $origin_name.call_once(|| self._lib.$origin_name($cb_name));
 
                 let mut lock = $store.lock().unwrap();
                 lock.push($type(Box::new(func)));
@@ -91,34 +85,27 @@ macro_rules! add_event_fp {
 
         (property_change,$lib:expr,$store:expr,$doc:literal) => {
             extern "cdecl" fn cb_property_change(vm_id: i32, event: JObject64, source: JObject64,property:*const u16,old_value:*const u16,new_value: *const u16) {
-                let (source,property,old_value,new_value) = unsafe {
-                    let Some(lib) = $lib.get() else {
-                        return;
-                    };
-                    let source = Arc::new(AccessibleContext::new(lib, vm_id, source));
-                    let property2 = property.to_string_utf16();
-                    let old_value2 = old_value.to_string_utf16();
-                    let new_value2 = new_value.to_string_utf16();
-                    lib.release_java_object(vm_id, property as JObject64);
-                    lib.release_java_object(vm_id, old_value as JObject64);
-                    lib.release_java_object(vm_id, new_value as JObject64);
-
-                    lib.release_java_object(vm_id, event);
-                    (source,property2,old_value2,new_value2)
-                };
+                let source = Arc::new(AccessibleContext::new(&*$lib, vm_id, source));
+                let property2 = property.to_string_utf16();
+                let old_value2 = old_value.to_string_utf16();
+                let new_value2 = new_value.to_string_utf16();
+                $lib.release_java_object(vm_id, property as JObject64);
+                $lib.release_java_object(vm_id, old_value as JObject64);
+                $lib.release_java_object(vm_id, new_value as JObject64);
+                $lib.release_java_object(vm_id, event);
 
                 let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let AccessibleCallback::PropertyChange(f) = cb {
-                        f(source.clone(), property.clone(),old_value.clone(),new_value.clone());
+                        f(source.clone(), property2.clone(),old_value2.clone(),new_value2.clone());
                     }
                 });
             }
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_property_change_listener(&self, func: impl Fn(AccessibleContextType, String,String,String) + Sync + Send + 'static) {
-                    static set_property_change_fp: OnceLock<()> = OnceLock::new();
-                    set_property_change_fp.get_or_init(|| self._lib.set_property_change_fp(cb_property_change));
+                    static set_property_change_fp: std::sync::Once = std::sync::Once::new();
+                    set_property_change_fp.call_once(|| self._lib.set_property_change_fp(cb_property_change));
 
                     let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::PropertyChange(Box::new(func)));
@@ -128,32 +115,26 @@ macro_rules! add_event_fp {
 
         (property_x_change,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
             extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64,old_value:*const u16,new_value: *const u16) {
-                let (source,old_value,new_value) = unsafe {
-                    let Some(lib) = $lib.get() else {
-                        return;
-                    };
-                    let source = Arc::new(AccessibleContext::new(lib, vm_id, source));
-                    let old_value2 = old_value.to_string_utf16();
-                    let new_value2 = new_value.to_string_utf16();
-                    lib.release_java_object(vm_id, old_value as JObject64);
-                    lib.release_java_object(vm_id, new_value as JObject64);
+                let source = Arc::new(AccessibleContext::new(&*$lib, vm_id, source));
+                let old_value2 = old_value.to_string_utf16();
+                let new_value2 = new_value.to_string_utf16();
+                $lib.release_java_object(vm_id, old_value as JObject64);
+                $lib.release_java_object(vm_id, new_value as JObject64);
 
-                    lib.release_java_object(vm_id, event);
-                    (source,old_value2,new_value2)
-                };
+                $lib.release_java_object(vm_id, event);
 
                 let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
                     if let $type(f) = cb {
-                        f(source.clone(), old_value.clone(),new_value.clone());
+                        f(source.clone(), old_value2.clone(),new_value2.clone());
                     }
                 });
             }
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn $func_name(&self, func: impl Fn(AccessibleContextType, String,String) + Sync + Send + 'static) {
-                    static $origin_name: OnceLock<()> = OnceLock::new();
-                    $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+                    static $origin_name: std::sync::Once = std::sync::Once::new();
+                    $origin_name.call_once(|| self._lib.$origin_name($cb_name));
 
                     let mut lock = $store.lock().unwrap();
                     lock.push($type(Box::new(func)));
@@ -163,15 +144,8 @@ macro_rules! add_event_fp {
 
         (property_caret_change,$lib:expr,$store:expr,$doc:literal) => {
             extern "cdecl" fn cb_property_caret_change(vm_id: i32, event: JObject64, source: JObject64,old_value:i32,new_value: i32) {
-                let source = unsafe {
-                    let Some(lib) = $lib.get() else {
-                        return;
-                    };
-                    let source = Arc::new(AccessibleContext::new(lib, vm_id, source));
-
-                    lib.release_java_object(vm_id, event);
-                    source
-                };
+                let source = Arc::new(AccessibleContext::new(&*$lib, vm_id, source));
+                $lib.release_java_object(vm_id, event);
 
                 let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
@@ -183,8 +157,8 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_property_caret_change_listener(&self, func: impl Fn(AccessibleContextType, i32,i32) + Sync + Send + 'static) {
-                    static set_property_caret_change_fp: OnceLock<()> = OnceLock::new();
-                    set_property_caret_change_fp.get_or_init(|| self._lib.set_property_caret_change_fp(cb_property_caret_change));
+                    static set_property_caret_change_fp: std::sync::Once = std::sync::Once::new();
+                    set_property_caret_change_fp.call_once(|| self._lib.set_property_caret_change_fp(cb_property_caret_change));
 
                     let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::PropertyCaretChange(Box::new(func)));
@@ -194,17 +168,10 @@ macro_rules! add_event_fp {
 
         (property_y_change,$lib:expr,$store:expr,$cb_name:ident,$func_name:ident,$type:path,$origin_name:ident,$doc:literal) => {
             extern "cdecl" fn $cb_name(vm_id: i32, event: JObject64, source: JObject64,old_value:JObject64,new_value: JObject64) {
-                let (source,old_value,new_value) = unsafe {
-                    let Some(lib) = $lib.get() else {
-                        return;
-                    };
-                    let source = Arc::new(AccessibleContext::new(lib, vm_id, source));
-                    let old_value = Arc::new(AccessibleContext::new(lib,vm_id,old_value));
-                    let new_value = Arc::new(AccessibleContext::new(lib,vm_id,new_value));
-
-                    lib.release_java_object(vm_id, event);
-                    (source,old_value,new_value)
-                };
+                let source = Arc::new(AccessibleContext::new(&*$lib, vm_id, source));
+                let old_value = Arc::new(AccessibleContext::new(&*$lib,vm_id,old_value));
+                let new_value = Arc::new(AccessibleContext::new(&*$lib,vm_id,new_value));
+                $lib.release_java_object(vm_id, event);
 
                 let lock = $store.lock().unwrap();
                 lock.iter().for_each(move |cb| {
@@ -216,8 +183,8 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn $func_name(&self, func: impl Fn(AccessibleContextType, AccessibleContextType, AccessibleContextType) + Sync + Send + 'static) {
-                    static $origin_name: OnceLock<()> = OnceLock::new();
-                    $origin_name.get_or_init(|| self._lib.$origin_name($cb_name));
+                    static $origin_name: std::sync::Once = std::sync::Once::new();
+                    $origin_name.call_once(|| self._lib.$origin_name($cb_name));
 
                     let mut lock = $store.lock().unwrap();
                     lock.push($type(Box::new(func)));
@@ -237,8 +204,8 @@ macro_rules! add_event_fp {
             impl Jab {
                 #[doc=concat!("添加", $doc,"监听器\n","`func` 一个监听器函数或闭包。")]
                 pub fn add_on_java_shutdown_listener(&self, func: impl Fn(i32) + Sync + Send + 'static) {
-                    static set_java_shutdown_fp: OnceLock<()> = OnceLock::new();
-                    set_java_shutdown_fp.get_or_init(|| self._lib.set_java_shutdown_fp(cb_java_shutdown));
+                    static set_java_shutdown_fp: std::sync::Once = std::sync::Once::new();
+                    set_java_shutdown_fp.call_once(|| self._lib.set_java_shutdown_fp(cb_java_shutdown));
 
                     let mut lock = $store.lock().unwrap();
                     lock.push(AccessibleCallback::JavaShutdown(Box::new(func)));

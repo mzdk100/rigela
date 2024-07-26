@@ -38,10 +38,18 @@ use crate::{
     },
 };
 use rigela_utils::library::get_library_path;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex};
 use win_wrap::{common::HWND, ext::StringExt, message::pump_waiting_messages};
 
-static mut LIB: OnceLock<JabLib> = OnceLock::new();
+static LIB: LazyLock<JabLib> = LazyLock::new(|| {
+    #[cfg(target_arch = "x86_64")]
+    let path = get_library_path("windowsaccessbridge-64.dll");
+    #[cfg(target_arch = "x86")]
+    let path = get_library_path("windowsaccessbridge-32.dll");
+
+    pump_waiting_messages();
+    JabLib::new(Some(path)).unwrap()
+});
 static FUNCS: Mutex<Vec<AccessibleCallback>> = Mutex::new(vec![]);
 
 #[derive(Debug)]
@@ -51,58 +59,47 @@ pub struct Jab {
 
 impl Jab {
     /**
-     * 创建一个新实例。
-     * */
+    创建一个新实例。
+    */
     pub fn new() -> Self {
-        let lib = unsafe {
-            LIB.get_or_init(|| {
-                #[cfg(target_arch = "x86_64")]
-                let path = get_library_path("windowsaccessbridge-64.dll");
-                #[cfg(target_arch = "x86")]
-                let path = get_library_path("windowsaccessbridge-32.dll");
-
-                pump_waiting_messages();
-                JabLib::new(Some(path)).unwrap()
-            })
-        };
-        Self { _lib: lib }
+        Self {_lib: &*LIB }
     }
 
     /**
-     * 从窗口上的焦点对象获取上下文。
-     * `target` 目标窗口句柄。
-     * */
+    从窗口上的焦点对象获取上下文。
+    `target` 目标窗口句柄。
+    */
     pub fn get_context_from_hwnd(&self, target: HWND) -> Option<AccessibleContext> {
         AccessibleContext::from_hwnd(&self._lib, target)
     }
 
     /**
-     * 从窗口获取上下文。
-     * `h_wnd` 父窗口句柄。
-     * */
+    从窗口获取上下文。
+    `h_wnd` 父窗口句柄。
+    */
     pub fn get_context_with_focus(&self, h_wnd: HWND) -> Option<AccessibleContext> {
         AccessibleContext::from_focus(&self._lib, h_wnd)
     }
 
     /**
-     * 判断窗口是否是java的窗口。
-     * `h_wnd` 一个窗口句柄。
-     * */
+    判断窗口是否是java的窗口。
+    `h_wnd` 一个窗口句柄。
+    */
     pub fn is_java_window(&self, h_wnd: HWND) -> bool {
         pump_waiting_messages();
         self._lib.is_java_window(h_wnd)
     }
 
     /**
-     * 获取等待触发的事件数。
-     * */
+    获取等待触发的事件数。
+    */
     pub fn get_events_waiting(&self) -> i32 {
         self._lib.get_events_waiting()
     }
 
     /**
-     * 移除所有监听器。
-     * */
+    移除所有监听器。
+    */
     pub fn remove_all_listeners(&self) {
         let mut lock = FUNCS.lock().unwrap();
         lock.clear();
@@ -345,14 +342,6 @@ add_event_fp!(
     "属性表格模式改变"
 );
 add_event_fp!(java_shutdown, LIB, FUNCS, "java关闭");
-
-impl Drop for Jab {
-    fn drop(&mut self) {
-        unsafe {
-            LIB.take();
-        }
-    }
-}
 
 #[cfg(all(test, target_arch = "x86_64"))]
 mod test_jab {
