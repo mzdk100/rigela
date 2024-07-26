@@ -74,11 +74,11 @@ workspace = true
 features = ["derive"]
 
 [dependencies.toml]
-version = "0.8.14"
+version = "0.8.16"
 
 [dependencies]
 # 特征中使用async函数
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 
 # 配置I18N国际化多语言支持
 rust-i18n = "3.0.1"
@@ -87,7 +87,7 @@ rust-i18n = "3.0.1"
 select = "0.6.0"
 
 # 压缩解压
-zip = "2.1.3"
+zip = "2.1.5"
 
 # 跨线程去锁传输数据
 arc-swap = "1.7.1"

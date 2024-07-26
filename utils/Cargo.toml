@@ -52,7 +52,7 @@ workspace = true
 optional = true
 
 [dependencies.serde_json_bytes]
-version = "0.2.2"
+version = "0.2.4"
 optional = true
 
 [dependencies.win-wrap]
