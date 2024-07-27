@@ -29,7 +29,7 @@ optional = true
 
 [dependencies.rigela-utils]
 path = "../utils"
-version = "0.1.8"
+version = "0.1.9"
 optional = true
 
 [dependencies.scintilla-sys]
