@@ -25,7 +25,7 @@ use win_wrap::shell::{get_known_folder_path, FOLDERID_Profile, KF_FLAG_DEFAULT};
 pub const DIR_NAME: &str = ".rigela";
 
 /// 获取程序存储目录
-pub fn get_program_directory() -> PathBuf {
+pub fn get_rigela_program_directory() -> PathBuf {
     let home_path = get_known_folder_path(&FOLDERID_Profile, KF_FLAG_DEFAULT, None).unwrap();
     let program_dir = Path::new(&home_path).join(DIR_NAME);
 
@@ -37,9 +37,9 @@ pub fn get_program_directory() -> PathBuf {
 }
 
 /**
- * 获取文件已修改的时长（单位是秒），如果文件不存在或遇到其他错误则返回u64::MAX。
- * `path` 文件路径。
- * */
+ 获取文件已修改的时长（单位是秒），如果文件不存在或遇到其他错误则返回u64::MAX。
+ `path` 文件路径。
+ */
 pub async fn get_file_modified_duration(path: &PathBuf) -> u64 {
     let Ok(attr) = metadata(&path).await else {
         return u64::MAX;
@@ -54,10 +54,10 @@ pub async fn get_file_modified_duration(path: &PathBuf) -> u64 {
 }
 
 /**
- * 把数据完整写入到文件，这会冲洗现有文件，覆盖写入。
- * `path` 文件路径。
- * `data` 需要写入的数据。
- * */
+ 把数据完整写入到文件，这会冲洗现有文件，覆盖写入。
+ `path` 文件路径。
+ `data` 需要写入的数据。
+ */
 pub async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), Error> {
     OpenOptions::new()
         .create(true)
@@ -69,7 +69,10 @@ pub async fn write_file(path: &PathBuf, data: &[u8]) -> Result<(), Error> {
         .await
 }
 
-/// 异步读取文件
+/**
+ 异步读取文件
+ `path` 文件路径。
+ */
 pub async fn read_file(path: &PathBuf) -> Result<String, Error> {
     let mut result = String::new();
     OpenOptions::new()

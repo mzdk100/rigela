@@ -18,7 +18,7 @@ use crate::{
 use arc_swap::ArcSwap;
 use log::error;
 use native_windows_gui::NoticeSender;
-use rigela_utils::fs::{get_program_directory, read_file, write_file};
+use rigela_utils::fs::{get_rigela_program_directory, read_file, write_file};
 use select::{document::Document, predicate::Class};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -77,7 +77,7 @@ pub(crate) enum UpdateState {
 /// 检测是否需要更新
 pub(crate) async fn check_update() -> UpdateState {
     let newest_md5 = get_newest_docs_md5().await;
-    let md5_file = get_program_directory().join(DOCS_MD5_FILE);
+    let md5_file = get_rigela_program_directory().join(DOCS_MD5_FILE);
 
     // 如果尚未保存哈希值，则直接首次保存，返回未检测到更新，否则再比较哈希值
     if !md5_file.exists() {
@@ -148,7 +148,7 @@ pub(crate) async fn get_newest_docs_md5() -> DocsMd5 {
 
 /// 保存新的docs_md5
 pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
-    let docs_md5_path = get_program_directory().join(DOCS_MD5_FILE);
+    let docs_md5_path = get_rigela_program_directory().join(DOCS_MD5_FILE);
     let data = toml::to_string(md5).unwrap_or_else(|_| {
         error!("数据格式错误.");
         String::new()
@@ -162,8 +162,8 @@ pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
 /// 保存最新的文档。
 pub(crate) async fn save_docs(help_or_changelogs: bool) {
     let (path, url) = match help_or_changelogs {
-        true => (get_program_directory().join(HELP_DIR), HELP_URL),
-        false => (get_program_directory().join(CHANGELOGS_DIR), CHANGELOGS_URL),
+        true => (get_rigela_program_directory().join(HELP_DIR), HELP_URL),
+        false => (get_rigela_program_directory().join(CHANGELOGS_DIR), CHANGELOGS_URL),
     };
 
     write_file(&path, parse_html_node(url, "blob-content").await.as_bytes())
@@ -193,7 +193,7 @@ async fn parse_html_node(url: &str, node: &str) -> String {
 //noinspection RsUnresolvedPath
 /// 确认更新器存在
 pub(crate) async fn confirm_update_exists() -> Result<(), Box<dyn Error>> {
-    let path = get_program_directory().join(UPDATE_BIN_DIR);
+    let path = get_rigela_program_directory().join(UPDATE_BIN_DIR);
     if path.exists() {
         Ok(())
     } else {
@@ -213,14 +213,14 @@ pub(crate) fn backup_data(target: &PathBuf) -> Result<(), Box<dyn Error>> {
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::DEFLATE);
 
     let mut files_to_compress: Vec<PathBuf> = vec![];
-    let resources_path = get_program_directory().join("resources");
+    let resources_path = get_rigela_program_directory().join("resources");
     for entry in resources_path.read_dir()? {
         let path = entry?.path();
         if path.is_file() {
             files_to_compress.push(path);
         }
     }
-    files_to_compress.push(get_program_directory().join("config.toml"));
+    files_to_compress.push(get_rigela_program_directory().join("config.toml"));
 
     for file_path in &files_to_compress {
         let file = File::open(file_path)?;
@@ -244,7 +244,7 @@ pub(crate) fn restore_data(source: &PathBuf) -> Result<(), Box<dyn Error>> {
     let zip_file = File::open(zip_file_path)?;
 
     let mut archive = ZipArchive::new(zip_file)?;
-    let extraction_dir = get_program_directory();
+    let extraction_dir = get_rigela_program_directory();
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::fs::get_program_directory;
+use crate::fs::get_rigela_program_directory;
 use log::error;
 use std::{
     fs::{create_dir, OpenOptions},
@@ -20,27 +20,24 @@ use std::{
 };
 
 /**
- * 获取库的路径。
- * `lib_name` 库名称。
- * */
-pub fn get_library_path(lib_name: &str) -> PathBuf {
-    let path = get_program_directory().join("libs");
+ 获取RigelA库目录的路径。
+ */
+pub fn get_rigela_library_path() -> PathBuf {
+    let path = get_rigela_program_directory().join("libs");
     if !path.exists() {
         create_dir(&path).unwrap();
     }
-
-    path.join(lib_name)
+    path
 }
 
 /**
- * 安装一个动态库文件到个人文件夹中。
- * `lib_name` 库名称。
- * `lib_bin` 库的二进制数据。
- * */
-pub fn setup_library(lib_name: &str, lib_bin: &[u8]) -> PathBuf {
-    let path = get_library_path(lib_name);
+安装一个动态库文件到指定的目录。
+`path` 动态库路径。
+`lib_bin` 库的二进制数据。
+*/
+pub fn setup_library(path: &PathBuf, lib_bin: &[u8]) {
     if path.exists() {
-        return path;
+        return;
     }
 
     match OpenOptions::new().write(true).create(true).open(&path) {
@@ -50,7 +47,6 @@ pub fn setup_library(lib_name: &str, lib_bin: &[u8]) -> PathBuf {
         },
         Err(e) => error!("Can't setup the `{}` library. {}", path.display(), e),
     }
-    path
 }
 
 #[macro_export]

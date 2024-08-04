@@ -27,7 +27,7 @@ use crate::{
 };
 use log::error;
 use native_windows_gui::{message, MessageButtons, MessageChoice, MessageIcons, MessageParams};
-use rigela_utils::fs::get_program_directory;
+use rigela_utils::fs::get_rigela_program_directory;
 use std::{
     env::current_exe,
     fs::remove_file,
@@ -48,7 +48,7 @@ pub(crate) fn exit_cmd(context: Weak<Context>) {
 
 /// 打开帮助文档。
 pub(crate) fn help_cmd(_context: Weak<Context>) {
-    let help_path = get_program_directory().join(HELP_DIR);
+    let help_path = get_rigela_program_directory().join(HELP_DIR);
     Command::new("notepad")
         .arg(help_path)
         .spawn()
@@ -102,7 +102,7 @@ pub(crate) fn check_update_cmd(context: Weak<Context>, auto: bool) {
                 // 需要使用cmd.exe辅助启动，使用start参数不等待，否则当更新器尝试kill主进程时，更新器自己也会被kill
                 .arg("/c")
                 .arg("start")
-                .arg(get_program_directory().join("libs/update.exe"))
+                .arg(get_rigela_program_directory().join("libs/update.exe"))
                 .arg(current_exe().unwrap().to_str().unwrap())
                 .spawn(),
             Err(_) => {

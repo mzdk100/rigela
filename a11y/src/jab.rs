@@ -29,15 +29,11 @@ pub mod table;
 pub mod text;
 pub mod version;
 
-use crate::{
-    add_event_fp,
-    jab::{
-        callback::{AccessibleCallback, AccessibleContextType},
-        context::AccessibleContext,
-        jab_lib::{packages::JObject64, JabLib},
-    },
-};
-use rigela_utils::library::get_library_path;
+use crate::{add_event_fp, get_library_path, jab::{
+    callback::{AccessibleCallback, AccessibleContextType},
+    context::AccessibleContext,
+    jab_lib::{packages::JObject64, JabLib},
+}};
 use std::sync::{Arc, LazyLock, Mutex};
 use win_wrap::{common::HWND, ext::StringExt, message::pump_waiting_messages};
 
@@ -50,6 +46,7 @@ static LIB: LazyLock<JabLib> = LazyLock::new(|| {
     pump_waiting_messages();
     JabLib::new(Some(path)).unwrap()
 });
+
 static FUNCS: Mutex<Vec<AccessibleCallback>> = Mutex::new(vec![]);
 
 #[derive(Debug)]
@@ -59,8 +56,8 @@ pub struct Jab {
 
 impl Jab {
     /**
-    创建一个新实例。
-    */
+     创建一个新实例。
+     */
     pub fn new() -> Self {
         Self {_lib: &*LIB }
     }

@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::fs::get_program_directory;
+use crate::fs::get_rigela_program_directory;
 use log::LevelFilter;
 use log4rs::{
     append::{
@@ -37,7 +37,7 @@ const LOG_FILE_NAME: &str = "run.log";
  * */
 pub fn init_logger(path: Option<&str>) {
     let level = LevelFilter::Info;
-    let file_path = get_program_directory()
+    let file_path = get_rigela_program_directory()
         .join("logs")
         .join(path.unwrap_or(LOG_FILE_NAME));
 

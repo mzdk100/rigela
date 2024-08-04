@@ -28,6 +28,7 @@ use win_wrap::{
     threading::get_current_thread_id,
     wm,
 };
+use crate::library::get_rigela_library_path;
 
 macro_rules! eci {
     ($module:expr,new) => {
@@ -212,7 +213,8 @@ impl Ibmeci {
             }
         }
         const LIB_NAME: &str = "ibmeci.dll";
-        let eci_path = setup_library(LIB_NAME, include_bytes!("../lib/ibmeci.dll"));
+        let eci_path = get_rigela_library_path().join(LIB_NAME);
+        setup_library(&eci_path, include_bytes!("../lib/ibmeci.dll"));
 
         let h_module = match load_library(eci_path.to_str().unwrap()) {
             Ok(h) => SafeModuleHandle::new(h),

@@ -14,7 +14,7 @@
 use log::error;
 use rigela_resources::clone_resource;
 use rigela_utils::{
-    fs::{get_file_modified_duration, get_program_directory},
+    fs::{get_file_modified_duration, get_rigela_program_directory},
     SERVER_HOME_URI,
 };
 use std::{io::Error, path::PathBuf};
@@ -33,7 +33,7 @@ impl ResourceProvider {
      * 创建一个资源读取器。
      * */
     pub(crate) fn new() -> Self {
-        let root_dir = get_program_directory().join(PATH_NAME);
+        let root_dir = get_rigela_program_directory().join(PATH_NAME);
         if !root_dir.exists() {
             if std::fs::create_dir_all(&root_dir).is_err() {
                 error!("创建资源目录失败");

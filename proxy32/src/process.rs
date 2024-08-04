@@ -47,7 +47,7 @@ impl Proxy32Process {
      * */
     pub async fn spawn(&self) -> &Self {
         use log::{error, info};
-        use rigela_utils::fs::{get_file_modified_duration, get_program_directory, write_file};
+        use rigela_utils::fs::{get_file_modified_duration, get_rigela_program_directory, write_file};
         use std::time::Duration;
         use tokio::{process::Command, time::sleep};
 
@@ -63,7 +63,7 @@ impl Proxy32Process {
             include_bytes!("../../target/i686-pc-windows-msvc/debug/rigela-proxy32.exe"),
             true,
         );
-        let proxy32_path = get_program_directory().join("libs/proxy32.exe");
+        let proxy32_path = get_rigela_program_directory().join("libs/proxy32.exe");
         if is_debug || get_file_modified_duration(&proxy32_path).await > 3600 * 6 {
             // 如果文件修改时间超出6个小时才重新写文件，加快启动速度
             if let Err(e) = write_file(&proxy32_path, proxy32_bin).await {

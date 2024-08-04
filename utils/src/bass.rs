@@ -20,6 +20,7 @@ use std::{
 };
 use tokio::time::sleep;
 use win_wrap::common::{free_library, get_proc_address, load_library, FARPROC, HMODULE};
+use crate::library::get_rigela_library_path;
 
 macro_rules! bass {
     ($module:expr,init,$device:expr,$freq:expr,$flags:expr,$win:expr,$clsid:expr) => {
@@ -311,10 +312,11 @@ pub struct BassChannelOutputStream {
 
 impl BassChannelOutputStream {
     fn create(slot: impl FnOnce(HMODULE) -> Option<i32>) -> Self {
+        let bass_path = get_rigela_library_path().join(LIB_NAME);
         #[cfg(target_arch = "x86_64")]
-        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-64.dll"));
+        setup_library(&bass_path, include_bytes!("../lib/bass-64.dll"));
         #[cfg(target_arch = "x86")]
-        let bass_path = setup_library(LIB_NAME, include_bytes!("../lib/bass-32.dll"));
+        setup_library(&bass_path, include_bytes!("../lib/bass-32.dll"));
         let h_module = match load_library(bass_path.to_str().unwrap()) {
             Ok(h) => h,
             Err(e) => {

@@ -21,7 +21,7 @@ use log::info;
 use peeper::server::PeeperServer;
 #[cfg(target_arch = "x86_64")]
 use rigela_proxy32::process::Proxy32Process;
-use rigela_utils::fs::get_program_directory;
+use rigela_utils::fs::get_rigela_program_directory;
 use std::sync::{Arc, Weak};
 use tokio::runtime::Runtime;
 use win_wrap::{msaa::Msaa, uia::automation::UiAutomation};
@@ -60,7 +60,7 @@ impl Context {
         let commander = Commander::new();
 
         // 配置管理器
-        let path = get_program_directory().join(CONFIG_FILE_NAME);
+        let path = get_rigela_program_directory().join(CONFIG_FILE_NAME);
         let config_manager = ConfigManager::new(path);
 
         // 创建表演者对象（用于把各种信息转换成用户可以感知的形式，例如语音、音效等）
