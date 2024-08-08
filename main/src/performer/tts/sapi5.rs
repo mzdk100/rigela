@@ -47,7 +47,7 @@ impl TtsEngine for Sapi5Engine {
                 .fetch_update(Ordering::Release, Ordering::Acquire, |_| Some(false))
                 .unwrap();
             if !first {
-                self.output_stream.put_data(data);
+                self.output_stream.put_data(&data);
             }
 
             if data.len() < 320 {
