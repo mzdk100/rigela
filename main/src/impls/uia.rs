@@ -22,6 +22,7 @@ use win_wrap::uia::{
         text::{TextUnit::Line, UiAutomationTextRange},
         toggle::{ToggleState, UiAutomationTogglePattern},
         value::UiAutomationValuePattern,
+        PatternCreator,
     },
 };
 

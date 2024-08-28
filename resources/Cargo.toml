@@ -11,7 +11,7 @@ repository.workspace = true
 
 [dependencies]
 bitar = "0.12.0"
-blake2 = "0.11.0-pre.3"
+blake2 = "0.11.0-pre.4"
 url = "2.5.2"
 
 [dependencies.log]
@@ -27,7 +27,7 @@ workspace = true
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies]
-blake2 = "0.11.0-pre.3"
+blake2 = "0.11.0-pre.4"
 
 [build-dependencies.bitar]
 version = "0.12.0"

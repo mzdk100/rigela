@@ -25,13 +25,13 @@ version = "0.12.3"
 version = "0.4.22"
 
 [workspace.dependencies.tokio]
-version = "1.39.2"
+version = "1.39.3"
 
 [workspace.dependencies.serde]
-version = "1.0.204"
+version = "1.0.209"
 
 [workspace.dependencies.win-wrap]
-version = "0.2.4"
+version = "0.2.7"
 
 [workspace.dependencies.windows]
 version = "0.58.0"

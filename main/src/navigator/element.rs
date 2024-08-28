@@ -163,7 +163,7 @@ impl<'a> UiElement<'a> {
                 let name = get_nearest_color_name(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
                 set.insert(ColorItem {
                     rgb: [rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue],
-                    name: t!(format!("color.{}", name).as_str()).to_string(),
+                    name: t!(format!("color.{}", name)).to_string(),
                 });
             }
         }

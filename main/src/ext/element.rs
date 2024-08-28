@@ -13,7 +13,10 @@
 
 use win_wrap::uia::{
     element::UiAutomationElement,
-    pattern::text::{UiAutomationTextPattern, UiAutomationTextPattern2, UiAutomationTextRange},
+    pattern::{
+        text::{UiAutomationTextPattern, UiAutomationTextPattern2, UiAutomationTextRange},
+        PatternCreator,
+    },
 };
 
 pub(crate) trait UiAutomationElementExt {
