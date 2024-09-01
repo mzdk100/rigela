@@ -23,7 +23,10 @@ use crate::{
 
 pub(crate) const MS_IME_CLASS_NAME: &str = "Windows.UI.Core.CoreWindow";
 
-//noinspection DuplicatedCode
+/**
+订阅输入法通知事件。
+`context` 读屏框架的上下文环境。
+*/
 pub(crate) async fn subscribe_ime_events(context: Weak<Context>) {
     // 订阅通用的输入法候选事件
     let ctx = context.clone();

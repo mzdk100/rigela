@@ -19,6 +19,7 @@ use win_wrap::uia::{
     element::{ControlType, UiAutomationElement},
     pattern::{
         legacy::UiAutomationIAccessiblePattern,
+        range::UiAutomationRangeValuePattern,
         text::{TextUnit::Line, UiAutomationTextRange},
         toggle::{ToggleState, UiAutomationTogglePattern},
         value::UiAutomationValuePattern,
@@ -54,51 +55,51 @@ impl ElementNameExt for UiAutomationElement {
 /// 给UIA元素实现朗读接口
 impl Speakable for UiAutomationElement {
     fn get_sentence(&self) -> String {
-        let mut text = self.get_name_better();
+        let mut text = vec![self.get_name_better(), self.get_role_name()];
 
-        let role = self.get_role_name();
-        if !role.is_empty() {
-            text += format!(", {}", role).as_str()
-        }
-        match self.get_control_type() {
-            ControlType::ComboBox | ControlType::ProgressBar => {
-                if let Ok(pattern) = UiAutomationValuePattern::obtain(self) {
-                    text += format!(", {}", pattern.get_value().unwrap()).as_str()
-                }
+        let control_type = self.get_control_type();
+        if control_type != ControlType::Document && control_type != ControlType::Edit {
+            if let Ok(pattern) = UiAutomationValuePattern::obtain(self) {
+                text.push(pattern.get_value().unwrap())
             }
-            ControlType::Edit | ControlType::Document => {
-                if let Some(caret) = self.get_caret() {
-                    caret.expand_to_enclosing_unit(Line);
-                    text += format!(", {}", caret.get_text(-1)).as_str()
-                }
-            }
-            _ => (),
         }
 
-        let accelerator_key = self.get_accelerator_key();
-        if !accelerator_key.is_empty() {
-            text += format!(", {}", accelerator_key).as_str()
+        if let Some(caret) = self.get_caret() {
+            caret.expand_to_enclosing_unit(Line);
+            text.push(caret.get_text(-1))
         }
 
-        let access_key = self.get_access_key();
-        if !access_key.is_empty() {
-            text += format!(", {}", access_key).as_str()
-        }
+        text.push(self.get_accelerator_key());
+        text.push(self.get_access_key());
 
-        let toggle = UiAutomationTogglePattern::obtain(self);
-        if toggle.is_ok() {
-            text += format!(
-                ", {}",
-                match toggle.unwrap().get_toggle_state() {
+        if let Ok(toggle) = UiAutomationTogglePattern::obtain(self) {
+            text.push(
+                match toggle.get_toggle_state() {
                     ToggleState::On => t!("uia.toggle_on"),
                     ToggleState::Off => t!("uia.toggle_off"),
                     ToggleState::Indeterminate => t!("uia.toggle_indeterminate"),
                 }
-            )
-            .as_str();
+                .to_string(),
+            );
         }
 
-        text
+        if let Ok(pattern) = UiAutomationRangeValuePattern::obtain(self) {
+            let (m, n) = (pattern.get_minimum(), pattern.get_maximum());
+            if n > m {
+                text.push(format!(
+                    "{}% ({}-{})",
+                    (pattern.get_value() - m) / (n - m) * 100f64,
+                    m,
+                    n
+                ));
+            } else {
+                text.push(format!("{} ({}-{})", pattern.get_value(), m, n))
+            }
+        }
+
+        // 过滤空文本
+        text.retain(|i| !i.is_empty());
+        text.join(", ")
     }
 }
 

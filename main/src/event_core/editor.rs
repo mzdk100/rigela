@@ -75,8 +75,10 @@ impl Editor {
         }
     }
 
-    /// 订阅编辑器事件。
-    /// `context` 读屏框架的上下文环境。
+    /**
+    订阅编辑器事件。
+    `context` 读屏框架的上下文环境。
+    */
     pub(crate) async fn subscribe_events(&self, context: Weak<Context>) {
         self.context.set(context).unwrap_or(());
 
@@ -94,8 +96,8 @@ impl Editor {
     }
 
     /**
-     清除编辑框的焦点。
-     */
+    清除编辑框的焦点。
+    */
     pub(crate) fn clear_focus_control(&self) {
         let control = self.control.clone();
         control.store(Control::None.into());

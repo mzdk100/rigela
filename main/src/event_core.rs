@@ -33,7 +33,7 @@ use crate::{
     event_core::{
         dialog::subscribe_dialog_events, element::subscribe_element_events,
         focus::subscribe_focus_events, ime::subscribe_ime_events, input::subscribe_input_events,
-        progress::subscribe_progress_events,
+        progress::subscribe_progress_and_slider_events,
     },
 };
 
@@ -59,12 +59,11 @@ impl EventCore {
         }
     }
 
-    //noinspection StructuralWrap
     /**
-     * 给定一个事件的特征，判断是否应该忽略此事件。
-     * `same` 事件的特征文字。
-     * `interval` 一个时间内如果此事件出现过，则表示他应该被忽略。
-     * */
+    给定一个事件的特征，判断是否应该忽略此事件。
+    `same` 事件的特征文字。
+    `interval` 一个时间内如果此事件出现过，则表示他应该被忽略。
+    */
     pub(crate) async fn should_ignore(&self, same: String, interval: Duration) -> bool {
         let item = EventItem {
             same: same.clone(),
@@ -83,7 +82,7 @@ impl EventCore {
             }
         }
         lock.push(item);
-        return false;
+        false
     }
 
     /// 启动事件监听
@@ -107,12 +106,12 @@ impl EventCore {
         self.editor.subscribe_events(context.clone()).await;
 
         // 订阅进度栏事件
-        subscribe_progress_events(context.clone()).await;
+        subscribe_progress_and_slider_events(context.clone()).await;
     }
 
     /**
-     * 停止所有事件处理。
-     * */
+    停止所有事件处理。
+    */
     pub(crate) fn shutdown(&self) {}
 }
 

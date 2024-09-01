@@ -16,14 +16,14 @@ use crate::{
     performer::sound::SoundArgument::WithFreq,
 };
 use std::sync::Weak;
-use win_wrap::msaa::object::ROLE_SYSTEM_PROGRESSBAR;
+use win_wrap::msaa::object::{ROLE_SYSTEM_PROGRESSBAR, ROLE_SYSTEM_SLIDER};
 
 //noinspection SpellCheckingInspection
 /**
- * 订阅进度通知事件。
- * `context` 读屏框架的上下文环境。
- * */
-pub(crate) async fn subscribe_progress_events(context: Weak<Context>) {
+订阅进度和滑块的通知事件。
+`context` 读屏框架的上下文环境。
+*/
+pub(crate) async fn subscribe_progress_and_slider_events(context: Weak<Context>) {
     let ctx = context.clone();
     context
         .get_msaa()
@@ -31,7 +31,9 @@ pub(crate) async fn subscribe_progress_events(context: Weak<Context>) {
             let Ok((obj, child)) = src.get_object() else {
                 return;
             };
-            if obj.get_role(child) != ROLE_SYSTEM_PROGRESSBAR {
+            if obj.get_role(child) != ROLE_SYSTEM_PROGRESSBAR
+                && obj.get_role(child) != ROLE_SYSTEM_SLIDER
+            {
                 return;
             }
             let Ok(value) = obj

@@ -20,9 +20,9 @@ use win_wrap::input::{get_key_state, VK_NUMLOCK, VK_SCROLL};
 
 //noinspection SpellCheckingInspection
 /**
- * 订阅键盘输入事件。
- * `context` 读屏框架的上下文环境。
- * */
+订阅键盘输入事件。
+`context` 读屏框架的上下文环境。
+*/
 pub(crate) async fn subscribe_input_events(context: Weak<Context>) {
     let ctx = context.clone();
 

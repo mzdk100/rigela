@@ -20,9 +20,9 @@ use crate::{
 
 //noinspection SpellCheckingInspection
 /**
- * 订阅元素改变事件。
- * `context` 读屏框架的上下文环境。
- * */
+订阅元素改变事件。
+`context` 读屏框架的上下文环境。
+*/
 pub(crate) async fn subscribe_element_events(context: Weak<Context>) {
     let ctx = context.clone();
     context.get_msaa().add_on_object_show_listener(move |src| {

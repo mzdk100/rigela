@@ -11,17 +11,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::ext::role::AccessibleRoleExt;
-use crate::performer::Speakable;
+use crate::{ext::role::AccessibleRoleExt, performer::Speakable};
 use win_wrap::msaa::object::AccessibleObject;
 
 impl Speakable for (AccessibleObject, i32) {
     fn get_sentence(&self) -> String {
-        format!(
-            "{}: {}, {}",
+        let mut text = vec![
             self.0.get_name(self.1),
             self.0.get_description(self.1),
-            self.get_role_name()
-        )
+            self.get_role_name(),
+            self.0.get_value(self.1),
+        ];
+        text.retain(|i| !i.is_empty());
+        text.join(", ")
     }
 }

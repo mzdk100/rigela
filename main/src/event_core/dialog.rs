@@ -40,9 +40,9 @@ pub(crate) fn handle_dialog_events(context: Weak<Context>, src: WinEventSource) 
 
 //noinspection SpellCheckingInspection
 /**
- * 订阅对话框事件。
- * `context` 读屏框架的上下文环境。
- * */
+订阅对话框事件。
+`context` 读屏框架的上下文环境。
+*/
 pub(crate) async fn subscribe_dialog_events(context: Weak<Context>) {
     let ctx = context.clone();
     context
