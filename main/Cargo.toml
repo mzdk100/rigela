@@ -118,3 +118,6 @@ version = "1.0.13"
 [dependencies.parking_lot]
 features = ["send_guard"]
 workspace = true
+
+[build-dependencies.cargo-emit]
+workspace = true

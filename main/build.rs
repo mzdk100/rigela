@@ -13,13 +13,12 @@
 
 extern crate cargo_rigela;
 
+use cargo_emit::rerun_if_changed;
 use embed_manifest::{embed_manifest, new_manifest};
 
 //noinspection SpellCheckingInspection
 fn main() {
-    println!("cargo:rerun-if-changed=locale");
-    println!("cargo:rerun-if-changed=src");
-    println!("cargo:rerun-if-changed=build.rs");
+    rerun_if_changed!("locale", "src", "build.rs");
 
     cargo_rigela::make_version();
 

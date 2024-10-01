@@ -41,3 +41,6 @@ features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 version = "0.3.30"
 default-features = false
 features = ["std"]
+
+[build-dependencies.cargo-emit]
+workspace = true

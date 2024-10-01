@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
+use cargo_emit::rerun_if_changed;
+
 #[cfg(feature = "dll")]
 use cargo_rigela;
 
 fn main() {
-    println!("cargo:rerun-if-changed=src");
-    println!("cargo:rerun-if-changed=build.rs");
+    rerun_if_changed!("src", "build.rs");
 
     #[cfg(feature = "dll")]
     cargo_rigela::make_version();

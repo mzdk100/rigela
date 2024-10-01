@@ -11,21 +11,21 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use bitar::chunk_dictionary::chunker_parameters::ChunkingAlgorithm;
-use bitar::chunk_dictionary::{ChunkDescriptor, ChunkDictionary, ChunkerParameters};
-use bitar::chunker::Config::RollSum;
-use bitar::chunker::FilterConfig;
-use bitar::{Compression, HashSum};
+use bitar::{
+    chunk_dictionary::{
+        chunker_parameters::ChunkingAlgorithm, ChunkDescriptor, ChunkDictionary, ChunkerParameters,
+    },
+    chunker::{Config::RollSum, FilterConfig},
+    Compression, HashSum,
+};
 use blake2::{Blake2b512, Digest};
+use cargo_emit::rerun_if_changed;
 use futures_util::StreamExt;
-use std::collections::HashMap;
-use std::path::Path;
-use std::{env, future};
-use tokio::fs::{create_dir, read_dir};
-use tokio::task::spawn_blocking;
+use std::{collections::HashMap, env::var, fs::exists, future::ready, path::Path};
 use tokio::{
-    fs::{File, OpenOptions},
+    fs::{create_dir, read_dir, File, OpenOptions},
     io::AsyncWriteExt,
+    task::spawn_blocking,
 };
 
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -70,7 +70,7 @@ async fn compress(resource_name: &str) {
                 };
                 // 将指针（作为索引）存储到每个区块的唯一区块索引
                 chunk_order.push(chunk_index);
-                future::ready(if unique {
+                ready(if unique {
                     Some((chunk_index, offset, verified))
                 } else {
                     None
@@ -169,9 +169,11 @@ async fn compress(resource_name: &str) {
 
 #[tokio::main]
 async fn main() {
-    println!("cargo:rerun-if-changed=dev");
-    println!("cargo:rerun-if-changed=src");
-    if let Ok(x) = env::var("CARGO_CFG_TARGET_ARCH") {
+    if let Ok(true) = exists("dev") {
+        rerun_if_changed!("dev");
+    }
+    rerun_if_changed!("src", "build.rs");
+    if let Ok(x) = var("CARGO_CFG_TARGET_ARCH") {
         if x == "x86" {
             // 构建32位版本不用压缩资源，仅在构建64位程序时压缩一次
             return;

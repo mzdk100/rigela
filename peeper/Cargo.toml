@@ -52,3 +52,6 @@ path = "../build_helper"
 [dependencies.parking_lot]
 optional = true
 workspace = true
+
+[build-dependencies.cargo-emit]
+workspace = true

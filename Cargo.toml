@@ -15,6 +15,9 @@ edition = "2021"
 readme = "README.md"
 repository = "https://gitcode.net/mzdk100/rigela.git"
 
+[workspace.dependencies.cargo-emit]
+version = "0.2.1"
+
 [workspace.dependencies.chrono]
 version = "0.4.38"
 
