@@ -6,6 +6,7 @@
 * [RigelA（名称取自猎户座餐宿七的英文）](#rigela名称取自猎户座餐宿七的英文)
   * [简介](#简介)
   * [构建和运行](#构建和运行)
+  * [捐献支持](#捐献支持)
   * [开发文档](#开发文档)
   * [开发贡献](#开发贡献)
   * [许可协议](#许可协议)
@@ -13,11 +14,11 @@
 
 * [官方网站](http://rigela.site)
 * [github](https://github.com/mzdk100/rigela)
-* [gitcode](https://gitcode.net/mzdk100/rigela)
+* [gitcode](https://gitcode.com/mzdk100/rigela)
 
 ## 简介
 
-本项目是使用rust编写的一个读屏(Screen Reader)项目![logo](logo.ico)。
+本项目是使用rust编写的一个读屏(Screen Reader)项目![logo](images/logo.ico)。
 名称中首字母r和rust的首字母相同，且猎户座在 12 月份是最佳观赏时间（本项目发起自2023年12月），rust注重性能、编码效率和安全，让我们展开想象吧！
 中文名称暂定`雷革读屏`，如果大家有更好的想法欢迎告诉我们。，“雷”闪电般的速度，“革”功能革新（也可以使用“格”代替）。
 关于名称可以参考[维基百科餐宿七的介绍](https://zh.wikipedia.org/wiki/%E5%8F%83%E5%AE%BF%E4%B8%83)
@@ -37,7 +38,7 @@
     ```
 2. 克隆仓库
     ```shell
-    git clone https://gitcode.net/mzdk100/rigela.git
+    git clone https://gitcode.com/mzdk100/rigela.git
     ```
    或者
     ```shell
@@ -63,6 +64,15 @@
     ```shell
     cargo rel
     ```
+
+## 捐献支持
+
+本项目提供给任何国家的任何人免费使用，但如果您可以资金支持我们的开发人员，则可以享受我们更加贴心的服务。
+例如您在使用本软件的过程中遇到任何困难，都可以提出issue，我们将优先为您解决。
+下面是目前本项目的核心贡献人员名单（按字母排序），您可以使用二维码像其中的任何人付款并与他们取得联系：
+- lwboy<liwenboy2008@126.com>: [微信收款码](images/lw_weixin.png)，[支付宝收款码](images/lw_alipay.jpg)
+- SmileSky<mzdk100@foxmail.com>: [微信收款码](images/lq_weixin.jpg)，[支付宝收款码](images/lq_alipay.jpg)
+
 
 ## 开发文档
 

@@ -6,6 +6,7 @@ English (en) | [简体中文 (zh-CN)](README.md)
 * [RigelA (the name is taken from the Rigel-A of Orion)](#rigela-the-name-is-taken-from-the-rigel-a-of-orion)
   * [Introduction](#introduction)
   * [Build and run](#build-and-run)
+  * [Donation Support](#donation-support)
   * [Development documentation](#development-documentation)
   * [Development Contribution](#development-contribution)
   * [agreement](#agreement)
@@ -13,11 +14,11 @@ English (en) | [简体中文 (zh-CN)](README.md)
 
 * [Official Site](http://rigela.site)
 * [GitHub](https://github.com/mzdk100/rigela)
-* [GitCode](https://gitcode.net/mzdk100/rigela)
+* [GitCode](https://gitcode.com/mzdk100/rigela)
 
 ## Introduction
 
-This project is a Screen Reader project written in rust![logo](logo.ico).
+This project is a Screen Reader project written in rust![logo](images/logo.ico).
 The first letter r in the name is the same as the first letter of rust, and Orion is the best viewing time in December(This project was initiated in December 2023).
 Rust focuses on performance, coding efficiency and security, let us imagine!
 For the name, please refer
@@ -40,7 +41,7 @@ language, it is highly recommended to learn from official documents or authorita
     ```
 2. Clone the repository
     ```shell
-    git clone https://gitcode.net/mzdk100/rigela.git
+    git clone https://gitcode.com/mzdk100/rigela.git
     ```
    or
     ```shell
@@ -70,6 +71,15 @@ language, it is highly recommended to learn from official documents or authorita
     ```shell
     cargo rel
     ```
+
+## Donation Support
+
+This project is free for anyone in any country, but if you can financially support our developers, you can enjoy more personalized services from us.
+For example, if you encounter any difficulties while using this software, you can submit an issue, and we will prioritize solving it for you.
+Below is the current list of core contributors to this project (sorted alphabetically), and you can use the QR code to pay and contact anyone of them:
+- lwboy<liwenboy2008@126.com>: [WeChat Payment QR Code](images/lw_weixin.png), [Alipay Payment QR Code](images/lw_alipay.jpg)
+- SmileSky<mzdk100@foxmail.com>: [WeChat Payment QR Code](images/lq_weixin.jpg), [Alipay Payment QR Code](images/lq_alipay.jpg)
+
 
 ## Development documentation
 
