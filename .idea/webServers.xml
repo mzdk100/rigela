@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="2788ca9e-7164-4cd1-acc3-8a10c2e3907f" name="rigela" url="http://localhost">
-        <fileTransfer rootFolder="/home/ubuntu/rigela" accessType="SFTP" host="api.zhumang.vip" port="22" sshConfigId="8761a323-6063-4bae-9a4c-77a11eee7b08" sshConfig="ubuntu@api.zhumang.vip:22 password">
+      <webServer id="2788ca9e-7164-4cd1-acc3-8a10c2e3907f" name="rigela" url="http://rigela.site">
+        <fileTransfer rootFolder="/var/www/html/rigela" accessType="SFTP" host="rigela.site" port="22" sshConfigId="c5ef2e4d-de78-4451-bc64-83d130b828f7" sshConfig="ubuntu@rigela.site:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" isUseSudo="true" />
           </advancedOptions>

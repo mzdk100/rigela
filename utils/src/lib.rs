@@ -36,4 +36,4 @@ pub mod pipe;
 pub mod screen;
 
 //noinspection HttpUrlsUsage
-pub const SERVER_HOME_URI: &str = "http://api.zhumang.vip:8080/rigela";
+pub const SERVER_HOME_URI: &str = "http://rigela.site/rigela";

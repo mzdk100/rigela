@@ -11,10 +11,14 @@ English (en) | [简体中文 (zh-CN)](README.md)
   * [agreement](#agreement)
 <!-- TOC -->
 
+* [Official Site](http://rigela.site)
+* [GitHub](https://github.com/mzdk100/rigela)
+* [GitCode](https://gitcode.net/mzdk100/rigela)
+
 ## Introduction
 
 This project is a Screen Reader project written in rust![logo](logo.ico).
-The first letter r in the name is the same as the first letter of rust, and Orion is the best viewing time in December.
+The first letter r in the name is the same as the first letter of rust, and Orion is the best viewing time in December(This project was initiated in December 2023).
 Rust focuses on performance, coding efficiency and security, let us imagine!
 For the name, please refer
 to [Wikipedia’s introduction to Rigel A](https://zh.wikipedia.org/wiki/%E5%8F%83%E5%AE%BF%E4%B8%83)
