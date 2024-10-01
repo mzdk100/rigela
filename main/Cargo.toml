@@ -77,7 +77,7 @@ version = "0.8.19"
 
 [dependencies]
 # 特征中使用async函数
-async-trait = "0.1.81"
+async-trait = "0.1.83"
 
 # 配置I18N国际化多语言支持
 rust-i18n = "3.1.2"
@@ -106,7 +106,7 @@ workspace = true
 
 [dependencies.reqwest]
 # 网络请求
-version = "0.12.7"
+version = "0.12.8"
 features = ["json"]
 
 [dependencies.native-windows-derive]

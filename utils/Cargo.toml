@@ -66,5 +66,5 @@ workspace = true
 optional = true
 
 [dependencies.png]
-version = "0.17.13"
+version = "0.17.14"
 optional = true
