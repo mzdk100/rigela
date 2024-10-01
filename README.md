@@ -70,8 +70,8 @@
 本项目提供给任何国家的任何人免费使用，但如果您可以资金支持我们的开发人员，则可以享受我们更加贴心的服务。
 例如您在使用本软件的过程中遇到任何困难，都可以提出issue，我们将优先为您解决。
 下面是目前本项目的核心贡献人员名单（按字母排序），您可以使用二维码像其中的任何人付款并与他们取得联系：
-- lwboy<liwenboy2008@126.com>: [微信收款码](images/lw_weixin.png)，[支付宝收款码](images/lw_alipay.jpg)
-- SmileSky<mzdk100@foxmail.com>: [微信收款码](images/lq_weixin.jpg)，[支付宝收款码](images/lq_alipay.jpg)
+- lwboy<liwenboy2008@126.com>: ![微信收款码](images/lw_weixin.png)， ![支付宝收款码](images/lw_alipay.jpg)
+- SmileSky<mzdk100@foxmail.com>: ![微信收款码](images/lq_weixin.jpg)， ![支付宝收款码](images/lq_alipay.jpg)
 
 
 ## 开发文档
