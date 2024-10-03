@@ -76,9 +76,25 @@ language, it is highly recommended to learn from official documents or authorita
 
 This project is free for anyone in any country, but if you can financially support our developers, you can enjoy more personalized services from us.
 For example, if you encounter any difficulties while using this software, you can submit an issue, and we will prioritize solving it for you.
+
 Below is the current list of core contributors to this project (sorted alphabetically), and you can use the QR code to pay and contact anyone of them:
-- lwboy<liwenboy2008@126.com>: ![WeChat Payment QR Code](images/lw_weixin.png), ![Alipay Payment QR Code](images/lw_alipay.jpg)
-- SmileSky<mzdk100@foxmail.com>: ![WeChat Payment QR Code](images/lq_weixin.jpg), ![Alipay Payment QR Code](images/lq_alipay.jpg)
+- lwboy<liwenboy2008@126.com>:
+  <!--suppress HtmlDeprecatedAttribute -->
+  <p align="center">
+  <!--suppress CheckImageSize -->
+  <img alt="WeChat payment code" src="images/lw_weixin.png" width="300px" style="margin: 0 30px;"/>
+  <!--suppress CheckImageSize -->
+  <img alt="Alipay collection code" src="images/lw_alipay.jpg" width="280px" style="margin: 0 30px;"/>
+  </p>
+
+- SmileSky<mzdk100@foxmail.com>:
+  <!--suppress HtmlDeprecatedAttribute -->
+  <p align="center">
+  <!--suppress CheckImageSize -->
+  <img alt="WeChat payment code" src="images/lq_weixin.jpg" width="300px"  style="margin: 0 30px;"/>
+  <!--suppress CheckImageSize -->
+  <img alt="Alipay collection code" src="images/lq_alipay.jpg" width="280px"  style="margin: 0 30px;"/>
+  </p>
 
 
 ## Development documentation
