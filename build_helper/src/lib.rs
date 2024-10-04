@@ -13,6 +13,7 @@
 
 extern crate embed_resource;
 
+use cargo_emit::rerun_if_changed;
 use chrono::{Datelike, Local};
 use std::env;
 use std::env::current_dir;
@@ -77,7 +78,7 @@ IDI_ICON1 ICON DISCARDABLE "{LOGO}"
 "#;
 pub fn make_version() {
     let path = Path::new(env::var("OUT_DIR").unwrap().as_str()).join("version.rc");
-    let logo_path = current_dir().unwrap().parent().unwrap().join("logo.ico");
+    let logo_path = current_dir().unwrap().parent().unwrap().join("images").join("logo.ico");
     let mut description = env::var("CARGO_PKG_DESCRIPTION").unwrap();
     if description.is_empty() {
         description = "RigelA screen reader (rsr).".to_string()
@@ -105,7 +106,7 @@ pub fn make_version() {
         .write_all(version.as_bytes())
         .unwrap();
     embed_resource::compile(&path, embed_resource::NONE);
-    println!("cargo:rerun-if-changed=build.rs");
+    rerun_if_changed!(logo_path.display(), "build.rs");
 }
 
 fn get_vcs_last_commit_hash() -> String {

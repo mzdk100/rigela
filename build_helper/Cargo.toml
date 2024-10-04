@@ -15,3 +15,6 @@ version = "2.5.0"
 
 [dependencies.chrono]
 workspace = true
+
+[dependencies.cargo-emit]
+workspace = true
