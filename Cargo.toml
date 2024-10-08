@@ -47,6 +47,7 @@ members = [
     'a11y',
     "build_helper",
     "macros",
+    "framework",
     "main",
     "peeper",
     "proxy32",

@@ -1,0 +1,8 @@
+[package]
+name = "rigela-framework"
+version = "0.1.0"
+rust-version = "1.81.0"
+edition = "2021"
+
+[dependencies]
+parking_lot.workspace = true

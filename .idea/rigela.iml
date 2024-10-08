@@ -16,6 +16,8 @@
       <sourceFolder url="file://$MODULE_DIR$/utils/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/a11y/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/a11y/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
