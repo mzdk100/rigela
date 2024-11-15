@@ -13,6 +13,7 @@ English (en) | [简体中文 (zh-CN)](README.md)
 <!-- TOC -->
 
 * [Official Site](http://rigela.site)
+* [![Actions Status](https://github.com/mzdk100/rigela/actions/workflows/rust.yml/badge.svg)](https://github.com/mzdk100/rigela/actions)
 * [GitHub](https://github.com/mzdk100/rigela)
 * [GitCode](https://gitcode.com/mzdk100/rigela)
 

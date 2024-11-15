@@ -1,9 +1,9 @@
-# RigelA（名称取自猎户座餐宿七的英文）
+# RigelA（名称取自猎户座参宿七的英文）
 
 简体中文 (zh-CN) | [English (en)](README-EN.md)
 
 <!-- TOC -->
-* [RigelA（名称取自猎户座餐宿七的英文）](#rigela名称取自猎户座餐宿七的英文)
+* [RigelA（名称取自猎户座参宿七的英文）](#rigela名称取自猎户座参宿七的英文)
   * [简介](#简介)
   * [构建和运行](#构建和运行)
   * [捐献支持](#捐献支持)
@@ -13,6 +13,7 @@
 <!-- TOC -->
 
 * [官方网站](http://rigela.site)
+* [![Actions Status](https://github.com/mzdk100/rigela/actions/workflows/rust.yml/badge.svg)](https://github.com/mzdk100/rigela/actions)
 * [github](https://github.com/mzdk100/rigela)
 * [gitcode](https://gitcode.com/mzdk100/rigela)
 
@@ -21,7 +22,7 @@
 本项目是使用rust编写的一个读屏(Screen Reader)项目![logo](images/logo.ico)。
 名称中首字母r和rust的首字母相同，且猎户座在 12 月份是最佳观赏时间（本项目发起自2023年12月），rust注重性能、编码效率和安全，让我们展开想象吧！
 中文名称暂定`雷革读屏`，如果大家有更好的想法欢迎告诉我们。，“雷”闪电般的速度，“革”功能革新（也可以使用“格”代替）。
-关于名称可以参考[维基百科餐宿七的介绍](https://zh.wikipedia.org/wiki/%E5%8F%83%E5%AE%BF%E4%B8%83)
+关于名称可以参考[维基百科参宿七的介绍](https://zh.wikipedia.org/wiki/%E5%8F%83%E5%AE%BF%E4%B8%83)
 关于rust环境搭建可以参考相关文档，如果您对rust语言不熟悉，强烈推荐从官方文档或权威的书籍学习。
 
 ## 构建和运行
@@ -72,14 +73,20 @@
 
 下面是目前本项目的核心贡献人员名单（按字母排序），您可以使用二维码像其中的任何人付款并与他们取得联系：
 - lwboy<liwenboy2008@126.com>:
+  <!--suppress HtmlDeprecatedAttribute -->
   <p align="center">
+  <!--suppress CheckImageSize -->
   <img alt="微信收款码" src="images/lw_weixin.png" width="300px" style="margin: 0 30px;"/>
+  <!--suppress CheckImageSize -->
   <img alt="支付宝收款码" src="images/lw_alipay.jpg" width="280px" style="margin: 0 30px;"/>
   </p>
 
 - SmileSky<mzdk100@foxmail.com>:
+  <!--suppress HtmlDeprecatedAttribute -->
   <p align="center">
+  <!--suppress CheckImageSize -->
   <img alt="微信收款码" src="images/lq_weixin.jpg" width="300px"  style="margin: 0 30px;"/>
+  <!--suppress CheckImageSize -->
   <img alt="支付宝收款码" src="images/lq_alipay.jpg" width="280px"  style="margin: 0 30px;"/>
   </p>
 
