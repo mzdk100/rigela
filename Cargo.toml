@@ -31,7 +31,7 @@ version = "0.4.22"
 version = "1.41.1"
 
 [workspace.dependencies.serde]
-version = "1.0.215"
+version = "1.0.214"
 
 [workspace.dependencies.win-wrap]
 version = "0.2.9"
@@ -52,5 +52,5 @@ members = [
     "proxy32",
     "resources",
     "utils"
-, "sr"]
+]
 resolver = "2"
