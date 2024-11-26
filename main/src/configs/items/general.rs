@@ -28,7 +28,7 @@ impl Default for GeneralConfig {
         Self {
             run_on_startup: false,
             auto_check_update: true,
-            lang: Lang::Zh,
+            lang: Lang::FollowSystem,
         }
     }
 }

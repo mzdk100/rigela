@@ -25,14 +25,14 @@ use rigela_macros::talent;
 use std::sync::Weak;
 use win_wrap::input::{click, get_cur_mouse_point, right_click};
 
-#[talent(doc = String::from("鼠标单击"), key = combo_key!(VkNumPadDiv))]
+#[talent(doc = t!("mouse.click_doc").to_string(), key = combo_key!(VkNumPadDiv))]
 async fn click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     click(x, y);
     context.get_performer().speak(&t!("mouse.click")).await;
 }
 
-#[talent(doc = String::from("鼠标右击"), key = combo_key!(VkNumPadMul))]
+#[talent(doc = t!("mouse.right_click_doc").to_string(), key = combo_key!(VkNumPadMul))]
 async fn right_click(context: Weak<Context>) {
     let (x, y) = get_point(context.clone()).await;
     right_click(x, y);
@@ -42,7 +42,7 @@ async fn right_click(context: Weak<Context>) {
         .await;
 }
 
-#[talent(doc = String::from("鼠标朗读"), key = combo_key!("RigelA", VkM))]
+#[talent(doc = t!("mouse.reader").to_string(), key = combo_key!("RigelA", VkM))]
 async fn read_mouse(context: Weak<Context>) {
     let is_read = !context
         .get_config_manager()

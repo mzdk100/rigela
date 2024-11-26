@@ -136,4 +136,41 @@ tts.volume_info:
   en: "Volume: %{value}"
   zh-CN: "音量: %{value}"
 
+mouse.click_doc:
+  en: Mouse click
+  zh-CN: 鼠标单击
+mouse.reader:
+  en: Mouse reader switch
+  zh-CN: 鼠标朗读
+mouse.right_click_doc:
+  en: Mouse right click
+  zh-CN: 鼠标右击
+tts.cache_to_clip_doc:
+  en: Copy reading cache
+  zh-CN: 拷贝缓冲区
+tts.inc_doc:
+  en: Voice property increase
+  zh-CN: 语音属性值增加
+tts.make_word_cache_char_doc:
+  en: Cache char making word
+  zh-CN: 缓冲区当前字符组词
+tts.next_cache_char_doc:
+  en: Cache next char
+  zh-CN: 缓冲区下一字符
+tts.next_prop_doc:
+  en: Voice next property
+  zh-CN: 语音下一属性
+tts.prev_cache_char_doc:
+  en: Cache previous char
+  zh-CN: 缓冲区上一字符
+tts.prev_prop_doc:
+  en: Voice previous property
+  zh-CN: 语音上一属性
+tts.red_doc:
+  en: Voice property reduce
+  zh-CN: 语音属性值降低
+tts.trans_cache_char_doc:
+  en: Translate cache char
+  zh-CN: 解释缓冲区当前字符
+
 
