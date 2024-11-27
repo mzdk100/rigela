@@ -397,7 +397,7 @@ unsafe impl Send for Ibmeci {}
 #[cfg(all(test, target_arch = "x86"))]
 mod test_eci {
     use super::Ibmeci;
-    use rigela_utils::logger::init_logger;
+    use super::super::logger::init_logger;
 
     #[tokio::test]
     async fn main() {

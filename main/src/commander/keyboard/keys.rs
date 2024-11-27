@@ -1048,8 +1048,8 @@ impl Default for Keys {
     }
 }
 
+#[cfg(test)]
 mod tests {
-    #[allow(unused_imports)]
     use super::*;
 
     #[test]
@@ -1060,13 +1060,13 @@ mod tests {
 
     #[test]
     fn test_vk_from_str() {
-        let key: Keys = "A".into();
+        let key: Keys = String::from("A").into();
         assert_eq!(key, Keys::VkA);
     }
 
     #[test]
     fn test_vk_to_str() {
-        let key_str: &str = Keys::VkA.into();
-        assert_eq!(key_str, "A");
+        let key_str: String = Keys::VkA.into();
+        assert_eq!(key_str, String::from("A"));
     }
 }
