@@ -11,24 +11,26 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use crate::{call_proc, common::SafeModuleHandle, library::setup_library};
+use crate::{
+    call_proc,
+    common::SafeModuleHandle,
+    library::{get_rigela_library_path, setup_library},
+};
 use encoding_rs::GBK;
-use log::info;
+use flume::{bounded, Sender};
+use log::{error, info};
 use std::{
     alloc::{alloc_zeroed, dealloc, Layout},
-    borrow::Cow,
     ffi::{c_char, CString},
     sync::OnceLock,
     thread,
 };
-use tokio::sync::oneshot::{self, channel, Sender};
+use tokio::sync::oneshot;
 use win_wrap::{
     common::{free_library, get_proc_address, load_library, FARPROC, LPARAM, WPARAM},
-    message::{message_loop, post_thread_message, register_window_message},
+    message::{message_loop, post_thread_message},
     threading::get_current_thread_id,
-    wm,
 };
-use crate::library::get_rigela_library_path;
 
 macro_rules! eci {
     ($module:expr,new) => {
@@ -161,8 +163,7 @@ pub const VP_SPEED: u32 = 6;
 pub const VP_VOLUME: u32 = 7;
 
 //noinspection SpellCheckingInspection
-static mut IBMECI: OnceLock<Ibmeci> = OnceLock::new();
-static SYNTH_TASK: OnceLock<u32> = OnceLock::new();
+static IBMECI: OnceLock<Ibmeci> = OnceLock::new();
 
 extern "system" fn _callback_internal(
     #[allow(unused_variables)] h_eci: u32,
@@ -174,7 +175,7 @@ extern "system" fn _callback_internal(
         return RETURN_DATA_PROCESSED;
     }
     unsafe {
-        let eci = IBMECI.get_mut();
+        let eci = IBMECI.get();
         if eci.is_none() {
             return RETURN_DATA_PROCESSED;
         }
@@ -184,17 +185,19 @@ extern "system" fn _callback_internal(
         for i in 0..(param * 2) {
             vec.push(*eci.buffer_ptr.wrapping_add(i as usize));
         }
-        eci.data.extend(vec);
+        let _ = eci.data_tx.send(vec);
     }
     RETURN_DATA_PROCESSED
 }
 
+const BUFFER_LAYOUT: Layout = Layout::new::<[u8; 8192]>();
+
 //noinspection SpellCheckingInspection
 #[derive(Debug)]
 pub struct Ibmeci {
-    buffer_layout: Layout,
     buffer_ptr: *mut u8,
-    data: Vec<u8>,
+    request_tx: Sender<(Vec<u8>, Sender<Vec<u8>>)>,
+    data_tx: Sender<Vec<u8>>,
     h_module: SafeModuleHandle,
     h_eci: i32,
     thread: u32,
@@ -205,12 +208,10 @@ impl Ibmeci {
     /**
     获取一个实例。
     */
-    pub async fn get<'a>() -> Result<&'a Self, String> {
-        unsafe {
-            // 单例模式
-            if let Some(self_) = IBMECI.get() {
-                return Ok(self_);
-            }
+    pub async fn get() -> Result<&'static Self, String> {
+        // 单例模式
+        if let Some(self_) = IBMECI.get() {
+            return Ok(self_);
         }
         const LIB_NAME: &str = "ibmeci.dll";
         let eci_path = get_rigela_library_path().join(LIB_NAME);
@@ -230,13 +231,14 @@ impl Ibmeci {
         let (tx, rx) = oneshot::channel();
         thread::spawn(move || {
             let h_eci = eci!(*h_module, new).unwrap_or(0);
-            let buffer_layout = Layout::new::<[u8; 8192]>();
-            let buffer_ptr = unsafe { alloc_zeroed(buffer_layout) };
+            let buffer_ptr = unsafe { alloc_zeroed(BUFFER_LAYOUT) };
 
+            let (tx_data, rx_data) = bounded(BUFFER_LAYOUT.size());
+            let (tx_request, rx_request) = bounded(2);
             let self_ = Self {
-                buffer_layout,
                 buffer_ptr,
-                data: vec![],
+                request_tx: tx_request,
+                data_tx: tx_data,
                 h_module: h_module.clone(),
                 h_eci,
                 thread: get_current_thread_id(),
@@ -247,22 +249,20 @@ impl Ibmeci {
                 *h_module,
                 set_output_buffer,
                 h_eci,
-                (buffer_layout.size() / 2) as u32,
+                (BUFFER_LAYOUT.size() / 2) as u32,
                 buffer_ptr
             );
             info!("Module handle: {:?}, eci handle: {}", h_module.0, h_eci);
-            unsafe {
-                IBMECI.set(self_).unwrap();
-                tx.send(IBMECI.get().unwrap()).unwrap();
-            }
-            message_loop(|m| {
-                if wm!(SYNTH_TASK) == m.message {
-                    let b = unsafe { Box::from_raw(m.wParam.0 as *mut Cow<[u8]>) };
-                    eci!(*h_module, add_text, h_eci, *b);
+            IBMECI.set(self_).unwrap();
+            tx.send(IBMECI.get().unwrap()).unwrap();
+            message_loop(|_| {
+                if let Ok((text, tx_status)) = rx_request.try_recv() {
+                    eci!(*h_module, add_text, h_eci, text);
                     eci!(*h_module, synthesize, h_eci);
                     eci!(*h_module, synchronize, h_eci);
-                    let b = unsafe { Box::from_raw(m.lParam.0 as *mut Sender<()>) };
-                    b.send(()).unwrap_or(());
+                    while let Ok(data) = rx_data.try_recv() {
+                        let _ = tx_status.send(data);
+                    }
                 }
             });
         });
@@ -312,25 +312,23 @@ impl Ibmeci {
                 }
                 last_char = i;
             }
-            Cow::from(v)
+            v.into()
         } else {
             text
         };
-        if let Some(eci) = unsafe { IBMECI.get_mut() } {
-            eci.data.clear();
-            let (tx, rx) = channel();
-            let tx = Box::new(tx);
-            post_thread_message(
-                eci.thread,
-                wm!(SYNTH_TASK),
-                WPARAM(Box::into_raw(Box::new(text)) as usize),
-                LPARAM(Box::into_raw(tx) as isize),
-            );
-            rx.await.unwrap_or(());
-            eci.data.clone()
-        } else {
-            vec![]
+        let Some(eci) = IBMECI.get() else {
+            return vec![];
+        };
+        let (tx, rx) = bounded(2);
+        if let Err(e) = eci.request_tx.send_async((text.to_vec(), tx)).await {
+            error!("Can't synth the data. ({})", e);
         }
+        post_thread_message(eci.thread, 0, WPARAM::default(), LPARAM::default());
+        let mut buf = vec![];
+        while let Ok(data) = rx.recv_async().await {
+            buf.extend(data);
+        }
+        buf
     }
 
     /**
@@ -385,7 +383,7 @@ impl Drop for Ibmeci {
             free_library(*self.h_module);
         }
         unsafe {
-            dealloc(self.buffer_ptr, self.buffer_layout);
+            dealloc(self.buffer_ptr, BUFFER_LAYOUT);
         }
     }
 }
@@ -396,8 +394,8 @@ unsafe impl Send for Ibmeci {}
 
 #[cfg(all(test, target_arch = "x86"))]
 mod test_eci {
-    use super::Ibmeci;
     use super::super::logger::init_logger;
+    use super::Ibmeci;
 
     #[tokio::test]
     async fn main() {

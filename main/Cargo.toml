@@ -86,7 +86,7 @@ rust-i18n = "3.1.2"
 select = "0.6.0"
 
 # 压缩解压
-zip = "2.2.0"
+zip = "2.2.1"
 
 # 跨线程去锁传输数据
 arc-swap = "1.7.1"
@@ -106,7 +106,7 @@ workspace = true
 
 [dependencies.reqwest]
 # 网络请求
-version = "0.12.8"
+version = "0.12.9"
 features = ["json"]
 
 [dependencies.native-windows-derive]

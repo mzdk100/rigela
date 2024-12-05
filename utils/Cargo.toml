@@ -22,7 +22,7 @@ clip = ["clipboard"]
 color = []
 common = []
 fs = ["win-wrap/shell", "tokio/fs", "tokio/io-util"]
-ibmeci = ["common", "encoding_rs/fast-gb-hanzi-encode", "tokio/sync"]
+ibmeci = ["common", "encoding_rs/fast-gb-hanzi-encode", "tokio/sync", "flume"]
 killer = ["pipe", "win-wrap/threading"]
 library = ["fs"]
 logger = ["log4rs"]
@@ -40,7 +40,7 @@ optional = true
 
 [dependencies.encoding_rs]
 # 字符串编解码
-version = "0.8.34"
+version = "0.8.35"
 optional = true
 
 [dependencies.log4rs]
@@ -68,3 +68,7 @@ optional = true
 [dependencies.png]
 version = "0.17.14"
 optional = true
+
+[dependencies.flume]
+optional = true
+version = "0.11.1"
