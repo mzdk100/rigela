@@ -152,6 +152,7 @@ async fn compress(resource_name: &str) {
         chunk_compression: Some(Some(compression).into()),
         source_total_size: source_size,
         chunker_params: Some(chunkier_params),
+        metadata: Default::default(),
     };
     let header_buf = bitar::header::build(&file_header, None).unwrap();
     output_file.write_all(&header_buf).await.expect(

@@ -12,6 +12,7 @@ English (en) | [简体中文 (zh-CN)](README.md)
   * [agreement](#agreement)
 <!-- TOC -->
 
+* [<img src="https://api.gitsponsors.com/api/badge/img?id=743708176" height="20">](https://api.gitsponsors.com/api/badge/link?p=NQ2qaC9eM8Eqkk7/NlVCUMnMIYpyYsjpWpVciogJaCWBucmwJ8jIWUJMEdl5e7pq)
 * [Official Site](http://rigela.site)
 * [![Actions Status](https://github.com/mzdk100/rigela/actions/workflows/rust.yml/badge.svg)](https://github.com/mzdk100/rigela/actions)
 * [GitHub](https://github.com/mzdk100/rigela)

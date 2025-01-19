@@ -11,7 +11,7 @@ repository.workspace = true
 
 [dependencies.embed-resource]
 # 嵌入资源信息到程序中
-version = "2.5.0"
+version = "3.0.1"
 
 [dependencies.chrono]
 workspace = true

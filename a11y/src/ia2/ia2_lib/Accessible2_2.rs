@@ -12,36 +12,36 @@
  */
 
 use super::Accessible2::{IAccessible2, IAccessible2_Impl, IAccessible2_Vtbl};
-use windows::core::interface;
-use windows::core::IUnknown;
-use windows::core::BSTR;
-use windows::core::{HRESULT, VARIANT};
+use windows::{
+    core::{interface, IUnknown, BSTR, HRESULT},
+    Win32::System::Variant::VARIANT,
+};
 
 /**
- * This interface exposes the primary set of information about an IAccessible2 enabled accessible object.
- * This interface must always be provided for objects that support some portion of the collection of the %IAccessible2 interfaces.
- * Please refer to @ref _changingInterfaces "Changing between Accessible Interfaces" for special considerations related to use of the MSAA IAccessible interface and
- * the set of %IAccessible2 interfaces.
- * */
+This interface exposes the primary set of information about an IAccessible2 enabled accessible object.
+ This interface must always be provided for objects that support some portion of the collection of the %IAccessible2 interfaces.
+ Please refer to @ref _changingInterfaces "Changing between Accessible Interfaces" for special considerations related to use of the MSAA IAccessible interface and
+ the set of %IAccessible2 interfaces.
+ */
 #[interface("6C9430E9-299D-4E6F-BD01-A82A1E88D3FF")]
 pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
     //noinspection SpellCheckingInspection
     /**
-     * Returns the attribute value of a specified attribute specific to this object.
-     * `name`
-     * `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
-     * retrieval E_INVALIDARG if bad [in] passed.
-     * @note The output value is a VARIANT.
-     * Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.
-     * Refer to the [ Object Attributes specification](http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2)
-     * for more information.
-     * */
+    Returns the attribute value of a specified attribute specific to this object.
+    `name`
+    `attribute` retrieval S_FALSE returned if there is nothing to return, [out] value is NULL.
+    retrieval E_INVALIDARG if bad [in] passed.
+    @note The output value is a VARIANT.
+    Typically, it will be a VT_BSTR, but there are some cases where it will be a VT_I4 or VT_BOOL.
+    Refer to the [ Object Attributes specification](http://www.linuxfoundation.org/collaborate/workgroups/accessibility/iaccessible2/objectattributesIAccessible2)
+    for more information.
+    */
     pub(crate) fn attribute(&self, name: BSTR, attribute: *mut VARIANT) -> HRESULT;
 
     /**
-     * Returns the deepest hypertext accessible in the subtree of this object, and the caret offset within it.
-     * `accessible` `caretOffset` retrieval S_FALSE returned if there is no caret in any of the objects in the subtree, [out] accessible is NULL and [out] caretOffset is -1.
-     * */
+    Returns the deepest hypertext accessible in the subtree of this object, and the caret offset within it.
+    `accessible` `caretOffset` retrieval S_FALSE returned if there is no caret in any of the objects in the subtree, [out] accessible is NULL and [out] caretOffset is -1.
+    */
     pub(crate) fn accessibleWithCaret(
         &self,
         accessible: *mut *mut IUnknown,
@@ -50,14 +50,14 @@ pub(crate) unsafe trait IAccessible2_2: IAccessible2 {
 
     //noinspection SpellCheckingInspection
     /**
-     * Returns relation targets for a specified target type.
-     * `type` The requested @ref grpRelations "relation type".
-     * `maxTargets` The number of targets requested.  Zero indicates that all targets should be returned.
-     * `targets` This array is allocated by the server.  The client must free it with CoTaskMemFree.
-     * `nTargets` The number of targets returned; the size of the returned array.
-     * retrieval S_FALSE if there are no targets, [out] values are NULL and 0 respectively.
-     * retrieval E_INVALIDARG if bad [in] passed.
-     * */
+    Returns relation targets for a specified target type.
+    `type` The requested @ref grpRelations "relation type".
+    `maxTargets` The number of targets requested.  Zero indicates that all targets should be returned.
+    `targets` This array is allocated by the server.  The client must free it with CoTaskMemFree.
+    `nTargets` The number of targets returned; the size of the returned array.
+    retrieval S_FALSE if there are no targets, [out] values are NULL and 0 respectively.
+    retrieval E_INVALIDARG if bad [in] passed.
+    */
     pub(crate) fn relationTargetsOfType(
         &self,
         r#type: BSTR,

@@ -10,15 +10,15 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bitar = "0.12.0"
+bitar = "0.13.0"
 blake2 = "0.11.0-pre.4"
-url = "2.5.2"
+url = "2.5.4"
 
 [dependencies.log]
 workspace = true
 
 [dependencies.futures-util]
-version = "0.3.30"
+version = "0.3.31"
 default-features = false
 features = ["std"]
 
@@ -30,7 +30,7 @@ features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 blake2 = "0.11.0-pre.4"
 
 [build-dependencies.bitar]
-version = "0.12.0"
+version = "0.13.0"
 features = ["compress"]
 
 [build-dependencies.tokio]
@@ -38,7 +38,7 @@ workspace = true
 features = ["fs", "io-std", "macros", "time", "rt-multi-thread"]
 
 [build-dependencies.futures-util]
-version = "0.3.30"
+version = "0.3.31"
 default-features = false
 features = ["std"]
 

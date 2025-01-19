@@ -12,65 +12,69 @@
  */
 
 use super::AccessibleAction::{IAccessibleAction, IAccessibleAction_Impl, IAccessibleAction_Vtbl};
-use windows::core::interface;
-use windows::core::{HRESULT, VARIANT};
+use windows::{
+    core::{interface, HRESULT},
+    Win32::System::Variant::VARIANT,
+};
 
 //noinspection SpellCheckingInspection
 /**
- * This interface represents hyperlinks.
- * This interface represents a hyperlink associated with a single substring of text or single non-text object.  Non-text objects can have either a single link or a collection of links such as when the non-text object is an image map.
- * Linked objects and anchors are implementation-dependent. This interface is derived from IAccessibleAction.  IAccessibleAction::nActions is one greater than the maximum value for the indices used with the methods of this interface.
- * Furthermore, the object that implements this interface has to be connected implicitly or explicitly with an object that implements IAccessibleText.
- * IAccessibleHyperlink::startIndex and IAccessibleHyperlink::endIndex are indices with respect to the text exposed by IAccessibleText.
- * This interface provides access to a single object which can have multiple actions.
- * An example is an image map, which is an image with multiple links, each of which is associated with a separate non-overlapping area of the image.  This interface could also be applied to other kinds of objects with multiple actions such as "smart tags" which are objects, typically strings, which have multiple actions such as "Activate URI", "Bookmark URI", etc.
- * An interesting use case is an image map where each area is associated with multiple actions, e.g. an image map of smart tags.  In this case, you would have to implement two levels of accessible hyperlinks.  The first level of hyperlinks would only implement anchor and anchorTarget.  The anchors would all reference the image object.  The anchorTargets would reference the second level of accessible hyperlink objects.  None of the IAccessibleAction methods would be implemented on the first level of hyperlink objects.
- * The second level hyperlink objects would implement the IAccessibleAction methods.  Their anchors would also reference the image object, and their anchorTargets would reference URLs or the objects that would be activated.
- * This use case demonstrates that in some cases, there is no need for IAccessibleHyperlink to derive from IAccessibleAction.  As a result, it may be removed in a later version of the IDL, and it is suggested that implementations should not rely on the inheritance.
- * */
+This interface represents hyperlinks.
+This interface represents a hyperlink associated with a single substring of text or single non-text object.  Non-text objects can have either a single link or a collection of links such as when the non-text object is an image map.
+Linked objects and anchors are implementation-dependent. This interface is derived from IAccessibleAction.  IAccessibleAction::nActions is one greater than the maximum value for the indices used with the methods of this interface.
+Furthermore, the object that implements this interface has to be connected implicitly or explicitly with an object that implements IAccessibleText.
+IAccessibleHyperlink::startIndex and IAccessibleHyperlink::endIndex are indices with respect to the text exposed by IAccessibleText.
+This interface provides access to a single object which can have multiple actions.
+An example is an image map, which is an image with multiple links, each of which is associated with a separate non-overlapping area of the image.  This interface could also be applied to other kinds of objects with multiple actions such as "smart tags" which are objects, typically strings, which have multiple actions such as "Activate URI", "Bookmark URI", etc.
+An interesting use case is an image map where each area is associated with multiple actions, e.g. an image map of smart tags.  In this case, you would have to implement two levels of accessible hyperlinks.  The first level of hyperlinks would only implement anchor and anchorTarget.  The anchors would all reference the image object.  The anchorTargets would reference the second level of accessible hyperlink objects.  None of the IAccessibleAction methods would be implemented on the first level of hyperlink objects.
+The second level hyperlink objects would implement the IAccessibleAction methods.  Their anchors would also reference the image object, and their anchorTargets would reference URLs or the objects that would be activated.
+This use case demonstrates that in some cases, there is no need for IAccessibleHyperlink to derive from IAccessibleAction.  As a result, it may be removed in a later version of the IDL, and it is suggested that implementations should not rely on the inheritance.
+*/
 #[interface("01C20F2B-3DD2-400f-949F-AD00BDAB1D41")]
 pub(crate) unsafe trait IAccessibleHyperlink: IAccessibleAction {
     /**
-     * Returns an object that represents the link anchor, as appropriate for the link at the specified index.
-     * `index` A 0 based index identifies the anchor when, as in the case of an image map, there is more than one link represented by this object.  The valid maximal index is indicated by IAccessibleAction::nActions.
-     * `anchor` This is an implementation dependent value.  For example, for a text link this method could return the substring of the containing string where the substring is overridden with link behavior, and for an image link this method could return an IUnknown VARIANT for IAccessibleImage.  See the section about
-     * @ref _variants "VARIANTs" for additional information.
-     * retrieval E_INVALIDARG if bad [in] passed
-     * */
+    Returns an object that represents the link anchor, as appropriate for the link at the specified index.
+    `index` A 0 based index identifies the anchor when, as in the case of an image map, there is more than one link represented by this object.  The valid maximal index is indicated by IAccessibleAction::nActions.
+    `anchor` This is an implementation dependent value.  For example, for a text link this method could return the substring of the containing string where the substring is overridden with link behavior, and for an image link this method could return an IUnknown VARIANT for IAccessibleImage.  See the section about
+    @ref _variants "VARIANTs" for additional information.
+    retrieval E_INVALIDARG if bad [in] passed
+    */
     fn anchor(&self, index: i32, anchor: *mut VARIANT) -> HRESULT;
 
     /**
-     * Returns an object representing the target of the link, as appropriate for the link at the specified index.
-     * `index` A 0 based index identifies the anchor when, as in the case of an image map, there is more than one link represented by this object.  The valid maximal index is indicated by IAccessibleAction::nActions.
-     * `anchorTarget` This is an implementation dependent value.  For example, this method could return a BSTR VARIANT of the URI.
-     * Alternatively, this method could return an IUnknown VARIANT of a COM interface representing a target object to be activated when the link is activated.  See the section about
-     * @ref _variants "VARIANTs" for additional information.
-     * retrieval E_INVALIDARG if bad [in] passed
-     * */
+    Returns an object representing the target of the link, as appropriate for the link at the specified index.
+    `index` A 0 based index identifies the anchor when, as in the case of an image map, there is more than one link represented by this object.  The valid maximal index is indicated by IAccessibleAction::nActions.
+    `anchorTarget` This is an implementation dependent value.  For example, this method could return a BSTR VARIANT of the URI.
+    Alternatively, this method could return an IUnknown VARIANT of a COM interface representing a target object to be activated when the link is activated.  See the section about
+    @ref _variants "VARIANTs" for additional information.
+    retrieval E_INVALIDARG if bad [in] passed
+    */
     fn anchorTarget(&self, index: i32, anchorTarget: *mut VARIANT) -> HRESULT;
 
     /**
-     * Returns the zero-based character offset at which the textual representation of the hyperlink starts.
-     * The returned value is related to the IAccessibleText interface of the object that owns this hyperlink.
-     * `index` */
+    Returns the zero-based character offset at which the textual representation of the hyperlink starts.
+    The returned value is related to the IAccessibleText interface of the object that owns this hyperlink.
+    `index`
+    */
     fn startIndex(&self, index: *mut i32) -> HRESULT;
 
     /**
-     * Returns the zero-based character offset at which the textual representation of the hyperlink ends.
-     * The returned value is related to the IAccessibleText interface of the object that owns this hyperlink. The character at the index is not part of the hypertext.
-     * `index` */
+    Returns the zero-based character offset at which the textual representation of the hyperlink ends.
+    The returned value is related to the IAccessibleText interface of the object that owns this hyperlink. The character at the index is not part of the hypertext.
+    `index`
+    */
     fn endIndex(&self, index: *mut i32) -> HRESULT;
 
     /**
-     * Returns whether the target object referenced by this link is still valid.
-     * This is a volatile state that may change without sending an appropriate event.
-     * Returns TRUE if the referenced target is still valid and FALSE otherwise.
-     * This has also been used to indicate whether the URI of the anchorTarget is malformed.
-     * `valid` If false, one or more of the object's links are invalid.
-     * If true, all the object's links are valid.
-     * retrieval S_FALSE if there is nothing to return, [out] value is FALSE
-     * @note This method is not being used, is deprecated, and should not be implemented or used.  It is likely that this method will be removed in a later version of the IDL.
-     * */
+    Returns whether the target object referenced by this link is still valid.
+    This is a volatile state that may change without sending an appropriate event.
+    Returns TRUE if the referenced target is still valid and FALSE otherwise.
+    This has also been used to indicate whether the URI of the anchorTarget is malformed.
+    `valid` If false, one or more of the object's links are invalid.
+    If true, all the object's links are valid.
+    retrieval S_FALSE if there is nothing to return, [out] value is FALSE
+    @note This method is not being used, is deprecated, and should not be implemented or used.  It is likely that this method will be removed in a later version of the IDL.
+    */
     fn valid(&self, valid: *mut bool) -> HRESULT;
 }
 

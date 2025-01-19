@@ -43,7 +43,7 @@ static CLIENT: RwLock<Option<PeeperClient>> = RwLock::new(None);
 fn activate_transaction() {
     let mut lock = CLIENT.write().unwrap();
     if let None = lock.as_ref() {
-        let module = get_module_file_name(HMODULE::default());
+        let module = get_module_file_name(None);
         debug!("Injected into {}.", module.as_str());
         let client = PeeperClient::new(module);
         debug!("Hooked.");

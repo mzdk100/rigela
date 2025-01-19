@@ -59,10 +59,10 @@ static HOOK_INIT: OnceLock<u32> = OnceLock::new();
 static HOOK_UNINIT: OnceLock<u32> = OnceLock::new();
 
 /**
- 启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
- 为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
- 注意： 当main引用本模块并构建时，会自动生成此dll。
- */
+启动亏叹气，这会把当前模块作为dll注入到远进程中，这是通过set_windows_hook机制实现的。
+为什么选择使用windows hook的方法注入呢？这是因为很多安全防护软件会监控读屏的行为，如果使用create_remote_thread的方法，很容易被拦截，而windows hook机制是通过系统这一个媒介来完成dll注入，防护软件一般无能为力。
+注意： 当main引用本模块并构建时，会自动生成此dll。
+*/
 #[cfg(not(feature = "dll"))]
 pub fn mount() {
     debug!("mounted.");
@@ -70,7 +70,8 @@ pub fn mount() {
         #[cfg(target_arch = "x86_64")]
         let dll_path = get_rigela_program_directory().join(format!("libs/{}.dll", module_path!()));
         #[cfg(target_arch = "x86")]
-        let dll_path = get_rigela_program_directory().join(format!("libs/{}32.dll", module_path!()));
+        let dll_path =
+            get_rigela_program_directory().join(format!("libs/{}32.dll", module_path!()));
 
         debug!("Module path: {}", dll_path.display());
         let handle = match load_library(dll_path.to_str().unwrap()) {
@@ -85,9 +86,12 @@ pub fn mount() {
         // 安装消息队列钩子
         let h_hook_get_message = loop {
             let proc = get_proc_address(handle, "hook_proc_get_message");
-            if let Ok(h) =
-                set_windows_hook_ex(HOOK_TYPE_GET_MESSAGE, proc.to_hook_proc(), handle.into(), 0)
-            {
+            if let Ok(h) = set_windows_hook_ex(
+                HOOK_TYPE_GET_MESSAGE,
+                proc.to_hook_proc(),
+                Some(handle.into()),
+                0,
+            ) {
                 break h;
             }
             error!("Can't set the `get message` hook.");
@@ -104,7 +108,7 @@ pub fn mount() {
             if let Ok(h) = set_windows_hook_ex(
                 HOOK_TYPE_CALL_WND_PROC,
                 proc.to_hook_proc(),
-                handle.into(),
+                Some(handle.into()),
                 0,
             ) {
                 break h;

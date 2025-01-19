@@ -15,12 +15,14 @@ extern crate embed_resource;
 
 use cargo_emit::rerun_if_changed;
 use chrono::{Datelike, Local};
-use std::env;
-use std::env::current_dir;
-use std::fs::OpenOptions;
-use std::io::{Read, Write};
-use std::path::Path;
-use std::process::{Command, Stdio};
+use embed_resource::{compile, CompilationResult};
+use std::{
+    env::{self, current_dir},
+    fs::OpenOptions,
+    io::{Read, Write},
+    path::Path,
+    process::{Command, Stdio},
+};
 
 const VERSION: &str = r#"
 #include <windows.h>
@@ -78,7 +80,12 @@ IDI_ICON1 ICON DISCARDABLE "{LOGO}"
 "#;
 pub fn make_version() {
     let path = Path::new(env::var("OUT_DIR").unwrap().as_str()).join("version.rc");
-    let logo_path = current_dir().unwrap().parent().unwrap().join("images").join("logo.ico");
+    let logo_path = current_dir()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("images")
+        .join("logo.ico");
     let mut description = env::var("CARGO_PKG_DESCRIPTION").unwrap();
     if description.is_empty() {
         description = "RigelA screen reader (rsr).".to_string()
@@ -105,8 +112,9 @@ pub fn make_version() {
         .unwrap()
         .write_all(version.as_bytes())
         .unwrap();
-    embed_resource::compile(&path, embed_resource::NONE);
-    rerun_if_changed!(logo_path.display(), "build.rs");
+    if let CompilationResult::Ok = compile(&path, embed_resource::NONE) {
+        rerun_if_changed!(logo_path.display(), "build.rs");
+    }
 }
 
 fn get_vcs_last_commit_hash() -> String {

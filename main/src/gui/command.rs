@@ -36,7 +36,7 @@ use std::{
     sync::Weak,
 };
 use win_wrap::{
-    common::{message_box, HWND, MB_OK},
+    common::{message_box, MB_OK},
     shell::{get_known_folder_path, FOLDERID_Desktop, KF_FLAG_DEFAULT},
 };
 
@@ -77,7 +77,7 @@ pub(crate) fn check_update_cmd(context: Weak<Context>, auto: bool) {
             (false, UpdateState::None) => {
                 // 手动检查, 未检测到更新需要弹窗提示
                 message_box(
-                    HWND::default(),
+                    None,
                     &t!("command.msg_newest_version"),
                     &t!("command.msg_mind_title"),
                     MB_OK,
@@ -86,7 +86,7 @@ pub(crate) fn check_update_cmd(context: Weak<Context>, auto: bool) {
             }
             (_, UpdateState::Updated) => {
                 message_box(
-                    HWND::default(),
+                    None,
                     &t!("command.msg_newest_version"),
                     &t!("command.msg_mind_title"),
                     MB_OK,
@@ -107,7 +107,7 @@ pub(crate) fn check_update_cmd(context: Weak<Context>, auto: bool) {
                 .spawn(),
             Err(_) => {
                 message_box(
-                    HWND::default(),
+                    None,
                     &t!("command.msg_no_updater"),
                     &t!("command.msg_mind_title"),
                     MB_OK,
@@ -133,7 +133,7 @@ pub(crate) fn welcome_form_cmd(context: Weak<Context>) {
 
 /// 打开捐赠界面。
 pub(crate) fn donate_cmd(_context: Weak<Context>) {
-    message_box(HWND::default(), &t!("command.msg_thanks"), "RigelA", MB_OK);
+    message_box(None, &t!("command.msg_thanks"), "RigelA", MB_OK);
 }
 
 /// 打开关于窗口
@@ -322,7 +322,7 @@ pub(crate) fn export_config_cmd(_context: Weak<Context>, path: PathBuf) {
     }
 
     message_box(
-        HWND::default(),
+        None,
         &t!("command.msg_export_success"),
         &t!("command.msg_mind_title"),
         MB_OK,
@@ -339,7 +339,7 @@ pub(crate) fn import_config_cmd(context: Weak<Context>, path: PathBuf) {
     reapply_config(context.clone());
 
     message_box(
-        HWND::default(),
+        None,
         &t!("command.msg_import_success"),
         &t!("command.msg_mind_title"),
         MB_OK,

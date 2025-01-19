@@ -23,11 +23,7 @@ use a11y::{
     jab::context::AccessibleContext,
 };
 use rigela_utils::{color::get_nearest_color_name, screen::snapshot};
-use win_wrap::{
-    common::{HWND, RECT},
-    msaa::object::AccessibleObject,
-    uia::element::UiAutomationElement,
-};
+use win_wrap::{common::RECT, msaa::object::AccessibleObject, uia::element::UiAutomationElement};
 
 use crate::performer::Speakable;
 
@@ -148,7 +144,7 @@ impl<'a> UiElement<'a> {
             return None;
         };
         let Some((pixels, info, _)) = snapshot(
-            HWND::default(),
+            None,
             rect.left,
             rect.top,
             rect.right - rect.left,

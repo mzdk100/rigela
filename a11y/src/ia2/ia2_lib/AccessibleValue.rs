@@ -11,50 +11,52 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-use windows::core::interface;
-use windows::core::{IUnknown, IUnknown_Vtbl, HRESULT, VARIANT};
+use windows::{
+    core::{interface, IUnknown, IUnknown_Vtbl, HRESULT},
+    Win32::System::Variant::VARIANT,
+};
 
 /**
- * This interface gives access to a single numerical value.
- * The %IAccessibleValue interface represents a single numerical value and should be implemented by any class that supports numerical value like progress bars and spin boxes.  This interface lets you access the value and its upper and lower bounds.
- * */
+This interface gives access to a single numerical value.
+The %IAccessibleValue interface represents a single numerical value and should be implemented by any class that supports numerical value like progress bars and spin boxes.  This interface lets you access the value and its upper and lower bounds.
+*/
 #[interface("35855B5B-C566-4fd0-A7B1-E65465600394")]
 pub(crate) unsafe trait IAccessibleValue: IUnknown {
     //noinspection SpellCheckingInspection
     /**
-     * Returns the value of this object as a number.
-     * The exact return type is implementation-dependent.  Typical types are long and double.
-     * `currentValue` Returns the current value represented by this object.  See the section about
-     * @ref _variants "VARIANTs" for additional information.
-     * retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
-     * */
+    Returns the value of this object as a number.
+    The exact return type is implementation-dependent.  Typical types are long and double.
+    `currentValue` Returns the current value represented by this object.  See the section about
+    @ref _variants "VARIANTs" for additional information.
+    retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
+    */
     fn currentValue(&self, currentValue: *mut VARIANT) -> HRESULT;
 
     /**
-     * Sets the value of this object to the given number.
-     * The argument is clipped to the valid interval whose upper and lower bounds are returned by the methods IAccessibleValue::maximumValue and IAccessibleValue::minimumValue, i.e., if it is lower than the minimum value, the new value will be the minimum, and if it is greater than the maximum, then the new value will be the maximum.
-     * `value` The new value represented by this object.  The set of admissible types for this argument is implementation-dependent.
-     * */
+    Sets the value of this object to the given number.
+    The argument is clipped to the valid interval whose upper and lower bounds are returned by the methods IAccessibleValue::maximumValue and IAccessibleValue::minimumValue, i.e., if it is lower than the minimum value, the new value will be the minimum, and if it is greater than the maximum, then the new value will be the maximum.
+    `value` The new value represented by this object.  The set of admissible types for this argument is implementation-dependent.
+    */
     fn setCurrentValue(&self, value: VARIANT) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
-     * Returns the maximal value that can be represented by this object.
-     * The type of the returned value is implementation-dependent.  It does not have to be the same type as that returned by method IAccessibleValue::currentValue.
-     * `maximumValue` Returns the maximal value in an implementation-dependent type. If this object has no upper bound, then an empty object is returned.  See the section about
-     * @ref _variants "VARIANTs" for additional information.
-     * retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
-     * */
+    Returns the maximal value that can be represented by this object.
+    The type of the returned value is implementation-dependent.  It does not have to be the same type as that returned by method IAccessibleValue::currentValue.
+    `maximumValue` Returns the maximal value in an implementation-dependent type. If this object has no upper bound, then an empty object is returned.  See the section about
+    @ref _variants "VARIANTs" for additional information.
+    retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
+    */
     fn maximumValue(&self, maximumValue: *mut VARIANT) -> HRESULT;
 
     //noinspection SpellCheckingInspection
     /**
-     * Returns the minimal value that can be represented by this object.
-     * The type of the returned value is implementation-dependent.  It does not have to be the same type as that returned by method IAccessibleValue::currentValue.
-     * `minimumValue` Returns the minimal value in an implementation-dependent type. If this object has no lower bound, then an empty object is returned.  See the section about
-     * @ref _variants "VARIANTs" for additional information.
-     * retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
-     * */
+    Returns the minimal value that can be represented by this object.
+    The type of the returned value is implementation-dependent.  It does not have to be the same type as that returned by method IAccessibleValue::currentValue.
+    `minimumValue` Returns the minimal value in an implementation-dependent type. If this object has no lower bound, then an empty object is returned.  See the section about
+    @ref _variants "VARIANTs" for additional information.
+    retrieval S_FALSE if there is nothing to return, [out] value is a VARIANT with vt = VT_EMPTY
+    */
     fn minimumValue(&self, minimumValue: *mut VARIANT) -> HRESULT;
 }
 

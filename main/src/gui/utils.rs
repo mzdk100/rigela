@@ -163,7 +163,10 @@ pub(crate) async fn save_docs_md5(md5: &DocsMd5) {
 pub(crate) async fn save_docs(help_or_changelogs: bool) {
     let (path, url) = match help_or_changelogs {
         true => (get_rigela_program_directory().join(HELP_DIR), HELP_URL),
-        false => (get_rigela_program_directory().join(CHANGELOGS_DIR), CHANGELOGS_URL),
+        false => (
+            get_rigela_program_directory().join(CHANGELOGS_DIR),
+            CHANGELOGS_URL,
+        ),
     };
 
     write_file(&path, parse_html_node(url, "blob-content").await.as_bytes())
@@ -379,10 +382,10 @@ pub fn set_startup_registry(enable: bool) -> win_wrap::common::Result<()> {
         .collect();
 
     let software_key = r#"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"#;
-    let hkey = reg_open_key_ex(HKEY_CURRENT_USER, Some(software_key), 0, KEY_WRITE);
+    let hkey = reg_open_key_ex(HKEY_CURRENT_USER, Some(software_key), None, KEY_WRITE);
 
     if enable {
-        reg_set_value_ex(hkey, Some(program_name), 0, REG_SZ, Some(&path))?;
+        reg_set_value_ex(hkey, Some(program_name), None, REG_SZ, Some(&path))?;
     } else {
         reg_delete_value(hkey, Some(program_name))?;
     }

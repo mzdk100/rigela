@@ -24,23 +24,23 @@ use win_wrap::{
 };
 
 /**
- * 图像压缩格式。
- * */
+图像压缩格式。
+*/
 pub enum ImageCompressionFormat {
     BMP,
     PNG,
 }
 
 /**
- * 屏幕截图，返回未压缩的位图数据。
- * `h_wnd` 窗口句柄，0表示整个屏幕。
- * `left` 要截取的左上角x坐标。
- * `top` 要截取的左上角y坐标。
- * `width` 要截取的宽度。
- * `height` 要截取的高度。
- * */
+屏幕截图，返回未压缩的位图数据。
+`h_wnd` 窗口句柄，0表示整个屏幕。
+`left` 要截取的左上角x坐标。
+`top` 要截取的左上角y坐标。
+`width` 要截取的宽度。
+`height` 要截取的高度。
+*/
 pub fn snapshot(
-    h_wnd: HWND,
+    h_wnd: Option<HWND>,
     left: i32,
     top: i32,
     with: i32,
@@ -50,7 +50,7 @@ pub fn snapshot(
     if h_dc.is_invalid() {
         return None;
     }
-    let h_mem_dc = create_compatible_dc(h_dc);
+    let h_mem_dc = create_compatible_dc(Some(h_dc));
     if h_mem_dc.is_invalid() {
         release_dc(h_wnd, h_dc);
         return None;
@@ -61,7 +61,7 @@ pub fn snapshot(
         release_dc(h_wnd, h_dc);
     }
     let h_old_obj = select_object(h_mem_dc, h_bm.into());
-    let res = bit_blt(h_mem_dc, 0, 0, with, height, h_dc, left, top, SRCCOPY);
+    let res = bit_blt(h_mem_dc, 0, 0, with, height, Some(h_dc), left, top, SRCCOPY);
     let data = if res {
         let (pixels, mut bm_header, color_table) =
             get_di_bits(h_dc, h_bm, 0, height as u32, DIB_RGB_COLORS);
@@ -80,16 +80,16 @@ pub fn snapshot(
 }
 
 /**
- * 屏幕截图，返回二进制bytes数据。
- * `h_wnd` 窗口句柄，0表示整个屏幕。
- * `left` 要截取的左上角x坐标。
- * `top` 要截取的左上角y坐标。
- * `width` 要截取的宽度。
- * `height` 要截取的高度。
- * `format` 图像格式。
- * */
+屏幕截图，返回二进制bytes数据。
+`h_wnd` 窗口句柄，0表示整个屏幕。
+`left` 要截取的左上角x坐标。
+`top` 要截取的左上角y坐标。
+`width` 要截取的宽度。
+`height` 要截取的高度。
+`format` 图像格式。
+*/
 pub fn snapshot_bytes(
-    h_wnd: HWND,
+    h_wnd: Option<HWND>,
     left: i32,
     top: i32,
     width: i32,
@@ -103,8 +103,8 @@ pub fn snapshot_bytes(
     match format {
         ImageCompressionFormat::BMP => {
             let offset = bm_header.biSize
-                + std::mem::size_of::<BITMAPFILEHEADER>() as u32
-                + bm_header.biClrUsed * std::mem::size_of::<RGBQUAD>() as u32;
+                + size_of::<BITMAPFILEHEADER>() as u32
+                + bm_header.biClrUsed * size_of::<RGBQUAD>() as u32;
             let header = BITMAPFILEHEADER {
                 bfType: 0x4d42,
                 bfSize: bm_header.biSizeImage + offset,
@@ -165,7 +165,7 @@ mod test_screen {
     #[test]
     fn main() {
         let Some(data) = snapshot_bytes(
-            get_desktop_window(),
+            Some(get_desktop_window()),
             20,
             20,
             1300,
